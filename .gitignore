@@ -9,3 +9,6 @@ vite.config.ts.timestamp-*
 .venv
 cria_csv.ipynb
 src/_temp_data
+
+src/stories/assets
+static/

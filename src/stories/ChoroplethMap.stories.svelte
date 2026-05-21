@@ -1,6 +1,7 @@
 <script module>
+  // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { ChoroplethMap } from 'sniic-design-system';
+  import ChoroplethMapLabeled from '$lib/components/ChoroplethMapLabeled.svelte';
 
   const siglaToName = {
     AC: 'Acre', AL: 'Alagoas', AM: 'Amazonas', AP: 'Amapá',
@@ -42,38 +43,33 @@
     { uf: 'TO', valor_executado_rs: 21172903.86,  valor_executado_perc: 0.014596825056480222 },
   ];
 
+  // @ts-ignore
   const states = Object.fromEntries(csvRows.map((d) => [siglaToName[d.uf], d]));
 
+  // @ts-ignore
   const formatPerc = (v) =>
     v.toLocaleString('pt-BR', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
+  // @ts-ignore
   const formatBRL = (v) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', maximumFractionDigits: 1 }).format(v);
 
+  // @ts-ignore
+  const formatLine2 = (row) => formatPerc(row.valor_executado_perc);
+
   const { Story } = defineMeta({
     title: 'Section 1/ChoroplethMap',
-    component: ChoroplethMap,
+    component: ChoroplethMapLabeled,
     tags: ['autodocs'],
   });
 </script>
 
-<Story name="% do Valor Executado por Estado">
+<Story name="Valor Executado por Estado">
   {#snippet template()}
-    <ChoroplethMap
-      {states}
-      metric="valor_executado_perc"
-      label="% do valor total executado"
-      format={formatPerc}
-    />
-  {/snippet}
-</Story>
-
-<Story name="Valor Executado (R$) por Estado">
-  {#snippet template()}
-    <ChoroplethMap
+    <ChoroplethMapLabeled
       {states}
       metric="valor_executado_rs"
-      label="Valor executado (R$)"
+      label="Valor executado"
       format={formatBRL}
     />
   {/snippet}

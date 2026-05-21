@@ -7,5 +7,5 @@ build
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .venv
-cria_csv.ipynb
+*.ipynb
 src/_temp_data

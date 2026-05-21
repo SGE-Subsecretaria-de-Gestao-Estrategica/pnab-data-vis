@@ -58,7 +58,7 @@
   }));
 
   const { Story } = defineMeta({
-    title: 'Section 1/DataTable',
+    title: 'Section 1/executedValueByUf',
     component: DataTable,
     tags: ['autodocs'],
   });

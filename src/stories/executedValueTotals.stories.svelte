@@ -11,7 +11,7 @@
   };
 
   const { Story } = defineMeta({
-    title: 'Section 1/BigNumber',
+    title: 'Section 1/executedValueTotals',
     component: BigNumber,
     tags: ['autodocs'],
     argTypes: {

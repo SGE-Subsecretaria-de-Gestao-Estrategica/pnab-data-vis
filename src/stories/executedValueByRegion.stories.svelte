@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import ChoroplethMapRegions from '$lib/components/ChoroplethMapRegions.svelte';
+  import ChoroplethMapRegions from '$lib/components/ExecutedValueByRegionMap.svelte';
 
   const regions = {
     'Centro-Oeste': { valor_executado_rs: 125183148.54, populacao: 17071595, perc_valor_executado: 8.630259369900891,  perc_populacao: 8.030526792381826  },
@@ -20,7 +20,7 @@
     v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
   const { Story } = defineMeta({
-    title: 'Section 1/ChoroplethMapRegions',
+    title: 'Section 1/executedValueByRegion',
     component: ChoroplethMapRegions,
     tags: ['autodocs'],
   });

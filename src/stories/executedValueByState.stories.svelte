@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import ChoroplethMapLabeled from '$lib/components/ChoroplethMapLabeled.svelte';
+  import ChoroplethMapLabeled from '$lib/components/ExecutedValueByStateMap.svelte';
 
   const siglaToName = {
     AC: 'Acre', AL: 'Alagoas', AM: 'Amazonas', AP: 'Amapá',
@@ -58,7 +58,7 @@
   const formatLine2 = (row) => formatPerc(row.valor_executado_perc);
 
   const { Story } = defineMeta({
-    title: 'Section 1/ChoroplethMap',
+    title: 'Section 1/executedValueByState',
     component: ChoroplethMapLabeled,
     tags: ['autodocs'],
   });

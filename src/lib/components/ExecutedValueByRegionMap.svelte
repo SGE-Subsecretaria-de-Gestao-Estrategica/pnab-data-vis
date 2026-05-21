@@ -1,10 +1,8 @@
 <script lang="ts">
   import { geoMercator, geoPath } from 'd3-geo';
-  import { scaleSequential } from 'd3-scale';
-  import { interpolateRgbBasis } from 'd3-interpolate';
   import {
     loadBrazilGeoJSON,
-    colorScales,
+    categorical5,
     getContrastColor,
     typography,
   } from 'sniic-design-system';
@@ -56,13 +54,14 @@
     new Map(Object.entries(regions).map(([name, d]) => [name, (d[metric] ?? 0) as number]))
   );
 
-  const maxVal = $derived(Math.max(...valueMap.values(), 1));
-
-  const colorScale = $derived(
-    scaleSequential<string>()
-      .domain([0, maxVal])
-      .interpolator(interpolateRgbBasis(colorScales.blue))
+  const REGIONS = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul'] as const;
+  const regionColorMap: Record<string, string> = Object.fromEntries(
+    REGIONS.map((r, i) => [r, categorical5[i]])
   );
+
+  function regionColor(region: string | undefined): string {
+    return region ? (regionColorMap[region] ?? '#ccc') : '#ccc';
+  }
 
   const projection = $derived.by(() => {
     if (!geojson || width <= 0) return null;
@@ -88,7 +87,7 @@
 
     return Object.entries(acc).map(([name, { xs, ys }]) => {
       const val = valueMap.get(name) ?? 0;
-      const fill = colorScale(val);
+      const fill = regionColor(name);
       return {
         name,
         cx: xs.reduce((a, b) => a + b, 0) / xs.length,
@@ -109,10 +108,9 @@
     <svg {width} height={mapH}>
       {#each geojson.features as f (f.properties.name)}
         {@const region = STATE_TO_REGION[f.properties.sigla]}
-        {@const val = region ? (valueMap.get(region) ?? 0) : 0}
         {@const d = pathFn(f)}
         {#if d}
-          <path d={d} fill={colorScale(val)} stroke="white" stroke-width="0.5" />
+          <path d={d} fill={regionColor(region)} stroke="white" stroke-width="0.5" />
         {/if}
       {/each}
 

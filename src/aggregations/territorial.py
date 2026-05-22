@@ -1046,3 +1046,159 @@ def aggregate_faixa_valor_by(
     return df_faixa_vlr
 
 
+def aggregate_execution_by_person_type(
+    df_cubo: pd.DataFrame,
+    by_filter: str = "UF"
+) -> pd.DataFrame:
+    """
+    Agrega valor executado e quantidade de contemplados por tipo_documento.
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        Base principal.
+
+    by_filter : str
+        Recorte territorial usado na agregação.
+
+        Opções:
+        - "ESTADO": considera apenas registros estaduais.
+        - "MUNICIPIO": considera apenas registros municipais.
+        - "UF": considera ESTADO + MUNICIPIO.
+
+    Retorna
+    -------
+    pd.DataFrame
+        Tabela agregada por tipo_documento, com valores absolutos,
+        percentuais e estatísticas de valor.
+    """
+
+    by_filter = by_filter.upper()
+
+    df = df_cubo.copy()
+
+    # ------------------------------------------------------------
+    # 1. Normalizar tipo_ente
+    # ------------------------------------------------------------
+
+    df["tipo_ente_norm"] = (
+        df["tipo_ente"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    # ------------------------------------------------------------
+    # 2. Aplicar filtro territorial
+    # ------------------------------------------------------------
+
+    if by_filter == "ESTADO":
+        df = df[df["tipo_ente_norm"].eq("ESTADO")].copy()
+
+    elif by_filter == "MUNICIPIO":
+        df = df[df["tipo_ente_norm"].eq("MUNICIPIO")].copy()
+
+    elif by_filter == "UF":
+        df = df[df["tipo_ente_norm"].isin(["ESTADO", "MUNICIPIO"])].copy()
+
+    else:
+        raise ValueError("by_filter deve ser 'ESTADO', 'MUNICIPIO' ou 'UF'.")
+
+    # ------------------------------------------------------------
+    # 3. Tratar tipo_documento
+    # ------------------------------------------------------------
+
+    df["tipo_documento_tratado"] = (
+        df["tipo_documento"]
+        .fillna("Não informado")
+    )
+
+    # ------------------------------------------------------------
+    # 4. Agregar por tipo_documento
+    # ------------------------------------------------------------
+
+    df_tipo_documento = (
+        df
+        .groupby("tipo_documento_tratado", dropna=False, as_index=False)
+        .agg(
+            valor_executado_rs=("valor_transacao", "sum"),
+            qtde_contemplados=("quantidade", "sum"),
+            min_valor=("valor_transacao", "min"),
+            mediana_valor=("valor_transacao", "median"),
+            max_valor=("valor_transacao", "max"),
+            media_valor=("valor_transacao", "mean")
+        )
+    )
+
+    # ------------------------------------------------------------
+    # 5. Calcular percentuais
+    # ------------------------------------------------------------
+
+    valor_total = df_tipo_documento["valor_executado_rs"].sum()
+    quantidade_total = df_tipo_documento["qtde_contemplados"].sum()
+
+    df_tipo_documento["perc_valor_executado"] = np.where(
+        valor_total > 0,
+        df_tipo_documento["valor_executado_rs"] / valor_total,
+        0
+    )
+
+    df_tipo_documento["perc_qtde_contemplados"] = np.where(
+        quantidade_total > 0,
+        df_tipo_documento["qtde_contemplados"] / quantidade_total,
+        0
+    )
+
+    # ------------------------------------------------------------
+    # 6. Formatar valores
+    # ------------------------------------------------------------
+
+    colunas_valor = [
+        "valor_executado_rs",
+        "min_valor",
+        "mediana_valor",
+        "max_valor",
+        "media_valor"
+    ]
+
+    df_tipo_documento[colunas_valor] = (
+        np.ceil(df_tipo_documento[colunas_valor])
+        .astype("Int64")
+    )
+
+    df_tipo_documento["qtde_contemplados"] = (
+        df_tipo_documento["qtde_contemplados"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    # ------------------------------------------------------------
+    # 7. Renomear e ordenar
+    # ------------------------------------------------------------
+
+    df_tipo_documento = (
+        df_tipo_documento
+        .rename(columns={
+            "tipo_documento_tratado": "tipo_documento"
+        })
+        [
+            [
+                "tipo_documento",
+                "valor_executado_rs",
+                "perc_valor_executado",
+                "qtde_contemplados",
+                "perc_qtde_contemplados",
+                "min_valor",
+                "mediana_valor",
+                "max_valor",
+                "media_valor"
+            ]
+        ]
+        .sort_values("valor_executado_rs", ascending=False)
+        .reset_index(drop=True)
+    )
+
+    return df_tipo_documento

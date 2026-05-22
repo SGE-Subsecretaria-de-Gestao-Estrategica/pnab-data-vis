@@ -1,12 +1,12 @@
 ,cod_tipo_nome,valor_transacao,perc_valor_transacao,quantidade_contemplados,perc_quantidade_contemplados
-0,Não especial,1311000910,0.94,139873,0.97
-1,Favela e Comunidade Urbana,55119044,0.04,3281,0.02
-2,Setor com baixo patamar domiciliar,9604835,0.01,565,0.0
-3,Agrupamento quilombola,2906038,0.0,391,0.0
-4,Agrupamento indígena,1109793,0.0,143,0.0
-5,Quartel e base militar,130603,0.0,22,0.0
-6,Não informado,15054200,0.01,479,0.0
-7,Agrovila do PA,282888,0.0,56,0.0
-8,Unidade prisional,66969,0.0,9,0.0
-9,Convento / hospital / ILPI / IACA,152685,0.0,13,0.0
+0,Não especial,1311000910,0.9395,139873,0.9657
+1,Favela e Comunidade Urbana,55119044,0.0395,3281,0.0227
+2,Setor com baixo patamar domiciliar,9604835,0.0069,565,0.0039
+3,Agrupamento quilombola,2906038,0.0021,391,0.0027
+4,Agrupamento indígena,1109793,0.0008,143,0.001
+5,Quartel e base militar,130603,0.0001,22,0.0002
+6,Não informado,15054200,0.0108,479,0.0033
+7,Agrovila do PA,282888,0.0002,56,0.0004
+8,Unidade prisional,66969,0.0,9,0.0001
+9,Convento / hospital / ILPI / IACA,152685,0.0001,13,0.0001
 10,Alojamento / acampamento,53308,0.0,4,0.0

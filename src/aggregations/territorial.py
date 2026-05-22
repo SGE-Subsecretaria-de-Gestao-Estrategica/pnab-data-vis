@@ -1050,8 +1050,12 @@ def aggregate_execution_by_person_type(
     df_cubo: pd.DataFrame,
     by_filter: str = "UF"
 ) -> pd.DataFrame:
+
     """
     Agrega valor executado e quantidade de contemplados por tipo_documento.
+
+    Também acrescenta a quantidade de contemplados por faixa_vlr_pago,
+    com cada faixa aparecendo como uma coluna.
 
     Parâmetros
     ----------
@@ -1070,7 +1074,7 @@ def aggregate_execution_by_person_type(
     -------
     pd.DataFrame
         Tabela agregada por tipo_documento, com valores absolutos,
-        percentuais e estatísticas de valor.
+        percentuais, estatísticas de valor e faixas de valor pago.
     """
 
     by_filter = by_filter.upper()
@@ -1108,13 +1112,29 @@ def aggregate_execution_by_person_type(
         raise ValueError("by_filter deve ser 'ESTADO', 'MUNICIPIO' ou 'UF'.")
 
     # ------------------------------------------------------------
-    # 3. Tratar tipo_documento
+    # 3. Tratar tipo_documento e faixa_vlr_pago
     # ------------------------------------------------------------
 
     df["tipo_documento_tratado"] = (
         df["tipo_documento"]
         .fillna("Não informado")
     )
+
+    df["faixa_vlr_pago_tratada"] = (
+        df["faixa_vlr_pago"]
+        .fillna("Não informado")
+    )
+
+    ordem_faixa_vlr_pago = [
+        "Até 2 mil",
+        "2 a 10 mil",
+        "10 a 50 mil",
+        "50 a 200 mil",
+        "200 a 500 mil",
+        "500 mil a 1 milhão",
+        "1 milhão a 10 milhões",
+        "Acima de 10 milhões"
+    ]
 
     # ------------------------------------------------------------
     # 4. Agregar por tipo_documento
@@ -1134,7 +1154,44 @@ def aggregate_execution_by_person_type(
     )
 
     # ------------------------------------------------------------
-    # 5. Calcular percentuais
+    # 5. Quantidade de contemplados por faixa_vlr_pago
+    # ------------------------------------------------------------
+
+    df_faixa_vlr_pago = (
+        df
+        .pivot_table(
+            index="tipo_documento_tratado",
+            columns="faixa_vlr_pago_tratada",
+            values="quantidade",
+            aggfunc="sum",
+            fill_value=0
+        )
+        .reset_index()
+    )
+
+    # Garantir ordem das colunas de faixa quando existirem
+    colunas_faixa_existentes = [
+        coluna
+        for coluna in ordem_faixa_vlr_pago
+        if coluna in df_faixa_vlr_pago.columns
+    ]
+
+    df_faixa_vlr_pago = df_faixa_vlr_pago[
+        ["tipo_documento_tratado"] + colunas_faixa_existentes
+    ]
+
+    # ------------------------------------------------------------
+    # 6. Juntar tabela principal com faixas
+    # ------------------------------------------------------------
+
+    df_tipo_documento = df_tipo_documento.merge(
+        df_faixa_vlr_pago,
+        on="tipo_documento_tratado",
+        how="left"
+    )
+
+    # ------------------------------------------------------------
+    # 7. Calcular percentuais
     # ------------------------------------------------------------
 
     valor_total = df_tipo_documento["valor_executado_rs"].sum()
@@ -1153,7 +1210,7 @@ def aggregate_execution_by_person_type(
     )
 
     # ------------------------------------------------------------
-    # 6. Formatar valores
+    # 8. Formatar valores
     # ------------------------------------------------------------
 
     colunas_valor = [
@@ -1169,34 +1226,38 @@ def aggregate_execution_by_person_type(
         .astype("Int64")
     )
 
-    df_tipo_documento["qtde_contemplados"] = (
-        df_tipo_documento["qtde_contemplados"]
+    colunas_quantidade = [
+        "qtde_contemplados"
+    ] + colunas_faixa_existentes
+
+    df_tipo_documento[colunas_quantidade] = (
+        df_tipo_documento[colunas_quantidade]
         .fillna(0)
         .astype("Int64")
     )
 
     # ------------------------------------------------------------
-    # 7. Renomear e ordenar
+    # 9. Renomear e ordenar
     # ------------------------------------------------------------
+
+    colunas_finais = [
+        "tipo_documento",
+        "valor_executado_rs",
+        "perc_valor_executado",
+        "qtde_contemplados",
+        "perc_qtde_contemplados",
+        "min_valor",
+        "mediana_valor",
+        "max_valor",
+        "media_valor",
+    ] + colunas_faixa_existentes
 
     df_tipo_documento = (
         df_tipo_documento
         .rename(columns={
             "tipo_documento_tratado": "tipo_documento"
         })
-        [
-            [
-                "tipo_documento",
-                "valor_executado_rs",
-                "perc_valor_executado",
-                "qtde_contemplados",
-                "perc_qtde_contemplados",
-                "min_valor",
-                "mediana_valor",
-                "max_valor",
-                "media_valor"
-            ]
-        ]
+        [colunas_finais]
         .sort_values("valor_executado_rs", ascending=False)
         .reset_index(drop=True)
     )

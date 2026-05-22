@@ -1,0 +1,3 @@
+,tipo_documento,valor_executado_rs,perc_valor_executado,qtde_contemplados,perc_qtde_contemplados,min_valor,mediana_valor,max_valor,media_valor
+0,CPF,741987236,0.5317070554604448,119610,0.8258305946035516,375,3000,640000,6409
+1,CNPJ,653494032,0.4682929445395553,25226,0.1741694053964484,375,10679,15333334,29613

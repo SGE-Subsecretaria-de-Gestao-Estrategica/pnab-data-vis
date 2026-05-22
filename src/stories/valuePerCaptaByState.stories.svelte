@@ -2,37 +2,7 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import { HorizontalStackedBarChart } from 'sniic-design-system';
-
-  // Data from data/section_1/executed_value_by_uf.csv
-  const chartData = [
-    { uf: 'AC', valor_percapita_uf: 27.63 },
-    { uf: 'AL', valor_percapita_uf: 18.72 },
-    { uf: 'AM', valor_percapita_uf: 17.31 },
-    { uf: 'AP', valor_percapita_uf: 29.44 },
-    { uf: 'BA', valor_percapita_uf: 11.91 },
-    { uf: 'CE', valor_percapita_uf: 14.80 },
-    { uf: 'DF', valor_percapita_uf: 13.80 },
-    { uf: 'ES', valor_percapita_uf: 13.59 },
-    { uf: 'GO', valor_percapita_uf: 14.35 },
-    { uf: 'MA', valor_percapita_uf: 16.39 },
-    { uf: 'MG', valor_percapita_uf: 12.59 },
-    { uf: 'MS', valor_percapita_uf: 14.59 },
-    { uf: 'MT', valor_percapita_uf: 12.61 },
-    { uf: 'PA', valor_percapita_uf: 14.32 },
-    { uf: 'PB', valor_percapita_uf: 16.94 },
-    { uf: 'PE', valor_percapita_uf: 14.83 },
-    { uf: 'PI', valor_percapita_uf: 16.97 },
-    { uf: 'PR', valor_percapita_uf: 12.96 },
-    { uf: 'RJ', valor_percapita_uf: 10.81 },
-    { uf: 'RN', valor_percapita_uf: 15.69 },
-    { uf: 'RO', valor_percapita_uf: 5.06 },
-    { uf: 'RR', valor_percapita_uf: 22.96 },
-    { uf: 'RS', valor_percapita_uf: 13.46 },
-    { uf: 'SC', valor_percapita_uf: 10.19 },
-    { uf: 'SE', valor_percapita_uf: 17.65 },
-    { uf: 'SP', valor_percapita_uf: 12.09 },
-    { uf: 'TO', valor_percapita_uf: 20.36 },
-  ];
+  import { percapitaData } from '$lib/data/section1';
 
   const flagModules = import.meta.glob(
     '/node_modules/sniic-design-system/dist/flags/states/*.svg',
@@ -55,13 +25,30 @@
     title: 'Section 1/valuePerCaptaByState',
     component: HorizontalStackedBarChart,
     tags: ['autodocs'],
+    parameters: {
+      docs: {
+        description: {
+          component: `
+**Quem recebe mais por habitante? A régua per capita inverte o ranking**
+
+A métrica per capita equaliza a comparação e revela um ranking completamente diferente do ordenado por volume absoluto.
+
+**Amapá (R$ 29,44/hab), Acre (R$ 27,63/hab) e Roraima (R$ 22,96/hab)** lideram — estados pequenos em população que concentraram recursos de forma proporcionalmente mais favorável. Tocantins (R$ 20,36/hab) e Amazonas também ficam acima da média.
+
+No extremo oposto, **Rondônia (R$ 5,06/hab)** — cujo baixo total executado já chamou atenção — confirma ser o grande outlier negativo. Santa Catarina (R$ 10,19/hab) e Rio de Janeiro (R$ 10,81/hab) fecham a lista, mesmo sendo estados com volume absoluto considerável.
+
+São Paulo, que lidera em valor total, cai para uma posição intermediária quando normalizado pela população: R$ 12,09 por habitante.
+          `,
+        },
+      },
+    },
   });
 </script>
 
 <Story name="Valor per capita por UF (abreviação)">
   {#snippet template()}
     <HorizontalStackedBarChart
-      data={chartData}
+      data={percapitaData}
       keys={['valor_percapita_uf']}
       categoryKey="uf"
       labels={{ valor_percapita_uf: 'Valor per capita (R$)' }}
@@ -73,7 +60,7 @@
 <Story name="Valor per capita por UF (bandeiras)">
   {#snippet template()}
     <HorizontalStackedBarChart
-      data={chartData}
+      data={percapitaData}
       keys={['valor_percapita_uf']}
       categoryKey="uf"
       labels={{ valor_percapita_uf: 'Valor per capita (R$)' }}

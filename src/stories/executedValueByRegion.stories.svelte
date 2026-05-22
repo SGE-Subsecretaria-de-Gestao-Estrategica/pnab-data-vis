@@ -2,14 +2,7 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import ChoroplethMapRegions from '$lib/components/ExecutedValueByRegionMap.svelte';
-
-  const regions = {
-    'Centro-Oeste': { valor_executado_rs: 125183148.54, populacao: 17071595, perc_valor_executado: 8.630259369900891,  perc_populacao: 8.030526792381826  },
-    'Nordeste':     { valor_executado_rs: 448164039.52, populacao: 57112096, perc_valor_executado: 30.89690542560716,  perc_populacao: 26.865692227181054 },
-    'Norte':        { valor_executado_rs: 188830083.6,  populacao: 18669345, perc_valor_executado: 13.018146749898552, perc_populacao: 8.782112931962109  },
-    'Sudeste':      { valor_executado_rs: 516724465.47, populacao: 88617693, perc_valor_executado: 35.623534092167006, perc_populacao: 41.686014570728005 },
-    'Sul':          { valor_executado_rs: 171612588.97, populacao: 31113021, perc_valor_executado: 11.831154362426398, perc_populacao: 14.635653477747004 },
-  };
+  import { regions } from '$lib/data/section1';
 
   // @ts-ignore
   const formatBRL = (v) =>
@@ -23,6 +16,23 @@
     title: 'Section 1/executedValueByRegion',
     component: ChoroplethMapRegions,
     tags: ['autodocs'],
+    parameters: {
+      docs: {
+        description: {
+          component: `
+**O mapa dos recursos: o programa segue a população?**
+
+Com os totais em mãos, a próxima pergunta é: *onde* o dinheiro chegou?
+
+O mapa revela distribuições que não seguem linearmente o peso demográfico de cada região. O **Sudeste** concentrou **35,6%** dos recursos, mas abriga **41,7%** da população — proporcionalmente, recebeu menos por habitante do que seu tamanho sugere.
+
+Já o **Nordeste**, com 26,9% da população, absorveu 30,9% dos recursos. O **Norte**, a região com menor população relativa (8,8%), captou 13% — uma fatia acima do seu peso demográfico.
+
+Essa assimetria indica que o programa, em certa medida, direciona recursos para além da lógica puramente proporcional — mas será que isso se reflete em equidade de fato?
+          `,
+        },
+      },
+    },
   });
 </script>
 

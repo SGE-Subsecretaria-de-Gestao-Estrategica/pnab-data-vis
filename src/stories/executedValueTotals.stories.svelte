@@ -1,19 +1,27 @@
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import { BigNumber } from 'sniic-design-system';
-
-  // Data from data/section_1/bignumber1.csv
-  const data = {
-    estados_df: 1450514327,
-    municipios_df: 1395481268,
-    perc_executado_estados: 0.9606055145695365,
-    perc_executado_municipios: 0.9365646093959732,
-  };
+  import { percExecEstados, percExecMunicipios } from '$lib/data/section1';
 
   const { Story } = defineMeta({
     title: 'Section 1/executedValueTotals',
     component: BigNumber,
     tags: ['autodocs'],
+    parameters: {
+      docs: {
+        description: {
+          component: `
+**O ponto de partida: quanto o PNAB investiu?**
+
+O Programa Nacional de Atenção Básica (PNAB) transferiu cerca de **R$ 2,85 bilhões** ao longo do período analisado, divididos entre repasses aos governos estaduais (R$ 1,45 bi) e municipais (R$ 1,40 bi).
+
+A taxa de execução foi alta em ambas as esferas: **96,1%** para estados e **93,7%** para municípios — sinalizando que os recursos empenhados, em sua grande maioria, foram de fato aplicados.
+
+Este painel apresenta os grandes números que abrem a narrativa: quanto foi, de fato, investido e com que eficiência.
+          `,
+        },
+      },
+    },
     argTypes: {
       value: { control: 'text' },
       suffix: { control: 'text' },
@@ -47,9 +55,8 @@
 <Story
   name="Estados - % Executado"
   args={{
-    value: (data.perc_executado_estados * 100).toFixed(1),
+    value: percExecEstados.toFixed(1),
     suffix: '%',
-    label: 'Execução Estados e DF',
     fontSize: 96,
   }}
 />
@@ -57,9 +64,8 @@
 <Story
   name="Municípios - % Executado"
   args={{
-    value: (data.perc_executado_municipios * 100).toFixed(1),
+    value: percExecMunicipios.toFixed(1),
     suffix: '%',
-    label: 'Execução Municípios e DF',
     fontSize: 96,
   }}
 />

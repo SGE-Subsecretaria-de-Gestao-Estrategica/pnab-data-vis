@@ -13,3 +13,5 @@ src/stories/assets
 static/
 *.ipynb
 src/_temp_data
+storybook-static/
+debug-storybook.log

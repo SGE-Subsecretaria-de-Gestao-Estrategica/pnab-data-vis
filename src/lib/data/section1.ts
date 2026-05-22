@@ -216,7 +216,9 @@ const porteKeyMap: Record<string, string> = {
 	'Médio':      'medio',
 };
 
-export const porteRaw = parseCSV(csvPorteRaw).map((d) => ({
+export const porteRaw = parseCSV(csvPorteRaw)
+	.filter((d) => d.porte_populacional in porteNameMap)
+	.map((d) => ({
 	porte:           porteNameMap[d.porte_populacional],
 	municipios:      +d.numero_municipios,
 	valor_total:     +d.valor_total_por_porte,

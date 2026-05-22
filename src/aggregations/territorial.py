@@ -506,3 +506,137 @@ def aggregate_execution_by_porte_with_estado(
 
     return df_porte
 
+
+
+def aggregate_special_territories_by(
+    df_cubo: pd.DataFrame,
+    categories: list[str],
+    by_filter: str = "MUNICIPIO",
+) -> pd.DataFrame:
+    """
+    Agrega valor executado e quantidade de contemplados por tipo de território especial.
+
+    A variável de referência é cod_tipo_nome.
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        Base principal.
+
+    by_filter : str
+        Recorte territorial usado na agregação.
+
+        Opções:
+        - "MUNICIPIO": considera apenas registros municipais.
+        - "ESTADO": considera apenas registros estaduais.
+        - "UF": considera ESTADO + MUNICIPIO.
+
+    categories : list[str]
+        Lista de categorias que devem aparecer no resultado final,
+        mesmo quando não houver registros.
+
+    Retorna
+    -------
+    pd.DataFrame
+        Tabela agregada por cod_tipo_nome, com valor, quantidade e percentuais.
+    """
+
+    by_filter = by_filter.upper()
+
+    df = df_cubo.copy()
+
+    df["tipo_ente_norm"] = (
+        df["tipo_ente"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    if by_filter == "MUNICIPIO":
+        df = df[df["tipo_ente_norm"].eq("MUNICIPIO")].copy()
+
+    elif by_filter == "ESTADO":
+        df = df[df["tipo_ente_norm"].eq("ESTADO")].copy()
+
+    elif by_filter == "UF":
+        df = df[df["tipo_ente_norm"].isin(["ESTADO", "MUNICIPIO"])].copy()
+
+    else:
+        raise ValueError("by_filter deve ser 'MUNICIPIO', 'ESTADO' ou 'UF'.")
+
+    df["cod_tipo_nome_tratado"] = (
+        df["cod_tipo_nome"]
+        .fillna("Não informado")
+    )
+
+    df_agg = (
+        df
+        .groupby("cod_tipo_nome_tratado", dropna=False, as_index=False)
+        .agg(
+            valor_transacao=("valor_transacao", "sum"),
+            quantidade_contemplados=("quantidade", "sum")
+        )
+    )
+
+    df_agg = (
+        df_agg
+        .set_index("cod_tipo_nome_tratado")
+        .reindex(categories, fill_value=0)
+        .reset_index()
+    )
+
+    valor_total = df_agg["valor_transacao"].sum()
+    quantidade_total = df_agg["quantidade_contemplados"].sum()
+
+    df_agg["perc_valor_transacao"] = np.where(
+        valor_total > 0,
+        df_agg["valor_transacao"] / valor_total,
+        0
+    )
+
+    df_agg["perc_quantidade_contemplados"] = np.where(
+        quantidade_total > 0,
+        df_agg["quantidade_contemplados"] / quantidade_total,
+        0
+    )
+
+    df_agg["valor_transacao"] = (
+        np.ceil(df_agg["valor_transacao"])
+        .astype("Int64")
+    )
+
+    df_agg["quantidade_contemplados"] = (
+        df_agg["quantidade_contemplados"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_agg[[
+        "perc_valor_transacao",
+        "perc_quantidade_contemplados"
+    ]] = (
+        df_agg[[
+            "perc_valor_transacao",
+            "perc_quantidade_contemplados"
+        ]]
+        .round(4)
+    )
+
+    df_agg = df_agg.rename(
+        columns={"cod_tipo_nome_tratado": "cod_tipo_nome"}
+    )
+
+    df_agg = df_agg[
+        [
+            "cod_tipo_nome",
+            "valor_transacao",
+            "perc_valor_transacao",
+            "quantidade_contemplados",
+            "perc_quantidade_contemplados"
+        ]
+    ]
+
+    return df_agg

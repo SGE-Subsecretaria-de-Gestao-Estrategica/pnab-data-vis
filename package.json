@@ -27,7 +27,7 @@
     "vite": "^6.0.0"
   },
   "dependencies": {
-    "sniic-design-system": "^1.0.7",
+    "sniic-design-system": "^1.0.9",
     "storybook": "^10.4.0"
   },
   "type": "module"

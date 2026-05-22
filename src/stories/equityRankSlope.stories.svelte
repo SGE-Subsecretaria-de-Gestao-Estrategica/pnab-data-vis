@@ -51,7 +51,7 @@ Este padrão indica que o PNAB possui, ao menos parcialmente, um viés redistrib
         labels={slopeLabels}
         format={formatSlope}
         width={containerWidth}
-        height={480}
+        height={600}
         colors={categorical8}
       />
     </div>

@@ -81,17 +81,6 @@
 		valor_executado_perc:           pct(d.valor_executado_perc),
 	}));
 
-	// ── Slope container (responsive width) ──────────────────────────────────────
-	let slopeContainerEl = $state<HTMLDivElement | undefined>();
-	let slopeWidth = $state(800);
-
-	$effect(() => {
-		if (!slopeContainerEl) return;
-		slopeWidth = slopeContainerEl.clientWidth;
-		const ro = new ResizeObserver(([e]) => { slopeWidth = e.contentRect.width; });
-		ro.observe(slopeContainerEl);
-		return () => ro.disconnect();
-	});
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -265,16 +254,14 @@
 		<strong>Receberam proporcionalmente menos:</strong> SC, RO, PR, RS e MT — estados do Sul e
 		Centro-Oeste, com indicadores socioeconômicos geralmente mais favoráveis.
 	</p>
-	<div bind:this={slopeContainerEl} style="width:100%">
-		<SlopeGraph
-			items={slopeItems}
-			labels={slopeLabels}
-			format={formatSlope}
-			width={slopeWidth}
-			height={700}
-			colors={categorical8}
-		/>
-	</div>
+	<SlopeGraph
+		items={slopeItems}
+		labels={slopeLabels}
+		format={formatSlope}
+		height={1000}
+		colors={categorical8}
+		margin={{ top: 40, right: 80, bottom: 40, left: 80 }}
+	/>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -343,7 +330,7 @@
 		A maioria dos estados mantém divisão próxima de 50/50.
 	</p>
 	<div style="overflow: hidden;">
-		<div style="margin-left: -80px; width: calc(100% + 80px);">
+		<div style="margin-left: -100px; width: calc(100% + 80px);">
 			<DivergingBarChart
 				data={ufSplitData}
 				leftLabel="Estado"
@@ -488,7 +475,7 @@
 		Municípios <strong>Grandes</strong> direcionam quase a totalidade para áreas urbanas.
 	</p>
 	<div style="overflow: hidden;">
-		<div style="margin-left: -80px; width: calc(100% + 80px);">
+		<div style="margin-left: -60px; width: calc(100% + 80px);">
 			<DivergingBarChart
 				data={porteDivergingData}
 				leftLabel="Urbano"
@@ -497,7 +484,7 @@
 				referenceLabel="50%"
 				colors={colorPairs.blueOrange}
 			/>
-		</div>
+		</div> 
 	</div>
 </ScrollSection>
 
@@ -574,18 +561,15 @@
 		4,85% dos recursos. Quilombos e territórios indígenas somam menos de 1,5% da população
 		e receberam menos de 0,5% do total.
 	</p>
-	<div style="overflow: hidden;">
-		<div style="margin-left: -80px; width: calc(100% + 80px);">
-			<DivergingBarChart
-				data={specialDivergingData}
-				leftLabel="% população no território"
-				rightLabel="% do total de recursos"
-				referenceValue={50}
-				referenceLabel="Equidade"
-				colors={colorPairs.blueOrange}
-			/>
-		</div>
-	</div>
+	<DivergingBarChart
+		data={specialDivergingData}
+		leftLabel="% população no território"
+		rightLabel="% do total de recursos"
+		referenceValue={50}
+		referenceLabel="Equidade"
+		colors={colorPairs.blueOrange}
+		marginLeft={200}
+	/>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════

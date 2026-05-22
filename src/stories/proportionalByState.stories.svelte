@@ -1,8 +1,8 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { ProportionalAreaChart, categorical8 } from 'sniic-design-system';
-  import { rankingData, regionAreaData } from '$lib/data/section1';
+  import { ProportionalAreaChart, StatesSilhouetteChart, RegionSilhouetteChart, categorical8 } from 'sniic-design-system';
+  import { rankingData, regionAreaData, silhouetteStateData, silhouetteRegionData } from '$lib/data/section1';
 
   // @ts-ignore
   const formatBRL = (v) =>
@@ -52,6 +52,30 @@ Este gráfico foi concebido para que o leitor *sinta* a concentração antes de 
     <ProportionalAreaChart
       data={regionAreaData}
       maxRadius={110}
+      colors={categorical8}
+      format={formatBRL}
+      showLabels={true}
+    />
+  {/snippet}
+</Story>
+
+<Story name="Silhueta proporcional — Valor executado por estado">
+  {#snippet template()}
+    <StatesSilhouetteChart
+      data={silhouetteStateData}
+      maxSize={120}
+      colors={categorical8}
+      format={formatBRL}
+      showLabels={true}
+    />
+  {/snippet}
+</Story>
+
+<Story name="Silhueta proporcional — Valor executado por região">
+  {#snippet template()}
+    <RegionSilhouetteChart
+      data={silhouetteRegionData}
+      maxSize={200}
       colors={categorical8}
       format={formatBRL}
       showLabels={true}

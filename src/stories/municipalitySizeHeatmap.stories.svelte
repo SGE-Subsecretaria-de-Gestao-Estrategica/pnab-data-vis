@@ -5,26 +5,26 @@
   import { heatmapData, heatmapBuckets } from '$lib/data/section1';
 
   const { Story } = defineMeta({
-    title: 'Section 1/municipalitySizeHeatmap',
+    title: 'Section 1/municipalityValueHeatmap',
     component: HeatMap,
     tags: ['autodocs'],
     parameters: {
       docs: {
         description: {
           component: `
-**Onde estão os municípios beneficiados? O cruzamento entre estado e porte**
+**Onde estão os municípios beneficiados? O cruzamento entre estado e faixa de valor pago**
 
-Este mapa de calor cruza dois eixos: os **estados** (ordenados pelo valor total executado, do maior ao menor) e as **faixas de porte municipal** (de menos de 2 mil a mais de 10 milhões de habitantes).
+Este mapa de calor cruza dois eixos: os **estados** (ordenados pelo valor total executado, do maior ao menor) e as **faixas de valor pago por município** (de até R$2 mil a mais de R$10 milhões).
 
-Cada célula mostra quantos entes foram contemplados naquela combinação — e a intensidade da cor indica a concentração.
+Cada célula mostra quantos municípios foram contemplados naquela combinação — e a intensidade da cor indica a concentração.
 
 Alguns padrões chamam atenção:
-- **MG** tem uma célula muito escura na faixa 10–50k hab, indicando grande número de municípios pequenos atendidos.
-- **PE e PB** também mostram forte concentração em municípios de pequeno porte.
-- **SP** se destaca nas faixas maiores (200k–1M hab), refletindo sua estrutura urbana.
-- **RS** apresenta um padrão incomum, com concentração na faixa 50–200k e ausência na faixa 10–50k.
+- A massa dos municípios se concentra nas faixas **R$2–10k** e **R$10–50k**, típicas de pequenas cidades.
+- **MG** e **BA** dominam as faixas intermediárias pelo volume de municípios atendidos.
+- Repasses acima de **R$500 mil** ficam restritos a estados com maior base urbana, como **SP** e **RJ**.
+- Estados menores tendem a apresentar distribuição mais estreita, concentrada em poucas faixas de valor.
 
-O mapa evidencia que o perfil de beneficiários varia enormemente entre estados — e que não existe um "município típico" do PNAB.
+O mapa evidencia que o perfil de distribuição de valores varia enormemente entre estados — e que não existe um valor típico do PNAB.
           `,
         },
       },
@@ -32,13 +32,13 @@ O mapa evidencia que o perfil de beneficiários varia enormemente entre estados 
   });
 </script>
 
-<Story name="Heatmap — Estados por faixa de porte dos municipios">
+<Story name="Heatmap — Estados por faixa de valor pago">
   {#snippet template()}
     <HeatMap
       data={heatmapData}
       height={820}
       colorRange={colorScales.blue}
-      xLabel="Faixa de porte populacional"
+      xLabel="Faixa de valor pago"
       yLabel="Estado (UF)"
       format={(v) => v > 0 ? String(v) : ''}
       showValues={true}
@@ -55,7 +55,7 @@ O mapa evidencia que o perfil de beneficiários varia enormemente entre estados 
       data={heatmapData}
       height={820}
       colorRange={colorScales.teal}
-      xLabel="Faixa de porte populacional"
+      xLabel="Faixa de valor pago"
       yLabel="Estado (UF)"
       format={(v) => String(v)}
       showValues={false}

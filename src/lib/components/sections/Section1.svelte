@@ -1,6 +1,5 @@
 <script lang="ts">
 	import ScrollSection from '$lib/components/ScrollSection.svelte';
-	import ExecutedValueByRegionMap from '$lib/components/ExecutedValueByRegionMap.svelte';
 	import ExecutedValueByStateMap from '$lib/components/ExecutedValueByStateMap.svelte';
 	import {
 		BigNumber,
@@ -13,13 +12,15 @@
 		BoxPlotChart,
 		HeatMap,
 		TreemapChart,
+		DataTable,
+		RegionSilhouetteChart,
 		colorPairs,
 		colorScales,
 		categorical8,
 	} from 'sniic-design-system';
 	import {
 		percExecEstados, percExecMunicipios,
-		regions, regionAreaData,
+		regionAreaData,
 		states, rankingData, bubbleStateData,
 		slopeItems, slopeLabels, formatSlope,
 		boxPlotData,
@@ -29,6 +30,9 @@
 		porteTreemapData, porteDivergingData, porteBubbleData,
 		porteStackedKeys, porteStackedLabels, porteStackedData,
 		percRecursoEspecial, percPopulacaoEspecial, specialDivergingData,
+		specialStackedData,
+		ufData,
+		silhouetteRegionData,
 	} from '$lib/data/section1';
 
 	// ── Flags via import.meta.glob ──────────────────────────────────────────────
@@ -54,6 +58,28 @@
 	const formatPercFix = (v: number) => `${v.toFixed(1)}%`;
 	const formatPop     = (v: number) =>
 		new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 }).format(v);
+
+	// ── Tabela UF ────────────────────────────────────────────────────────────────
+	const ufTableColumns = [
+		{ key: 'uf', label: 'UF', align: 'left', width: 80 },
+		{ key: 'valor_executado_estado', label: 'Valor Executado Estado', align: 'right', width: 200 },
+		{ key: 'valor_executado_municipio', label: 'Valor Executado Município', align: 'right', width: 200 },
+		{ key: 'valor_executado_total_uf', label: 'Valor Executado Total UF', align: 'right', width: 200 },
+		{ key: 'perc_valor_executado_estado', label: '% Estado', align: 'right', width: 120 },
+		{ key: 'perc_valor_executado_municipio', label: '% Município', align: 'right', width: 120 },
+		{ key: 'valor_executado_perc', label: '% Total', align: 'right', width: 100 },
+	];
+	const brl = (v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+	const pct = (v: number) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+	const ufTableRows = ufData.map((d) => ({
+		uf: d.uf,
+		valor_executado_estado:         brl(d.valor_executado_estado),
+		valor_executado_municipio:      brl(d.valor_executado_municipio),
+		valor_executado_total_uf:       brl(d.valor_executado_total_uf),
+		perc_valor_executado_estado:    pct(d.perc_valor_executado_estado),
+		perc_valor_executado_municipio: pct(d.perc_valor_executado_municipio),
+		valor_executado_perc:           pct(d.valor_executado_perc),
+	}));
 
 	// ── Slope container (responsive width) ──────────────────────────────────────
 	let slopeContainerEl = $state<HTMLDivElement | undefined>();
@@ -126,11 +152,12 @@
 		<strong>Norte</strong> captou 13% do total com apenas 8,8% da população — proporcionalmente,
 		o maior favorecido.
 	</p>
-	<ExecutedValueByRegionMap
-		{regions}
-		metric="valor_executado_rs"
+	<RegionSilhouetteChart
+		data={silhouetteRegionData}
+		maxSize={200}
+		colors={categorical8}
 		format={formatBRL}
-		formatLine2={(row: { perc_valor_executado: number }) => formatPercPt(row.perc_valor_executado)}
+		showLabels={true}
 	/>
 </ScrollSection>
 
@@ -244,7 +271,7 @@
 			labels={slopeLabels}
 			format={formatSlope}
 			width={slopeWidth}
-			height={480}
+			height={700}
 			colors={categorical8}
 		/>
 	</div>
@@ -330,26 +357,44 @@
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
-     HEATMAP: ESTADO × PORTE MUNICIPAL
+     TABELA DE REFERÊNCIA POR UF
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-1-uf-table">
+	<h3>Referência completa: o que cada UF executou</h3>
+	<p>
+		Os gráficos anteriores contam a história visualmente — esta tabela reúne os <strong>números
+		exatos</strong> de todas as 27 unidades federativas. Para cada UF: valor executado pelo governo
+		estadual, pelos municípios, o total e a participação percentual de cada esfera e no total nacional.
+	</p>
+	<div style="overflow-x: auto;">
+		<svg width={1020} height={920}>
+			<DataTable columns={ufTableColumns} rows={ufTableRows} />
+		</svg>
+	</div>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     HEATMAP: ESTADO × FAIXA DE VALOR PAGO
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-1-heatmap">
-	<h3>Onde estão os municípios beneficiados? Estado × porte</h3>
+	<h3>Onde estão os municípios beneficiados? Estado × faixa de valor pago</h3>
 	<p>
 		Este mapa de calor cruza os <strong>estados</strong> (ordenados por valor total executado,
-		do maior ao menor) com as <strong>faixas de porte municipal</strong>. Cada célula mostra
+		do maior ao menor) com as <strong>faixas de valor pago por município</strong>. Cada célula mostra
 		quantos entes foram contemplados naquela combinação.
 	</p>
 	<p>
-		<strong>MG</strong> tem uma célula muito escura na faixa 10–50 mil hab. <strong>PE e PB</strong>
-		mostram forte concentração em municípios pequenos. <strong>SP</strong> destaca-se nas faixas
-		maiores. <strong>RS</strong> tem um padrão incomum: concentração em 50–200k e ausência em
-		10–50k. O mapa evidencia que não existe um "município típico" do PNAB.
+		A grande maioria dos municípios recebeu entre <strong>R$2 mil e R$50 mil</strong> — faixa onde
+		se concentra a massa de pequenas cidades. <strong>MG</strong> e <strong>BA</strong> dominam
+		as faixas intermediárias. Repasses acima de <strong>R$500 mil</strong> ficam restritos a poucos
+		estados com municípios de maior porte. O mapa evidencia que não existe um valor típico do PNAB:
+		cada estado tem um perfil de distribuição próprio.
 	</p>
 	<HeatMap
 		data={heatmapData}
 		height={820}
 		colorRange={colorScales.blue}
-		xLabel="Faixa de porte populacional"
+		xLabel="Faixa de valor pago"
 		yLabel="Estado (UF)"
 		format={(v: number) => v > 0 ? String(v) : ''}
 		showValues={true}
@@ -540,6 +585,30 @@
 				colors={colorPairs.blueOrange}
 			/>
 		</div>
+	</div>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     TERRITÓRIOS ESPECIAIS — ESTADO vs MUNICÍPIO
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-1-special-split">
+	<h3>Dentro dos territórios: quem executa — estado ou município?</h3>
+	<p>
+		Dos recursos que chegaram aos territórios especiais, há uma divisão entre repasses ao
+		<strong>governo estadual</strong> e ao <strong>conjunto de municípios</strong>.
+		Favelas e comunidades urbanas concentram a maior fatia — e os municípios respondem por
+		parcela significativa da execução em todos os territórios.
+	</p>
+	<div style="padding-left: 100px;">
+		<HorizontalStackedBarChart
+			data={specialStackedData}
+			keys={['valor_estado', 'valor_municipio']}
+			categoryKey="shortLabel"
+			labels={{ valor_estado: 'Governo Estadual', valor_municipio: 'Governo Municipal' }}
+			colors={[colorScales.blue[2], colorScales.red[2]]}
+			format={(v: number) => `R$ ${(v / 1e6).toFixed(1)}M`}
+			showTotalLabel={true}
+		/>
 	</div>
 </ScrollSection>
 

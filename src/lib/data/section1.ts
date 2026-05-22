@@ -1,6 +1,7 @@
 // All Section 1 data, parsed from CSVs at build time.
 
 import csvStateRaw      from '../../../data/section_1/executed_value_by_state.csv?raw';
+import csvMunRaw        from '../../../data/section_1/executed_value_by_municipality.csv?raw';
 import csvUfRaw         from '../../../data/section_1/executed_value_by_uf.csv?raw';
 import csvRegionRaw     from '../../../data/section_1/executed_value_by_region_state.csv?raw';
 import csvZoneRaw       from '../../../data/section_1/executed_value_zone_by_state.csv?raw';
@@ -69,6 +70,10 @@ export const regionAreaData = [...regionRows]
 	.sort((a, b) => +b.valor_executado_rs - +a.valor_executado_rs)
 	.map((d) => ({ label: d.regiao, value: +d.valor_executado_rs }));
 
+export const silhouetteRegionData = [...regionRows]
+	.sort((a, b) => +b.valor_executado_rs - +a.valor_executado_rs)
+	.map((d) => ({ region: d.regiao === 'Centro-Oeste' ? 'CentroOeste' : d.regiao, value: +d.valor_executado_rs }));
+
 // ── Por estado (executed_value_by_state.csv) ──────────────────────────────────
 interface StateRow {
 	uf: string;
@@ -77,14 +82,14 @@ interface StateRow {
 	sum_populacao:        number;
 	qtde_contemplados:    number;
 	mediana_valor:        number;
-	'<2k':    number;
-	'2-10k':  number;
-	'10-50k': number;
-	'50-200k': number;
-	'200-500k': number;
-	'500k-1M': number;
-	'1M-10M': number;
-	'>10M':   number;
+	'Até R$2k':    number;
+	'R$2–10k':     number;
+	'R$10–50k':    number;
+	'R$50–200k':   number;
+	'R$200–500k':  number;
+	'R$500k–1M':   number;
+	'R$1–10M':     number;
+	'>R$10M':      number;
 }
 
 export const stateRows: StateRow[] = parseCSV(csvStateRaw).map((d) => ({
@@ -94,14 +99,14 @@ export const stateRows: StateRow[] = parseCSV(csvStateRaw).map((d) => ({
 	sum_populacao:        +d.sum_populacao,
 	qtde_contemplados:    +d.qtde_contemplados,
 	mediana_valor:        +d.mediana_valor,
-	'<2k':    +d['Até 2 mil'],
-	'2-10k':  +d['2 a 10 mil'],
-	'10-50k': +d['10 a 50 mil'],
-	'50-200k': +d['50 a 200 mil'],
-	'200-500k': +d['200 a 500 mil'],
-	'500k-1M': +d['500 mil a 1 milhão'],
-	'1M-10M': +d['1 milhão a 10 milhões'],
-	'>10M':   +d['Acima de 10 milhões'],
+	'Até R$2k':   +d['Até 2 mil'],
+	'R$2–10k':    +d['2 a 10 mil'],
+	'R$10–50k':   +d['10 a 50 mil'],
+	'R$50–200k':  +d['50 a 200 mil'],
+	'R$200–500k': +d['200 a 500 mil'],
+	'R$500k–1M':  +d['500 mil a 1 milhão'],
+	'R$1–10M':    +d['1 milhão a 10 milhões'],
+	'>R$10M':     +d['Acima de 10 milhões'],
 }));
 
 export const states = Object.fromEntries(
@@ -111,6 +116,8 @@ export const states = Object.fromEntries(
 export const rankingData = [...stateRows]
 	.sort((a, b) => b.valor_executado_rs - a.valor_executado_rs)
 	.map((d) => ({ label: d.uf, value: d.valor_executado_rs }));
+
+export const silhouetteStateData = stateRows.map((d) => ({ state: d.uf, value: d.valor_executado_rs }));
 
 export const bubbleStateData = stateRows.map((d) => ({
 	label: d.uf,
@@ -147,9 +154,9 @@ export const boxPlotData = regionOrder.map((regiao) => ({
 		.map((d) => d.mediana_valor),
 }));
 
-// ── Heatmap: estados × faixas de porte municipal ──────────────────────────────
+// ── Heatmap: estados × faixas de valor pago ───────────────────────────────────
 export const heatmapBuckets = [
-	'<2k', '2-10k', '10-50k', '50-200k', '200-500k', '500k-1M', '1M-10M', '>10M',
+	'Até R$2k', 'R$2–10k', 'R$10–50k', 'R$50–200k', 'R$200–500k', 'R$500k–1M', 'R$1–10M', '>R$10M',
 ] as const;
 
 export const heatmapStates = [...stateRows]
@@ -161,18 +168,30 @@ export const heatmapData = heatmapStates.flatMap((uf) => {
 	return heatmapBuckets.map((bucket) => ({ x: bucket, y: uf, value: row[bucket] }));
 });
 
-// ── Per capita e split estado/município (executed_value_by_uf.csv) ─────────────
-const ufRows = parseCSV(csvUfRaw);
+// ── Per capita e split estado/município ────────────────────────────────────────
+const ufRows  = parseCSV(csvUfRaw);
+const munRows = parseCSV(csvMunRaw);
+
+const stateValByUf = Object.fromEntries(stateRows.map((d) => [d.uf, d.valor_executado_rs]));
+const munValByUf   = Object.fromEntries(munRows.map((d)   => [d.uf, +d.valor_executado_rs]));
 
 export const percapitaData = [...ufRows]
-	.map((d) => ({ uf: d.uf, valor_percapita_uf: +d.valor_percapita_uf }))
+	.map((d) => ({
+		uf:               d.uf,
+		valor_percapita_uf: +d.sum_populacao > 0 ? +d.valor_executado_rs / +d.sum_populacao : 0,
+	}))
 	.sort((a, b) => b.valor_percapita_uf - a.valor_percapita_uf);
 
-export const ufSplitData = ufRows.map((d) => ({
-	label:    d.uf,
-	leftPct:  +d.perc_valor_executado_estado   * 100,
-	rightPct: +d.perc_valor_executado_municipio * 100,
-}));
+export const ufSplitData = ufRows.map((d) => {
+	const stVal = stateValByUf[d.uf] ?? 0;
+	const muVal = munValByUf[d.uf]   ?? 0;
+	const total = stVal + muVal || 1;
+	return {
+		label:    d.uf,
+		leftPct:  (stVal / total) * 100,
+		rightPct: (muVal / total) * 100,
+	};
+});
 
 // ── Urbano vs Rural por UF (executed_value_zone_by_state.csv) ─────────────────
 export const zoneData = parseCSV(csvZoneRaw)
@@ -265,15 +284,20 @@ export const specialDivergingData = specialData.map((d) => {
 });
 
 // ── UF completo para DataTable ────────────────────────────────────────────
-export const ufData = ufRows.map((d) => ({
-	uf:                             d.uf,
-	valor_executado_estado:         +d.valor_executado_estado,
-	valor_executado_municipio:      +d.valor_executado_municipio,
-	valor_executado_total_uf:       +d.valor_executado_total_uf,
-	perc_valor_executado_estado:    +d.perc_valor_executado_estado    * 100,
-	perc_valor_executado_municipio: +d.perc_valor_executado_municipio * 100,
-	valor_executado_perc:           +d.valor_executado_perc           * 100,
-}));
+export const ufData = ufRows.map((d) => {
+	const stVal = stateValByUf[d.uf] ?? 0;
+	const muVal = munValByUf[d.uf]   ?? 0;
+	const total = stVal + muVal || 1;
+	return {
+		uf:                             d.uf,
+		valor_executado_estado:         stVal,
+		valor_executado_municipio:      muVal,
+		valor_executado_total_uf:       total,
+		perc_valor_executado_estado:    (stVal / total) * 100,
+		perc_valor_executado_municipio: (muVal / total) * 100,
+		valor_executado_perc:           +d.valor_executado_perc * 100,
+	};
+});
 
 // ── Zona municipal (UF total − estado) ────────────────────────────────────
 const zoneStateMap = Object.fromEntries(zoneData.map((d) => [d.label, d]));

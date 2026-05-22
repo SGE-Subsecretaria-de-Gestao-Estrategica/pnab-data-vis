@@ -640,3 +640,185 @@ def aggregate_special_territories_by(
     ]
 
     return df_agg
+
+
+def generate_special_territories_brazil_view(
+    df_cubo: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Gera visão Brasil para territórios especiais selecionados.
+
+    Considera:
+    - valor total Brasil = ESTADO + MUNICIPIO;
+    - população Brasil = população dos ESTADOS, uma vez por UF;
+    - territórios:
+        - Favela e Comunidade Urbana
+        - Agrupamento quilombola
+        - Agrupamento indígena
+    """
+
+    # ------------------------------------------------------------
+    # 1. Copiar base
+    # ------------------------------------------------------------
+
+    df_territorio = df_cubo.copy()
+
+    # ------------------------------------------------------------
+    # 2. Normalizar tipo_ente e tratar cod_tipo_nome
+    # ------------------------------------------------------------
+
+    df_territorio["tipo_ente_norm"] = (
+        df_territorio["tipo_ente"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    df_territorio["cod_tipo_nome_tratado"] = (
+        df_territorio["cod_tipo_nome"]
+        .fillna("Não informado")
+    )
+
+    # ------------------------------------------------------------
+    # 3. Categorias de interesse
+    # ------------------------------------------------------------
+
+    categorias_territorio = [
+        "Favela e Comunidade Urbana",
+        "Agrupamento quilombola",
+        "Agrupamento indígena"
+    ]
+
+    # ------------------------------------------------------------
+    # 4. Percentual fixo da população no território - IBGE
+    # ------------------------------------------------------------
+
+    dict_perc_populacao_territorio = {
+        "Favela e Comunidade Urbana": 8.00,
+        "Agrupamento quilombola": 0.70,
+        "Agrupamento indígena": 0.83
+    }
+
+    # ------------------------------------------------------------
+    # 5. Valor total Brasil
+    # Estado + municípios
+    # ------------------------------------------------------------
+
+    valor_total_brasil = df_territorio["valor_transacao"].sum()
+
+    # ------------------------------------------------------------
+    # 6. População total Brasil
+    # Usando sum_populacao das linhas de ESTADO
+    # Uma vez por UF, para evitar duplicação
+    # ------------------------------------------------------------
+
+    populacao_brasil = (
+        df_territorio
+        .loc[df_territorio["tipo_ente_norm"].eq("ESTADO")]
+        .groupby("uf", as_index=False)
+        .agg(populacao_uf=("sum_populacao", "max"))
+        ["populacao_uf"]
+        .sum()
+    )
+
+    # ------------------------------------------------------------
+    # 7. Agregar Brasil por tipo de território
+    # Estado + municípios
+    # ------------------------------------------------------------
+
+    df_vis_territorio_brasil = (
+        df_territorio
+        .loc[df_territorio["cod_tipo_nome_tratado"].isin(categorias_territorio)]
+        .groupby("cod_tipo_nome_tratado", as_index=False)
+        .agg(
+            valor=("valor_transacao", "sum"),
+            quantidade_contemplados=("quantidade", "sum")
+        )
+    )
+
+    # ------------------------------------------------------------
+    # 8. Garantir que as 3 linhas apareçam
+    # ------------------------------------------------------------
+
+    df_vis_territorio_brasil = (
+        df_vis_territorio_brasil
+        .set_index("cod_tipo_nome_tratado")
+        .reindex(categorias_territorio, fill_value=0)
+        .reset_index()
+    )
+
+    # ------------------------------------------------------------
+    # 9. Calcular percentuais
+    # ------------------------------------------------------------
+
+    df_vis_territorio_brasil["perc_recurso_total"] = np.where(
+        valor_total_brasil > 0,
+        df_vis_territorio_brasil["valor"] / valor_total_brasil,
+        0
+    )
+
+    df_vis_territorio_brasil["perc_agentes_contemplados"] = np.where(
+        populacao_brasil > 0,
+        df_vis_territorio_brasil["quantidade_contemplados"] / populacao_brasil,
+        0
+    )
+
+    df_vis_territorio_brasil["perc_populacao_no_territorio"] = (
+        df_vis_territorio_brasil["cod_tipo_nome_tratado"]
+        .map(dict_perc_populacao_territorio)
+    )
+
+    # ------------------------------------------------------------
+    # 10. Formatar valores
+    # ------------------------------------------------------------
+
+    df_vis_territorio_brasil["valor"] = (
+        np.ceil(df_vis_territorio_brasil["valor"])
+        .astype("Int64")
+    )
+
+    df_vis_territorio_brasil["quantidade_contemplados"] = (
+        df_vis_territorio_brasil["quantidade_contemplados"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_vis_territorio_brasil["perc_recurso_total"] = (
+        df_vis_territorio_brasil["perc_recurso_total"] * 100
+    ).round(2)
+
+    df_vis_territorio_brasil["perc_agentes_contemplados"] = (
+        df_vis_territorio_brasil["perc_agentes_contemplados"] * 100
+    ).round(2)
+
+    # ------------------------------------------------------------
+    # 11. Renomear colunas finais
+    # ------------------------------------------------------------
+
+    df_vis_territorio_brasil = (
+        df_vis_territorio_brasil
+        .rename(columns={
+            "cod_tipo_nome_tratado": "territorio",
+            "valor": "Valor (R$)",
+            "quantidade_contemplados": "Quantidade de contemplados",
+            "perc_recurso_total": "% recurso total",
+            "perc_agentes_contemplados": "% de agentes contemplados",
+            "perc_populacao_no_territorio": "% população no território"
+        })
+        [
+            [
+                "territorio",
+                "Valor (R$)",
+                "Quantidade de contemplados",
+                "% recurso total",
+                "% de agentes contemplados",
+                "% população no território"
+            ]
+        ]
+    )
+
+    return df_vis_territorio_brasil
+

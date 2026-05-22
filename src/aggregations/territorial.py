@@ -320,10 +320,8 @@ def aggregate_execution_by_porte_with_estado(
 
     A linha de ESTADO usa porte_populacional = -99.
 
-    Retorna
-    -------
-    pd.DataFrame
-        Tabela agregada com municípios por porte populacional e uma linha para estados.
+    Também acrescenta a quantidade de contemplados por faixa_vlr_pago,
+    com cada faixa aparecendo como uma coluna.
     """
 
     df = df_cubo.copy()
@@ -387,6 +385,11 @@ def aggregate_execution_by_porte_with_estado(
         0
     )
 
+    df["faixa_vlr_pago_tratada"] = (
+        df["faixa_vlr_pago"]
+        .fillna("Não informado")
+    )
+
     # ------------------------------------------------------------
     # 4. Separar municípios e estados
     # ------------------------------------------------------------
@@ -413,7 +416,23 @@ def aggregate_execution_by_porte_with_estado(
     )
 
     # ------------------------------------------------------------
-    # 6. Criar linha agregada dos estados
+    # 6. Quantidade de contemplados por faixa de valor - municípios
+    # ------------------------------------------------------------
+
+    df_faixa_municipios = (
+        df_municipios
+        .pivot_table(
+            index="porte_populacional",
+            columns="faixa_vlr_pago_tratada",
+            values="quantidade",
+            aggfunc="sum",
+            fill_value=0
+        )
+        .reset_index()
+    )
+
+    # ------------------------------------------------------------
+    # 7. Criar linha agregada dos estados
     # ------------------------------------------------------------
 
     df_estado = pd.DataFrame({
@@ -428,7 +447,26 @@ def aggregate_execution_by_porte_with_estado(
     })
 
     # ------------------------------------------------------------
-    # 7. Juntar municípios por porte + linha de estados
+    # 8. Quantidade de contemplados por faixa de valor - estados
+    # ------------------------------------------------------------
+
+    df_estados_faixa_base = df_estados.copy()
+    df_estados_faixa_base["porte_populacional"] = -99
+
+    df_faixa_estado = (
+        df_estados_faixa_base
+        .pivot_table(
+            index="porte_populacional",
+            columns="faixa_vlr_pago_tratada",
+            values="quantidade",
+            aggfunc="sum",
+            fill_value=0
+        )
+        .reset_index()
+    )
+
+    # ------------------------------------------------------------
+    # 9. Juntar municípios por porte + linha de estados
     # ------------------------------------------------------------
 
     df_porte = pd.concat(
@@ -436,8 +474,19 @@ def aggregate_execution_by_porte_with_estado(
         ignore_index=True
     )
 
+    df_faixa = pd.concat(
+        [df_faixa_municipios, df_faixa_estado],
+        ignore_index=True
+    )
+
+    df_porte = df_porte.merge(
+        df_faixa,
+        on="porte_populacional",
+        how="left"
+    )
+
     # ------------------------------------------------------------
-    # 8. Calcular percentuais
+    # 10. Calcular percentuais
     # ------------------------------------------------------------
 
     valor_total_geral = df_porte["valor_total_por_porte"].sum()
@@ -468,7 +517,7 @@ def aggregate_execution_by_porte_with_estado(
     )
 
     # ------------------------------------------------------------
-    # 9. Arredondar valores monetários para cima
+    # 11. Arredondar valores monetários para cima
     # ------------------------------------------------------------
 
     colunas_valor = [
@@ -489,13 +538,33 @@ def aggregate_execution_by_porte_with_estado(
         "quantidade_contemplados_rural",
     ]
 
-    df_porte[colunas_quantidade] = (
-        df_porte[colunas_quantidade]
+    colunas_faixa_vlr_pago = [
+        coluna
+        for coluna in df_porte.columns
+        if coluna not in [
+            "porte_populacional",
+            "numero_municipios",
+            "valor_total_por_porte",
+            "valor_urbano_por_porte",
+            "valor_rural_por_porte",
+            "quantidade_contemplados_por_porte",
+            "quantidade_contemplados_urbano",
+            "quantidade_contemplados_rural",
+            "percentual_valor_urbano_por_porte",
+            "percentual_valor_rural_por_porte",
+            "percentual_valor_por_porte",
+            "percentual_quantidade_por_porte",
+        ]
+    ]
+
+    df_porte[colunas_quantidade + colunas_faixa_vlr_pago] = (
+        df_porte[colunas_quantidade + colunas_faixa_vlr_pago]
+        .fillna(0)
         .astype("Int64")
     )
 
     # ------------------------------------------------------------
-    # 10. Ordenar tabela
+    # 12. Ordenar tabela
     # ------------------------------------------------------------
 
     df_porte = (
@@ -505,7 +574,6 @@ def aggregate_execution_by_porte_with_estado(
     )
 
     return df_porte
-
 
 
 def aggregate_special_territories_by(
@@ -821,4 +889,160 @@ def generate_special_territories_brazil_view(
     )
 
     return df_vis_territorio_brasil
+
+
+def aggregate_faixa_valor_by(
+    df_cubo: pd.DataFrame,
+    by_filter: str = "UF"
+) -> pd.DataFrame:
+    """
+    Agrega quantidade de contemplados por faixa de valor pago.
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        Base principal.
+
+    by_filter : str
+        Recorte territorial usado na agregação.
+
+        Opções:
+        - "ESTADO": considera apenas registros estaduais.
+        - "MUNICIPIO": considera apenas registros municipais.
+        - "UF": considera ESTADO + MUNICIPIO.
+
+    Retorna
+    -------
+    pd.DataFrame
+        Tabela com quantidade e percentual de contemplados por faixa de valor.
+    """
+
+    by_filter = by_filter.upper()
+
+    # ------------------------------------------------------------
+    # 1. Copiar base
+    # ------------------------------------------------------------
+
+    df_faixa = df_cubo.copy()
+
+    # ------------------------------------------------------------
+    # 2. Normalizar tipo_ente
+    # ------------------------------------------------------------
+
+    df_faixa["tipo_ente_norm"] = (
+        df_faixa["tipo_ente"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    # ------------------------------------------------------------
+    # 3. Aplicar filtro territorial
+    # ------------------------------------------------------------
+
+    if by_filter == "ESTADO":
+        df_faixa = df_faixa[
+            df_faixa["tipo_ente_norm"].eq("ESTADO")
+        ].copy()
+
+    elif by_filter == "MUNICIPIO":
+        df_faixa = df_faixa[
+            df_faixa["tipo_ente_norm"].eq("MUNICIPIO")
+        ].copy()
+
+    elif by_filter == "UF":
+        df_faixa = df_faixa[
+            df_faixa["tipo_ente_norm"].isin(["ESTADO", "MUNICIPIO"])
+        ].copy()
+
+    else:
+        raise ValueError("by_filter deve ser 'ESTADO', 'MUNICIPIO' ou 'UF'.")
+
+    # ------------------------------------------------------------
+    # 4. Ordem desejada das faixas
+    # ------------------------------------------------------------
+
+    ordem_faixa_vlr_pago = [
+        "Até 2 mil",
+        "2 a 10 mil",
+        "10 a 50 mil",
+        "50 a 200 mil",
+        "200 a 500 mil",
+        "500 mil a 1 milhão",
+        "1 milhão a 10 milhões",
+        "Acima de 10 milhões"
+    ]
+
+    # ------------------------------------------------------------
+    # 5. Tratar faixa_vlr_pago
+    # ------------------------------------------------------------
+
+    df_faixa["faixa_vlr_pago_tratada"] = (
+        df_faixa["faixa_vlr_pago"]
+        .fillna("Não informado")
+    )
+
+    # ------------------------------------------------------------
+    # 6. Agregar por faixa de valor
+    # ------------------------------------------------------------
+
+    df_faixa_vlr = (
+        df_faixa
+        .groupby("faixa_vlr_pago_tratada", as_index=False)
+        .agg(
+            quantidade_contemplados=("quantidade", "sum")
+        )
+    )
+
+    # ------------------------------------------------------------
+    # 7. Garantir que todas as faixas apareçam
+    # ------------------------------------------------------------
+
+    df_faixa_vlr = (
+        df_faixa_vlr
+        .set_index("faixa_vlr_pago_tratada")
+        .reindex(ordem_faixa_vlr_pago, fill_value=0)
+        .reset_index()
+    )
+
+    # ------------------------------------------------------------
+    # 8. Calcular percentual
+    # ------------------------------------------------------------
+
+    total_contemplados = df_faixa_vlr["quantidade_contemplados"].sum()
+
+    df_faixa_vlr["perc_quantidade_contemplados"] = np.where(
+        total_contemplados > 0,
+        df_faixa_vlr["quantidade_contemplados"] / total_contemplados,
+        0
+    )
+
+    # ------------------------------------------------------------
+    # 9. Formatar valores
+    # ------------------------------------------------------------
+
+    df_faixa_vlr["quantidade_contemplados"] = (
+        df_faixa_vlr["quantidade_contemplados"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    # ------------------------------------------------------------
+    # 10. Renomear colunas finais
+    # ------------------------------------------------------------
+
+    df_faixa_vlr = (
+        df_faixa_vlr
+        .rename(columns={
+            "faixa_vlr_pago_tratada": "faixa_vlr_pago",
+            "quantidade_contemplados": "Quantidade de contemplados",
+            "perc_quantidade_contemplados": "% de contemplados"
+        })
+    )
+
+    return df_faixa_vlr
+
 

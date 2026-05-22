@@ -943,6 +943,14 @@ def aggregate_special_territories_by(
 
     A variável de referência é cod_tipo_nome.
 
+    Também acrescenta, por tipo_documento:
+    - quantidade;
+    - valor total;
+    - valor mínimo;
+    - mediana;
+    - valor máximo;
+    - média.
+
     Parâmetros
     ----------
     df_cubo : pd.DataFrame
@@ -963,7 +971,8 @@ def aggregate_special_territories_by(
     Retorna
     -------
     pd.DataFrame
-        Tabela agregada por cod_tipo_nome, com valor, quantidade e percentuais.
+        Tabela agregada por cod_tipo_nome, com valor, quantidade,
+        percentuais e indicadores por tipo_documento.
     """
 
     by_filter = by_filter.upper()
@@ -997,6 +1006,16 @@ def aggregate_special_territories_by(
         .fillna("Não informado")
     )
 
+    df["tipo_documento_tratado"] = (
+        df["tipo_documento"]
+        .fillna("Não informado")
+        .astype(str)
+    )
+
+    # ------------------------------------------------------------
+    # Agregação principal por território
+    # ------------------------------------------------------------
+
     df_agg = (
         df
         .groupby("cod_tipo_nome_tratado", dropna=False, as_index=False)
@@ -1013,6 +1032,112 @@ def aggregate_special_territories_by(
         .reset_index()
     )
 
+    # ------------------------------------------------------------
+    # Função auxiliar para pivot por tipo_documento
+    # ------------------------------------------------------------
+
+    def pivot_tipo_documento_por_territorio(
+        df_base: pd.DataFrame,
+        values: str,
+        aggfunc: str,
+        prefixo_coluna: str
+    ) -> pd.DataFrame:
+        if df_base.empty:
+            return pd.DataFrame({"cod_tipo_nome_tratado": categories})
+
+        df_pivot = (
+            df_base
+            .pivot_table(
+                index="cod_tipo_nome_tratado",
+                columns="tipo_documento_tratado",
+                values=values,
+                aggfunc=aggfunc,
+                fill_value=0
+            )
+            .reset_index()
+        )
+
+        df_pivot = (
+            df_pivot
+            .set_index("cod_tipo_nome_tratado")
+            .reindex(categories, fill_value=0)
+            .reset_index()
+        )
+
+        df_pivot = df_pivot.rename(
+            columns={
+                col: f"{prefixo_coluna}_tipo_documento_{col}"
+                for col in df_pivot.columns
+                if col != "cod_tipo_nome_tratado"
+            }
+        )
+
+        return df_pivot
+
+    # ------------------------------------------------------------
+    # Tipo_documento
+    # ------------------------------------------------------------
+
+    df_qtd_tipo_documento = pivot_tipo_documento_por_territorio(
+        df_base=df,
+        values="quantidade",
+        aggfunc="sum",
+        prefixo_coluna="qtd"
+    )
+
+    df_valor_tipo_documento = pivot_tipo_documento_por_territorio(
+        df_base=df,
+        values="valor_transacao",
+        aggfunc="sum",
+        prefixo_coluna="valor"
+    )
+
+    df_min_valor_tipo_documento = pivot_tipo_documento_por_territorio(
+        df_base=df,
+        values="valor_transacao",
+        aggfunc="min",
+        prefixo_coluna="min_valor"
+    )
+
+    df_mediana_valor_tipo_documento = pivot_tipo_documento_por_territorio(
+        df_base=df,
+        values="valor_transacao",
+        aggfunc="median",
+        prefixo_coluna="mediana_valor"
+    )
+
+    df_max_valor_tipo_documento = pivot_tipo_documento_por_territorio(
+        df_base=df,
+        values="valor_transacao",
+        aggfunc="max",
+        prefixo_coluna="max_valor"
+    )
+
+    df_media_valor_tipo_documento = pivot_tipo_documento_por_territorio(
+        df_base=df,
+        values="valor_transacao",
+        aggfunc="mean",
+        prefixo_coluna="media_valor"
+    )
+
+    # ------------------------------------------------------------
+    # Juntar agregação principal + tipo_documento
+    # ------------------------------------------------------------
+
+    df_agg = (
+        df_agg
+        .merge(df_qtd_tipo_documento, on="cod_tipo_nome_tratado", how="left")
+        .merge(df_valor_tipo_documento, on="cod_tipo_nome_tratado", how="left")
+        .merge(df_min_valor_tipo_documento, on="cod_tipo_nome_tratado", how="left")
+        .merge(df_mediana_valor_tipo_documento, on="cod_tipo_nome_tratado", how="left")
+        .merge(df_max_valor_tipo_documento, on="cod_tipo_nome_tratado", how="left")
+        .merge(df_media_valor_tipo_documento, on="cod_tipo_nome_tratado", how="left")
+    )
+
+    # ------------------------------------------------------------
+    # Percentuais
+    # ------------------------------------------------------------
+
     valor_total = df_agg["valor_transacao"].sum()
     quantidade_total = df_agg["quantidade_contemplados"].sum()
 
@@ -1028,13 +1153,66 @@ def aggregate_special_territories_by(
         0
     )
 
-    df_agg["valor_transacao"] = (
-        np.ceil(df_agg["valor_transacao"])
+    # ------------------------------------------------------------
+    # Identificar colunas por tipo
+    # ------------------------------------------------------------
+
+    colunas_qtd_tipo_documento = [
+        col for col in df_agg.columns
+        if col.startswith("qtd_tipo_documento_")
+    ]
+
+    colunas_valor_tipo_documento = [
+        col for col in df_agg.columns
+        if col.startswith("valor_tipo_documento_")
+    ]
+
+    colunas_min_valor_tipo_documento = [
+        col for col in df_agg.columns
+        if col.startswith("min_valor_tipo_documento_")
+    ]
+
+    colunas_mediana_valor_tipo_documento = [
+        col for col in df_agg.columns
+        if col.startswith("mediana_valor_tipo_documento_")
+    ]
+
+    colunas_max_valor_tipo_documento = [
+        col for col in df_agg.columns
+        if col.startswith("max_valor_tipo_documento_")
+    ]
+
+    colunas_media_valor_tipo_documento = [
+        col for col in df_agg.columns
+        if col.startswith("media_valor_tipo_documento_")
+    ]
+
+    colunas_valor = (
+        ["valor_transacao"]
+        + colunas_valor_tipo_documento
+        + colunas_min_valor_tipo_documento
+        + colunas_mediana_valor_tipo_documento
+        + colunas_max_valor_tipo_documento
+        + colunas_media_valor_tipo_documento
+    )
+
+    colunas_quantidade = (
+        ["quantidade_contemplados"]
+        + colunas_qtd_tipo_documento
+    )
+
+    # ------------------------------------------------------------
+    # Formatação
+    # ------------------------------------------------------------
+
+    df_agg[colunas_valor] = (
+        np.ceil(df_agg[colunas_valor])
+        .fillna(0)
         .astype("Int64")
     )
 
-    df_agg["quantidade_contemplados"] = (
-        df_agg["quantidade_contemplados"]
+    df_agg[colunas_quantidade] = (
+        df_agg[colunas_quantidade]
         .fillna(0)
         .astype("Int64")
     )
@@ -1050,22 +1228,32 @@ def aggregate_special_territories_by(
         .round(4)
     )
 
+    # ------------------------------------------------------------
+    # Renomear e ordenar colunas
+    # ------------------------------------------------------------
+
     df_agg = df_agg.rename(
         columns={"cod_tipo_nome_tratado": "cod_tipo_nome"}
     )
 
-    df_agg = df_agg[
-        [
-            "cod_tipo_nome",
-            "valor_transacao",
-            "perc_valor_transacao",
-            "quantidade_contemplados",
-            "perc_quantidade_contemplados"
-        ]
-    ]
+    colunas_finais = [
+        "cod_tipo_nome",
+        "valor_transacao",
+        "perc_valor_transacao",
+        "quantidade_contemplados",
+        "perc_quantidade_contemplados",
+    ] + (
+        colunas_qtd_tipo_documento
+        + colunas_valor_tipo_documento
+        + colunas_min_valor_tipo_documento
+        + colunas_mediana_valor_tipo_documento
+        + colunas_max_valor_tipo_documento
+        + colunas_media_valor_tipo_documento
+    )
+
+    df_agg = df_agg[colunas_finais]
 
     return df_agg
-
 
 def generate_special_territories_brazil_view(
     df_cubo: pd.DataFrame
@@ -1620,3 +1808,226 @@ def aggregate_execution_by_person_type(
     )
 
     return df_tipo_documento
+
+
+def aggregate_execution_by_region(
+    df_cubo: pd.DataFrame,
+    by_filter: str = "ESTADO"
+) -> pd.DataFrame:
+    """
+    Agrega valor executado, quantidade de contemplados e população por região.
+
+    Também acrescenta, por tipo_documento:
+    - quantidade;
+    - valor total;
+    - valor mínimo;
+    - mediana;
+    - valor máximo;
+    - média.
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        Base principal.
+
+    by_filter : str
+        Recorte territorial usado no cálculo.
+
+        Opções:
+        - "ESTADO": considera apenas registros estaduais.
+        - "MUNICIPIO": considera apenas registros municipais.
+        - "UF": considera ESTADO + MUNICIPIO para valor e contemplados,
+          mas usa apenas a população dos ESTADOS como referência.
+
+    Retorna
+    -------
+    pd.DataFrame
+        Tabela agregada por região.
+    """
+
+    by_filter = by_filter.upper()
+
+    if by_filter == "ESTADO":
+        df_valores = df_cubo[df_cubo["tipo_ente"] == "ESTADO"].copy()
+        df_populacao_base = df_valores.copy()
+
+    elif by_filter == "MUNICIPIO":
+        df_valores = df_cubo[df_cubo["tipo_ente"] == "MUNICIPIO"].copy()
+        df_populacao_base = df_valores.copy()
+
+    elif by_filter == "UF":
+        # Valor e contemplados consideram ESTADO + MUNICIPIO
+        df_valores = df_cubo.copy()
+
+        # População de referência vem apenas dos ESTADOS
+        df_populacao_base = df_cubo[df_cubo["tipo_ente"] == "ESTADO"].copy()
+
+    else:
+        raise ValueError("by_filter deve ser 'ESTADO', 'MUNICIPIO' ou 'UF'.")
+
+    # ------------------------------------------------------------
+    # Tratar tipo_documento
+    # ------------------------------------------------------------
+
+    df_valores["tipo_documento_tratado"] = (
+        df_valores["tipo_documento"]
+        .fillna("Não informado")
+        .astype(str)
+    )
+
+    # ------------------------------------------------------------
+    # Tabela principal por região
+    # ------------------------------------------------------------
+
+    df_valor_region = (
+        df_valores
+        .groupby("regiao", as_index=False)
+        .agg(
+            valor_executado_rs=("valor_transacao", "sum"),
+            qtde_contemplados=("quantidade", "sum"),
+            min_valor=("valor_transacao", "min"),
+            mediana_valor=("valor_transacao", "median"),
+            max_valor=("valor_transacao", "max"),
+            media_valor=("valor_transacao", "mean")
+        )
+    )
+
+    # ------------------------------------------------------------
+    # População por região
+    # ------------------------------------------------------------
+
+    df_populacao_region = (
+        df_populacao_base
+        .groupby(["regiao", "uf"], as_index=False)
+        .agg(
+            populacao=("sum_populacao", "max")
+        )
+        .groupby("regiao", as_index=False)
+        .agg(
+            populacao=("populacao", "sum")
+        )
+    )
+
+    df_tabela_region = df_valor_region.merge(
+        df_populacao_region,
+        on="regiao",
+        how="left"
+    )
+
+    # ------------------------------------------------------------
+    # Percentuais gerais
+    # ------------------------------------------------------------
+
+    df_tabela_region["perc_valor_executado"] = (
+        df_tabela_region["valor_executado_rs"]
+        / df_tabela_region["valor_executado_rs"].sum()
+    )
+
+    df_tabela_region["perc_qtde_contemplados"] = (
+        df_tabela_region["qtde_contemplados"]
+        / df_tabela_region["qtde_contemplados"].sum()
+    )
+
+    df_tabela_region["perc_populacao"] = (
+        df_tabela_region["populacao"]
+        / df_tabela_region["populacao"].sum()
+    )
+
+    df_tabela_region["perc_contemplados_populacao"] = (
+        df_tabela_region["qtde_contemplados"]
+        / df_tabela_region["populacao"]
+    )
+
+    # ------------------------------------------------------------
+    # Função auxiliar para pivot por tipo_documento
+    # ------------------------------------------------------------
+
+    def pivot_tipo_documento_por_regiao(
+        df_base: pd.DataFrame,
+        values: str,
+        aggfunc: str,
+        prefixo_coluna: str
+    ) -> pd.DataFrame:
+        df_pivot = (
+            df_base
+            .pivot_table(
+                index="regiao",
+                columns="tipo_documento_tratado",
+                values=values,
+                aggfunc=aggfunc,
+                fill_value=0
+            )
+            .reset_index()
+        )
+
+        df_pivot = df_pivot.rename(
+            columns={
+                col: f"{prefixo_coluna}_tipo_documento_{col}"
+                for col in df_pivot.columns
+                if col != "regiao"
+            }
+        )
+
+        return df_pivot
+
+    # ------------------------------------------------------------
+    # Tipo_documento por região
+    # ------------------------------------------------------------
+
+    df_qtd_tipo_documento = pivot_tipo_documento_por_regiao(
+        df_base=df_valores,
+        values="quantidade",
+        aggfunc="sum",
+        prefixo_coluna="qtd"
+    )
+
+    df_valor_tipo_documento = pivot_tipo_documento_por_regiao(
+        df_base=df_valores,
+        values="valor_transacao",
+        aggfunc="sum",
+        prefixo_coluna="valor"
+    )
+
+    df_min_valor_tipo_documento = pivot_tipo_documento_por_regiao(
+        df_base=df_valores,
+        values="valor_transacao",
+        aggfunc="min",
+        prefixo_coluna="min_valor"
+    )
+
+    df_mediana_valor_tipo_documento = pivot_tipo_documento_por_regiao(
+        df_base=df_valores,
+        values="valor_transacao",
+        aggfunc="median",
+        prefixo_coluna="mediana_valor"
+    )
+
+    df_max_valor_tipo_documento = pivot_tipo_documento_por_regiao(
+        df_base=df_valores,
+        values="valor_transacao",
+        aggfunc="max",
+        prefixo_coluna="max_valor"
+    )
+
+    df_media_valor_tipo_documento = pivot_tipo_documento_por_regiao(
+        df_base=df_valores,
+        values="valor_transacao",
+        aggfunc="mean",
+        prefixo_coluna="media_valor"
+    )
+
+    # ------------------------------------------------------------
+    # Juntar tudo
+    # ------------------------------------------------------------
+
+    df_tabela_region = (
+        df_tabela_region
+        .merge(df_qtd_tipo_documento, on="regiao", how="left")
+        .merge(df_valor_tipo_documento, on="regiao", how="left")
+        .merge(df_min_valor_tipo_documento, on="regiao", how="left")
+        .merge(df_mediana_valor_tipo_documento, on="regiao", how="left")
+        .merge(df_max_valor_tipo_documento, on="regiao", how="left")
+        .merge(df_media_valor_tipo_documento, on="regiao", how="left")
+    )
+
+    return df_tabela_region

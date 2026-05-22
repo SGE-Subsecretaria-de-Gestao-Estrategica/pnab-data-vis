@@ -22,7 +22,8 @@ def executed_value_n_contemplados_qty_by(df_cubo, by_filter):
     - valor executado per capita;
     - estatísticas de valor: mínimo, mediana, máximo e média;
     - quantidade de contemplados por faixa de valor;
-    - valores e quantidades por zona urbana/rural.
+    - valores e quantidades por zona urbana/rural;
+    - valor e quantidade por tipo_documento.
     """
 
     by_filter = by_filter.upper()
@@ -46,10 +47,8 @@ def executed_value_n_contemplados_qty_by(df_cubo, by_filter):
         )
 
     elif by_filter == "UF":
-        # Aqui entram valores de ESTADO + MUNICIPIO
         df = df_cubo.copy()
 
-        # Mas a população de referência vem somente do ESTADO
         df_populacao = (
             df_cubo
             .loc[df_cubo["tipo_ente"] == "ESTADO"]
@@ -103,6 +102,16 @@ def executed_value_n_contemplados_qty_by(df_cubo, by_filter):
         mask_rural,
         df["quantidade"],
         0
+    )
+
+    # ------------------------------------------------------------
+    # Tratar tipo_documento
+    # ------------------------------------------------------------
+
+    df["tipo_documento_tratado"] = (
+        df["tipo_documento"]
+        .fillna("Não informado")
+        .astype(str)
     )
 
     # ------------------------------------------------------------
@@ -195,14 +204,131 @@ def executed_value_n_contemplados_qty_by(df_cubo, by_filter):
         .reset_index()
     )
 
-    df_final = df_tabela_uf.merge(
-        right=df_exec_uf_faixa_vlr,
-        on="uf",
-        how="left"
+    # ------------------------------------------------------------
+    # Quantidade por tipo_documento
+    # ------------------------------------------------------------
+
+    df_qtd_tipo_documento = (
+        df
+        .pivot_table(
+            index="uf",
+            columns="tipo_documento_tratado",
+            values="quantidade",
+            aggfunc="sum",
+            fill_value=0
+        )
+        .reset_index()
+    )
+
+    df_qtd_tipo_documento = df_qtd_tipo_documento.rename(
+        columns={
+            col: f"qtd_tipo_documento_{col}"
+            for col in df_qtd_tipo_documento.columns
+            if col != "uf"
+        }
+    )
+
+    # ------------------------------------------------------------
+    # Valor por tipo_documento: soma, mínimo, mediana, máximo e média
+    # ------------------------------------------------------------
+
+    def pivot_valor_tipo_documento(df_base, aggfunc, prefixo_coluna):
+        df_pivot = (
+            df_base
+            .pivot_table(
+                index="uf",
+                columns="tipo_documento_tratado",
+                values="valor_transacao",
+                aggfunc=aggfunc,
+                fill_value=0
+            )
+            .reset_index()
+        )
+
+        df_pivot = df_pivot.rename(
+            columns={
+                col: f"{prefixo_coluna}_tipo_documento_{col}"
+                for col in df_pivot.columns
+                if col != "uf"
+            }
+        )
+
+        return df_pivot
+
+
+    df_valor_tipo_documento = pivot_valor_tipo_documento(
+        df_base=df,
+        aggfunc="sum",
+        prefixo_coluna="valor"
+    )
+
+    df_min_valor_tipo_documento = pivot_valor_tipo_documento(
+        df_base=df,
+        aggfunc="min",
+        prefixo_coluna="min_valor"
+    )
+
+    df_mediana_valor_tipo_documento = pivot_valor_tipo_documento(
+        df_base=df,
+        aggfunc="median",
+        prefixo_coluna="mediana_valor"
+    )
+
+    df_max_valor_tipo_documento = pivot_valor_tipo_documento(
+        df_base=df,
+        aggfunc="max",
+        prefixo_coluna="max_valor"
+    )
+
+    df_media_valor_tipo_documento = pivot_valor_tipo_documento(
+        df_base=df,
+        aggfunc="mean",
+        prefixo_coluna="media_valor"
+    )
+    # ------------------------------------------------------------
+    # Juntar tudo
+    # ------------------------------------------------------------
+
+    df_final = (
+        df_tabela_uf
+        .merge(
+            right=df_exec_uf_faixa_vlr,
+            on="uf",
+            how="left"
+        )
+        .merge(
+            right=df_qtd_tipo_documento,
+            on="uf",
+            how="left"
+        )
+        .merge(
+            right=df_valor_tipo_documento,
+            on="uf",
+            how="left"
+        )
+        .merge(
+            right=df_min_valor_tipo_documento,
+            on="uf",
+            how="left"
+        )
+        .merge(
+            right=df_mediana_valor_tipo_documento,
+            on="uf",
+            how="left"
+        )
+        .merge(
+            right=df_max_valor_tipo_documento,
+            on="uf",
+            how="left"
+        )
+        .merge(
+            right=df_media_valor_tipo_documento,
+            on="uf",
+            how="left"
+        )
     )
 
     return df_final
-
 
 def aggregate_capital_interior_summary(
     df_cubo: pd.DataFrame
@@ -320,8 +446,11 @@ def aggregate_execution_by_porte_with_estado(
 
     A linha de ESTADO usa porte_populacional = -99.
 
-    Também acrescenta a quantidade de contemplados por faixa_vlr_pago,
-    com cada faixa aparecendo como uma coluna.
+    Também acrescenta:
+    - quantidade de contemplados por faixa_vlr_pago;
+    - quantidade por tipo_documento;
+    - valor total por tipo_documento;
+    - valor mínimo, mediana, máximo e média por tipo_documento.
     """
 
     df = df_cubo.copy()
@@ -390,6 +519,12 @@ def aggregate_execution_by_porte_with_estado(
         .fillna("Não informado")
     )
 
+    df["tipo_documento_tratado"] = (
+        df["tipo_documento"]
+        .fillna("Não informado")
+        .astype(str)
+    )
+
     # ------------------------------------------------------------
     # 4. Separar municípios e estados
     # ------------------------------------------------------------
@@ -432,7 +567,85 @@ def aggregate_execution_by_porte_with_estado(
     )
 
     # ------------------------------------------------------------
-    # 7. Criar linha agregada dos estados
+    # 7. Função auxiliar para pivot por tipo_documento
+    # ------------------------------------------------------------
+
+    def pivot_tipo_documento_por_porte(
+        df_base: pd.DataFrame,
+        values: str,
+        aggfunc: str,
+        prefixo_coluna: str
+    ) -> pd.DataFrame:
+        df_pivot = (
+            df_base
+            .pivot_table(
+                index="porte_populacional",
+                columns="tipo_documento_tratado",
+                values=values,
+                aggfunc=aggfunc,
+                fill_value=0
+            )
+            .reset_index()
+        )
+
+        df_pivot = df_pivot.rename(
+            columns={
+                col: f"{prefixo_coluna}_tipo_documento_{col}"
+                for col in df_pivot.columns
+                if col != "porte_populacional"
+            }
+        )
+
+        return df_pivot
+
+    # ------------------------------------------------------------
+    # 8. Tipo_documento - municípios
+    # ------------------------------------------------------------
+
+    df_qtd_tipo_doc_municipios = pivot_tipo_documento_por_porte(
+        df_base=df_municipios,
+        values="quantidade",
+        aggfunc="sum",
+        prefixo_coluna="qtd"
+    )
+
+    df_valor_tipo_doc_municipios = pivot_tipo_documento_por_porte(
+        df_base=df_municipios,
+        values="valor_transacao",
+        aggfunc="sum",
+        prefixo_coluna="valor"
+    )
+
+    df_min_valor_tipo_doc_municipios = pivot_tipo_documento_por_porte(
+        df_base=df_municipios,
+        values="valor_transacao",
+        aggfunc="min",
+        prefixo_coluna="min_valor"
+    )
+
+    df_mediana_valor_tipo_doc_municipios = pivot_tipo_documento_por_porte(
+        df_base=df_municipios,
+        values="valor_transacao",
+        aggfunc="median",
+        prefixo_coluna="mediana_valor"
+    )
+
+    df_max_valor_tipo_doc_municipios = pivot_tipo_documento_por_porte(
+        df_base=df_municipios,
+        values="valor_transacao",
+        aggfunc="max",
+        prefixo_coluna="max_valor"
+    )
+
+    df_media_valor_tipo_doc_municipios = pivot_tipo_documento_por_porte(
+        df_base=df_municipios,
+        values="valor_transacao",
+        aggfunc="mean",
+        prefixo_coluna="media_valor"
+    )
+
+    # ------------------------------------------------------------
+    # 9. Criar linha agregada dos estados
     # ------------------------------------------------------------
 
     df_estado = pd.DataFrame({
@@ -447,14 +660,18 @@ def aggregate_execution_by_porte_with_estado(
     })
 
     # ------------------------------------------------------------
-    # 8. Quantidade de contemplados por faixa de valor - estados
+    # 10. Base dos estados com porte_populacional = -99
     # ------------------------------------------------------------
 
-    df_estados_faixa_base = df_estados.copy()
-    df_estados_faixa_base["porte_populacional"] = -99
+    df_estados_base = df_estados.copy()
+    df_estados_base["porte_populacional"] = -99
+
+    # ------------------------------------------------------------
+    # 11. Quantidade de contemplados por faixa de valor - estados
+    # ------------------------------------------------------------
 
     df_faixa_estado = (
-        df_estados_faixa_base
+        df_estados_base
         .pivot_table(
             index="porte_populacional",
             columns="faixa_vlr_pago_tratada",
@@ -466,7 +683,53 @@ def aggregate_execution_by_porte_with_estado(
     )
 
     # ------------------------------------------------------------
-    # 9. Juntar municípios por porte + linha de estados
+    # 12. Tipo_documento - estados
+    # ------------------------------------------------------------
+
+    df_qtd_tipo_doc_estado = pivot_tipo_documento_por_porte(
+        df_base=df_estados_base,
+        values="quantidade",
+        aggfunc="sum",
+        prefixo_coluna="qtd"
+    )
+
+    df_valor_tipo_doc_estado = pivot_tipo_documento_por_porte(
+        df_base=df_estados_base,
+        values="valor_transacao",
+        aggfunc="sum",
+        prefixo_coluna="valor"
+    )
+
+    df_min_valor_tipo_doc_estado = pivot_tipo_documento_por_porte(
+        df_base=df_estados_base,
+        values="valor_transacao",
+        aggfunc="min",
+        prefixo_coluna="min_valor"
+    )
+
+    df_mediana_valor_tipo_doc_estado = pivot_tipo_documento_por_porte(
+        df_base=df_estados_base,
+        values="valor_transacao",
+        aggfunc="median",
+        prefixo_coluna="mediana_valor"
+    )
+
+    df_max_valor_tipo_doc_estado = pivot_tipo_documento_por_porte(
+        df_base=df_estados_base,
+        values="valor_transacao",
+        aggfunc="max",
+        prefixo_coluna="max_valor"
+    )
+
+    df_media_valor_tipo_doc_estado = pivot_tipo_documento_por_porte(
+        df_base=df_estados_base,
+        values="valor_transacao",
+        aggfunc="mean",
+        prefixo_coluna="media_valor"
+    )
+
+    # ------------------------------------------------------------
+    # 13. Juntar municípios por porte + linha de estados
     # ------------------------------------------------------------
 
     df_porte = pd.concat(
@@ -479,14 +742,49 @@ def aggregate_execution_by_porte_with_estado(
         ignore_index=True
     )
 
-    df_porte = df_porte.merge(
-        df_faixa,
-        on="porte_populacional",
-        how="left"
+    df_qtd_tipo_doc = pd.concat(
+        [df_qtd_tipo_doc_municipios, df_qtd_tipo_doc_estado],
+        ignore_index=True
+    )
+
+    df_valor_tipo_doc = pd.concat(
+        [df_valor_tipo_doc_municipios, df_valor_tipo_doc_estado],
+        ignore_index=True
+    )
+
+    df_min_valor_tipo_doc = pd.concat(
+        [df_min_valor_tipo_doc_municipios, df_min_valor_tipo_doc_estado],
+        ignore_index=True
+    )
+
+    df_mediana_valor_tipo_doc = pd.concat(
+        [df_mediana_valor_tipo_doc_municipios, df_mediana_valor_tipo_doc_estado],
+        ignore_index=True
+    )
+
+    df_max_valor_tipo_doc = pd.concat(
+        [df_max_valor_tipo_doc_municipios, df_max_valor_tipo_doc_estado],
+        ignore_index=True
+    )
+
+    df_media_valor_tipo_doc = pd.concat(
+        [df_media_valor_tipo_doc_municipios, df_media_valor_tipo_doc_estado],
+        ignore_index=True
+    )
+
+    df_porte = (
+        df_porte
+        .merge(df_faixa, on="porte_populacional", how="left")
+        .merge(df_qtd_tipo_doc, on="porte_populacional", how="left")
+        .merge(df_valor_tipo_doc, on="porte_populacional", how="left")
+        .merge(df_min_valor_tipo_doc, on="porte_populacional", how="left")
+        .merge(df_mediana_valor_tipo_doc, on="porte_populacional", how="left")
+        .merge(df_max_valor_tipo_doc, on="porte_populacional", how="left")
+        .merge(df_media_valor_tipo_doc, on="porte_populacional", how="left")
     )
 
     # ------------------------------------------------------------
-    # 10. Calcular percentuais
+    # 14. Calcular percentuais
     # ------------------------------------------------------------
 
     valor_total_geral = df_porte["valor_total_por_porte"].sum()
@@ -517,7 +815,69 @@ def aggregate_execution_by_porte_with_estado(
     )
 
     # ------------------------------------------------------------
-    # 11. Arredondar valores monetários para cima
+    # 15. Identificar colunas
+    # ------------------------------------------------------------
+
+    colunas_base = [
+        "porte_populacional",
+        "numero_municipios",
+        "valor_total_por_porte",
+        "valor_urbano_por_porte",
+        "valor_rural_por_porte",
+        "quantidade_contemplados_por_porte",
+        "quantidade_contemplados_urbano",
+        "quantidade_contemplados_rural",
+        "percentual_valor_urbano_por_porte",
+        "percentual_valor_rural_por_porte",
+        "percentual_valor_por_porte",
+        "percentual_quantidade_por_porte",
+    ]
+
+    colunas_qtd_tipo_documento = [
+        col for col in df_porte.columns
+        if col.startswith("qtd_tipo_documento_")
+    ]
+
+    colunas_valor_tipo_documento = [
+        col for col in df_porte.columns
+        if col.startswith("valor_tipo_documento_")
+    ]
+
+    colunas_min_valor_tipo_documento = [
+        col for col in df_porte.columns
+        if col.startswith("min_valor_tipo_documento_")
+    ]
+
+    colunas_mediana_valor_tipo_documento = [
+        col for col in df_porte.columns
+        if col.startswith("mediana_valor_tipo_documento_")
+    ]
+
+    colunas_max_valor_tipo_documento = [
+        col for col in df_porte.columns
+        if col.startswith("max_valor_tipo_documento_")
+    ]
+
+    colunas_media_valor_tipo_documento = [
+        col for col in df_porte.columns
+        if col.startswith("media_valor_tipo_documento_")
+    ]
+
+    colunas_faixa_vlr_pago = [
+        col for col in df_porte.columns
+        if col not in (
+            colunas_base
+            + colunas_qtd_tipo_documento
+            + colunas_valor_tipo_documento
+            + colunas_min_valor_tipo_documento
+            + colunas_mediana_valor_tipo_documento
+            + colunas_max_valor_tipo_documento
+            + colunas_media_valor_tipo_documento
+        )
+    ]
+
+    # ------------------------------------------------------------
+    # 16. Arredondar valores monetários para cima
     # ------------------------------------------------------------
 
     colunas_valor = [
@@ -526,8 +886,16 @@ def aggregate_execution_by_porte_with_estado(
         "valor_rural_por_porte",
     ]
 
-    df_porte[colunas_valor] = (
-        np.ceil(df_porte[colunas_valor])
+    colunas_valor_tipo_documento_todas = (
+        colunas_valor_tipo_documento
+        + colunas_min_valor_tipo_documento
+        + colunas_mediana_valor_tipo_documento
+        + colunas_max_valor_tipo_documento
+        + colunas_media_valor_tipo_documento
+    )
+
+    df_porte[colunas_valor + colunas_valor_tipo_documento_todas] = (
+        np.ceil(df_porte[colunas_valor + colunas_valor_tipo_documento_todas])
         .astype("Int64")
     )
 
@@ -538,33 +906,22 @@ def aggregate_execution_by_porte_with_estado(
         "quantidade_contemplados_rural",
     ]
 
-    colunas_faixa_vlr_pago = [
-        coluna
-        for coluna in df_porte.columns
-        if coluna not in [
-            "porte_populacional",
-            "numero_municipios",
-            "valor_total_por_porte",
-            "valor_urbano_por_porte",
-            "valor_rural_por_porte",
-            "quantidade_contemplados_por_porte",
-            "quantidade_contemplados_urbano",
-            "quantidade_contemplados_rural",
-            "percentual_valor_urbano_por_porte",
-            "percentual_valor_rural_por_porte",
-            "percentual_valor_por_porte",
-            "percentual_quantidade_por_porte",
+    df_porte[
+        colunas_quantidade
+        + colunas_faixa_vlr_pago
+        + colunas_qtd_tipo_documento
+    ] = (
+        df_porte[
+            colunas_quantidade
+            + colunas_faixa_vlr_pago
+            + colunas_qtd_tipo_documento
         ]
-    ]
-
-    df_porte[colunas_quantidade + colunas_faixa_vlr_pago] = (
-        df_porte[colunas_quantidade + colunas_faixa_vlr_pago]
         .fillna(0)
         .astype("Int64")
     )
 
     # ------------------------------------------------------------
-    # 12. Ordenar tabela
+    # 17. Ordenar tabela
     # ------------------------------------------------------------
 
     df_porte = (

@@ -96,6 +96,27 @@ export const faixaDistData = rangeRows
 		value: +r['% de contemplados'] * 100,
 	}));
 
+// ── 3b. HorizontalBarChart — % do valor total por faixa ───────────────────────
+export const faixaValorPercData = [
+	{ label: 'Até R$2 mil',              value: 2  },
+	{ label: 'R$2 a R$10 mil',           value: 13 },
+	{ label: 'R$10 a R$50 mil',          value: 32 },
+	{ label: 'R$50 a R$200 mil',         value: 28 },
+	{ label: 'R$200 a R$500 mil',        value: 13 },
+	{ label: 'R$500 mil a R$1 milhão',   value: 4  },
+	{ label: 'R$1 milhão a R$10 milhões',value: 7  },
+	{ label: 'Acima de R$10 milhões',    value: 1  },
+];
+
+// ── 3c. HorizontalBarChart — agentes culturais por região ─────────────────────
+export const regiaoDistData = [
+	{ label: 'Nordeste',     value: 47.7, count: 79446 },
+	{ label: 'Sudeste',      value: 27.4, count: 45655 },
+	{ label: 'Sul',          value: 10.8, count: 17946 },
+	{ label: 'Norte',        value: 8.7,  count: 14504 },
+	{ label: 'Centro-Oeste', value: 5.4,  count: 9018  },
+];
+
 // ── 4. HorizontalStackedBarChart — faixas por tipo CPF vs CNPJ ───────────────
 export const BAND_LABELS: Record<string, string> = {
 	ate2k:      'Até R$2k',

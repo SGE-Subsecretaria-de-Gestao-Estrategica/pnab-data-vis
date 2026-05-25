@@ -11,6 +11,7 @@
 		colorPairs,
 		colorScales,
 		categorical8,
+		AnnotationBox
 	} from 'sniic-design-system';
 	import {
 		percBenefCPF,
@@ -20,6 +21,8 @@
 		valorDivergingData,
 		benefVsValorData,
 		faixaDistData,
+		faixaValorPercData,
+		regiaoDistData,
 		bandStackedData,
 		BAND_STACK_KEYS,
 		BAND_LABELS,
@@ -48,13 +51,122 @@
      GRANDES NÚMEROS — MUITOS CPFs, POUCO DINHEIRO
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-2-bignumber">
-	<h2>Quem recebe o quê?</h2>
+	<h2>Como os recursos se traduziram em pagamentos aos agentes culturais?</h2>
 	<p>
-		O PNAB atinge dois perfis bem distintos: <strong>pessoas físicas (CPF)</strong> —
-		agricultores familiares, pescadores, extrativistas — e <strong>entidades (CNPJ)</strong> —
-		cooperativas, associações e empresas. O contraste entre quem são os beneficiários
-		e quem fica com o dinheiro é imediato.
+		Depois de entendermos a distribuição dos recursos nos territórios, vamos identificar e analisar a forma como esses recursos foram operacionalizados em pagamentos aos agentes culturais.
 	</p>
+	<svg width={600} height={130} style="overflow: hidden; margin-top: 1rem;">
+		<AnnotationBox
+			title=""
+			subtitle={"A partir do cruzamento dos dados de agentes culturais contemplados pela Política Nacional Aldir Blanc com bases da Receita Federal."}
+			boxX={0}
+			boxY={0}
+			boxWidth={600}
+			pointX={-30}
+			pointY={63}
+			circleRadius={0}
+		/>
+	</svg>
+	<h2>Como os pagamentos foram estruturados?</h2>
+	<p>A Política Nacional Aldir Blanc contemplou <strong>166.886</strong> agentes culturais em todo o país. Para analisar se houve concentração de recursos com poucos proponentes, divididos os pagamentos realizados por faixas de valores.</p>
+	
+	<ScrollSection id="section-2-faixas-bignumbers">
+		<div class="faixas-bignumbers-row">
+			<div class="faixa-bignumber-cell">
+				<BigNumber value={29} suffix="%" fontSize={64} />
+				<p class="faixa-bignumber-count">49.037 agentes</p>
+				<p class="faixa-bignumber-caption">receberam até R$2 mil</p>
+			</div>
+			<div class="faixa-bignumber-cell">
+				<BigNumber value={42} suffix="%" fontSize={64} />
+				<p class="faixa-bignumber-count">70.493 agentes</p>
+				<p class="faixa-bignumber-caption">receberam entre R$2 e R$10 mil</p>
+			</div>
+			<div class="faixa-bignumber-cell">
+				<BigNumber value={23} suffix="%" fontSize={64} />
+				<p class="faixa-bignumber-count">37.661 agentes</p>
+				<p class="faixa-bignumber-caption">receberam entre R$10 e R$50 mil</p>
+			</div>
+			<div class="faixa-bignumber-cell">
+				<BigNumber value={5} suffix="%" fontSize={64} />
+				<p class="faixa-bignumber-count">8.348 agentes</p>
+				<p class="faixa-bignumber-caption">receberam entre R$50 e R$200 mil</p>
+			</div>
+			<div class="faixa-bignumber-cell">
+				<BigNumber value={1} suffix="%" fontSize={64} />
+				<p class="faixa-bignumber-count">1.347 agentes</p>
+				<p class="faixa-bignumber-caption">receberam mais de R$200 mil</p>
+			</div>
+		</div>
+	</ScrollSection>
+
+	<ScrollSection class="section-2-faixas-valor" style="padding: 0; margin-top: 1.5rem;">
+		<h3>Onde está o dinheiro? A concentração nas faixas intermediárias</h3>
+		<p>
+			Enquanto a maioria dos agentes recebe valores pequenos, o grosso dos recursos se concentra
+			nas faixas intermediárias e altas. As faixas de <strong>R$10 a R$200 mil</strong> absorvem
+			<strong>60%</strong> do total executado.
+		</p>
+		<HorizontalBarChart
+			data={faixaValorPercData}
+			color={colorScales.blue[2]}
+			format={formatPct}
+			xLabel="% do valor total"
+			margin={{ top: 20, right: 80, bottom: 40, left: 200 }}
+		/>
+		<p>Aproximadamente R$ 2,1 bilhões, o equivalente a 75% do orçamento total executado, foram destinados a mais de 165 mil agentes culturais, o que representa 99% do total dos contemplados da política. Esse volume de recursos financiou projetos, bolsas e subsídios com valores individuais de até R$ 200 mil.</p>
+		<p>Do ponto de vista da distribuição dos pagamentos, observa-se forte predominância de repasses de menor valor:  71% dos agentes culturais receberam até 10 mil reais. Embora tais pagamentos sejam majoritários em termos de quantidade de agentes, eles representam uma fração reduzida do orçamento (15%).</p>
+		<p>As faixas intermediárias, entre R$ 10 mil e R$ 200 mil, desempenham papel central, representando 60% dos recursos. Essas compreendem cerca de 30% dos agentes culturais contemplados.</p>
+		<p>Diante desses dados, percebe-se que a execução da Aldir Blanc articula alcance social ampliado e financiamento de projetos de diferentes escalas, sem se restringir a um único perfil de beneficiário ou de valor.</p>
+	</ScrollSection>
+	
+	<ScrollSection class="section-2-distribuicao-pagamentos" style="padding: 0; margin-top: 1.5rem;">
+		<h2>Distribuição de pagamentos por região</h2>
+		<p>Veremos a seguir como foi a distribuição da quantidade de pagamentos da Política pelas regiões do país.</p>
+		<HorizontalBarChart       
+     		data={regiaoDistData}   
+     		color={colorScales.blue[
+          +2]}                           
+      		format={formatPct}      
+      		xLabel="% dos agentes culturais"                      
+      		margin={{ top: 20, right:80, bottom: 40, left: 140 }}
+      	/>
+		<p>As regiões Norte, Centro-Oeste e Sul apresentaram uma proporção de agentes culturais contemplados com  recursos da Aldir Blanc muito semelhante à participaçãoproporção de sua população em relação à população nacional.</p>
+		<p><strong>Maior distribuição:</strong> a região Nordeste liderou a distribuição de recursos da política, beneficiando o maior número de agentes culturais, com 47,7% do total de contemplados da Aldir Blanc, quase metade do total.</p>
+		<p><strong>Menor distribuição:</strong> o Sudeste apresentou uma proporção de agentes culturais contemplados inferior à proporção da população nacional. Isso indica que a região concentrou mais os recursos em um número menor de agentes.</p>
+
+		<!-- ══════════════════════════════════════════════════════════════════════════
+     	VERTICAL STACKED — FAIXA DE VALOR PAGO × UF
+    	 ══════════════════════════════════════════════════════════════════════════ -->
+		<h3>Qual o perfil de pagamentos de cada estado?</h3>
+		<p>
+			Cada barra representa um estado, ordenado pelos que têm <strong>maior proporção de
+			beneficiários nas faixas mais altas</strong> (acima de R$50 mil) — à esquerda estão
+			os estados com mais pagamentos concentrados em valores elevados; à direita, os que
+			atendem quase exclusivamente faixas pequenas.
+		</p>
+		<p>
+			Estados como <strong>DF, RJ e SP</strong> têm fatias relevantes acima de R$50 mil —
+			reflexo do peso de CNPJs e entidades de maior porte nesses territórios.
+			No extremo oposto, estados do Nordeste como <strong>PI, PB e RN</strong> têm suas barras
+			dominadas pelas faixas de até R$10 mil, indicando que o programa atinge principalmente
+			pequenos agricultores e extrativistas nesses locais.
+		</p>
+		<div class="chart-wide">
+			<VerticalStackedBarChart
+				data={ufBandPercData}
+				keys={[...UF_BAND_KEYS]}
+				labels={UF_BAND_LABELS}
+				colors={categorical8}
+				format={(v) => `${v.toFixed(1)}%`}
+				yLabel="% dos beneficiários"
+				normalize={true}
+				showLegend={true}
+				height={480}
+			/>
+		</div>
+	</ScrollSection>
+
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
 			<BigNumber
@@ -208,38 +320,6 @@
 	/>
 </ScrollSection>
 
-<!-- ══════════════════════════════════════════════════════════════════════════
-     VERTICAL STACKED — FAIXA DE VALOR PAGO × UF
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-2-uf-bands">
-	<h3>Qual o perfil de pagamentos de cada estado?</h3>
-	<p>
-		Cada barra representa um estado, ordenado pelos que têm <strong>maior proporção de
-		beneficiários nas faixas mais altas</strong> (acima de R$50 mil) — à esquerda estão
-		os estados com mais pagamentos concentrados em valores elevados; à direita, os que
-		atendem quase exclusivamente faixas pequenas.
-	</p>
-	<p>
-		Estados como <strong>DF, RJ e SP</strong> têm fatias relevantes acima de R$50 mil —
-		reflexo do peso de CNPJs e entidades de maior porte nesses territórios.
-		No extremo oposto, estados do Nordeste como <strong>PI, PB e RN</strong> têm suas barras
-		dominadas pelas faixas de até R$10 mil, indicando que o programa atinge principalmente
-		pequenos agricultores e extrativistas nesses locais.
-	</p>
-	<div class="chart-wide">
-		<VerticalStackedBarChart
-			data={ufBandPercData}
-			keys={[...UF_BAND_KEYS]}
-			labels={UF_BAND_LABELS}
-			colors={categorical8}
-			format={(v) => `${v.toFixed(1)}%`}
-			yLabel="% dos beneficiários"
-			normalize={true}
-			showLegend={true}
-			height={480}
-		/>
-	</div>
-</ScrollSection>
 
 <style>
 	.bignumbers-row {
@@ -270,9 +350,51 @@
 		margin-top: 2.5rem;
 	}
 
+	:global(#section-2-faixas-bignumbers) {
+		margin: 0;
+		min-height: unset;
+		padding: 0;
+	}
+
+	.faixas-bignumbers-row {
+		display: grid;
+		grid-template-columns: auto auto 1fr;
+		align-items: center;
+		column-gap: 1.5rem;
+		row-gap: 0.5rem;
+		margin-top: 1.5rem;
+	}
+
+	.faixa-bignumber-cell {
+		display: contents;
+	}
+
+	.faixa-bignumber-count {
+		font-size: 1.4rem;
+		font-weight: 600;
+		color: var(--color-text);
+		margin: 0;
+	}
+
+	.faixa-bignumber-caption {
+		font-size: 1.2rem;
+		color: var(--color-text);
+		opacity: 0.75;
+		margin: 0;
+	}
+
 	.chart-wide {
 		overflow-x: auto;
 		margin-left: -1rem;
 		margin-right: -1rem;
 	}
+
+	.section-2-faixas-valor {
+		padding: 0;
+	}
+
+	p {
+		margin-top: 1.5rem;
+	}
+
 </style>

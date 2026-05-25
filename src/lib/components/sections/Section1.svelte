@@ -14,12 +14,14 @@
 		DataTable,
 		RegionSilhouetteChart,
 		StatesSilhouetteChart,
+		AnnotationBox,
 		colorPairs,
 		colorScales,
 		categorical8,
 	} from 'sniic-design-system';
 	import {
 		percExecEstados, percExecMunicipios,
+		valorExecEstados, valorExecMunicipios, valorExecTotal,
 		regionAreaData,
 		rankingData, bubbleStateData,
 		slopeItems, slopeLabels, formatSlope,
@@ -89,29 +91,71 @@
      INTRODUÇÃO
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-1-intro">
-	<h2>O dinheiro chegou — mas chegou a quem?</h2>
+	<h2>Em quais territórios os recursos da Política Nacional Aldir Blanc chegaram?</h2>
 	<p>
-		O Programa Nacional de Atenção Básica (PNAB) transferiu quase <strong>R$ 2,85 bilhões</strong>
-		para estados e municípios ao longo do período analisado. A taxa de execução foi alta: mais de
-		<strong>96%</strong> dos repasses estaduais e <strong>93%</strong> dos municipais foram de fato
-		aplicados.
+		Neste capítulo, vamos entender como foram distribuídos territorialmente os <strong> R$ 3 bilhões </strong> da Política Nacional Aldir Blanc.
 	</p>
 	<p>
-		Mas volume executado não é sinônimo de equidade. Esta seção acompanha o percurso desse dinheiro —
-		de qual região recebeu mais à pergunta mais difícil: o programa chegou a quem mais precisa?
+	Vamos descrever e analisar a distribuição entre os municípios, estados e Distrito Federal; entre os diversos portes de municípios; entre zona urbana ou rural e também a distribuição em territórios específicos como as periferias e as comunidades indígenas e quilombolas.
 	</p>
+	<svg width={600} height={130} style="overflow: hidden; margin-top: 1rem;">
+		<AnnotationBox
+			title=""
+			subtitle={"As análises apresentadas nesta seção foram elaboradas a partir do\ncruzamento dos dados de agentes culturais contemplados pela Política\nNacional Aldir Blanc com bases da Receita Federal e dados do Censo\n2022 do IBGE."}
+			boxX={0}
+			boxY={0}
+			boxWidth={500}
+			pointX={-30}
+			pointY={63}
+			circleRadius={0}
+		/>
+	</svg>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
      GRANDES NÚMEROS — EXECUÇÃO
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-1-totals">
+	<h2>Como ocorreu a distribuição dos recursos?</h2>
+	<div style="margin-bottom: 1.5rem;">
+		<p>
+			A Lei 14.399/2022 que institui a Política Nacional Aldir Blanc de Fomento à Cultura prevê uma lógica de repasse igualitária do recurso federal para estados e municípios, sendo com 50% dos recursos destinados aos Estados e Distrito Federal e 50% dos recursos destinados aos Municípios e ao Distrito Federal. 
+		</p>
+		<p>
+			No Ciclo I da Política Nacional Aldir Blanc, o Governo Federal, por meio do Ministério da Cultura, repassou R$ 3 bilhões para estados, municípios e Distrito Federal. O montante executado pelos Estados e pelo Distrito Federal representa 96% do recurso repassado. Já os municípios e Distrito Federal executaram 93,6% do recurso recebido. Confira os valores: 
+		</p>
+	</div>
 	<h3>Alta execução em ambas as esferas</h3>
 	<p>
 		Os repasses chegam por dois caminhos: ao <strong>governo estadual</strong> (R$ 1,45 bi) e aos
 		<strong>municípios</strong> (R$ 1,40 bi). Em ambos, a execução superou 93% — sinal de que os
 		recursos empenhados foram, em grande maioria, de fato aplicados.
 	</p>
+	<div class="bignumbers-row">
+		<div class="bignumber-cell">
+			<BigNumber
+				value={formatBRL(valorExecEstados)}
+				fontSize={80}
+			/>
+			<p class="bignumber-caption">Estados e Distrito Federal</p>
+		</div>
+		<div class="bignumber-cell">
+			<BigNumber
+				value={formatBRL(valorExecMunicipios)}
+				fontSize={80}
+			/>
+			<p class="bignumber-caption">Municípios e Distrito Federal</p>
+		</div>
+	</div>
+	<div class="bignumbers-row">
+		<div class="bignumber-cell">
+			<BigNumber
+				value={formatBRL(valorExecTotal)}
+				fontSize={80}
+			/>
+			<p class="bignumber-caption">Total</p>
+		</div>
+	</div>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
 			<BigNumber
@@ -650,6 +694,7 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.5rem;
+		margin-top: 1.5rem;
 	}
 
 	.bignumber-caption {

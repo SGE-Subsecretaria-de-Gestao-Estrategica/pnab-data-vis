@@ -27,6 +27,9 @@ function parseCSV(text: string): Record<string, string>[] {
 const [bnRow] = parseCSV(csvBnRaw);
 export const percExecEstados    = +bnRow.perc_executado_estados    * 100;
 export const percExecMunicipios = +bnRow.perc_executado_municipios * 100;
+export const valorExecEstados    = +bnRow.Estados_DF;
+export const valorExecMunicipios = +bnRow.Municipios_DF;
+export const valorExecTotal      = +bnRow.Estados_DF + +bnRow.Municipios_DF;
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 export const siglaToName: Record<string, string> = {

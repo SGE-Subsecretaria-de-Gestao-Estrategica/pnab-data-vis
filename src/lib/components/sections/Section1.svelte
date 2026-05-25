@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ScrollSection from '$lib/components/ScrollSection.svelte';
+	import ExecutedValueByStateMap from '$lib/components/ExecutedValueByStateMap.svelte';
 	import {
 		BigNumber,
 		HorizontalBarChart,
@@ -37,6 +38,7 @@
 		silhouetteStateData,
 		silhouetteRegionData,
 		silhouetteRegionPopData,
+		states,
 	} from '$lib/data/section1';
 
 	// ── Flags via import.meta.glob ──────────────────────────────────────────────
@@ -188,6 +190,14 @@
 		<p>
 			Você pode conferir no gráfico a seguir os valores executados por Unidade Federativa (UF). Os valores apresentados são a soma dos valores executados pelos estados e pelos municípios de cada UF. Os percentuais representam a participação da UF no valor total executado no país.
 		</p>
+	</div>
+	<div style="margin-top: 2.5rem;">
+		<ExecutedValueByStateMap
+			{states}
+			metric="valor_executado_rs"
+			format={formatBRL}
+			formatLine2={(row) => formatPercFix(row.valor_executado_perc * 100)}
+		/>
 	</div>
 </ScrollSection>
 

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ScrollSection from '$lib/components/ScrollSection.svelte';
+	import ExecutedValueByStateMap from '$lib/components/ExecutedValueByStateMap.svelte';
 	import {
 		BigNumber,
 		HorizontalBarChart,
@@ -14,16 +15,18 @@
 		DataTable,
 		RegionSilhouetteChart,
 		StatesSilhouetteChart,
+		AnnotationBox,
 		colorPairs,
 		colorScales,
 		categorical8,
 	} from 'sniic-design-system';
 	import {
 		percExecEstados, percExecMunicipios,
+		valorExecEstados, valorExecMunicipios, valorExecTotal,
 		regionAreaData,
 		rankingData, bubbleStateData,
 		slopeItems, slopeLabels, formatSlope,
-		boxPlotData,
+		boxPlotData, regionMedianData,
 		heatmapData,
 		percapitaData, ufSplitData,
 		zoneData,
@@ -35,6 +38,7 @@
 		silhouetteStateData,
 		silhouetteRegionData,
 		silhouetteRegionPopData,
+		states,
 	} from '$lib/data/section1';
 
 	// ── Flags via import.meta.glob ──────────────────────────────────────────────
@@ -89,29 +93,72 @@
      INTRODUÇÃO
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-1-intro">
-	<h2>O dinheiro chegou — mas chegou a quem?</h2>
+	<h2>Em quais territórios os recursos da Política Nacional Aldir Blanc chegaram?</h2>
 	<p>
-		O Programa Nacional de Atenção Básica (PNAB) transferiu quase <strong>R$ 2,85 bilhões</strong>
-		para estados e municípios ao longo do período analisado. A taxa de execução foi alta: mais de
-		<strong>96%</strong> dos repasses estaduais e <strong>93%</strong> dos municipais foram de fato
-		aplicados.
+		Neste capítulo, vamos entender como foram distribuídos territorialmente os <strong> R$ 3 bilhões </strong> da Política Nacional Aldir Blanc.
 	</p>
 	<p>
-		Mas volume executado não é sinônimo de equidade. Esta seção acompanha o percurso desse dinheiro —
-		de qual região recebeu mais à pergunta mais difícil: o programa chegou a quem mais precisa?
+	Vamos descrever e analisar a distribuição entre os municípios, estados e Distrito Federal; entre os diversos portes de municípios; entre zona urbana ou rural e também a distribuição em territórios específicos como as periferias e as comunidades indígenas e quilombolas.
 	</p>
+	<svg width={600} height={130} style="overflow: hidden; margin-top: 1rem;">
+		<AnnotationBox
+			title=""
+			subtitle={"As análises apresentadas nesta seção foram elaboradas a partir do\ncruzamento dos dados de agentes culturais contemplados pela Política\nNacional Aldir Blanc com bases da Receita Federal e dados do Censo\n2022 do IBGE."}
+			boxX={0}
+			boxY={0}
+			boxWidth={500}
+			pointX={-30}
+			pointY={63}
+			showTitle={false}
+			circleRadius={0}
+		/>
+	</svg>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
      GRANDES NÚMEROS — EXECUÇÃO
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-1-totals">
+	<h2>Como ocorreu a distribuição dos recursos?</h2>
+	<div style="margin-bottom: 1.5rem;">
+		<p>
+			A Lei 14.399/2022 que institui a Política Nacional Aldir Blanc de Fomento à Cultura prevê uma lógica de repasse igualitária do recurso federal para estados e municípios, sendo com 50% dos recursos destinados aos Estados e Distrito Federal e 50% dos recursos destinados aos Municípios e ao Distrito Federal. 
+		</p>
+		<p>
+			No Ciclo I da Política Nacional Aldir Blanc, o Governo Federal, por meio do Ministério da Cultura, repassou R$ 3 bilhões para estados, municípios e Distrito Federal. O montante executado pelos Estados e pelo Distrito Federal representa 96% do recurso repassado. Já os municípios e Distrito Federal executaram 93,6% do recurso recebido. Confira os valores: 
+		</p>
+		<div class="bignumbers-row">
+			<div class="bignumber-cell">
+				<BigNumber
+					value={formatBRL(valorExecTotal)}
+					fontSize={80}
+				/>
+				<p class="bignumber-caption">Total</p>
+			</div>
+		</div>
+	</div>
 	<h3>Alta execução em ambas as esferas</h3>
 	<p>
 		Os repasses chegam por dois caminhos: ao <strong>governo estadual</strong> (R$ 1,45 bi) e aos
 		<strong>municípios</strong> (R$ 1,40 bi). Em ambos, a execução superou 93% — sinal de que os
 		recursos empenhados foram, em grande maioria, de fato aplicados.
 	</p>
+	<div class="bignumbers-row">
+		<div class="bignumber-cell">
+			<BigNumber
+				value={formatBRL(valorExecEstados)}
+				fontSize={80}
+			/>
+			<p class="bignumber-caption">Estados e Distrito Federal</p>
+		</div>
+		<div class="bignumber-cell">
+			<BigNumber
+				value={formatBRL(valorExecMunicipios)}
+				fontSize={80}
+			/>
+			<p class="bignumber-caption">Municípios e Distrito Federal</p>
+		</div>
+	</div>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
 			<BigNumber
@@ -129,6 +176,29 @@
 			/>
 			<p class="bignumber-caption">dos repasses a municípios foram executados</p>
 		</div>
+	</div>
+	<div style="margin-top: 1.5rem;">
+		<p>
+			Os níveis de execução observados são expressivos, indicando um desempenho consistente na implementação da política. Esse resultado sugere, por um lado, uma elevada capacidade de mobilização institucional por parte dos entes federativos, mesmo em um contexto ainda recente de implementação. Por outro, evidencia um baixo nível de represamento de recursos, o que reforça a efetividade operacional da política no curto prazo.
+		</p>
+	</div>
+	<div style="margin-top: 1.5rem;">
+		<p>
+ 			O repasse do recurso da Política Nacional Aldir Blanc é regido também pelos critérios de rateio do Fundos de Participação dos Estados e do Distrito Federal (FPE), do Fundo de Participação dos Municípios (FPM) e pela proporcionalidade da população. Isso quer dizer que o cálculo de repasse prevê que mais recurso chegue em territórios mais populosos.
+		</p>
+	</div>
+	<div style="margin-top: 1.5rem;">
+		<p>
+			Você pode conferir no gráfico a seguir os valores executados por Unidade Federativa (UF). Os valores apresentados são a soma dos valores executados pelos estados e pelos municípios de cada UF. Os percentuais representam a participação da UF no valor total executado no país.
+		</p>
+	</div>
+	<div style="margin-top: 2.5rem;">
+		<ExecutedValueByStateMap
+			{states}
+			metric="valor_executado_rs"
+			format={formatBRL}
+			formatLine2={(row) => formatPercFix(row.valor_executado_perc * 100)}
+		/>
 	</div>
 </ScrollSection>
 
@@ -168,26 +238,6 @@
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
-     ÁREA PROPORCIONAL POR REGIÃO
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-1-proportional">
-	<h3>Sentindo a concentração antes de calculá-la</h3>
-	<p>
-		Às vezes os números precisam virar forma. Aqui, a <strong>área de cada círculo é proporcional
-		ao valor total executado</strong> pela região. O contraste visual entre Sudeste e Centro-Oeste
-		comunica em segundos o que qualquer tabela demora a transmitir — e mostra que o Nordeste,
-		frequentemente invisível nos debates de investimento, é o segundo maior bloco.
-	</p>
-	<ProportionalAreaChart
-		data={regionAreaData}
-		maxRadius={110}
-		colors={categorical8}
-		format={formatBRL}
-		showLabels={true}
-	/>
-</ScrollSection>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
      MAPA POR ESTADO
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-1-state-map">
@@ -206,6 +256,28 @@
 		showLabels={true}
 	/>
 </ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     ÁREA PROPORCIONAL POR REGIÃO
+     ══════════════════════════════════════════════════════════════════════════ -->
+<!-- <ScrollSection id="section-1-proportional">
+	<h3>Sentindo a concentração antes de calculá-la</h3>
+	<p>
+		Às vezes os números precisam virar forma. Aqui, a <strong>área de cada círculo é proporcional
+		ao valor total executado</strong> pela região. O contraste visual entre Sudeste e Centro-Oeste
+		comunica em segundos o que qualquer tabela demora a transmitir — e mostra que o Nordeste,
+		frequentemente invisível nos debates de investimento, é o segundo maior bloco.
+	</p>
+	<ProportionalAreaChart
+		data={regionAreaData}
+		maxRadius={110}
+		colors={categorical8}
+		format={formatBRL}
+		showLabels={true}
+	/>
+</ScrollSection> -->
+
+
 
 <!-- ══════════════════════════════════════════════════════════════════════════
      RANKING POR ESTADO
@@ -324,12 +396,64 @@
 		concentra os menores valores típicos. <strong>Sul e Sudeste</strong> têm distribuições mais
 		compactas, mas com outliers elevados em RS e SP.
 	</p>
+	<p class="chart-label-compare">Opção A — Box plot: mediana por estado dentro de cada região</p>
 	<BoxPlotChart
 		data={boxPlotData}
 		xLabel="Região"
 		yLabel="Mediana do repasse por estado (R$)"
 		format={formatBRL}
 		showOutliers={true}
+	/>
+	<div class="boxplot-legend">
+		<p class="boxplot-legend-title">Como ler este gráfico</p>
+		<svg class="boxplot-legend-svg" viewBox="0 0 340 90" role="img" aria-label="Legenda do box plot">
+			<!-- whisker superior -->
+			<line x1="60" y1="12" x2="60" y2="22" stroke="#4271b5" stroke-width="1.5"/>
+			<!-- cap superior -->
+			<line x1="47" y1="12" x2="73" y2="12" stroke="#4271b5" stroke-width="1.5"/>
+			<!-- caixa IQR -->
+			<rect x="34" y="22" width="52" height="28" fill="#4271b5" fill-opacity="0.18" stroke="#4271b5" stroke-width="1.5"/>
+			<!-- mediana -->
+			<line x1="34" y1="36" x2="86" y2="36" stroke="#4271b5" stroke-width="2.5"/>
+			<!-- whisker inferior -->
+			<line x1="60" y1="50" x2="60" y2="60" stroke="#4271b5" stroke-width="1.5"/>
+			<!-- cap inferior -->
+			<line x1="47" y1="60" x2="73" y2="60" stroke="#4271b5" stroke-width="1.5"/>
+			<!-- outlier -->
+			<circle cx="60" cy="76" r="3" fill="none" stroke="#4271b5" stroke-width="1.5"/>
+
+			<!-- rótulo: whisker superior -->
+			<line x1="73" y1="12" x2="110" y2="12" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+			<text x="114" y="15" class="legend-label">Máximo (excl. outliers)</text>
+
+			<!-- rótulo: Q3 -->
+			<line x1="86" y1="22" x2="110" y2="22" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+			<text x="114" y="26" class="legend-label">3º quartil (Q3) — 75%</text>
+
+			<!-- rótulo: mediana -->
+			<line x1="86" y1="36" x2="110" y2="36" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+			<text x="114" y="40" class="legend-label">Mediana (Q2) — valor central</text>
+
+			<!-- rótulo: Q1 -->
+			<line x1="86" y1="50" x2="110" y2="50" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+			<text x="114" y="54" class="legend-label">1º quartil (Q1) — 25%</text>
+
+			<!-- rótulo: whisker inferior -->
+			<line x1="73" y1="60" x2="110" y2="60" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+			<text x="114" y="64" class="legend-label">Mínimo (excl. outliers)</text>
+
+			<!-- rótulo: outlier -->
+			<line x1="63" y1="76" x2="110" y2="76" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+			<text x="114" y="80" class="legend-label">Outlier (valor atípico)</text>
+		</svg>
+	</div>
+	<p class="chart-label-compare">Opção B — Barra simples: mediana agregada de todos os pagamentos da região</p>
+	<HorizontalBarChart
+		data={regionMedianData}
+		color={categorical8[0]}
+		format={formatBRLpc}
+		xLabel="Mediana do valor pago (R$)"
+		margin={{ top: 20, right: 40, bottom: 40, left: 120 }}
 	/>
 </ScrollSection>
 
@@ -650,6 +774,16 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.5rem;
+		margin-top: 1.5rem;
+	}
+
+	.chart-label-compare {
+		font-size: 0.8rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		opacity: 0.55;
+		margin: 1.5rem 0 0.25rem;
 	}
 
 	.bignumber-caption {
@@ -658,5 +792,35 @@
 		text-align: center;
 		opacity: 0.75;
 		max-width: 20ch;
+	}
+
+	.boxplot-legend {
+		margin-top: 1rem;
+		padding: 0.75rem 1rem;
+		border: 1px solid var(--color-border, #e2e8f0);
+		border-radius: 6px;
+		background: var(--color-surface, #f8fafc);
+		display: inline-block;
+	}
+
+	.boxplot-legend-title {
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		opacity: 0.55;
+		margin: 0 0 0.5rem;
+	}
+
+	.boxplot-legend-svg {
+		width: 340px;
+		height: 90px;
+		display: block;
+	}
+
+	:global(.legend-label) {
+		font-size: 11px;
+		fill: var(--color-text, #334155);
+		dominant-baseline: middle;
 	}
 </style>

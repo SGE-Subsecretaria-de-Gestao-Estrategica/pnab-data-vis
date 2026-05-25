@@ -13,12 +13,14 @@
   const FONT_FAMILY = typography.chartValueFontFamily;
   const FONT_SIZE = 11;
   const LINE_SPACING = 13;    // px between label lines
-  const FORCE_LEFT     = new Set(['TO', 'AP']);                // labels go left regardless of centroid
-  const FORCE_RIGHT    = new Set(['SC']);                      // labels go right regardless of centroid
-  const FORCE_EXTERNAL = new Set(['SC', 'PE', 'PI', 'DF', 'SP', 'AC', 'RR', 'AP']);   // always use external leader line
+  const FORCE_LEFT     = new Set(['AP', 'DF']);                // labels go left regardless of centroid
+  const FORCE_RIGHT    = new Set(['SC', 'TO']);               // labels go right regardless of centroid
+  const FORCE_EXTERNAL = new Set(['SC', 'PE', 'PI', 'DF', 'SP', 'AC', 'RR', 'AP', 'TO']);   // always use external leader line
   // Extra rightward offset for specific states (on top of bboxMaxX + ELBOW_GAP)
-  const EXTRA_X: Record<string, number> = { RN: 22, DF: 130 };
-  const EXTRA_Y: Record<string, number> = { PI: -100, CE: -30, RN: -25, PB: -15, SE: 10, SP: 20, RR: -30, AP: -30 };
+  const EXTRA_X: Record<string, number> = { RN: 22 };
+  // Extra leftward offset for specific left-side labels (subtracted from bboxMinX)
+  const EXTRA_LEFT_X: Record<string, number> = { DF: 140 };
+  const EXTRA_Y: Record<string, number> = { PI: -100, CE: -30, RN: -25, PB: -15, SE: 10, SP: 20, RR: 0, AP: -40, RJ: 20, ES: 5, SC: 10, TO: -140 };
 
   interface Props {
     states: Record<string, any>;
@@ -57,9 +59,10 @@
     loadBrazilGeoJSON().then((g: any) => { geojson = g; });
   });
 
+  const TOP_PAD = 45;
   const mapW = $derived(Math.max(0, width - LABEL_W * 2));
   const mapH = $derived(Math.round(mapW * 0.72));
-  const svgH = $derived(mapH + 20);
+  const svgH = $derived(mapH + 20 + TOP_PAD);
 
   const valueMap = $derived(
     new Map(Object.entries(states).map(([name, d]) => [name, (d[metric] ?? 0) as number]))
@@ -171,7 +174,7 @@
     const placed: { name: string; labelX: number; labelY: number; [k: string]: any }[] = [];
 
     for (const d of items) {
-      const lx = d.bboxMinX - ELBOW_GAP;
+      const lx = d.bboxMinX - ELBOW_GAP - (EXTRA_LEFT_X[d.sigla] ?? 0);
       let ly = d.cy;
 
       const nearX = placed
@@ -227,7 +230,7 @@
 <div bind:this={containerEl} style="width: 100%">
   {#if geojson && pathFn && mapW > 0}
     <svg width={width} height={svgH}>
-      <g transform={`translate(${LABEL_W}, 10)`}>
+      <g transform={`translate(${LABEL_W}, ${TOP_PAD})`}>
 
         <!-- State fills -->
         {#each geojson.features as f (f.properties.name)}

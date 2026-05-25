@@ -653,7 +653,13 @@ def aggregate_execution_by_porte_with_estado(
     - valor total por tipo_documento;
     - valor mínimo, mediana, máximo e média por tipo_documento;
     - quantidade por Sexo;
-    - percentual por Sexo dentro de cada porte.
+    - valor por Sexo;
+    - percentual de quantidade por Sexo;
+    - percentual de valor por Sexo.
+
+    Observação:
+    - a regra de manter apenas Sexo válido é aplicada somente nas agregações de Sexo;
+    - o restante da função usa a base completa conforme os filtros originais.
     """
 
     df = df_cubo.copy()
@@ -728,12 +734,21 @@ def aggregate_execution_by_porte_with_estado(
         .astype(str)
     )
 
-    df["sexo_tratado"] = (
+    df["sexo_norm"] = (
         df["Sexo"]
         .fillna("Não informado")
         .astype(str)
+        .str.upper()
         .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
     )
+
+    df["sexo_tratado"] = df["sexo_norm"].map({
+        "FEMININO": "Feminino",
+        "MASCULINO": "Masculino"
+    })
 
     # ------------------------------------------------------------
     # 4. Separar municípios e estados
@@ -813,15 +828,18 @@ def aggregate_execution_by_porte_with_estado(
     # ------------------------------------------------------------
 
     def pivot_sexo_por_porte(
-        df_base: pd.DataFrame
+        df_base: pd.DataFrame,
+        values: str,
+        aggfunc: str,
+        prefixo_coluna: str
     ) -> pd.DataFrame:
         df_pivot = (
             df_base
             .pivot_table(
                 index="porte_populacional",
                 columns="sexo_tratado",
-                values="quantidade",
-                aggfunc="sum",
+                values=values,
+                aggfunc=aggfunc,
                 fill_value=0
             )
             .reset_index()
@@ -829,7 +847,7 @@ def aggregate_execution_by_porte_with_estado(
 
         df_pivot = df_pivot.rename(
             columns={
-                col: f"qtd_sexo_{col}"
+                col: f"{prefixo_coluna}_sexo_{col}"
                 for col in df_pivot.columns
                 if col != "porte_populacional"
             }
@@ -885,10 +903,34 @@ def aggregate_execution_by_porte_with_estado(
 
     # ------------------------------------------------------------
     # 10. Sexo - municípios
+    # Mantém apenas Sexo válido somente nesta agregação
     # ------------------------------------------------------------
 
-    df_sexo_municipios = pivot_sexo_por_porte(
-        df_base=df_municipios
+    df_municipios_sexo = df_municipios[
+        df_municipios["sexo_tratado"].isin(["Feminino", "Masculino"])
+    ].copy()
+
+    df_qtd_sexo_municipios = pivot_sexo_por_porte(
+        df_base=df_municipios_sexo,
+        values="quantidade",
+        aggfunc="sum",
+        prefixo_coluna="qtd"
+    )
+
+    df_valor_sexo_municipios = pivot_sexo_por_porte(
+        df_base=df_municipios_sexo,
+        values="valor_transacao",
+        aggfunc="sum",
+        prefixo_coluna="valor"
+    )
+
+    df_total_sexo_municipios = (
+        df_municipios_sexo
+        .groupby("porte_populacional", dropna=False, as_index=False)
+        .agg(
+            total_qtd_sexo_valido=("quantidade", "sum"),
+            total_valor_sexo_valido=("valor_transacao", "sum")
+        )
     )
 
     # ------------------------------------------------------------
@@ -977,10 +1019,34 @@ def aggregate_execution_by_porte_with_estado(
 
     # ------------------------------------------------------------
     # 15. Sexo - estados
+    # Mantém apenas Sexo válido somente nesta agregação
     # ------------------------------------------------------------
 
-    df_sexo_estado = pivot_sexo_por_porte(
-        df_base=df_estados_base
+    df_estados_sexo = df_estados_base[
+        df_estados_base["sexo_tratado"].isin(["Feminino", "Masculino"])
+    ].copy()
+
+    df_qtd_sexo_estado = pivot_sexo_por_porte(
+        df_base=df_estados_sexo,
+        values="quantidade",
+        aggfunc="sum",
+        prefixo_coluna="qtd"
+    )
+
+    df_valor_sexo_estado = pivot_sexo_por_porte(
+        df_base=df_estados_sexo,
+        values="valor_transacao",
+        aggfunc="sum",
+        prefixo_coluna="valor"
+    )
+
+    df_total_sexo_estado = (
+        df_estados_sexo
+        .groupby("porte_populacional", dropna=False, as_index=False)
+        .agg(
+            total_qtd_sexo_valido=("quantidade", "sum"),
+            total_valor_sexo_valido=("valor_transacao", "sum")
+        )
     )
 
     # ------------------------------------------------------------
@@ -1027,8 +1093,18 @@ def aggregate_execution_by_porte_with_estado(
         ignore_index=True
     )
 
-    df_sexo = pd.concat(
-        [df_sexo_municipios, df_sexo_estado],
+    df_qtd_sexo = pd.concat(
+        [df_qtd_sexo_municipios, df_qtd_sexo_estado],
+        ignore_index=True
+    )
+
+    df_valor_sexo = pd.concat(
+        [df_valor_sexo_municipios, df_valor_sexo_estado],
+        ignore_index=True
+    )
+
+    df_total_sexo = pd.concat(
+        [df_total_sexo_municipios, df_total_sexo_estado],
         ignore_index=True
     )
 
@@ -1041,7 +1117,9 @@ def aggregate_execution_by_porte_with_estado(
         .merge(df_mediana_valor_tipo_doc, on="porte_populacional", how="left")
         .merge(df_max_valor_tipo_doc, on="porte_populacional", how="left")
         .merge(df_media_valor_tipo_doc, on="porte_populacional", how="left")
-        .merge(df_sexo, on="porte_populacional", how="left")
+        .merge(df_qtd_sexo, on="porte_populacional", how="left")
+        .merge(df_valor_sexo, on="porte_populacional", how="left")
+        .merge(df_total_sexo, on="porte_populacional", how="left")
     )
 
     # ------------------------------------------------------------
@@ -1076,7 +1154,8 @@ def aggregate_execution_by_porte_with_estado(
     )
 
     # ------------------------------------------------------------
-    # 18. Calcular percentuais por Sexo dentro de cada porte
+    # 18. Calcular percentuais por Sexo
+    # Denominador: apenas registros com Sexo válido
     # ------------------------------------------------------------
 
     colunas_qtd_sexo = [
@@ -1084,12 +1163,26 @@ def aggregate_execution_by_porte_with_estado(
         if col.startswith("qtd_sexo_")
     ]
 
+    colunas_valor_sexo = [
+        col for col in df_porte.columns
+        if col.startswith("valor_sexo_")
+    ]
+
     for coluna in colunas_qtd_sexo:
-        nome_percentual = coluna.replace("qtd_sexo_", "percentual_sexo_")
+        nome_percentual = coluna.replace("qtd_sexo_", "percentual_qtd_sexo_")
 
         df_porte[nome_percentual] = np.where(
-            df_porte["quantidade_contemplados_por_porte"].ne(0),
-            df_porte[coluna] / df_porte["quantidade_contemplados_por_porte"],
+            df_porte["total_qtd_sexo_valido"].fillna(0).ne(0),
+            df_porte[coluna] / df_porte["total_qtd_sexo_valido"],
+            np.nan
+        )
+
+    for coluna in colunas_valor_sexo:
+        nome_percentual = coluna.replace("valor_sexo_", "percentual_valor_sexo_")
+
+        df_porte[nome_percentual] = np.where(
+            df_porte["total_valor_sexo_valido"].fillna(0).ne(0),
+            df_porte[coluna] / df_porte["total_valor_sexo_valido"],
             np.nan
         )
 
@@ -1110,6 +1203,8 @@ def aggregate_execution_by_porte_with_estado(
         "percentual_valor_rural_por_porte",
         "percentual_valor_por_porte",
         "percentual_quantidade_por_porte",
+        "total_qtd_sexo_valido",
+        "total_valor_sexo_valido",
     ]
 
     colunas_qtd_tipo_documento = [
@@ -1147,9 +1242,19 @@ def aggregate_execution_by_porte_with_estado(
         if col.startswith("qtd_sexo_")
     ]
 
-    colunas_percentual_sexo = [
+    colunas_valor_sexo = [
         col for col in df_porte.columns
-        if col.startswith("percentual_sexo_")
+        if col.startswith("valor_sexo_")
+    ]
+
+    colunas_percentual_qtd_sexo = [
+        col for col in df_porte.columns
+        if col.startswith("percentual_qtd_sexo_")
+    ]
+
+    colunas_percentual_valor_sexo = [
+        col for col in df_porte.columns
+        if col.startswith("percentual_valor_sexo_")
     ]
 
     colunas_faixa_vlr_pago = [
@@ -1163,7 +1268,9 @@ def aggregate_execution_by_porte_with_estado(
             + colunas_max_valor_tipo_documento
             + colunas_media_valor_tipo_documento
             + colunas_qtd_sexo
-            + colunas_percentual_sexo
+            + colunas_valor_sexo
+            + colunas_percentual_qtd_sexo
+            + colunas_percentual_valor_sexo
         )
     ]
 
@@ -1175,6 +1282,7 @@ def aggregate_execution_by_porte_with_estado(
         "valor_total_por_porte",
         "valor_urbano_por_porte",
         "valor_rural_por_porte",
+        "total_valor_sexo_valido",
     ]
 
     colunas_valor_tipo_documento_todas = (
@@ -1185,8 +1293,19 @@ def aggregate_execution_by_porte_with_estado(
         + colunas_media_valor_tipo_documento
     )
 
-    df_porte[colunas_valor + colunas_valor_tipo_documento_todas] = (
-        np.ceil(df_porte[colunas_valor + colunas_valor_tipo_documento_todas])
+    df_porte[
+        colunas_valor
+        + colunas_valor_tipo_documento_todas
+        + colunas_valor_sexo
+    ] = (
+        np.ceil(
+            df_porte[
+                colunas_valor
+                + colunas_valor_tipo_documento_todas
+                + colunas_valor_sexo
+            ]
+        )
+        .fillna(0)
         .astype("Int64")
     )
 
@@ -1195,6 +1314,7 @@ def aggregate_execution_by_porte_with_estado(
         "quantidade_contemplados_por_porte",
         "quantidade_contemplados_urbano",
         "quantidade_contemplados_rural",
+        "total_qtd_sexo_valido",
     ]
 
     df_porte[

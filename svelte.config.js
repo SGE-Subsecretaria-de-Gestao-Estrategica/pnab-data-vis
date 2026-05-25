@@ -14,6 +14,12 @@ const config = {
 		}),
 		paths: {
 			base: process.env.BASE_PATH ?? ''
+		},
+		prerender: {
+			handleHttpError: ({ path, message }) => {
+				if (path.startsWith('/fonts/')) return;
+				throw new Error(message);
+			}
 		}
 	}
 };

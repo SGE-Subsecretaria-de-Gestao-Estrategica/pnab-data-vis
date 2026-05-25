@@ -109,6 +109,7 @@
 			boxWidth={500}
 			pointX={-30}
 			pointY={63}
+			showTitle={false}
 			circleRadius={0}
 		/>
 	</svg>
@@ -126,6 +127,15 @@
 		<p>
 			No Ciclo I da Política Nacional Aldir Blanc, o Governo Federal, por meio do Ministério da Cultura, repassou R$ 3 bilhões para estados, municípios e Distrito Federal. O montante executado pelos Estados e pelo Distrito Federal representa 96% do recurso repassado. Já os municípios e Distrito Federal executaram 93,6% do recurso recebido. Confira os valores: 
 		</p>
+		<div class="bignumbers-row">
+			<div class="bignumber-cell">
+				<BigNumber
+					value={formatBRL(valorExecTotal)}
+					fontSize={80}
+				/>
+				<p class="bignumber-caption">Total</p>
+			</div>
+		</div>
 	</div>
 	<h3>Alta execução em ambas as esferas</h3>
 	<p>
@@ -147,15 +157,6 @@
 				fontSize={80}
 			/>
 			<p class="bignumber-caption">Municípios e Distrito Federal</p>
-		</div>
-	</div>
-	<div class="bignumbers-row">
-		<div class="bignumber-cell">
-			<BigNumber
-				value={formatBRL(valorExecTotal)}
-				fontSize={80}
-			/>
-			<p class="bignumber-caption">Total</p>
 		</div>
 	</div>
 	<div class="bignumbers-row">
@@ -403,6 +404,49 @@
 		format={formatBRL}
 		showOutliers={true}
 	/>
+	<div class="boxplot-legend">
+		<p class="boxplot-legend-title">Como ler este gráfico</p>
+		<svg class="boxplot-legend-svg" viewBox="0 0 340 90" role="img" aria-label="Legenda do box plot">
+			<!-- whisker superior -->
+			<line x1="60" y1="12" x2="60" y2="22" stroke="#4271b5" stroke-width="1.5"/>
+			<!-- cap superior -->
+			<line x1="47" y1="12" x2="73" y2="12" stroke="#4271b5" stroke-width="1.5"/>
+			<!-- caixa IQR -->
+			<rect x="34" y="22" width="52" height="28" fill="#4271b5" fill-opacity="0.18" stroke="#4271b5" stroke-width="1.5"/>
+			<!-- mediana -->
+			<line x1="34" y1="36" x2="86" y2="36" stroke="#4271b5" stroke-width="2.5"/>
+			<!-- whisker inferior -->
+			<line x1="60" y1="50" x2="60" y2="60" stroke="#4271b5" stroke-width="1.5"/>
+			<!-- cap inferior -->
+			<line x1="47" y1="60" x2="73" y2="60" stroke="#4271b5" stroke-width="1.5"/>
+			<!-- outlier -->
+			<circle cx="60" cy="76" r="3" fill="none" stroke="#4271b5" stroke-width="1.5"/>
+
+			<!-- rótulo: whisker superior -->
+			<line x1="73" y1="12" x2="110" y2="12" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+			<text x="114" y="15" class="legend-label">Máximo (excl. outliers)</text>
+
+			<!-- rótulo: Q3 -->
+			<line x1="86" y1="22" x2="110" y2="22" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+			<text x="114" y="26" class="legend-label">3º quartil (Q3) — 75%</text>
+
+			<!-- rótulo: mediana -->
+			<line x1="86" y1="36" x2="110" y2="36" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+			<text x="114" y="40" class="legend-label">Mediana (Q2) — valor central</text>
+
+			<!-- rótulo: Q1 -->
+			<line x1="86" y1="50" x2="110" y2="50" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+			<text x="114" y="54" class="legend-label">1º quartil (Q1) — 25%</text>
+
+			<!-- rótulo: whisker inferior -->
+			<line x1="73" y1="60" x2="110" y2="60" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+			<text x="114" y="64" class="legend-label">Mínimo (excl. outliers)</text>
+
+			<!-- rótulo: outlier -->
+			<line x1="63" y1="76" x2="110" y2="76" stroke="#888" stroke-width="0.8" stroke-dasharray="3,2"/>
+			<text x="114" y="80" class="legend-label">Outlier (valor atípico)</text>
+		</svg>
+	</div>
 	<p class="chart-label-compare">Opção B — Barra simples: mediana agregada de todos os pagamentos da região</p>
 	<HorizontalBarChart
 		data={regionMedianData}
@@ -748,5 +792,35 @@
 		text-align: center;
 		opacity: 0.75;
 		max-width: 20ch;
+	}
+
+	.boxplot-legend {
+		margin-top: 1rem;
+		padding: 0.75rem 1rem;
+		border: 1px solid var(--color-border, #e2e8f0);
+		border-radius: 6px;
+		background: var(--color-surface, #f8fafc);
+		display: inline-block;
+	}
+
+	.boxplot-legend-title {
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		opacity: 0.55;
+		margin: 0 0 0.5rem;
+	}
+
+	.boxplot-legend-svg {
+		width: 340px;
+		height: 90px;
+		display: block;
+	}
+
+	:global(.legend-label) {
+		font-size: 11px;
+		fill: var(--color-text, #334155);
+		dominant-baseline: middle;
 	}
 </style>

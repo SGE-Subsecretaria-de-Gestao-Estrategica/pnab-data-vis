@@ -156,12 +156,37 @@ const regionOrder = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul'];
 const regionUfRows = parseCSV(csvRegionUfRaw);
 
 // Opção 3: mediana por estado dentro de cada região (4–9 pontos por caixa)
-export const boxPlotData = regionOrder.map((regiao) => ({
-	label:  regiao,
-	values: stateRows
+// Para grupos com menos de 5 pontos, desativa detecção de outliers — quartis interpolados
+// podem ultrapassar os valores reais quando n é muito pequeno, tornando os whiskers invisíveis.
+function boxStats(values: number[], minForOutliers = 5) {
+	const s = [...values].sort((a, b) => a - b);
+	const q = (p: number) => {
+		const i = (s.length - 1) * p;
+		const lo = Math.floor(i), hi = Math.ceil(i);
+		return s[lo] + (s[hi] - s[lo]) * (i - lo);
+	};
+	const q1 = q(0.25), median = q(0.5), q3 = q(0.75);
+	if (s.length < minForOutliers) {
+		return { min: s[0], q1, median, q3, max: s[s.length - 1] };
+	}
+	const iqr = q3 - q1;
+	const lo = q1 - 1.5 * iqr, hi = q3 + 1.5 * iqr;
+	const inner = s.filter(v => v >= lo && v <= hi);
+	const outer = s.filter(v => v < lo || v > hi);
+	return {
+		min: inner.length > 0 ? inner[0] : s[0],
+		q1, median, q3,
+		max: inner.length > 0 ? inner[inner.length - 1] : s[s.length - 1],
+		...(outer.length > 0 ? { outliers: outer } : {}),
+	};
+}
+
+export const boxPlotData = regionOrder.map((regiao) => {
+	const values = stateRows
 		.filter((d) => regionMap[d.uf] === regiao)
-		.map((d) => d.mediana_valor),
-}));
+		.map((d) => d.mediana_valor);
+	return { label: regiao, stats: boxStats(values) };
+});
 
 // Opção 1: mediana agregada da região (individual-level) para barra simples
 export const regionMedianData = regionOrder.map((regiao) => {

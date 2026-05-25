@@ -1,6 +1,5 @@
 <script lang="ts">
 	import ScrollSection from '$lib/components/ScrollSection.svelte';
-	import ExecutedValueByStateMap from '$lib/components/ExecutedValueByStateMap.svelte';
 	import {
 		BigNumber,
 		HorizontalBarChart,
@@ -14,6 +13,7 @@
 		TreemapChart,
 		DataTable,
 		RegionSilhouetteChart,
+		StatesSilhouetteChart,
 		colorPairs,
 		colorScales,
 		categorical8,
@@ -21,7 +21,7 @@
 	import {
 		percExecEstados, percExecMunicipios,
 		regionAreaData,
-		states, rankingData, bubbleStateData,
+		rankingData, bubbleStateData,
 		slopeItems, slopeLabels, formatSlope,
 		boxPlotData,
 		heatmapData,
@@ -32,7 +32,9 @@
 		percRecursoEspecial, percPopulacaoEspecial, specialDivergingData,
 		specialStackedData,
 		ufData,
+		silhouetteStateData,
 		silhouetteRegionData,
+		silhouetteRegionPopData,
 	} from '$lib/data/section1';
 
 	// ── Flags via import.meta.glob ──────────────────────────────────────────────
@@ -141,13 +143,28 @@
 		<strong>Norte</strong> captou 13% do total com apenas 8,8% da população — proporcionalmente,
 		o maior favorecido.
 	</p>
-	<RegionSilhouetteChart
-		data={silhouetteRegionData}
-		maxSize={200}
-		colors={categorical8}
-		format={formatBRL}
-		showLabels={true}
-	/>
+	<div class="silhouette-compare">
+		<div class="silhouette-col">
+			<p class="silhouette-label">Recursos executados</p>
+			<RegionSilhouetteChart
+				data={silhouetteRegionData}
+				maxSize={100}
+				colors={categorical8}
+				format={formatBRL}
+				showLabels={true}
+			/>
+		</div>
+		<div class="silhouette-col">
+			<p class="silhouette-label">Peso demográfico</p>
+			<RegionSilhouetteChart
+				data={silhouetteRegionPopData}
+				maxSize={100}
+				colors={categorical8}
+				format={formatPop}
+				showLabels={true}
+			/>
+		</div>
+	</div>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -181,11 +198,12 @@
 		<strong>Rondônia</strong> registrou apenas R$ 467 mil — SP recebeu
 		<strong>622 vezes mais</strong>.
 	</p>
-	<ExecutedValueByStateMap
-		{states}
-		metric="valor_executado_rs"
-		label="Valor executado"
+	<StatesSilhouetteChart
+		data={silhouetteStateData}
+		maxSize={120}
+		colors={categorical8}
 		format={formatBRL}
+		showLabels={true}
 	/>
 </ScrollSection>
 
@@ -597,6 +615,27 @@
 </ScrollSection>
 
 <style>
+	.silhouette-compare {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+
+	.silhouette-col {
+		width: 100%;
+	}
+
+	.silhouette-label {
+		font-size: 0.85rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		opacity: 0.6;
+		margin: 0 0 0.5rem;
+		text-align: center;
+		width: 100%;
+	}
+
 	.bignumbers-row {
 		display: flex;
 		gap: 2rem;

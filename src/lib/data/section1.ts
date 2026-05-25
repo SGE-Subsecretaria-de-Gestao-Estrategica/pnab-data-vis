@@ -74,6 +74,10 @@ export const silhouetteRegionData = [...regionRows]
 	.sort((a, b) => +b.valor_executado_rs - +a.valor_executado_rs)
 	.map((d) => ({ region: d.regiao === 'Centro-Oeste' ? 'CentroOeste' : d.regiao, value: +d.valor_executado_rs }));
 
+export const silhouetteRegionPopData = [...regionRows]
+	.sort((a, b) => +b.populacao - +a.populacao)
+	.map((d) => ({ region: d.regiao === 'Centro-Oeste' ? 'CentroOeste' : d.regiao, value: +d.populacao }));
+
 // ── Por estado (executed_value_by_state.csv) ──────────────────────────────────
 interface StateRow {
 	uf: string;

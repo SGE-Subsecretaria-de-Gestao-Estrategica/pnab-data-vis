@@ -11,7 +11,7 @@
 	type BgColor = 'cream' | 'white';
 	const bgColors: Record<BgColor, string> = { cream, white };
 
-	let activeBg = $state<BgColor>('white');
+	let activeBg = $state<BgColor>('cream');
 </script>
 
 <svelte:head>

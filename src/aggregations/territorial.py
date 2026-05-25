@@ -2031,3 +2031,105 @@ def aggregate_execution_by_region(
     )
 
     return df_tabela_region
+
+
+
+def aggregate_execution_summary_by_scope(
+    df_cubo: pd.DataFrame,
+    scope: str = "MUNICIPIO"
+) -> pd.DataFrame:
+    """
+    Agrega número de entes, valor total, quantidade de contemplados
+    e valor médio por ente para diferentes recortes territoriais.
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        Base principal.
+
+    scope : str
+        Recorte desejado.
+
+        Opções:
+        - "MUNICIPIO": considera todos os municípios.
+        - "CAPITAL": considera apenas municípios com flag_capital == True.
+        - "ESTADO": considera apenas estados.
+
+    Retorna
+    -------
+    pd.DataFrame
+        Tabela com uma linha agregada para o recorte escolhido.
+    """
+
+    scope = scope.upper()
+
+    tipo_ente_normalizado = (
+        df_cubo["tipo_ente"]
+        .astype(str)
+        .str.upper()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    if scope == "MUNICIPIO":
+        df = df_cubo[tipo_ente_normalizado.eq("MUNICIPIO")].copy()
+        categoria = "municipios"
+
+    elif scope == "CAPITAL":
+        flag_capital_normalizada = (
+            df_cubo["flag_capital"]
+            .astype(str)
+            .str.upper()
+            .str.normalize("NFKD")
+            .str.encode("ascii", errors="ignore")
+            .str.decode("utf-8")
+        )
+
+        df = df_cubo[
+            tipo_ente_normalizado.eq("MUNICIPIO")
+            & flag_capital_normalizada.isin(["TRUE", "1", "SIM", "S"])
+        ].copy()
+
+        categoria = "capitais"
+
+    elif scope == "ESTADO":
+        df = df_cubo[tipo_ente_normalizado.eq("ESTADO")].copy()
+        categoria = "estados"
+
+    else:
+        raise ValueError("scope deve ser 'MUNICIPIO', 'CAPITAL' ou 'ESTADO'.")
+
+    df_agregado = pd.DataFrame({
+        "categoria": [categoria],
+        "numero_entes": [df["ente"].nunique()],
+        "valor_total": [df["valor_transacao"].sum()],
+        "contemplados_total": [df["quantidade"].sum()]
+    })
+
+    df_agregado["valor_total_dividido_numero_entes"] = (
+        df_agregado["valor_total"]
+        / df_agregado["numero_entes"]
+    )
+
+    colunas_valor = [
+        "valor_total",
+        "valor_total_dividido_numero_entes"
+    ]
+
+    df_agregado[colunas_valor] = (
+        np.ceil(df_agregado[colunas_valor])
+        .astype("Int64")
+    )
+
+    df_agregado["contemplados_total"] = (
+        df_agregado["contemplados_total"]
+        .astype("Int64")
+    )
+
+    df_agregado["numero_entes"] = (
+        df_agregado["numero_entes"]
+        .astype("Int64")
+    )
+
+    return df_agregado

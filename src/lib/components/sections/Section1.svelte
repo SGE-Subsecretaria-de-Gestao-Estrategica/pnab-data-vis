@@ -25,7 +25,7 @@
 		regionAreaData,
 		rankingData, bubbleStateData,
 		slopeItems, slopeLabels, formatSlope,
-		boxPlotData,
+		boxPlotData, regionMedianData,
 		heatmapData,
 		percapitaData, ufSplitData,
 		zoneData,
@@ -174,6 +174,21 @@
 			<p class="bignumber-caption">dos repasses a municípios foram executados</p>
 		</div>
 	</div>
+	<div style="margin-top: 1.5rem;">
+		<p>
+			Os níveis de execução observados são expressivos, indicando um desempenho consistente na implementação da política. Esse resultado sugere, por um lado, uma elevada capacidade de mobilização institucional por parte dos entes federativos, mesmo em um contexto ainda recente de implementação. Por outro, evidencia um baixo nível de represamento de recursos, o que reforça a efetividade operacional da política no curto prazo.
+		</p>
+	</div>
+	<div style="margin-top: 1.5rem;">
+		<p>
+ 			O repasse do recurso da Política Nacional Aldir Blanc é regido também pelos critérios de rateio do Fundos de Participação dos Estados e do Distrito Federal (FPE), do Fundo de Participação dos Municípios (FPM) e pela proporcionalidade da população. Isso quer dizer que o cálculo de repasse prevê que mais recurso chegue em territórios mais populosos.
+		</p>
+	</div>
+	<div style="margin-top: 1.5rem;">
+		<p>
+			Você pode conferir no gráfico a seguir os valores executados por Unidade Federativa (UF). Os valores apresentados são a soma dos valores executados pelos estados e pelos municípios de cada UF. Os percentuais representam a participação da UF no valor total executado no país.
+		</p>
+	</div>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -212,26 +227,6 @@
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
-     ÁREA PROPORCIONAL POR REGIÃO
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-1-proportional">
-	<h3>Sentindo a concentração antes de calculá-la</h3>
-	<p>
-		Às vezes os números precisam virar forma. Aqui, a <strong>área de cada círculo é proporcional
-		ao valor total executado</strong> pela região. O contraste visual entre Sudeste e Centro-Oeste
-		comunica em segundos o que qualquer tabela demora a transmitir — e mostra que o Nordeste,
-		frequentemente invisível nos debates de investimento, é o segundo maior bloco.
-	</p>
-	<ProportionalAreaChart
-		data={regionAreaData}
-		maxRadius={110}
-		colors={categorical8}
-		format={formatBRL}
-		showLabels={true}
-	/>
-</ScrollSection>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
      MAPA POR ESTADO
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-1-state-map">
@@ -250,6 +245,28 @@
 		showLabels={true}
 	/>
 </ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     ÁREA PROPORCIONAL POR REGIÃO
+     ══════════════════════════════════════════════════════════════════════════ -->
+<!-- <ScrollSection id="section-1-proportional">
+	<h3>Sentindo a concentração antes de calculá-la</h3>
+	<p>
+		Às vezes os números precisam virar forma. Aqui, a <strong>área de cada círculo é proporcional
+		ao valor total executado</strong> pela região. O contraste visual entre Sudeste e Centro-Oeste
+		comunica em segundos o que qualquer tabela demora a transmitir — e mostra que o Nordeste,
+		frequentemente invisível nos debates de investimento, é o segundo maior bloco.
+	</p>
+	<ProportionalAreaChart
+		data={regionAreaData}
+		maxRadius={110}
+		colors={categorical8}
+		format={formatBRL}
+		showLabels={true}
+	/>
+</ScrollSection> -->
+
+
 
 <!-- ══════════════════════════════════════════════════════════════════════════
      RANKING POR ESTADO
@@ -368,12 +385,21 @@
 		concentra os menores valores típicos. <strong>Sul e Sudeste</strong> têm distribuições mais
 		compactas, mas com outliers elevados em RS e SP.
 	</p>
+	<p class="chart-label-compare">Opção A — Box plot: mediana por estado dentro de cada região</p>
 	<BoxPlotChart
 		data={boxPlotData}
 		xLabel="Região"
 		yLabel="Mediana do repasse por estado (R$)"
 		format={formatBRL}
 		showOutliers={true}
+	/>
+	<p class="chart-label-compare">Opção B — Barra simples: mediana agregada de todos os pagamentos da região</p>
+	<HorizontalBarChart
+		data={regionMedianData}
+		color={categorical8[0]}
+		format={formatBRLpc}
+		xLabel="Mediana do valor pago (R$)"
+		margin={{ top: 20, right: 40, bottom: 40, left: 120 }}
 	/>
 </ScrollSection>
 
@@ -695,6 +721,15 @@
 		align-items: center;
 		gap: 0.5rem;
 		margin-top: 1.5rem;
+	}
+
+	.chart-label-compare {
+		font-size: 0.8rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		opacity: 0.55;
+		margin: 1.5rem 0 0.25rem;
 	}
 
 	.bignumber-caption {

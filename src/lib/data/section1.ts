@@ -11,6 +11,7 @@ import csvSpecialRaw    from '../../../data/section_1/special_territory_w_ibge_b
 import csvSpecialStRaw  from '../../../data/section_1/values_by_special_territory_state.csv?raw';
 import csvSpecialMunRaw from '../../../data/section_1/values_by_special_territory_municipality.csv?raw';
 import csvBnRaw         from '../../../data/section_1/bignumber1.csv?raw';
+import csvRegionUfRaw   from '../../../data/section_1/executed_value_by_region_uf.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -150,16 +151,23 @@ export const slopeItems = stateRows.map((d) => ({
 export const slopeLabels = ['Ranking por valor', 'Ranking por população'];
 export const formatSlope = (v: number) => `${n + 1 - v}º`;
 
-// ── BoxPlot: mediana de repasse por região ────────────────────────────────────
+// ── BoxPlot: distribuição de repasses por região ─────────────────────────────
 const regionOrder = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul'];
+const regionUfRows = parseCSV(csvRegionUfRaw);
 
+// Opção 3: mediana por estado dentro de cada região (4–9 pontos por caixa)
 export const boxPlotData = regionOrder.map((regiao) => ({
 	label:  regiao,
 	values: stateRows
 		.filter((d) => regionMap[d.uf] === regiao)
-		.sort((a, b) => a.uf.localeCompare(b.uf))
 		.map((d) => d.mediana_valor),
 }));
+
+// Opção 1: mediana agregada da região (individual-level) para barra simples
+export const regionMedianData = regionOrder.map((regiao) => {
+	const row = regionUfRows.find((d) => d.regiao === regiao)!;
+	return { label: regiao, value: +row.mediana_valor };
+});
 
 // ── Heatmap: estados × faixas de valor pago ───────────────────────────────────
 export const heatmapBuckets = [

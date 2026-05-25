@@ -1,6 +1,9 @@
 {
 	"extends": "./.svelte-kit/tsconfig.json",
 	"compilerOptions": {
+		"paths": {
+			"sniic-design-system": ["./node_modules/sniic-design-system/dist/src/lib/index.d.ts"]
+		},
 		"allowJs": true,
 		"checkJs": true,
 		"esModuleInterop": true,

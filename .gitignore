@@ -7,3 +7,12 @@ build
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .venv
+cria_csv.ipynb
+
+src/stories/assets
+static/
+*.ipynb
+src/_temp_data
+storybook-static/
+debug-storybook.log
+*.pyc

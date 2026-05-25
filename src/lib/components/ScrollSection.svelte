@@ -48,6 +48,15 @@
 			transform 0.6s ease;
 	}
 
+	:global(.scroll-section h1),
+	:global(.scroll-section h2),
+	:global(.scroll-section h3),
+	:global(.scroll-section h4),
+	:global(.scroll-section p),
+	:global(.scroll-section li) {
+		font-family: 'Rawline', 'Raleway', system-ui, sans-serif;
+	}
+
 	.scroll-section.visible {
 		opacity: 1;
 		transform: translateY(0);

@@ -4,7 +4,7 @@
   import { BigNumber } from 'sniic-design-system';
 
   const { Story } = defineMeta({
-    title: 'Section 2/paymentRangeBigNumbers',
+    title: 'Section 3/paymentRangeBigNumbers',
     component: BigNumber,
     tags: ['autodocs'],
     parameters: {

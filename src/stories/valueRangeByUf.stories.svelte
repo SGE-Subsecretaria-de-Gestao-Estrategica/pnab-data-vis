@@ -9,7 +9,7 @@
   const formatPct = (v) => `${v.toFixed(1)}%`;
 
   const { Story } = defineMeta({
-    title: 'Section 2/valueRangeByUf',
+    title: 'Section 3/valueRangeByUf',
     component: VerticalStackedBarChart,
     tags: ['autodocs'],
     parameters: {

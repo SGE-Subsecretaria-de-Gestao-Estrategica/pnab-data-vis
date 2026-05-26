@@ -11,7 +11,7 @@
   const pfPjColors = [colorScales.teal[2], colorScales.orange[2]];
 
   const { Story } = defineMeta({
-    title: 'Section 3/pfPjSplit',
+    title: 'Section 2/pfPjSplit',
     component: DonutChart,
     tags: ['autodocs'],
     parameters: {

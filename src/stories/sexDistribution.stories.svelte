@@ -17,7 +17,7 @@
   ];
 
   const { Story } = defineMeta({
-    title: 'Section 3/sexDistribution',
+    title: 'Section 2/sexDistribution',
     component: BigNumber,
     tags: ['autodocs'],
     parameters: {

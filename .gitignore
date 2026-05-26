@@ -9,4 +9,3 @@ vite.config.ts.timestamp-*
 .venv
 src/_temp_data
 *.pyc
-*.ipynb

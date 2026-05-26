@@ -93,7 +93,7 @@
      INTRODUÇÃO
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-1-intro">
-	<h2>Em quais territórios os recursos da Política Nacional Aldir Blanc chegaram?</h2>
+	<h2>1. Em quais territórios os recursos da Política Nacional Aldir Blanc chegaram?</h2>
 	<p>
 		Neste capítulo, vamos entender como foram distribuídos territorialmente os <strong> R$ 3 bilhões </strong> da Política Nacional Aldir Blanc.
 	</p>

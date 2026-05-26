@@ -10,7 +10,7 @@
     v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
   const { Story } = defineMeta({
-    title: 'Section 2/personTypeDiverging',
+    title: 'Section 3/personTypeDiverging',
     component: DivergingBarChart,
     tags: ['autodocs'],
     parameters: {

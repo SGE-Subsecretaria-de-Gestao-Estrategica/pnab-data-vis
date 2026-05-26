@@ -12,22 +12,43 @@
 	const bgColors: Record<BgColor, string> = { cream, white };
 
 	let activeBg = $state<BgColor>('cream');
+
+	const sections = [
+		{ id: 'section-1-intro', label: '1. Territórios' },
+		{ id: 'section-2-bignumber', label: '2. Pagamentos' },
+		{ id: 'section-3-intro', label: '3. Quem acessou' },
+		{ id: 'section-4-intro', label: '4. Mercado formal' },
+		{ id: 'section-5', label: '5. Seção 5' },
+		{ id: 'section-6', label: '6. Seção 6' },
+		{ id: 'section-7', label: '7. Seção 7' }
+	];
+
+	function scrollTo(id: string) {
+		document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	}
 </script>
 
 <svelte:head>
 	<title>PNAB - Visualizacao de Dados</title>
 </svelte:head>
 
-<div class="bg-switcher">
-	{#each Object.keys(bgColors) as key}
-		<button
-			class="swatch"
-			class:active={activeBg === key}
-			style:background={bgColors[key as BgColor]}
-			onclick={() => (activeBg = key as BgColor)}
-			aria-label="Fundo {key}"
-		></button>
-	{/each}
+<div class="controls">
+	<div class="bg-switcher">
+		{#each Object.keys(bgColors) as key}
+			<button
+				class="swatch"
+				class:active={activeBg === key}
+				style:background={bgColors[key as BgColor]}
+				onclick={() => (activeBg = key as BgColor)}
+				aria-label="Fundo {key}"
+			></button>
+		{/each}
+	</div>
+	<nav class="section-nav">
+		{#each sections as { id, label }}
+			<button onclick={() => scrollTo(id)}>{label}</button>
+		{/each}
+	</nav>
 </div>
 
 <main style:background={bgColors[activeBg]} style:--chart-bg={bgColors[activeBg]}>
@@ -47,17 +68,54 @@
 		transition: background 0.3s ease;
 	}
 
-	.bg-switcher {
+	.controls {
 		position: fixed;
 		top: 1rem;
 		right: 1rem;
 		z-index: 100;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 0.5rem;
+	}
+
+	.bg-switcher {
 		display: flex;
 		gap: 0.5rem;
 		padding: 0.4rem;
 		background: rgba(0, 0, 0, 0.06);
 		border-radius: 999px;
 		backdrop-filter: blur(4px);
+	}
+
+	.section-nav {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding: 0.5rem 0.6rem;
+		background: rgba(0, 0, 0, 0.06);
+		border-radius: 0.75rem;
+		backdrop-filter: blur(4px);
+	}
+
+	.section-nav button {
+		background: none;
+		border: none;
+		cursor: pointer;
+		font-family: 'Rawline', 'Raleway', system-ui, sans-serif;
+		font-size: 0.72rem;
+		text-align: right;
+		color: #333;
+		padding: 0.2rem 0.4rem;
+		border-radius: 0.4rem;
+		opacity: 0.7;
+		transition: opacity 0.15s, background 0.15s;
+		white-space: nowrap;
+	}
+
+	.section-nav button:hover {
+		opacity: 1;
+		background: rgba(0, 0, 0, 0.07);
 	}
 
 	.swatch {

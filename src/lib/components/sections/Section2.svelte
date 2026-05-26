@@ -51,7 +51,7 @@
      GRANDES NÚMEROS — MUITOS CPFs, POUCO DINHEIRO
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-2-bignumber">
-	<h2>Como os recursos se traduziram em pagamentos aos agentes culturais?</h2>
+	<h2>2. Como os recursos se traduziram em pagamentos aos agentes culturais?</h2>
 	<p>
 		Depois de entendermos a distribuição dos recursos nos territórios, vamos identificar e analisar a forma como esses recursos foram operacionalizados em pagamentos aos agentes culturais.
 	</p>

@@ -7,6 +7,5 @@ build
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .venv
-*.ipynb
 src/_temp_data
 *.pyc

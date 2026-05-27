@@ -4,7 +4,7 @@
   import { BigNumber, SvgExportDecorator } from 'sniic-design-system';
 
   const { Story } = defineMeta({
-    title: 'Section 3/paymentRangeBigNumbers',
+    title: 'Section 2/paymentRangeBigNumbers',
     component: BigNumber,
     tags: ['autodocs'],
   decorators: [() => ({ Component: SvgExportDecorator })],

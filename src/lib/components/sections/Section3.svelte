@@ -7,8 +7,7 @@
 		PictogramChart,
 		colorPairs,
 		colorScales,
-		categorical8,
-		AnnotationBox
+		categorical8
 	} from 'sniic-design-system';
 	import PyramidChartCustom from '$lib/components/PyramidChartCustom.svelte';
 	import {
@@ -59,19 +58,15 @@
 		organizações contempladas no primeiro ciclo da Aldir Blanc, destacando alguns indicadores que
 		ajudam a compreender quem acessou os recursos da política.
 	</p>
-	<svg width={600} height={130} style="overflow: hidden; margin-top: 1rem;">
-		<AnnotationBox
-			title=""
-			subtitle={"As análises apresentadas neste capítulo resultam do cruzamento dos dados de agentes culturais contemplados pela Política Nacional Aldir Blanc com bases da Receita Federal. Para as pessoas físicas, foram utilizadas as variáveis idade e sexo (masculino/feminino), sendo, esta última adotada conforme disponibilidade da base, referindo-se ao sexo biológico registrado — o que não contempla a diversidade de identidades de gênero (como pessoas trans, travestis, não binárias, entre outras). Para as pessoas jurídicas, foram utilizadas as variáveis natureza jurídica e CNAE (principal e secundários)."}
-			boxX={0}
-			boxY={0}
-			boxWidth={1000}
-			pointX={-30}
-			pointY={63}
-			showTitle={false}
-			circleRadius={0}
-		/>
-	</svg>
+	<div class="annotation-box">
+		As análises apresentadas neste capítulo resultam do cruzamento dos dados de agentes culturais
+		contemplados pela Política Nacional Aldir Blanc com bases da Receita Federal. Para as pessoas
+		físicas, foram utilizadas as variáveis idade e sexo (masculino/feminino), sendo, esta última
+		adotada conforme disponibilidade da base, referindo-se ao sexo biológico registrado — o que
+		não contempla a diversidade de identidades de gênero (como pessoas trans, travestis, não
+		binárias, entre outras). Para as pessoas jurídicas, foram utilizadas as variáveis natureza
+		jurídica e CNAE (principal e secundários).
+	</div>
 	<p>
 		Ao todo, <strong>{totalBeneficiarios.toLocaleString('pt-BR')} agentes culturais</strong> foram
 		contemplados pelo programa, entre pessoas físicas e jurídicas.
@@ -263,5 +258,15 @@
 		opacity: 0.55;
 		margin: 0 0 0.25rem;
 		text-align: center;
+	}
+
+	.annotation-box {
+		margin-top: 1rem;
+		padding: 1rem 1.25rem;
+		border: 1px solid currentColor;
+		border-radius: 2px;
+		font-size: 0.875rem;
+		line-height: 1.6;
+		opacity: 0.8;
 	}
 </style>

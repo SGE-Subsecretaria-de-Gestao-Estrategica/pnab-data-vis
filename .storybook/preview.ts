@@ -3,6 +3,11 @@ import '../node_modules/sniic-design-system/dist/sniic.css'
 
 const preview: Preview = {
   parameters: {
+    options: {
+      storySort: {
+        order: ['Section 1', 'Section 2', 'Section 3', 'Section 4'],
+      },
+    },
     controls: {
       matchers: {
        color: /(background|color)$/i,

@@ -15,7 +15,7 @@
     }).format(v);
 
   const { Story } = defineMeta({
-    title: 'Section 3/personTypeBoxPlot',
+    title: 'Section 2/personTypeBoxPlot',
     component: BoxPlotChart,
     tags: ['autodocs'],
   decorators: [() => ({ Component: SvgExportDecorator })],

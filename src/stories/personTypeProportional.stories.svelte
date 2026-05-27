@@ -15,7 +15,7 @@
     }).format(v);
 
   const { Story } = defineMeta({
-    title: 'Section 3/personTypeProportional',
+    title: 'Section 2/personTypeProportional',
     component: ProportionalAreaChart,
     tags: ['autodocs'],
   decorators: [() => ({ Component: SvgExportDecorator })],

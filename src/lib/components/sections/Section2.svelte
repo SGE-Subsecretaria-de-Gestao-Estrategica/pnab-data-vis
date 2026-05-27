@@ -69,7 +69,7 @@
 		/>
 	</svg>
 	<h2>Como os pagamentos foram estruturados?</h2>
-	<p>A Política Nacional Aldir Blanc contemplou <strong>166.886</strong> agentes culturais em todo o país. Para analisar se houve concentração de recursos com poucos proponentes, divididos os pagamentos realizados por faixas de valores.</p>
+	<p>Como vimos no capítulo anterior, entre os <strong>166.886</strong> agentes culturais contemplados, 81% são pessoas físicas e 19% são pessoas jurídicas.</p>
 	
 	<ScrollSection id="section-2-faixas-bignumbers">
 		<div class="faixas-bignumbers-row">

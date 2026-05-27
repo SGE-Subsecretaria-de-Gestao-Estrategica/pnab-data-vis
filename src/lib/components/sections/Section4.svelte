@@ -64,7 +64,7 @@
      GRANDES NÚMEROS — TOTAIS
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-4-totals">
-	<h2>Maioria dos beneficiários está fora do mercado formal</h2>
+	<h2>4. Quem são e no que se ocupam os trabalhadores formais contemplados pela Aldir Blanc?</h2>
 	<p>
 		Do total de <strong>{formatN(totalBenef)}</strong> beneficiários analisados,
 		<strong>{formatN(totalSemVinculo)}</strong> — ou seja, <strong>{formatPct(percSemVinculo)}</strong> —

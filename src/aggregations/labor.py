@@ -1449,3 +1449,82 @@ def aggregate_vinculo_trabalho_formal_by_escolaridade_sem_sem_informacao(
         .sort_values("numero_contemplados_total", ascending=False)
         .reset_index(drop=True)
     )
+
+
+def aggregate_cbo_rais(df_cubo: pd.DataFrame) -> pd.DataFrame:
+    """
+    Agrega quantidade de contemplados e valor recebido por CBO_2002_RAIS.
+
+    Filtros aplicados:
+    - tipo_documento == "CPF"
+    - flag_join_rais == True
+
+    Retorna:
+    - CBO_2002_RAIS
+    - soma_quantidade
+    - percentual_quantidade
+    - soma_valor
+    - percentual_valor
+    """
+    df_cubo_cbo = df_cubo[['cbo_codigo', 'cbo_descricao']].drop_duplicates()
+    df_cubo_cbo = df_cubo_cbo[~(df_cubo_cbo['cbo_codigo'].isna())]
+    df_cubo_cbo = df_cubo_cbo.rename(columns={
+        'cbo_descricao': 'cbo_descricao_rais'
+    })
+
+    df_cubo_rais_raw = df_cubo[df_cubo['flag_join_rais'] == True]
+
+    df_cubo_rais = df_cubo_rais_raw.merge(
+    how='left',
+    right=df_cubo_cbo,
+    left_on='CBO_2002_RAIS',
+    right_on='cbo_codigo'
+    )
+
+
+    df = df_cubo_rais.copy()
+
+    df_filtrado = df.loc[
+        (df["tipo_documento"].eq("CPF"))
+        & (df["flag_join_rais"].eq(True))
+    ].copy()
+
+    df_resultado = (
+        df_filtrado
+        .groupby("cbo_descricao_rais", dropna=False)
+        .agg(
+            soma_quantidade=("quantidade", "sum"),
+            soma_valor=("valor_transacao", "sum"),
+        )
+        .reset_index()
+    )
+
+    total_quantidade = df_resultado["soma_quantidade"].sum()
+    total_valor = df_resultado["soma_valor"].sum()
+
+    df_resultado["percentual_quantidade"] = (
+        df_resultado["soma_quantidade"] / total_quantidade
+        if total_quantidade > 0
+        else 0
+    )
+
+    df_resultado["percentual_valor"] = (
+        df_resultado["soma_valor"] / total_valor
+        if total_valor > 0
+        else 0
+    )
+
+    df_resultado = df_resultado[
+        [
+            "cbo_descricao_rais",
+            "soma_quantidade",
+            "percentual_quantidade",
+            "soma_valor",
+            "percentual_valor",
+        ]
+    ].sort_values(
+        by="soma_valor",
+        ascending=False
+    ).reset_index(drop=True)
+
+    return df_resultado

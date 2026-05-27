@@ -64,6 +64,7 @@
 			boxWidth={600}
 			pointX={-30}
 			pointY={63}
+			showTitle={false}
 			circleRadius={0}
 		/>
 	</svg>
@@ -100,7 +101,7 @@
 		</div>
 	</ScrollSection>
 
-	<ScrollSection class="section-2-faixas-valor" style="padding: 0; margin-top: 1.5rem;">
+	<ScrollSection id="section-2-faixas-valor">
 		<h3>Onde está o dinheiro? A concentração nas faixas intermediárias</h3>
 		<p>
 			Enquanto a maioria dos agentes recebe valores pequenos, o grosso dos recursos se concentra
@@ -120,7 +121,7 @@
 		<p>Diante desses dados, percebe-se que a execução da Aldir Blanc articula alcance social ampliado e financiamento de projetos de diferentes escalas, sem se restringir a um único perfil de beneficiário ou de valor.</p>
 	</ScrollSection>
 	
-	<ScrollSection class="section-2-distribuicao-pagamentos" style="padding: 0; margin-top: 1.5rem;">
+	<ScrollSection id="section-2-distribuicao-pagamentos">
 		<h2>Distribuição de pagamentos por região</h2>
 		<p>Veremos a seguir como foi a distribuição da quantidade de pagamentos da Política pelas regiões do país.</p>
 		<HorizontalBarChart       
@@ -158,7 +159,7 @@
 				keys={[...UF_BAND_KEYS]}
 				labels={UF_BAND_LABELS}
 				colors={categorical8}
-				format={(v) => `${v.toFixed(1)}%`}
+				format={(v:any) => `${v.toFixed(1)}%`}
 				yLabel="% dos beneficiários"
 				normalize={true}
 				showLegend={true}

@@ -9,3 +9,4 @@ vite.config.ts.timestamp-*
 .venv
 src/_temp_data
 *.pyc
+/data/input_data/non-public

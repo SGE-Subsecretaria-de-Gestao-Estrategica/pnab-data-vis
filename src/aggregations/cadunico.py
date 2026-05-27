@@ -498,3 +498,189 @@ def aggregate_cadunico_by_fx_renda_per_capita(df_cubo: pd.DataFrame) -> pd.DataF
             "percentual_valor",
         ]
     ]
+
+
+def aggregate_cadunico_by_situacao_domicilio(df_cubo: pd.DataFrame) -> pd.DataFrame:
+    """
+    Agrega quantidade de contemplados e valor recebido por situação do domicílio
+    entre contemplados CPF que estão no CadÚnico.
+
+    Regras:
+    - Considera apenas tipo_documento == "CPF"
+    - Considera apenas pessoaCad_cadunico == 1.0
+    - Usa quantidade como número de contemplados
+    - Usa valor_transacao como valor recebido
+    - Valores NaN em SITUACAO são contabilizados como "Não informado"
+    """
+
+    required_columns = [
+        "tipo_documento",
+        "pessoaCad_cadunico",
+        "SITUACAO",
+        "quantidade",
+        "valor_transacao",
+    ]
+
+    missing_columns = [
+        col for col in required_columns if col not in df_cubo.columns
+    ]
+
+    if missing_columns:
+        raise ValueError(
+            f"As seguintes colunas não existem no DataFrame: {missing_columns}"
+        )
+
+    categorias_ordenadas = [
+        "Urbana",
+        "Rural",
+        "Não informado",
+    ]
+
+    df = df_cubo.loc[
+        (df_cubo["tipo_documento"].eq("CPF"))
+        & (df_cubo["pessoaCad_cadunico"].eq(1.0))
+    ].copy()
+
+    df["SITUACAO"] = df["SITUACAO"].fillna("Não informado")
+
+    df = df.loc[
+        df["SITUACAO"].isin(categorias_ordenadas)
+    ].copy()
+
+    df_resultado = (
+        df
+        .groupby("SITUACAO", dropna=False)
+        .agg(
+            soma_quantidade=("quantidade", "sum"),
+            soma_valor=("valor_transacao", "sum"),
+        )
+        .reset_index()
+    )
+
+    total_quantidade = df_resultado["soma_quantidade"].sum()
+    total_valor = df_resultado["soma_valor"].sum()
+
+    df_resultado["percentual_quantidade"] = (
+        df_resultado["soma_quantidade"] / total_quantidade 
+        if total_quantidade > 0
+        else 0
+    )
+
+    df_resultado["percentual_valor"] = (
+        df_resultado["soma_valor"] / total_valor 
+        if total_valor > 0
+        else 0
+    )
+
+    df_resultado["SITUACAO"] = pd.Categorical(
+        df_resultado["SITUACAO"],
+        categories=categorias_ordenadas,
+        ordered=True,
+    )
+
+    df_resultado = (
+        df_resultado
+        .sort_values("SITUACAO")
+        .reset_index(drop=True)
+    )
+
+    return df_resultado[
+        [
+            "SITUACAO",
+            "soma_quantidade",
+            "percentual_quantidade",
+            "soma_valor",
+            "percentual_valor",
+        ]
+    ]
+
+
+def aggregate_cadunico_by_population_size(df_cubo: pd.DataFrame) -> pd.DataFrame:
+    """
+    Agrega quantidade de contemplados e valor recebido por porte populacional
+    entre contemplados CPF que estão no CadÚnico.
+
+    Regras:
+    - Considera apenas tipo_documento == "CPF"
+    - Considera apenas pessoaCad_cadunico == 1.0
+    - Remove porte_populacional == "-99", pois se refere a estados
+    - Usa quantidade como número de contemplados
+    - Usa valor_transacao como valor recebido
+    """
+
+    required_columns = [
+        "tipo_documento",
+        "pessoaCad_cadunico",
+        "porte_populacional",
+        "quantidade",
+        "valor_transacao",
+    ]
+
+    missing_columns = [
+        col for col in required_columns if col not in df_cubo.columns
+    ]
+
+    if missing_columns:
+        raise ValueError(
+            f"As seguintes colunas não existem no DataFrame: {missing_columns}"
+        )
+
+    categorias_ordenadas = [
+        "1_pequeno_i",
+        "2_pequeno_ii",
+        "3_medio",
+        "4_grande",
+    ]
+
+    df = df_cubo.loc[
+        (df_cubo["tipo_documento"].eq("CPF"))
+        & (df_cubo["pessoaCad_cadunico"].eq(1.0))
+        & (df_cubo["porte_populacional"].isin(categorias_ordenadas))
+    ].copy()
+
+    df_resultado = (
+        df
+        .groupby("porte_populacional", dropna=False)
+        .agg(
+            soma_quantidade=("quantidade", "sum"),
+            soma_valor=("valor_transacao", "sum"),
+        )
+        .reset_index()
+    )
+
+    total_quantidade = df_resultado["soma_quantidade"].sum()
+    total_valor = df_resultado["soma_valor"].sum()
+
+    df_resultado["percentual_quantidade"] = (
+        df_resultado["soma_quantidade"] / total_quantidade
+        if total_quantidade > 0
+        else 0
+    )
+
+    df_resultado["percentual_valor"] = (
+        df_resultado["soma_valor"] / total_valor
+        if total_valor > 0
+        else 0
+    )
+
+    df_resultado["porte_populacional"] = pd.Categorical(
+        df_resultado["porte_populacional"],
+        categories=categorias_ordenadas,
+        ordered=True,
+    )
+
+    df_resultado = (
+        df_resultado
+        .sort_values("porte_populacional")
+        .reset_index(drop=True)
+    )
+
+    return df_resultado[
+        [
+            "porte_populacional",
+            "soma_quantidade",
+            "percentual_quantidade",
+            "soma_valor",
+            "percentual_valor",
+        ]
+    ]

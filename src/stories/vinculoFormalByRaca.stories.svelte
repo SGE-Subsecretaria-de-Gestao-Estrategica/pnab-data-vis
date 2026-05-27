@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalBarChart, TreemapChart, categorical8 } from 'sniic-design-system';
+  import { HorizontalBarChart, TreemapChart, categorical8, SvgExportDecorator } from 'sniic-design-system';
   // @ts-ignore
   import { racaCorBarData, racaCorTreemapData } from '$lib/data/section4';
 
@@ -12,6 +12,7 @@
     title: 'Section 4/vinculoFormalByRaca',
     component: HorizontalBarChart,
     tags: ['autodocs'],
+  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

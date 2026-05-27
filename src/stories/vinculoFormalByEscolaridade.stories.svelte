@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalBarChart, colorScales } from 'sniic-design-system';
+  import { HorizontalBarChart, colorScales, SvgExportDecorator } from 'sniic-design-system';
   // @ts-ignore
   import { escolaridadeBarData } from '$lib/data/section4';
 
@@ -12,6 +12,7 @@
     title: 'Section 4/vinculoFormalByEscolaridade',
     component: HorizontalBarChart,
     tags: ['autodocs'],
+  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

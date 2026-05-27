@@ -1,13 +1,14 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { SlopeGraph, categorical8 } from 'sniic-design-system';
+  import { SlopeGraph, categorical8, SvgExportDecorator } from 'sniic-design-system';
   import { slopeItems, slopeLabels, formatSlope } from '$lib/data/section1';
 
   const { Story } = defineMeta({
     title: 'Section 1/equityRankSlope',
     component: SlopeGraph,
     tags: ['autodocs'],
+  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

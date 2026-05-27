@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart, RegionSilhouetteChart, colorScales, categorical8 } from 'sniic-design-system';
+  import { HorizontalStackedBarChart, RegionSilhouetteChart, colorScales, categorical8, SvgExportDecorator } from 'sniic-design-system';
   // @ts-ignore
   import { regionStackedData, regionSilhouetteData, ageGroupKeys, ageGroupLabels } from '$lib/data/section4';
 
@@ -14,6 +14,7 @@
     title: 'Section 4/vinculoFormalByRegion',
     component: HorizontalStackedBarChart,
     tags: ['autodocs'],
+  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

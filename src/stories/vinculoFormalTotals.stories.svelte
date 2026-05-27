@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { BigNumber, ProportionalAreaChart, colorScales } from 'sniic-design-system';
+  import { BigNumber, ProportionalAreaChart, colorScales, SvgExportDecorator } from 'sniic-design-system';
   // @ts-ignore
   import {
     percSemVinculo, percComVinculo,
@@ -17,6 +17,7 @@
     title: 'Section 4/vinculoFormalTotals',
     component: BigNumber,
     tags: ['autodocs'],
+  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

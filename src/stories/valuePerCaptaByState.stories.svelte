@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart } from 'sniic-design-system';
+  import { HorizontalStackedBarChart, SvgExportDecorator } from 'sniic-design-system';
   import { percapitaData } from '$lib/data/section1';
 
   const flagModules = import.meta.glob(
@@ -25,6 +25,7 @@
     title: 'Section 1/valuePerCaptaByState',
     component: HorizontalStackedBarChart,
     tags: ['autodocs'],
+  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

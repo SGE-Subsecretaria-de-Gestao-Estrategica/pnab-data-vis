@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalBarChart, categorical8 } from 'sniic-design-system';
+  import { HorizontalBarChart, categorical8, SvgExportDecorator } from 'sniic-design-system';
   import { rankingData } from '$lib/data/section1';
 
   // @ts-ignore
@@ -15,6 +15,7 @@
     title: 'Section 1/rankingByState',
     component: HorizontalBarChart,
     tags: ['autodocs'],
+  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

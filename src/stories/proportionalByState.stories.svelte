@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { ProportionalAreaChart, StatesSilhouetteChart, RegionSilhouetteChart, categorical8 } from 'sniic-design-system';
+  import { ProportionalAreaChart, StatesSilhouetteChart, RegionSilhouetteChart, categorical8, SvgExportDecorator } from 'sniic-design-system';
   import { rankingData, regionAreaData, silhouetteStateData, silhouetteRegionData } from '$lib/data/section1';
 
   // @ts-ignore
@@ -15,6 +15,7 @@
     title: 'Section 1/proportionalByState',
     component: ProportionalAreaChart,
     tags: ['autodocs'],
+  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

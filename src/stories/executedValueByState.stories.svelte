@@ -3,6 +3,7 @@
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import ChoroplethMapLabeled from '$lib/components/ExecutedValueByStateMap.svelte';
   import { states } from '$lib/data/section1';
+  import { SvgExportDecorator } from 'sniic-design-system';
 
   // @ts-ignore
   const formatPerc = (v) =>
@@ -19,6 +20,7 @@
     title: 'Section 1/executedValueByState',
     component: ChoroplethMapLabeled,
     tags: ['autodocs'],
+  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

@@ -1,12 +1,13 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { BigNumber } from 'sniic-design-system';
+  import { BigNumber, SvgExportDecorator } from 'sniic-design-system';
 
   const { Story } = defineMeta({
     title: 'Section 3/paymentRangeBigNumbers',
     component: BigNumber,
     tags: ['autodocs'],
+  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

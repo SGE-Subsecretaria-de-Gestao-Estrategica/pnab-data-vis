@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart, categorical8 } from 'sniic-design-system';
+  import { HorizontalStackedBarChart, categorical8, SvgExportDecorator } from 'sniic-design-system';
   // @ts-ignore
   import { bandStackedData, BAND_STACK_KEYS, BAND_LABELS } from '$lib/data/section2';
 
@@ -12,6 +12,7 @@
     title: 'Section 3/valueRangeByPersonType',
     component: HorizontalStackedBarChart,
     tags: ['autodocs'],
+  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

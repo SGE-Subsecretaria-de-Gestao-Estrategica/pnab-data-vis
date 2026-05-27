@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { ProportionalAreaChart, colorPairs } from 'sniic-design-system';
+  import { ProportionalAreaChart, colorPairs, SvgExportDecorator } from 'sniic-design-system';
   // @ts-ignore
   import { mediaPorTipoData } from '$lib/data/section2';
 
@@ -18,6 +18,7 @@
     title: 'Section 3/personTypeProportional',
     component: ProportionalAreaChart,
     tags: ['autodocs'],
+  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

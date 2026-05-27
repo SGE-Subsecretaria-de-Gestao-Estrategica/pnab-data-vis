@@ -8,6 +8,7 @@
     HorizontalStackedBarChart,
     categorical8,
     colorPairs,
+    SvgExportDecorator,
   } from 'sniic-design-system';
   import {
     porteTreemapData,
@@ -32,6 +33,7 @@
     title: 'Section 1/valuesByPopulationSize',
     component: TreemapChart,
     tags: ['autodocs'],
+  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

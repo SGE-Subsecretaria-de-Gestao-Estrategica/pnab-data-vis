@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { DivergingBarChart, colorPairs } from 'sniic-design-system';
+  import { DivergingBarChart, colorPairs, SvgExportDecorator } from 'sniic-design-system';
   // @ts-ignore
   import { sexoDivergingData } from '$lib/data/section4';
 
@@ -9,6 +9,7 @@
     title: 'Section 4/vinculoFormalBySexo',
     component: DivergingBarChart,
     tags: ['autodocs'],
+  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

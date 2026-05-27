@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { VerticalStackedBarChart, categorical8 } from 'sniic-design-system';
+  import { VerticalStackedBarChart, categorical8, SvgExportDecorator } from 'sniic-design-system';
   // @ts-ignore
   import { ufBandPercData, UF_BAND_KEYS, UF_BAND_LABELS } from '$lib/data/section2';
 
@@ -12,6 +12,7 @@
     title: 'Section 3/valueRangeByUf',
     component: VerticalStackedBarChart,
     tags: ['autodocs'],
+  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

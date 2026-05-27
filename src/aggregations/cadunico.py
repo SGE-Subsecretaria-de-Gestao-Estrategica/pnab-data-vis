@@ -316,3 +316,185 @@ def aggregate_cadunico_faixa_etaria_by_sexo(df_cubo: pd.DataFrame) -> pd.DataFra
             "total_quantidade_faixa_etaria",
         ]
     ]
+
+
+def aggregate_cadunico_by_situacao_renda(df_cubo: pd.DataFrame, tipo_agg: str = 'situacao_renda_cadunico') -> pd.DataFrame:
+    """
+    Agrega quantidade de contemplados e valor recebido por situação de renda
+    entre contemplados CPF que estão no CadÚnico.
+
+    Regras:
+    - Considera apenas tipo_documento == "CPF"
+    - Considera apenas pessoaCad_cadunico == 1.0
+    - Considera apenas as categorias válidas de situacao_renda_cadunico
+    - Usa quantidade como número de contemplados
+    - Usa valor_transacao como valor recebido
+    """
+
+    required_columns = [
+        "tipo_documento",
+        "pessoaCad_cadunico",
+        tipo_agg,
+        "quantidade",
+        "valor_transacao",
+    ]
+
+    missing_columns = [
+        col for col in required_columns if col not in df_cubo.columns
+    ]
+
+    if missing_columns:
+        raise ValueError(
+            f"As seguintes colunas não existem no DataFrame: {missing_columns}"
+        )
+
+    categorias_validas = [
+        "Pobreza",
+        "Baixa renda",
+        "Acima de 1/2 salário mínimo",
+    ]
+
+    df = df_cubo.loc[
+        (df_cubo["tipo_documento"].eq("CPF"))
+        & (df_cubo["pessoaCad_cadunico"].eq(1.0))
+        & (df_cubo[tipo_agg].isin(categorias_validas))
+    ].copy()
+
+    df_resultado = (
+        df
+        .groupby(tipo_agg, dropna=False)
+        .agg(
+            soma_quantidade=("quantidade", "sum"),
+            soma_valor=("valor_transacao", "sum"),
+        )
+        .reset_index()
+    )
+
+    total_quantidade = df_resultado["soma_quantidade"].sum()
+    total_valor = df_resultado["soma_valor"].sum()
+
+    df_resultado["percentual_quantidade"] = (
+        df_resultado["soma_quantidade"] / total_quantidade 
+        if total_quantidade > 0
+        else 0
+    )
+
+    df_resultado["percentual_valor"] = (
+        df_resultado["soma_valor"] / total_valor 
+        if total_valor > 0
+        else 0
+    )
+
+    df_resultado[tipo_agg] = pd.Categorical(
+        df_resultado[tipo_agg],
+        categories=categorias_validas,
+        ordered=True,
+    )
+
+    df_resultado = (
+        df_resultado
+        .sort_values(tipo_agg)
+        .reset_index(drop=True)
+    )
+
+    return df_resultado[
+        [
+            tipo_agg,
+            "soma_quantidade",
+            "percentual_quantidade",
+            "soma_valor",
+            "percentual_valor",
+        ]
+    ]
+
+
+def aggregate_cadunico_by_fx_renda_per_capita(df_cubo: pd.DataFrame) -> pd.DataFrame:
+    """
+    Agrega quantidade de contemplados e valor recebido por faixa de renda per capita
+    entre contemplados CPF que estão no CadÚnico.
+
+    Regras:
+    - Considera apenas tipo_documento == "CPF"
+    - Considera apenas pessoaCad_cadunico == 1.0
+    - Considera apenas as categorias válidas de fxRendaPerCapita_desc_cadunico
+    - Usa quantidade como número de contemplados
+    - Usa valor_transacao como valor recebido
+    """
+
+    required_columns = [
+        "tipo_documento",
+        "pessoaCad_cadunico",
+        "fxRendaPerCapita_desc_cadunico",
+        "quantidade",
+        "valor_transacao",
+    ]
+
+    missing_columns = [
+        col for col in required_columns if col not in df_cubo.columns
+    ]
+
+    if missing_columns:
+        raise ValueError(
+            f"As seguintes colunas não existem no DataFrame: {missing_columns}"
+        )
+
+    categorias_validas = [
+        "De 0 até R$ 109",
+        "De R$ 109,01 até R$ 218",
+        "De R$ 218,01 até meio salário mínimo",
+        "De meio salário mínimo a um salário mínimo",
+        "Superior a um salário mínimo",
+    ]
+
+    df = df_cubo.loc[
+        (df_cubo["tipo_documento"].eq("CPF"))
+        & (df_cubo["pessoaCad_cadunico"].eq(1.0))
+        & (df_cubo["fxRendaPerCapita_desc_cadunico"].isin(categorias_validas))
+    ].copy()
+
+    df_resultado = (
+        df
+        .groupby("fxRendaPerCapita_desc_cadunico", dropna=False)
+        .agg(
+            soma_quantidade=("quantidade", "sum"),
+            soma_valor=("valor_transacao", "sum"),
+        )
+        .reset_index()
+    )
+
+    total_quantidade = df_resultado["soma_quantidade"].sum()
+    total_valor = df_resultado["soma_valor"].sum()
+
+    df_resultado["percentual_quantidade"] = (
+        df_resultado["soma_quantidade"] / total_quantidade * 100
+        if total_quantidade > 0
+        else 0
+    )
+
+    df_resultado["percentual_valor"] = (
+        df_resultado["soma_valor"] / total_valor * 100
+        if total_valor > 0
+        else 0
+    )
+
+    df_resultado["fxRendaPerCapita_desc_cadunico"] = pd.Categorical(
+        df_resultado["fxRendaPerCapita_desc_cadunico"],
+        categories=categorias_validas,
+        ordered=True,
+    )
+
+    df_resultado = (
+        df_resultado
+        .sort_values("fxRendaPerCapita_desc_cadunico")
+        .reset_index(drop=True)
+    )
+
+    return df_resultado[
+        [
+            "fxRendaPerCapita_desc_cadunico",
+            "soma_quantidade",
+            "percentual_quantidade",
+            "soma_valor",
+            "percentual_valor",
+        ]
+    ]

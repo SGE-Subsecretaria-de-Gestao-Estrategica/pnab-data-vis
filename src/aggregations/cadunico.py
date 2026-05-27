@@ -961,3 +961,72 @@ def aggregate_bolsa_familia_summary(df_cubo: pd.DataFrame) -> pd.DataFrame:
     )
 
     return df_resultado
+
+def aggregate_bpc_summary(df_cubo: pd.DataFrame) -> pd.DataFrame:
+    """
+    Resume a participação dos contemplados CPF que recebem
+    Benefício de Prestação Continuada (BPC).
+
+    Regras:
+    - Considera apenas tipo_documento == "CPF"
+    - Considera beneficiário do BPC quando pertence_bpc == 1.0
+    - Usa quantidade como número de contemplados
+    - Usa valor_transacao como valor recebido
+
+    Retorna uma tabela com uma linha.
+    """
+
+    required_columns = [
+        "tipo_documento",
+        "pertence_bpc",
+        "quantidade",
+        "valor_transacao",
+    ]
+
+    missing_columns = [
+        col for col in required_columns if col not in df_cubo.columns
+    ]
+
+    if missing_columns:
+        raise ValueError(
+            f"As seguintes colunas não existem no DataFrame: {missing_columns}"
+        )
+
+    df_cpf = df_cubo.loc[
+        df_cubo["tipo_documento"].eq("CPF")
+    ].copy()
+
+    df_bpc = df_cpf.loc[
+        df_cpf["pertence_bpc"].eq(1.0)
+    ].copy()
+
+    total_contemplados_cpf = df_cpf["quantidade"].sum()
+    total_valor_cpf = df_cpf["valor_transacao"].sum()
+
+    qtd_contemplados_bpc = df_bpc["quantidade"].sum()
+    valor_recebido_bpc = df_bpc["valor_transacao"].sum()
+
+    perc_contemplados_bpc = (
+        qtd_contemplados_bpc / total_contemplados_cpf 
+        if total_contemplados_cpf > 0
+        else 0
+    )
+
+    perc_valor_bpc = (
+        valor_recebido_bpc / total_valor_cpf 
+        if total_valor_cpf > 0
+        else 0
+    )
+
+    df_resultado = pd.DataFrame(
+        {
+            "qtd_contemplados_bpc": [qtd_contemplados_bpc],
+            "perc_contemplados_bpc": [perc_contemplados_bpc],
+            "valor_recebido_bpc": [valor_recebido_bpc],
+            "perc_valor_bpc": [perc_valor_bpc],
+            "qtd_contemplados_cpf_total": [total_contemplados_cpf],
+            "valor_cpf_total": [total_valor_cpf],
+        }
+    )
+
+    return df_resultado

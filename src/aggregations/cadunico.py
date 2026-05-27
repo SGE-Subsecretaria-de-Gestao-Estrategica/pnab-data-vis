@@ -466,13 +466,13 @@ def aggregate_cadunico_by_fx_renda_per_capita(df_cubo: pd.DataFrame) -> pd.DataF
     total_valor = df_resultado["soma_valor"].sum()
 
     df_resultado["percentual_quantidade"] = (
-        df_resultado["soma_quantidade"] / total_quantidade * 100
+        df_resultado["soma_quantidade"] / total_quantidade 
         if total_quantidade > 0
         else 0
     )
 
     df_resultado["percentual_valor"] = (
-        df_resultado["soma_valor"] / total_valor * 100
+        df_resultado["soma_valor"] / total_valor 
         if total_valor > 0
         else 0
     )
@@ -684,3 +684,280 @@ def aggregate_cadunico_by_population_size(df_cubo: pd.DataFrame) -> pd.DataFrame
             "percentual_valor",
         ]
     ]
+
+def aggregate_cadunico_by_uf(df_cubo: pd.DataFrame) -> pd.DataFrame:
+    """
+    Agrega, por UF, quantidade e valor de contemplados no CadÚnico
+    em comparação com o total de contemplados CPF da UF.
+
+    Regras:
+    - Considera apenas tipo_documento == "CPF"
+    - Considera CadÚnico quando pessoaCad_cadunico == 1.0
+    - Usa quantidade como número de contemplados
+    - Usa valor_transacao como valor recebido
+
+    Percentuais calculados:
+    - participação da UF no total Brasil de contemplados CadÚnico
+    - participação da UF no total Brasil de contemplados CPF
+    - participação da UF no valor Brasil de contemplados CadÚnico
+    - participação da UF no valor Brasil de contemplados CPF
+    """
+
+    required_columns = [
+        "tipo_documento",
+        "pessoaCad_cadunico",
+        "uf",
+        "quantidade",
+        "valor_transacao",
+    ]
+
+    missing_columns = [
+        col for col in required_columns if col not in df_cubo.columns
+    ]
+
+    if missing_columns:
+        raise ValueError(
+            f"As seguintes colunas não existem no DataFrame: {missing_columns}"
+        )
+
+    df_cpf = df_cubo.loc[
+        df_cubo["tipo_documento"].eq("CPF")
+    ].copy()
+
+    df_cpf["uf"] = df_cpf["uf"].fillna("Não informado")
+
+    df_total_uf = (
+        df_cpf
+        .groupby("uf", dropna=False)
+        .agg(
+            qtd_contemplados_total_uf=("quantidade", "sum"),
+            valor_contemplados_total_uf=("valor_transacao", "sum"),
+        )
+        .reset_index()
+    )
+
+    df_cadunico_uf = (
+        df_cpf
+        .loc[df_cpf["pessoaCad_cadunico"].eq(1.0)]
+        .groupby("uf", dropna=False)
+        .agg(
+            qtd_contemplados_cadunico=("quantidade", "sum"),
+            valor_contemplados_cadunico=("valor_transacao", "sum"),
+        )
+        .reset_index()
+    )
+
+    df_resultado = df_total_uf.merge(
+        df_cadunico_uf,
+        on="uf",
+        how="left",
+    )
+
+    df_resultado[
+        [
+            "qtd_contemplados_cadunico",
+            "valor_contemplados_cadunico",
+        ]
+    ] = df_resultado[
+        [
+            "qtd_contemplados_cadunico",
+            "valor_contemplados_cadunico",
+        ]
+    ].fillna(0)
+
+    total_qtd_cadunico_brasil = df_resultado["qtd_contemplados_cadunico"].sum()
+    total_qtd_geral_brasil = df_resultado["qtd_contemplados_total_uf"].sum()
+
+    total_valor_cadunico_brasil = df_resultado["valor_contemplados_cadunico"].sum()
+    total_valor_geral_brasil = df_resultado["valor_contemplados_total_uf"].sum()
+
+    df_resultado["perc_qtd_cadunico_brasil"] = (
+        df_resultado["qtd_contemplados_cadunico"]
+        / total_qtd_cadunico_brasil
+        
+        if total_qtd_cadunico_brasil > 0
+        else 0
+    )
+
+    df_resultado["perc_qtd_total_brasil"] = (
+        df_resultado["qtd_contemplados_total_uf"]
+        / total_qtd_geral_brasil
+        
+        if total_qtd_geral_brasil > 0
+        else 0
+    )
+
+    df_resultado["perc_valor_cadunico_brasil"] = (
+        df_resultado["valor_contemplados_cadunico"]
+        / total_valor_cadunico_brasil
+        
+        if total_valor_cadunico_brasil > 0
+        else 0
+    )
+
+    df_resultado["perc_valor_total_brasil"] = (
+        df_resultado["valor_contemplados_total_uf"]
+        / total_valor_geral_brasil
+        
+        if total_valor_geral_brasil > 0
+        else 0
+    )
+
+    df_resultado = (
+        df_resultado
+        .sort_values("qtd_contemplados_cadunico", ascending=False)
+        .reset_index(drop=True)
+    )
+
+    return df_resultado[
+        [
+            "uf",
+            "qtd_contemplados_cadunico",
+            "qtd_contemplados_total_uf",
+            "perc_qtd_cadunico_brasil",
+            "perc_qtd_total_brasil",
+            "valor_contemplados_cadunico",
+            "valor_contemplados_total_uf",
+            "perc_valor_cadunico_brasil",
+            "perc_valor_total_brasil",
+        ]
+    ]
+
+
+def aggregate_cadunico_by_value_group(df_cubo: pd.DataFrame) -> pd.DataFrame:
+    """
+    Agrega a quantidade de contemplados no CadÚnico por faixa de valor pago.
+
+    Regras:
+    - Considera apenas tipo_documento == "CPF"
+    - Considera apenas pessoaCad_cadunico == 1.0
+    - Usa quantidade como número de contemplados
+    - Agrupa pela coluna faixa_vlr_pago_ju_bbagil
+    - Calcula o percentual que cada faixa representa no total de contemplados
+      CPF do CadÚnico
+    """
+
+    required_columns = [
+        "tipo_documento",
+        "pessoaCad_cadunico",
+        "faixa_vlr_pago_ju_bbagil",
+        "quantidade",
+    ]
+
+    missing_columns = [
+        col for col in required_columns if col not in df_cubo.columns
+    ]
+
+    if missing_columns:
+        raise ValueError(
+            f"As seguintes colunas não existem no DataFrame: {missing_columns}"
+        )
+
+    categorias_ordenadas = [
+        "Até 2 mil",
+        "De 2 a 10 mil",
+        "De 10 a 50 mil",
+        "De 50 a 200 mil",
+        "Acima de 200 mil",
+    ]
+
+    df = df_cubo.loc[
+        (df_cubo["tipo_documento"].eq("CPF"))
+        & (df_cubo["pessoaCad_cadunico"].eq(1.0))
+        & (df_cubo["faixa_vlr_pago_ju_bbagil"].isin(categorias_ordenadas))
+    ].copy()
+
+    df_resultado = (
+        df
+        .groupby("faixa_vlr_pago_ju_bbagil", dropna=False)
+        .agg(
+            soma_quantidade=("quantidade", "sum")
+        )
+        .reindex(categorias_ordenadas, fill_value=0)
+        .reset_index()
+    )
+
+    total_quantidade = df_resultado["soma_quantidade"].sum()
+
+    df_resultado["percentual_quantidade"] = (
+        df_resultado["soma_quantidade"] / total_quantidade
+        if total_quantidade > 0
+        else 0
+    )
+
+    return df_resultado[
+        [
+            "faixa_vlr_pago_ju_bbagil",
+            "soma_quantidade",
+            "percentual_quantidade",
+        ]
+    ]
+
+
+def aggregate_bolsa_familia_summary(df_cubo: pd.DataFrame) -> pd.DataFrame:
+    """
+    Resume a participação dos contemplados CPF que são beneficiários do Bolsa Família.
+
+    Regras:
+    - Considera apenas tipo_documento == "CPF"
+    - Considera beneficiário do Bolsa Família quando familiaPBF_cadunico == 1.0
+    - Usa quantidade como número de contemplados
+    - Usa valor_transacao como valor recebido
+
+    Retorna uma tabela com uma linha.
+    """
+
+    required_columns = [
+        "tipo_documento",
+        "familiaPBF_cadunico",
+        "quantidade",
+        "valor_transacao",
+    ]
+
+    missing_columns = [
+        col for col in required_columns if col not in df_cubo.columns
+    ]
+
+    if missing_columns:
+        raise ValueError(
+            f"As seguintes colunas não existem no DataFrame: {missing_columns}"
+        )
+
+    df_cpf = df_cubo.loc[
+        df_cubo["tipo_documento"].eq("CPF")
+    ].copy()
+
+    df_pbf = df_cpf.loc[
+        df_cpf["familiaPBF_cadunico"].eq(1.0)
+    ].copy()
+
+    total_contemplados_cpf = df_cpf["quantidade"].sum()
+    total_valor_cpf = df_cpf["valor_transacao"].sum()
+
+    qtd_contemplados_pbf = df_pbf["quantidade"].sum()
+    valor_recebido_pbf = df_pbf["valor_transacao"].sum()
+
+    perc_contemplados_pbf = (
+        qtd_contemplados_pbf / total_contemplados_cpf 
+        if total_contemplados_cpf > 0
+        else 0
+    )
+
+    perc_valor_pbf = (
+        valor_recebido_pbf / total_valor_cpf 
+        if total_valor_cpf > 0
+        else 0
+    )
+
+    df_resultado = pd.DataFrame(
+        {
+            "qtd_contemplados_bolsa_familia": [qtd_contemplados_pbf],
+            "perc_contemplados_bolsa_familia": [perc_contemplados_pbf],
+            "valor_recebido_bolsa_familia": [valor_recebido_pbf],
+            "perc_valor_bolsa_familia": [perc_valor_pbf],
+            "qtd_contemplados_cpf_total": [total_contemplados_cpf],
+            "valor_cpf_total": [total_valor_cpf],
+        }
+    )
+
+    return df_resultado

@@ -1683,6 +1683,8 @@ def aggregate_special_territories_by(
 
     df_agg = df_agg[colunas_finais]
 
+    df_agg = df_agg[df_agg['cod_tipo_nome'].isin(["Favela e Comunidade Urbana","Agrupamento quilombola","Agrupamento indígena"])]
+
     return df_agg
 
 def generate_special_territories_brazil_view(

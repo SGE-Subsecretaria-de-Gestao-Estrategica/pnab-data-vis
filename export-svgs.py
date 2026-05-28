@@ -3,6 +3,7 @@ Exports all chart SVGs from Storybook stories to svgs/section_X/ directories.
 Usage: python3 export-svgs.py
 """
 
+import base64
 import json
 import os
 import re
@@ -110,36 +111,123 @@ def main():
                         return chartSvg.outerHTML;
                     }
 
-                    // 2. No chart SVG — wrap rendered HTML in foreignObject
+                    // 2. No chart SVG — build native SVG text elements from the BigNumber component
+                    function esc(s) {
+                        return String(s)
+                            .replace(/&/g, '&amp;')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;')
+                            .replace(/"/g, '&quot;')
+                            .replace(/\\u00a0/g, '&#160;');
+                    }
+
                     const root = document.getElementById('storybook-root');
-                    if (!root || !root.firstElementChild) return null;
-                    const el = root.firstElementChild;
-                    const rect = el.getBoundingClientRect();
-                    const width = Math.ceil(rect.width) || 400;
-                    const height = Math.ceil(rect.height) || 120;
+                    if (!root) return null;
 
-                    // Collect all stylesheet text
-                    const styles = Array.from(document.styleSheets).map(sheet => {
-                        try { return Array.from(sheet.cssRules).map(r => r.cssText).join('\\n'); }
-                        catch { return ''; }
-                    }).join('\\n');
+                    const bigNumberEl = root.querySelector('[class*="big-number"]');
+                    if (!bigNumberEl) return null;
 
-                    return [
-                        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">`,
-                        `  <foreignObject x="0" y="0" width="${width}" height="${height}">`,
-                        `    <div xmlns="http://www.w3.org/1999/xhtml">`,
-                        `      <style>${styles}</style>`,
-                        `      ${el.outerHTML}`,
-                        `    </div>`,
-                        `  </foreignObject>`,
-                        `</svg>`,
-                    ].join('\\n');
+                    const valueEl = bigNumberEl.querySelector('[class*="value"]');
+                    if (!valueEl) return null;
+                    const labelEl = bigNumberEl.querySelector('[class*="label"]');
+
+                    const vcs = getComputedStyle(valueEl);
+                    const valueText = valueEl.textContent.trim();
+                    const fontSize = parseFloat(vcs.fontSize) || 72;
+                    const fillColor = vcs.color || '#000';
+                    const fontFamily = (vcs.fontFamily || 'system-ui').replace(/['"]/g, '');
+                    const fontWeight = vcs.fontWeight || '700';
+
+                    // Detect stroke from text-shadow (multiple offsets = outline effect)
+                    let strokeColor = null;
+                    let strokeWidth = 0;
+                    const ts = vcs.textShadow;
+                    if (ts && ts !== 'none') {
+                        const cm = ts.match(/^(rgba?\\([^)]+\\))/);
+                        if (cm) strokeColor = cm[1];
+                        const offsets = [...ts.matchAll(/(-?[\\d.]+)px\\s+(-?[\\d.]+)px/g)];
+                        strokeWidth = offsets.reduce(
+                            (m, [, x, y]) => Math.max(m, Math.abs(parseFloat(x)), Math.abs(parseFloat(y))), 0
+                        );
+                    }
+
+                    const labelText = labelEl ? labelEl.textContent.trim() : '';
+                    const lcs = labelEl ? getComputedStyle(labelEl) : null;
+                    const labelSize = lcs ? (parseFloat(lcs.fontSize) || 14) : 14;
+                    const labelColor = lcs ? (lcs.color || '#555') : '#555';
+                    const labelWeight = lcs ? (lcs.fontWeight || '600') : '600';
+
+                    // Background: body or storybook-root background
+                    const bodyBg = getComputedStyle(document.body).backgroundColor;
+                    const bg = (bodyBg && bodyBg !== 'rgba(0, 0, 0, 0)') ? bodyBg : 'white';
+
+                    const pad = 32;
+                    const lineH = fontSize * 1.2;
+                    const gap = labelText ? 12 : 0;
+                    const labelH = labelText ? labelSize * 1.4 : 0;
+                    const svgH = Math.ceil(pad * 2 + lineH + gap + labelH);
+                    const svgW = Math.max(Math.ceil(fontSize * 0.65 * valueText.length + pad * 2), 280);
+                    const cx = svgW / 2;
+                    const valueY = pad + fontSize;
+                    const labelY = valueY + gap + labelSize;
+
+                    const parts = [
+                        `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}">`,
+                        `  <rect width="${svgW}" height="${svgH}" fill="${bg}"/>`,
+                    ];
+
+                    // Stroke pass (outline)
+                    if (strokeColor && strokeWidth > 0) {
+                        parts.push(
+                            `  <text x="${cx}" y="${valueY}" text-anchor="middle" ` +
+                            `font-family="${esc(fontFamily)}, system-ui, sans-serif" ` +
+                            `font-size="${fontSize}" font-weight="${fontWeight}" ` +
+                            `fill="${strokeColor}" stroke="${strokeColor}" ` +
+                            `stroke-width="${strokeWidth * 2}" stroke-linejoin="round" ` +
+                            `paint-order="stroke fill">${esc(valueText)}</text>`
+                        );
+                    }
+                    // Fill pass
+                    parts.push(
+                        `  <text x="${cx}" y="${valueY}" text-anchor="middle" ` +
+                        `font-family="${esc(fontFamily)}, system-ui, sans-serif" ` +
+                        `font-size="${fontSize}" font-weight="${fontWeight}" ` +
+                        `fill="${fillColor}">${esc(valueText)}</text>`
+                    );
+
+                    if (labelText) {
+                        parts.push(
+                            `  <text x="${cx}" y="${labelY}" text-anchor="middle" ` +
+                            `font-family="${esc(fontFamily)}, system-ui, sans-serif" ` +
+                            `font-size="${labelSize}" font-weight="${labelWeight}" ` +
+                            `fill="${labelColor}">${esc(labelText)}</text>`
+                        );
+                    }
+
+                    parts.push(`</svg>`);
+                    return parts.join('\\n');
                 }""")
 
                 if not svg_content:
-                    print(f"  [SKIP] No content: {title} / {name}")
-                    failed += 1
-                    continue
+                    # Final fallback: screenshot the rendered element, embed PNG in SVG
+                    root_el = page.locator('#storybook-root')
+                    bbox = root_el.bounding_box()
+                    if bbox and bbox['width'] > 0 and bbox['height'] > 0:
+                        png_bytes = root_el.screenshot()
+                        png_b64 = base64.b64encode(png_bytes).decode()
+                        w, h = int(bbox['width']), int(bbox['height'])
+                        svg_content = (
+                            f'<svg xmlns="http://www.w3.org/2000/svg" '
+                            f'xmlns:xlink="http://www.w3.org/1999/xlink" '
+                            f'width="{w}" height="{h}">\n'
+                            f'  <image href="data:image/png;base64,{png_b64}" '
+                            f'width="{w}" height="{h}"/>\n'
+                            f'</svg>'
+                        )
+                    else:
+                        print(f"  [SKIP] No content: {title} / {name}")
+                        failed += 1
+                        continue
 
                 out_dir.mkdir(parents=True, exist_ok=True)
                 out_path.write_text(svg_content, encoding="utf-8")

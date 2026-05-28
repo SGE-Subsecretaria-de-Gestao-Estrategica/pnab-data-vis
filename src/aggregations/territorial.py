@@ -1275,7 +1275,7 @@ def aggregate_execution_by_porte_with_estado(
     ]
 
     # ------------------------------------------------------------
-    # 20. Arredondar valores monetários para cima
+    # 20. Converter tipos sem arredondar valores monetários
     # ------------------------------------------------------------
 
     colunas_valor = [
@@ -1293,20 +1293,18 @@ def aggregate_execution_by_porte_with_estado(
         + colunas_media_valor_tipo_documento
     )
 
-    df_porte[
+    colunas_valor_todas = (
         colunas_valor
         + colunas_valor_tipo_documento_todas
         + colunas_valor_sexo
-    ] = (
-        np.ceil(
-            df_porte[
-                colunas_valor
-                + colunas_valor_tipo_documento_todas
-                + colunas_valor_sexo
-            ]
-        )
+    )
+
+    # Mantém valores monetários como decimal, sem ceil, sem round e sem converter para inteiro
+    df_porte[colunas_valor_todas] = (
+        df_porte[colunas_valor_todas]
+        .apply(pd.to_numeric, errors="coerce")
         .fillna(0)
-        .astype("Int64")
+        .astype("Float64")
     )
 
     colunas_quantidade = [
@@ -1317,18 +1315,17 @@ def aggregate_execution_by_porte_with_estado(
         "total_qtd_sexo_valido",
     ]
 
-    df_porte[
+    colunas_quantidade_todas = (
         colunas_quantidade
         + colunas_faixa_vlr_pago
         + colunas_qtd_tipo_documento
         + colunas_qtd_sexo
-    ] = (
-        df_porte[
-            colunas_quantidade
-            + colunas_faixa_vlr_pago
-            + colunas_qtd_tipo_documento
-            + colunas_qtd_sexo
-        ]
+    )
+
+    # Quantidades continuam como inteiros
+    df_porte[colunas_quantidade_todas] = (
+        df_porte[colunas_quantidade_todas]
+        .apply(pd.to_numeric, errors="coerce")
         .fillna(0)
         .astype("Int64")
     )

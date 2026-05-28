@@ -2545,3 +2545,58 @@ def aggregate_execution_summary_by_scope(
     )
 
     return df_agregado
+
+
+def resumo_valor_por_porte_municipio(
+    df_cubo: pd.DataFrame,
+    filtrar_municipios: bool = True
+) -> pd.DataFrame:
+    """
+    Gera resumo por porte populacional do município.
+
+    Colunas retornadas:
+    - Tipo de município
+    - Quantidade de municípios por Porte
+    - Valor total por Porte
+    - Valor médio por município
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        Base principal contendo as colunas:
+        - porte_populacional
+        - ente
+        - valor_transacao
+        - tipo_ente, caso filtrar_municipios=True
+
+    filtrar_municipios : bool
+        Se True, mantém apenas registros em que tipo_ente == 'MUNICIPIO'.
+    """
+
+    df = df_cubo.copy()
+
+    if filtrar_municipios and "tipo_ente" in df.columns:
+        df = df[df["tipo_ente"].eq("MUNICIPIO")].copy()
+
+    resumo = (
+        df
+        .groupby("porte_populacional", dropna=False)
+        .agg(
+            quantidade_municipios_por_porte=("ente", "nunique"),
+            valor_total_por_porte=("valor_transacao", "sum")
+        )
+        .reset_index()
+    )
+
+    resumo["valor_medio_por_municipio"] = (
+        resumo["valor_total_por_porte"] / resumo["quantidade_municipios_por_porte"]
+    )
+
+    resumo = resumo.rename(columns={
+        "porte_populacional": "Tipo de município",
+        "quantidade_municipios_por_porte": "Quantidade de municípios por Porte",
+        "valor_total_por_porte": "Valor total por Porte",
+        "valor_medio_por_municipio": "Valor médio por município"
+    })
+
+    return resumo

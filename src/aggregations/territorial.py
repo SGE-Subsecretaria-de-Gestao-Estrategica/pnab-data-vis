@@ -454,8 +454,6 @@ def executed_value_n_contemplados_qty_by(df_cubo, by_filter):
         )
 
     return df_final
-
-
 def aggregate_capital_interior_summary(
     df_cubo: pd.DataFrame
 ) -> pd.DataFrame:
@@ -472,6 +470,11 @@ def aggregate_capital_interior_summary(
     - Masculino
 
     Retorna uma tabela com uma linha.
+
+    Observação:
+    - Percentuais retornam em escala decimal, isto é:
+      0.57 = 57%.
+    - Valores monetários não são arredondados.
     """
 
     tipo_ente_normalizado = (
@@ -552,44 +555,44 @@ def aggregate_capital_interior_summary(
         "valor_total_capital": [valor_total_capital],
         "quantidade_total_capital": [quantidade_total_capital],
         "percentual_valor_capital": [
-            valor_total_capital / valor_total_geral * 100
+            valor_total_capital / valor_total_geral
             if valor_total_geral > 0 else np.nan
         ],
         "percentual_quantidade_capital": [
-            quantidade_total_capital / quantidade_total_geral * 100
+            quantidade_total_capital / quantidade_total_geral
             if quantidade_total_geral > 0 else np.nan
         ],
 
         "quantidade_feminino_capital": [quantidade_feminino_capital],
         "percentual_feminino_capital": [
-            quantidade_feminino_capital / quantidade_total_capital * 100
+            quantidade_feminino_capital / quantidade_total_capital
             if quantidade_total_capital > 0 else np.nan
         ],
         "quantidade_masculino_capital": [quantidade_masculino_capital],
         "percentual_masculino_capital": [
-            quantidade_masculino_capital / quantidade_total_capital * 100
+            quantidade_masculino_capital / quantidade_total_capital
             if quantidade_total_capital > 0 else np.nan
         ],
 
         "valor_total_interior": [valor_total_interior],
         "quantidade_total_interior": [quantidade_total_interior],
         "percentual_valor_interior": [
-            valor_total_interior / valor_total_geral * 100
+            valor_total_interior / valor_total_geral
             if valor_total_geral > 0 else np.nan
         ],
         "percentual_quantidade_interior": [
-            quantidade_total_interior / quantidade_total_geral * 100
+            quantidade_total_interior / quantidade_total_geral
             if quantidade_total_geral > 0 else np.nan
         ],
 
         "quantidade_feminino_interior": [quantidade_feminino_interior],
         "percentual_feminino_interior": [
-            quantidade_feminino_interior / quantidade_total_interior * 100
+            quantidade_feminino_interior / quantidade_total_interior
             if quantidade_total_interior > 0 else np.nan
         ],
         "quantidade_masculino_interior": [quantidade_masculino_interior],
         "percentual_masculino_interior": [
-            quantidade_masculino_interior / quantidade_total_interior * 100
+            quantidade_masculino_interior / quantidade_total_interior
             if quantidade_total_interior > 0 else np.nan
         ],
     })
@@ -620,8 +623,9 @@ def aggregate_capital_interior_summary(
     ]
 
     df_resultado[colunas_valor] = (
-        np.ceil(df_resultado[colunas_valor])
-        .astype("Int64")
+        df_resultado[colunas_valor]
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
     )
 
     df_resultado[colunas_quantidade] = (
@@ -632,11 +636,11 @@ def aggregate_capital_interior_summary(
 
     df_resultado[colunas_percentual] = (
         df_resultado[colunas_percentual]
-        .round(2)
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
     )
 
     return df_resultado
-
 
 def aggregate_execution_by_porte_with_estado(
     df_cubo: pd.DataFrame
@@ -1275,7 +1279,7 @@ def aggregate_execution_by_porte_with_estado(
     ]
 
     # ------------------------------------------------------------
-    # 20. Arredondar valores monetários para cima
+    # 20. Converter tipos sem arredondar valores monetários
     # ------------------------------------------------------------
 
     colunas_valor = [
@@ -1293,20 +1297,18 @@ def aggregate_execution_by_porte_with_estado(
         + colunas_media_valor_tipo_documento
     )
 
-    df_porte[
+    colunas_valor_todas = (
         colunas_valor
         + colunas_valor_tipo_documento_todas
         + colunas_valor_sexo
-    ] = (
-        np.ceil(
-            df_porte[
-                colunas_valor
-                + colunas_valor_tipo_documento_todas
-                + colunas_valor_sexo
-            ]
-        )
+    )
+
+    # Mantém valores monetários como decimal, sem ceil, sem round e sem converter para inteiro
+    df_porte[colunas_valor_todas] = (
+        df_porte[colunas_valor_todas]
+        .apply(pd.to_numeric, errors="coerce")
         .fillna(0)
-        .astype("Int64")
+        .astype("Float64")
     )
 
     colunas_quantidade = [
@@ -1317,18 +1319,17 @@ def aggregate_execution_by_porte_with_estado(
         "total_qtd_sexo_valido",
     ]
 
-    df_porte[
+    colunas_quantidade_todas = (
         colunas_quantidade
         + colunas_faixa_vlr_pago
         + colunas_qtd_tipo_documento
         + colunas_qtd_sexo
-    ] = (
-        df_porte[
-            colunas_quantidade
-            + colunas_faixa_vlr_pago
-            + colunas_qtd_tipo_documento
-            + colunas_qtd_sexo
-        ]
+    )
+
+    # Quantidades continuam como inteiros
+    df_porte[colunas_quantidade_todas] = (
+        df_porte[colunas_quantidade_todas]
+        .apply(pd.to_numeric, errors="coerce")
         .fillna(0)
         .astype("Int64")
     )
@@ -2545,3 +2546,58 @@ def aggregate_execution_summary_by_scope(
     )
 
     return df_agregado
+
+
+def resumo_valor_por_porte_municipio(
+    df_cubo: pd.DataFrame,
+    filtrar_municipios: bool = True
+) -> pd.DataFrame:
+    """
+    Gera resumo por porte populacional do município.
+
+    Colunas retornadas:
+    - Tipo de município
+    - Quantidade de municípios por Porte
+    - Valor total por Porte
+    - Valor médio por município
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        Base principal contendo as colunas:
+        - porte_populacional
+        - ente
+        - valor_transacao
+        - tipo_ente, caso filtrar_municipios=True
+
+    filtrar_municipios : bool
+        Se True, mantém apenas registros em que tipo_ente == 'MUNICIPIO'.
+    """
+
+    df = df_cubo.copy()
+
+    if filtrar_municipios and "tipo_ente" in df.columns:
+        df = df[df["tipo_ente"].eq("MUNICIPIO")].copy()
+
+    resumo = (
+        df
+        .groupby("porte_populacional", dropna=False)
+        .agg(
+            quantidade_municipios_por_porte=("ente", "nunique"),
+            valor_total_por_porte=("valor_transacao", "sum")
+        )
+        .reset_index()
+    )
+
+    resumo["valor_medio_por_municipio"] = (
+        resumo["valor_total_por_porte"] / resumo["quantidade_municipios_por_porte"]
+    )
+
+    resumo = resumo.rename(columns={
+        "porte_populacional": "Tipo de município",
+        "quantidade_municipios_por_porte": "Quantidade de municípios por Porte",
+        "valor_total_por_porte": "Valor total por Porte",
+        "valor_medio_por_municipio": "Valor médio por município"
+    })
+
+    return resumo

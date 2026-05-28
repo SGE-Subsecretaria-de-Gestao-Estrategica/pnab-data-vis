@@ -454,6 +454,7 @@ def executed_value_n_contemplados_qty_by(df_cubo, by_filter):
         )
 
     return df_final
+
 def aggregate_capital_interior_summary(
     df_cubo: pd.DataFrame
 ) -> pd.DataFrame:
@@ -461,9 +462,11 @@ def aggregate_capital_interior_summary(
     Gera resumo agregado de valor e quantidade para capitais e interior.
 
     Considera apenas registros de MUNICIPIO.
+
     Divide os municípios entre:
-    - capital
-    - interior
+    - capital: definida pela coluna flag_capital;
+    - interior: definido pela coluna categoria_municipio_ibge,
+      quando o valor for "Interior" ou "Regiao Metropolitana".
 
     Também calcula quantidade e percentual de contemplados por Sexo:
     - Feminino
@@ -494,6 +497,17 @@ def aggregate_capital_interior_summary(
         df_municipios["flag_capital"]
         .astype(str)
         .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    categoria_municipio_normalizada = (
+        df_municipios["categoria_municipio_ibge"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
         .str.normalize("NFKD")
         .str.encode("ascii", errors="ignore")
         .str.decode("utf-8")
@@ -515,7 +529,10 @@ def aggregate_capital_interior_summary(
     ].copy()
 
     df_interior = df_municipios[
-        ~flag_capital_normalizada.isin(["TRUE", "1", "SIM", "S"])
+        categoria_municipio_normalizada.isin([
+            "INTERIOR",
+            "REGIAO METROPOLITANA"
+        ])
     ].copy()
 
     valor_total_capital = df_capital["valor_transacao"].sum()
@@ -1676,11 +1693,17 @@ def generate_special_territories_brazil_view(
 
     Considera:
     - valor total Brasil = ESTADO + MUNICIPIO;
+    - quantidade total de contemplados PNAB = soma da coluna quantidade;
     - população Brasil = população dos ESTADOS, uma vez por UF;
     - territórios:
         - Favela e Comunidade Urbana
         - Agrupamento quilombola
         - Agrupamento indígena
+
+    Observação:
+    - A coluna "% de agentes contemplados" representa:
+      quantidade de contemplados naquela categoria /
+      quantidade total de contemplados da PNAB.
     """
 
     # ------------------------------------------------------------
@@ -1729,11 +1752,12 @@ def generate_special_territories_brazil_view(
     }
 
     # ------------------------------------------------------------
-    # 5. Valor total Brasil
+    # 5. Valor total Brasil e quantidade total de contemplados PNAB
     # Estado + municípios
     # ------------------------------------------------------------
 
     valor_total_brasil = df_territorio["valor_transacao"].sum()
+    quantidade_total_pnab = df_territorio["quantidade"].sum()
 
     # ------------------------------------------------------------
     # 6. População total Brasil
@@ -1787,8 +1811,8 @@ def generate_special_territories_brazil_view(
     )
 
     df_vis_territorio_brasil["perc_agentes_contemplados"] = np.where(
-        populacao_brasil > 0,
-        df_vis_territorio_brasil["quantidade_contemplados"] / populacao_brasil,
+        quantidade_total_pnab > 0,
+        df_vis_territorio_brasil["quantidade_contemplados"] / quantidade_total_pnab,
         0
     )
 
@@ -1813,11 +1837,11 @@ def generate_special_territories_brazil_view(
     )
 
     df_vis_territorio_brasil["perc_recurso_total"] = (
-        df_vis_territorio_brasil["perc_recurso_total"] * 100
+        df_vis_territorio_brasil["perc_recurso_total"]
     ).round(2)
 
     df_vis_territorio_brasil["perc_agentes_contemplados"] = (
-        df_vis_territorio_brasil["perc_agentes_contemplados"] * 100
+        df_vis_territorio_brasil["perc_agentes_contemplados"]
     ).round(2)
 
     # ------------------------------------------------------------
@@ -1847,7 +1871,6 @@ def generate_special_territories_brazil_view(
     )
 
     return df_vis_territorio_brasil
-
 
 def aggregate_faixa_valor_by(
     df_cubo: pd.DataFrame,
@@ -2601,3 +2624,155 @@ def resumo_valor_por_porte_municipio(
     })
 
     return resumo
+
+
+def aggregate_by_local_residencia(
+    df_cubo: pd.DataFrame,
+    visao: str = "uf",
+    tipo_documento: str | None = None
+) -> pd.DataFrame:
+    """
+    Agrega quantidade de contemplados, valor total, número de municípios
+    e percentuais por local de residência.
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        DataFrame com as colunas:
+        - local_residencia_contemplados
+        - quantidade
+        - valor_transacao
+        - tipo_ente
+        - ente
+        - tipo_documento
+
+    visao : str
+        Define o filtro da análise:
+        - "estado": considera apenas tipo_ente == "ESTADO"
+        - "municipio": considera apenas tipo_ente == "MUNICIPIO"
+        - "uf": não filtra tipo_ente
+
+    tipo_documento : str | None
+        Define filtro opcional por tipo de documento.
+        Exemplo:
+        - tipo_documento="CPF" filtra apenas registros com tipo_documento == "CPF"
+        - None não aplica filtro
+
+    Observação
+    ----------
+    Percentuais retornam em escala decimal:
+    - 0.57 = 57%
+    """
+
+    visao = visao.lower().strip()
+
+    if visao not in ["estado", "municipio", "uf"]:
+        raise ValueError("visao deve ser 'estado', 'municipio' ou 'uf'.")
+
+    df = df_cubo.copy()
+
+    df["tipo_ente_norm"] = (
+        df["tipo_ente"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    if tipo_documento is not None:
+        tipo_documento_norm = (
+            str(tipo_documento)
+            .upper()
+            .strip()
+        )
+
+        df["tipo_documento_norm"] = (
+            df["tipo_documento"]
+            .astype(str)
+            .str.upper()
+            .str.strip()
+        )
+
+        df = df[df["tipo_documento_norm"].eq(tipo_documento_norm)].copy()
+
+    if visao == "estado":
+        df = df[df["tipo_ente_norm"].eq("ESTADO")].copy()
+
+    elif visao == "municipio":
+        df = df[df["tipo_ente_norm"].eq("MUNICIPIO")].copy()
+
+    categorias = [
+        "Interior",
+        "Regiao Metropolitana",
+        "Capital"
+    ]
+
+    df["local_residencia_contemplados"] = pd.Categorical(
+        df["local_residencia_contemplados"],
+        categories=categorias,
+        ordered=True
+    )
+
+    df_resultado = (
+        df
+        .groupby("local_residencia_contemplados", observed=False)
+        .agg(
+            numero_municipios=("ente", "nunique"),
+            quantidade_contemplados=("quantidade", "sum"),
+            valor_total=("valor_transacao", "sum")
+        )
+        .reset_index()
+    )
+
+    quantidade_total = df_resultado["quantidade_contemplados"].sum()
+    valor_total_geral = df_resultado["valor_total"].sum()
+
+    df_resultado["percentual_quantidade"] = np.where(
+        quantidade_total > 0,
+        df_resultado["quantidade_contemplados"] / quantidade_total,
+        np.nan
+    )
+
+    df_resultado["percentual_valor"] = np.where(
+        valor_total_geral > 0,
+        df_resultado["valor_total"] / valor_total_geral,
+        np.nan
+    )
+
+    df_resultado["visao"] = visao
+
+    df_resultado["tipo_documento_filtro"] = (
+        tipo_documento if tipo_documento is not None else "Todos"
+    )
+
+    df_resultado["numero_municipios"] = (
+        df_resultado["numero_municipios"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado["quantidade_contemplados"] = (
+        df_resultado["quantidade_contemplados"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado["valor_total"] = (
+        pd.to_numeric(df_resultado["valor_total"], errors="coerce")
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    df_resultado["percentual_quantidade"] = (
+        pd.to_numeric(df_resultado["percentual_quantidade"], errors="coerce")
+        .astype("Float64")
+    )
+
+    df_resultado["percentual_valor"] = (
+        pd.to_numeric(df_resultado["percentual_valor"], errors="coerce")
+        .astype("Float64")
+    )
+
+    return df_resultado

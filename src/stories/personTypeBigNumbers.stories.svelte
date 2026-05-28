@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { BigNumber, SvgExportDecorator } from 'sniic-design-system';
+  import { BigNumber } from 'sniic-design-system';
   // @ts-ignore
   import { percBenefCPF, percBenefCNPJ, percValorCPF, percValorCNPJ, totalBenefCPF, totalBenefCNPJ } from '$lib/data/section2';
 
@@ -9,7 +9,6 @@
     title: 'Section 2/personTypeBigNumbers',
     component: BigNumber,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

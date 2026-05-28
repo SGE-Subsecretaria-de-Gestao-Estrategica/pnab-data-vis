@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart, colorPairs, SvgExportDecorator } from 'sniic-design-system';
+  import { HorizontalStackedBarChart, colorPairs } from 'sniic-design-system';
   // @ts-ignore
   import { faixaEtariaSexoData, FAIXA_SEXO_KEYS, FAIXA_SEXO_LABELS } from '$lib/data/section5';
 
@@ -9,7 +9,6 @@
     title: 'Section 5/cadunicoFaixaSexo',
     component: HorizontalStackedBarChart,
     tags: ['autodocs'],
-    decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

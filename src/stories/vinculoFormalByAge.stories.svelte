@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart, colorScales, SvgExportDecorator } from 'sniic-design-system';
+  import { HorizontalStackedBarChart, colorScales } from 'sniic-design-system';
   // @ts-ignore
   import { ageGroupStackedData, ageGroupKeys, ageGroupLabels } from '$lib/data/section4';
 
@@ -12,7 +12,6 @@
     title: 'Section 4/vinculoFormalByAge',
     component: HorizontalStackedBarChart,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

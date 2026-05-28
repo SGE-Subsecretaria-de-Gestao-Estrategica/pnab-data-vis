@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { BubbleChart, categorical8, SvgExportDecorator } from 'sniic-design-system';
+  import { BubbleChart, categorical8 } from 'sniic-design-system';
   import { bubbleStateData } from '$lib/data/section1';
 
   // @ts-ignore
@@ -19,7 +19,6 @@
     title: 'Section 1/populationVsInvestment',
     component: BubbleChart,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

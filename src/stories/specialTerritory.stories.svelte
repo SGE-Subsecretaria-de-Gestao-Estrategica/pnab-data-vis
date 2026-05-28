@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { BigNumber, DivergingBarChart, HorizontalStackedBarChart, colorPairs, colorScales, SvgExportDecorator } from 'sniic-design-system';
+  import { BigNumber, DivergingBarChart, HorizontalStackedBarChart, colorPairs, colorScales } from 'sniic-design-system';
   import {
     specialData,
     percRecursoEspecial,
@@ -19,7 +19,6 @@
     title: 'Section 1/specialTerritory',
     component: BigNumber,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

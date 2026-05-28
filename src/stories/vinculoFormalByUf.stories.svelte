@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { StatesSilhouetteChart, HorizontalBarChart, colorScales, categorical8, SvgExportDecorator } from 'sniic-design-system';
+  import { StatesSilhouetteChart, HorizontalBarChart, colorScales, categorical8 } from 'sniic-design-system';
   // @ts-ignore
   import { ufSilhouetteData, ufRankingData } from '$lib/data/section4';
 
@@ -15,7 +15,6 @@
     title: 'Section 4/vinculoFormalByUf',
     component: StatesSilhouetteChart,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

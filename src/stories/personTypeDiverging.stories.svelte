@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { DivergingBarChart, HorizontalStackedBarChart, colorPairs, SvgExportDecorator } from 'sniic-design-system';
+  import { DivergingBarChart, HorizontalStackedBarChart, colorPairs } from 'sniic-design-system';
   // @ts-ignore
   import { valorDivergingData, benefVsValorData } from '$lib/data/section2';
 
@@ -13,7 +13,6 @@
     title: 'Section 2/personTypeDiverging',
     component: DivergingBarChart,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

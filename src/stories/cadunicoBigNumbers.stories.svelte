@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { BigNumber, SvgExportDecorator } from 'sniic-design-system';
+  import { BigNumber } from 'sniic-design-system';
   // @ts-ignore
   import {
     percContempladosCadunico,
@@ -32,7 +32,6 @@
     title: 'Section 5/cadunicoBigNumbers',
     component: BigNumber,
     tags: ['autodocs'],
-    decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { BigNumber, PictogramChart, colorScales, SvgExportDecorator } from 'sniic-design-system';
+  import { BigNumber, PictogramChart, colorScales } from 'sniic-design-system';
   // @ts-ignore
   import { totalPF, sexoPropMasculino, sexoPropFeminino } from '$lib/data/section3';
 
@@ -20,7 +20,6 @@
     title: 'Section 3/sexDistribution',
     component: BigNumber,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

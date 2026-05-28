@@ -3,7 +3,6 @@
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import ChoroplethMapRegions from '$lib/components/ExecutedValueByRegionMap.svelte';
   import { regions } from '$lib/data/section1';
-  import { SvgExportDecorator } from 'sniic-design-system';
 
   // @ts-ignore
   const formatBRL = (v) =>
@@ -17,7 +16,6 @@
     title: 'Section 1/executedValueByRegion',
     component: ChoroplethMapRegions,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

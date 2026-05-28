@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { BigNumber, HorizontalStackedBarChart, colorScales, SvgExportDecorator } from 'sniic-design-system';
+  import { BigNumber, HorizontalStackedBarChart, colorScales } from 'sniic-design-system';
   // @ts-ignore
   import {
     capitalInteriorStackedData,
@@ -20,7 +20,6 @@
     title: 'Section 1/capitalInterior',
     component: HorizontalStackedBarChart,
     tags: ['autodocs'],
-    decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

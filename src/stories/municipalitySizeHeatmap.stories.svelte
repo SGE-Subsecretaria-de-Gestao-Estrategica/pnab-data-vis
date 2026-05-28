@@ -1,14 +1,13 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HeatMap, colorScales, SvgExportDecorator } from 'sniic-design-system';
+  import { HeatMap, colorScales } from 'sniic-design-system';
   import { heatmapData, heatmapBuckets } from '$lib/data/section1';
 
   const { Story } = defineMeta({
     title: 'Section 1/municipalityValueHeatmap',
     component: HeatMap,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

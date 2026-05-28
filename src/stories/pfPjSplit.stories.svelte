@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { DonutChart, colorScales, SvgExportDecorator } from 'sniic-design-system';
+  import { DonutChart, colorScales } from 'sniic-design-system';
   // @ts-ignore
   import { pfPjDonutData, totalBeneficiarios } from '$lib/data/section3';
 
@@ -14,7 +14,6 @@
     title: 'Section 3/pfPjSplit',
     component: DonutChart,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

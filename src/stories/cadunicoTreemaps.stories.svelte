@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { TreemapChart, colorScales, categorical8, SvgExportDecorator } from 'sniic-design-system';
+  import { TreemapChart, colorScales, categorical8 } from 'sniic-design-system';
   // @ts-ignore
   import { domicilioTreemapData, porteTreemapData5, percUrbanoCadunico, percPequenoPorteCadunico } from '$lib/data/section5';
 
@@ -15,7 +15,6 @@
     title: 'Section 5/cadunicoTreemaps',
     component: TreemapChart,
     tags: ['autodocs'],
-    decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

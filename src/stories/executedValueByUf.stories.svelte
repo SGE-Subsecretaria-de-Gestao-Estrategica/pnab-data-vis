@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { DataTable, SvgExportDecorator } from 'sniic-design-system';
+  import { DataTable } from 'sniic-design-system';
   import { ufData } from '$lib/data/section1';
 
   // @ts-ignore
@@ -33,7 +33,6 @@
     title: 'Section 1/executedValueByUf',
     component: DataTable,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

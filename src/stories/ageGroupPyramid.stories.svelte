@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { colorPairs, SvgExportDecorator } from 'sniic-design-system';
+  import { colorPairs } from 'sniic-design-system';
   import PyramidChartCustom from '$lib/components/PyramidChartCustom.svelte';
   // @ts-ignore
   import { pyramidData } from '$lib/data/section3';
@@ -13,7 +13,6 @@
     title: 'Section 3/ageGroupPyramid',
     component: PyramidChartCustom,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

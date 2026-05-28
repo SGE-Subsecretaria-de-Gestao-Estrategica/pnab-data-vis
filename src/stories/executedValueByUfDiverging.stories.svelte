@@ -1,14 +1,13 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { DivergingBarChart, colorPairs, SvgExportDecorator } from 'sniic-design-system';
+  import { DivergingBarChart, colorPairs } from 'sniic-design-system';
   import { ufSplitData } from '$lib/data/section1';
 
   const { Story } = defineMeta({
     title: 'Section 1/executedValueByUfDiverging',
     component: DivergingBarChart,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

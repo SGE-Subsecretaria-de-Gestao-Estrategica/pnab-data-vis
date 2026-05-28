@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalBarChart, colorScales, SvgExportDecorator } from 'sniic-design-system';
+  import { HorizontalBarChart, colorScales } from 'sniic-design-system';
   // @ts-ignore
   import { cadunicoValorData } from '$lib/data/section5';
 
@@ -9,7 +9,6 @@
     title: 'Section 5/cadunicoByValue',
     component: HorizontalBarChart,
     tags: ['autodocs'],
-    decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

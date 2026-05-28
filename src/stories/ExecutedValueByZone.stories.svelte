@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart, colorScales, SvgExportDecorator } from 'sniic-design-system';
+  import { HorizontalStackedBarChart, colorScales } from 'sniic-design-system';
   import { zoneData, zoneMunicipalityData } from '$lib/data/section1';
 
   const redBlue = [colorScales.red[2], colorScales.blue[2]];
@@ -15,7 +15,6 @@
     title: 'Section 1/executedValueByZone',
     component: HorizontalStackedBarChart,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

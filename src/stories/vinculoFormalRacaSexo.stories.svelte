@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HeatMap, colorScales, SvgExportDecorator } from 'sniic-design-system';
+  import { HeatMap, colorScales } from 'sniic-design-system';
   // @ts-ignore
   import { racaCorSexoHeatmapData } from '$lib/data/section4';
 
@@ -12,7 +12,6 @@
     title: 'Section 4/vinculoFormalRacaSexo',
     component: HeatMap,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

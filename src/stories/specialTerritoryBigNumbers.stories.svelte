@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { BigNumber, SvgExportDecorator } from 'sniic-design-system';
+  import { BigNumber } from 'sniic-design-system';
   // @ts-ignore
   import { specialTerritoryCount, specialTerritoryValue } from '$lib/data/section1';
 
@@ -15,7 +15,6 @@
     title: 'Section 1/specialTerritoryBigNumbers',
     component: BigNumber,
     tags: ['autodocs'],
-    decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

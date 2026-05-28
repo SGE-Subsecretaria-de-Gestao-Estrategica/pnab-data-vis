@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { GroupedColumnChart, categorical8, SvgExportDecorator } from 'sniic-design-system';
+  import { GroupedColumnChart, categorical8 } from 'sniic-design-system';
   // @ts-ignore
   import { ageGroupRegionData, ageGroupRegionKeys, ageGroupRegionLabels } from '$lib/data/section3';
 
@@ -12,7 +12,6 @@
     title: 'Section 3/ageGroupByRegion',
     component: GroupedColumnChart,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

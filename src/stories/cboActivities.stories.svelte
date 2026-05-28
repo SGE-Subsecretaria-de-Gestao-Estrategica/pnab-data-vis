@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalBarChart, categorical8, SvgExportDecorator } from 'sniic-design-system';
+  import { HorizontalBarChart, categorical8 } from 'sniic-design-system';
   // @ts-ignore
   import { top20CboData } from '$lib/data/section3';
 
@@ -12,7 +12,6 @@
     title: 'Section 3/cboActivities',
     component: HorizontalBarChart,
     tags: ['autodocs'],
-    decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

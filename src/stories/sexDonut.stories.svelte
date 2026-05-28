@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { DonutChart, colorPairs, SvgExportDecorator } from 'sniic-design-system';
+  import { DonutChart, colorPairs } from 'sniic-design-system';
   // @ts-ignore
   import { sexoQuantityDonutData, sexoValueDonutData, totalPF, valorTotalPF } from '$lib/data/section3';
 
@@ -18,7 +18,6 @@
     title: 'Section 3/sexDonut',
     component: DonutChart,
     tags: ['autodocs'],
-    decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

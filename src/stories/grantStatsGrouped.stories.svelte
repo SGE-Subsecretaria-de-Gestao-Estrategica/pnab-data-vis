@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { BoxPlotChart, SvgExportDecorator } from 'sniic-design-system';
+  import { BoxPlotChart } from 'sniic-design-system';
   import { boxPlotData } from '$lib/data/section1';
 
   // @ts-ignore
@@ -15,7 +15,6 @@
     title: 'Section 1/grantStatsBoxPlot',
     component: BoxPlotChart,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

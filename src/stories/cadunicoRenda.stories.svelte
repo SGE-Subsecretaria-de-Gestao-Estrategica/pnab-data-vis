@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { DonutChart, colorScales, categorical8, SvgExportDecorator } from 'sniic-design-system';
+  import { DonutChart, colorScales, categorical8 } from 'sniic-design-system';
   // @ts-ignore
   import { rendaDonutData, situacaoRendaDonutData } from '$lib/data/section5';
 
@@ -15,7 +15,6 @@
     title: 'Section 5/cadunicoRenda',
     component: DonutChart,
     tags: ['autodocs'],
-    decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {
@@ -42,7 +41,7 @@ Dois donuts mostram as distribuições: por faixa de renda per capita (5 categor
       centerLabel="pessoas"
       centerValue={formatNum(totalRenda)}
       format={formatNum}
-      height={360}
+      height={400}
     />
   {/snippet}
 </Story>

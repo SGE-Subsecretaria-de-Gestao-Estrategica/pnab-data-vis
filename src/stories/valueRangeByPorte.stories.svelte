@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { VerticalStackedBarChart, categorical8, SvgExportDecorator } from 'sniic-design-system';
+  import { VerticalStackedBarChart, categorical8 } from 'sniic-design-system';
   // @ts-ignore
   import { portePagamentosData, PORTE_BAND_KEYS, PORTE_BAND_LABELS } from '$lib/data/section2';
 
@@ -12,7 +12,6 @@
     title: 'Section 2/valueRangeByPorte',
     component: VerticalStackedBarChart,
     tags: ['autodocs'],
-    decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

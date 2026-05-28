@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalBarChart, colorScales, SvgExportDecorator } from 'sniic-design-system';
+  import { HorizontalBarChart, colorScales } from 'sniic-design-system';
   // @ts-ignore
   import { faixaValorPercData } from '$lib/data/section2';
 
@@ -13,7 +13,6 @@
     title: 'Section 2/valueConcentrationByRange',
     component: HorizontalBarChart,
     tags: ['autodocs'],
-  decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

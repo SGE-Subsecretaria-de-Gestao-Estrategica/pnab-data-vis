@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { BigNumber, SvgExportDecorator } from 'sniic-design-system';
+  import { BigNumber } from 'sniic-design-system';
   // @ts-ignore
   import {
     percCPFEstados,
@@ -14,7 +14,6 @@
     title: 'Section 2/esferaBigNumbers',
     component: BigNumber,
     tags: ['autodocs'],
-    decorators: [() => ({ Component: SvgExportDecorator })],
     parameters: {
       docs: {
         description: {

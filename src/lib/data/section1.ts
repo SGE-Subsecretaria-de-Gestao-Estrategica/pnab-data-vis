@@ -101,7 +101,7 @@ interface StateRow {
 	'>R$10M':      number;
 }
 
-export const stateRows: StateRow[] = parseCSV(csvStateRaw).map((d) => ({
+export const stateRows: StateRow[] = parseCSV(csvUfRaw).map((d) => ({
 	uf:                   d.uf,
 	valor_executado_rs:   +d.valor_executado_rs,
 	valor_executado_perc: +d.valor_executado_perc,
@@ -210,10 +210,10 @@ export const heatmapData = heatmapStates.flatMap((uf) => {
 });
 
 // ── Per capita e split estado/município ────────────────────────────────────────
-const ufRows  = parseCSV(csvUfRaw);
+const ufRows  = stateRows;
 const munRows = parseCSV(csvMunRaw);
 
-const stateValByUf = Object.fromEntries(stateRows.map((d) => [d.uf, d.valor_executado_rs]));
+const stateValByUf = Object.fromEntries(parseCSV(csvStateRaw).map((d) => [d.uf, +d.valor_executado_rs]));
 const munValByUf   = Object.fromEntries(munRows.map((d)   => [d.uf, +d.valor_executado_rs]));
 
 export const percapitaData = [...ufRows]

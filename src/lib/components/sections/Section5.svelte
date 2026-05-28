@@ -161,7 +161,7 @@
 				centerLabel="pessoas"
 				centerValue={formatNum(rendaDonutData.reduce((s, d) => s + d.value, 0))}
 				format={formatNum}
-				height={320}
+				height={400}
 			/>
 		</div>
 		<div class="donut-col">
@@ -347,7 +347,6 @@
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
-		align-items: center;
 	}
 
 	.donut-label {
@@ -358,5 +357,6 @@
 		opacity: 0.55;
 		margin: 0 0 0.25rem;
 		text-align: center;
+		align-self: center;
 	}
 </style>

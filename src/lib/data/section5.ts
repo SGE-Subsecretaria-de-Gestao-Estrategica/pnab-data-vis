@@ -71,9 +71,16 @@ export const FAIXA_SEXO_LABELS: Record<string, string> = {
 };
 
 // ── Renda per capita (DonutChart) ──────────────────────────────────────────────
+const RENDA_LABEL_MAP: Record<string, string> = {
+	'De 0 até R$ 109':                          'Até R$109',
+	'De R$ 109,01 até R$ 218':                  'R$109–218',
+	'De R$ 218,01 até meio salário mínimo':      'R$218–½SM',
+	'De meio salário mínimo a um salário mínimo': '½SM–1SM',
+	'Superior a um salário mínimo':              'Acima de 1SM',
+};
 const rendaRows = parseCSV(csvRendaRaw);
 export const rendaDonutData = rendaRows.map((r) => ({
-	label: r.fxRendaPerCapita_desc_cadunico,
+	label: RENDA_LABEL_MAP[r.fxRendaPerCapita_desc_cadunico] ?? r.fxRendaPerCapita_desc_cadunico,
 	value: +r.soma_quantidade,
 }));
 

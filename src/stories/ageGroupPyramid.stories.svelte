@@ -10,7 +10,7 @@
   const formatNum = (v) => v.toLocaleString('pt-BR');
 
   const { Story } = defineMeta({
-    title: 'Section 2/ageGroupPyramid',
+    title: 'Section 3/ageGroupPyramid',
     component: PyramidChartCustom,
     tags: ['autodocs'],
     parameters: {

@@ -6,7 +6,7 @@
   import { percBenefCPF, percBenefCNPJ, percValorCPF, percValorCNPJ, totalBenefCPF, totalBenefCNPJ } from '$lib/data/section2';
 
   const { Story } = defineMeta({
-    title: 'Section 3/personTypeBigNumbers',
+    title: 'Section 2/personTypeBigNumbers',
     component: BigNumber,
     tags: ['autodocs'],
     parameters: {

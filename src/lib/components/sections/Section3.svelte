@@ -4,11 +4,11 @@
 		BigNumber,
 		DonutChart,
 		GroupedColumnChart,
+		HorizontalBarChart,
 		PictogramChart,
 		colorPairs,
 		colorScales,
-		categorical8,
-		AnnotationBox
+		categorical8
 	} from 'sniic-design-system';
 	import PyramidChartCustom from '$lib/components/PyramidChartCustom.svelte';
 	import {
@@ -24,6 +24,7 @@
 		ageGroupRegionData,
 		ageGroupRegionKeys,
 		ageGroupRegionLabels,
+		top20CboData,
 	} from '$lib/data/section3';
 
 	const formatNum = (v: number) => v.toLocaleString('pt-BR');
@@ -59,19 +60,15 @@
 		organizações contempladas no primeiro ciclo da Aldir Blanc, destacando alguns indicadores que
 		ajudam a compreender quem acessou os recursos da política.
 	</p>
-	<svg width={600} height={130} style="overflow: hidden; margin-top: 1rem;">
-		<AnnotationBox
-			title=""
-			subtitle={"As análises apresentadas neste capítulo resultam do cruzamento dos dados de agentes culturais contemplados pela Política Nacional Aldir Blanc com bases da Receita Federal. Para as pessoas físicas, foram utilizadas as variáveis idade e sexo (masculino/feminino), sendo, esta última adotada conforme disponibilidade da base, referindo-se ao sexo biológico registrado — o que não contempla a diversidade de identidades de gênero (como pessoas trans, travestis, não binárias, entre outras). Para as pessoas jurídicas, foram utilizadas as variáveis natureza jurídica e CNAE (principal e secundários)."}
-			boxX={0}
-			boxY={0}
-			boxWidth={1000}
-			pointX={-30}
-			pointY={63}
-			showTitle={false}
-			circleRadius={0}
-		/>
-	</svg>
+	<div class="annotation-box">
+		As análises apresentadas neste capítulo resultam do cruzamento dos dados de agentes culturais
+		contemplados pela Política Nacional Aldir Blanc com bases da Receita Federal. Para as pessoas
+		físicas, foram utilizadas as variáveis idade e sexo (masculino/feminino), sendo, esta última
+		adotada conforme disponibilidade da base, referindo-se ao sexo biológico registrado — o que
+		não contempla a diversidade de identidades de gênero (como pessoas trans, travestis, não
+		binárias, entre outras). Para as pessoas jurídicas, foram utilizadas as variáveis natureza
+		jurídica e CNAE (principal e secundários).
+	</div>
 	<p>
 		Ao todo, <strong>{totalBeneficiarios.toLocaleString('pt-BR')} agentes culturais</strong> foram
 		contemplados pelo programa, entre pessoas físicas e jurídicas.
@@ -133,15 +130,41 @@
 		</div>
 	</div>
 	<p class="pictogram-caption">Cada ícone representa 1 em cada 15 agentes culturais contemplados</p>
-	<PictogramChart
-		data={pictogramData}
-		unitValue={1}
-		columns={15}
-		iconSize={32}
-		gap={6}
-		showLabels={true}
-		format={formatNum}
-	/>
+	<div class="pictogram-wrap">
+		<PictogramChart
+			data={pictogramData}
+			unitValue={1}
+			columns={15}
+			iconSize={48}
+			gap={8}
+			showLabels={true}
+			format={formatNum}
+		/>
+	</div>
+	<div class="donut-row" style="margin-top: 2rem;">
+		<div class="donut-col">
+			<p class="donut-label">Por quantidade de agentes</p>
+			<DonutChart
+				data={sexoQuantityDonutData}
+				colors={sexColors}
+				centerLabel="PF contemplados"
+				centerValue={totalPF.toLocaleString('pt-BR')}
+				format={formatNum}
+				height={280}
+			/>
+		</div>
+		<div class="donut-col">
+			<p class="donut-label">Por valor recebido</p>
+			<DonutChart
+				data={sexoValueDonutData}
+				colors={sexColors}
+				centerLabel="valor total"
+				centerValue={formatBRL(valorTotalPF)}
+				format={formatBRL}
+				height={280}
+			/>
+		</div>
+	</div>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -198,6 +221,26 @@
 	/>
 </ScrollSection>
 
+<!-- ══════════════════════════════════════════════════════════════════════════
+     TOP 20 ATIVIDADES ECONÔMICAS (CBO/RAIS)
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-3-cbo">
+	<h3>Top 20 atividades econômicas dos contemplados com vínculo formal</h3>
+	<p>
+		Entre os agentes culturais contemplados que possuem vínculo formal de trabalho, as ocupações
+		mais frequentes revelam um perfil heterogêneo — com destaque para funções administrativas,
+		de ensino e de gestão pública. A lista ilustra que o setor cultural formal no Brasil abrange
+		muito além das artes em sentido estrito.
+	</p>
+	<HorizontalBarChart
+		data={top20CboData}
+		color={categorical8[0]}
+		format={formatNum}
+		xLabel="Quantidade de vínculos formais"
+		margin={{ top: 20, right: 60, bottom: 40, left: 320 }}
+	/>
+</ScrollSection>
+
 <style>
 	.bignumbers-row {
 		display: flex;
@@ -231,13 +274,20 @@
 		font-style: italic;
 	}
 
+	.pictogram-wrap {
+		display: flex;
+		justify-content: center;
+	}
+
 	.pyramid-wrap {
 		max-width: 680px;
+		margin-inline: auto;
 	}
 
 	.donut-single {
 		margin-top: 1.5rem;
 		max-width: 420px;
+		margin-inline: auto;
 	}
 
 	.donut-row {
@@ -263,5 +313,15 @@
 		opacity: 0.55;
 		margin: 0 0 0.25rem;
 		text-align: center;
+	}
+
+	.annotation-box {
+		margin-top: 1rem;
+		padding: 1rem 1.25rem;
+		border: 1px solid currentColor;
+		border-radius: 2px;
+		font-size: 0.875rem;
+		line-height: 1.6;
+		opacity: 0.8;
 	}
 </style>

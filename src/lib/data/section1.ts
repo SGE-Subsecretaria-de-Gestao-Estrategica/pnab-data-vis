@@ -12,6 +12,7 @@ import csvSpecialStRaw  from '../../../data/section_1/values_by_special_territor
 import csvSpecialMunRaw from '../../../data/section_1/values_by_special_territory_municipality.csv?raw';
 import csvBnRaw         from '../../../data/section_1/bignumber1.csv?raw';
 import csvRegionUfRaw   from '../../../data/section_1/executed_value_by_region_uf.csv?raw';
+import csvCapitalRaw    from '../../../data/section_1/aggregate_values_by_capital.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -100,7 +101,7 @@ interface StateRow {
 	'>R$10M':      number;
 }
 
-export const stateRows: StateRow[] = parseCSV(csvStateRaw).map((d) => ({
+export const stateRows: StateRow[] = parseCSV(csvUfRaw).map((d) => ({
 	uf:                   d.uf,
 	valor_executado_rs:   +d.valor_executado_rs,
 	valor_executado_perc: +d.valor_executado_perc,
@@ -209,10 +210,10 @@ export const heatmapData = heatmapStates.flatMap((uf) => {
 });
 
 // ── Per capita e split estado/município ────────────────────────────────────────
-const ufRows  = parseCSV(csvUfRaw);
+const ufRows  = stateRows;
 const munRows = parseCSV(csvMunRaw);
 
-const stateValByUf = Object.fromEntries(stateRows.map((d) => [d.uf, d.valor_executado_rs]));
+const stateValByUf = Object.fromEntries(parseCSV(csvStateRaw).map((d) => [d.uf, +d.valor_executado_rs]));
 const munValByUf   = Object.fromEntries(munRows.map((d)   => [d.uf, +d.valor_executado_rs]));
 
 export const percapitaData = [...ufRows]
@@ -383,3 +384,31 @@ export const specialStackedData = Object.keys(specialShortLabels)
 		valor_municipio: specialMunMap[nome] ?? 0,
 	}))
 	.sort((a, b) => (b.valor_estado + b.valor_municipio) - (a.valor_estado + a.valor_municipio));
+
+// ── Territory totals ───────────────────────────────────────────────────────────
+const rawSpecial = parseCSV(csvSpecialRaw);
+export const specialTerritoryCount = rawSpecial.reduce((s, d) => s + +d['Quantidade de contemplados'], 0);
+export const specialTerritoryValue = rawSpecial.reduce((s, d) => s + +d['Valor (R$)'], 0);
+
+// ── Rural total (sum across all UFs from zone UF data) ────────────────────────
+export const valorRuralTotal = parseCSV(csvZoneUfRaw)
+	.reduce((s, d) => s + +d.valor_uf_rural, 0);
+
+// ── Capital vs Interior (aggregate_values_by_capital.csv) ─────────────────────
+const [capitalRow] = parseCSV(csvCapitalRaw);
+export const capitalInteriorStackedData = [
+	{
+		label:    '% do valor recebido',
+		capital:  +capitalRow.percentual_valor_capital,
+		interior: +capitalRow.percentual_valor_interior,
+	},
+	{
+		label:    '% dos agentes contemplados',
+		capital:  +capitalRow.percentual_quantidade_capital,
+		interior: +capitalRow.percentual_quantidade_interior,
+	},
+];
+
+// ── Interior (pre-computed from executed_value_by_municipality.csv) ────────────
+export const percInteriorPagamentos  = 65.5;
+export const valorInteriorTotal      = 1_754_685_854;

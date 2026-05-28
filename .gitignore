@@ -16,3 +16,4 @@ src/_temp_data
 storybook-static/
 debug-storybook.log
 *.pyc
+/data/input_data/non-public

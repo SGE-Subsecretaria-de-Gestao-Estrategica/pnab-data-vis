@@ -9,7 +9,7 @@
   const formatNum = (v) => v.toLocaleString('pt-BR');
 
   const { Story } = defineMeta({
-    title: 'Section 2/ageGroupByRegion',
+    title: 'Section 3/ageGroupByRegion',
     component: GroupedColumnChart,
     tags: ['autodocs'],
     parameters: {

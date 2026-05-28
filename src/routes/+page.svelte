@@ -14,12 +14,12 @@
 	let activeBg = $state<BgColor>('cream');
 
 	const sections = [
-		{ id: 'section-1-intro', label: '1. Territórios' },
-		{ id: 'section-2-bignumber', label: '2. Pagamentos' },
-		{ id: 'section-3-intro', label: '3. Quem acessou' },
-		{ id: 'section-4-intro', label: '4. Mercado formal' },
-		{ id: 'section-5', label: '5. Seção 5' },
-		{ id: 'section-6', label: '6. Seção 6' },
+		{ id: 'section-1-intro', label: '1. Onde o dinheiro da PNAB chegou?' },
+		{ id: 'section-2-bignumber', label: '2. Como o recurso foi distribuido?' },
+		{ id: 'section-3-intro', label: '3. Quem recebeu os recursos culturais?' },
+		{ id: 'section-4-intro', label: '4. Como atuam os trabalhadores culturais?' },
+		{ id: 'section-5-intro', label: '5. Cultura e desigualdade social' },
+		{ id: 'section-6', label: '6. Quais ações a Aldir Blanc apoiou?' },
 		{ id: 'section-7', label: '7. Seção 7' }
 	];
 

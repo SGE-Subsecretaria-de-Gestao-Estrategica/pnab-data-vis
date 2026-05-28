@@ -10,7 +10,7 @@
     v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
   const { Story } = defineMeta({
-    title: 'Section 3/valueRangeDistribution',
+    title: 'Section 2/valueRangeDistribution',
     component: HorizontalBarChart,
     tags: ['autodocs'],
     parameters: {

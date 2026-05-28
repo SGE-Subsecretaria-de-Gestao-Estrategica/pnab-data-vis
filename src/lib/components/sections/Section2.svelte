@@ -31,6 +31,14 @@
 		ufBandPercData,
 		UF_BAND_KEYS,
 		UF_BAND_LABELS,
+		percCPFEstados,
+		percCNPJEstados,
+		percCPFMunicipios,
+		percCNPJMunicipios,
+		portePagamentosData,
+		PORTE_BAND_KEYS,
+		PORTE_BAND_LABELS,
+		specialTerritoryBarData,
 	} from '$lib/data/section2';
 
 	const formatBRL = (v: number) =>
@@ -64,11 +72,12 @@
 			boxWidth={600}
 			pointX={-30}
 			pointY={63}
+			showTitle={false}
 			circleRadius={0}
 		/>
 	</svg>
 	<h2>Como os pagamentos foram estruturados?</h2>
-	<p>A Política Nacional Aldir Blanc contemplou <strong>166.886</strong> agentes culturais em todo o país. Para analisar se houve concentração de recursos com poucos proponentes, divididos os pagamentos realizados por faixas de valores.</p>
+	<p>Como vimos no capítulo anterior, entre os <strong>166.886</strong> agentes culturais contemplados, 81% são pessoas físicas e 19% são pessoas jurídicas.</p>
 	
 	<ScrollSection id="section-2-faixas-bignumbers">
 		<div class="faixas-bignumbers-row">
@@ -100,7 +109,7 @@
 		</div>
 	</ScrollSection>
 
-	<ScrollSection class="section-2-faixas-valor" style="padding: 0; margin-top: 1.5rem;">
+	<ScrollSection id="section-2-faixas-valor">
 		<h3>Onde está o dinheiro? A concentração nas faixas intermediárias</h3>
 		<p>
 			Enquanto a maioria dos agentes recebe valores pequenos, o grosso dos recursos se concentra
@@ -120,7 +129,7 @@
 		<p>Diante desses dados, percebe-se que a execução da Aldir Blanc articula alcance social ampliado e financiamento de projetos de diferentes escalas, sem se restringir a um único perfil de beneficiário ou de valor.</p>
 	</ScrollSection>
 	
-	<ScrollSection class="section-2-distribuicao-pagamentos" style="padding: 0; margin-top: 1.5rem;">
+	<ScrollSection id="section-2-distribuicao-pagamentos">
 		<h2>Distribuição de pagamentos por região</h2>
 		<p>Veremos a seguir como foi a distribuição da quantidade de pagamentos da Política pelas regiões do país.</p>
 		<HorizontalBarChart       
@@ -158,7 +167,7 @@
 				keys={[...UF_BAND_KEYS]}
 				labels={UF_BAND_LABELS}
 				colors={categorical8}
-				format={(v) => `${v.toFixed(1)}%`}
+				format={(v:any) => `${v.toFixed(1)}%`}
 				yLabel="% dos beneficiários"
 				normalize={true}
 				showLegend={true}
@@ -190,6 +199,38 @@
 		<strong>{totalBenefCNPJ.toLocaleString('pt-BR')}</strong> entidades — uma razão de quase
 		<strong>4 para 1</strong> em número, mas o dinheiro segue na direção oposta.
 	</p>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     GRANDES NÚMEROS — CPF/CNPJ POR ESFERA
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-esfera-bignumbers">
+	<h3>O perfil muda conforme a esfera executora</h3>
+	<p>
+		A composição entre pessoas físicas e jurídicas varia significativamente entre estados e
+		municípios. Os estados concentram mais entidades; os municípios têm base mais ampla de
+		pessoas físicas.
+	</p>
+	<div class="bignumbers-row">
+		<div class="bignumber-cell">
+			<BigNumber value={percCPFEstados.toFixed(1)} suffix="%" fontSize={64} />
+			<p class="bignumber-caption">dos pagamentos de estados foram para pessoas físicas</p>
+		</div>
+		<div class="bignumber-cell">
+			<BigNumber value={percCNPJEstados.toFixed(1)} suffix="%" fontSize={64} />
+			<p class="bignumber-caption">dos pagamentos de estados foram para pessoas jurídicas</p>
+		</div>
+	</div>
+	<div class="bignumbers-row">
+		<div class="bignumber-cell">
+			<BigNumber value={percCPFMunicipios.toFixed(1)} suffix="%" fontSize={64} />
+			<p class="bignumber-caption">dos pagamentos de municípios foram para pessoas físicas</p>
+		</div>
+		<div class="bignumber-cell">
+			<BigNumber value={percCNPJMunicipios.toFixed(1)} suffix="%" fontSize={64} />
+			<p class="bignumber-caption">dos pagamentos de municípios foram para pessoas jurídicas</p>
+		</div>
+	</div>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -292,6 +333,59 @@
 		colors={colorPairs.blueOrange}
 		format={formatBRL}
 		showLabels={true}
+	/>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PORTE MUNICIPAL — DISTRIBUIÇÃO DE PAGAMENTOS POR FAIXA
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-porte">
+	<h3>Distribuição dos pagamentos por porte de município</h3>
+	<p>
+		Municípios de <strong>grande porte</strong> concentram proporcionalmente mais pagamentos
+		nas faixas mais altas — reflexo do maior peso de CNPJs e entidades culturais nessas cidades.
+		Já os municípios <strong>Pequenos I</strong> têm a maior fatia de pagamentos nas faixas
+		mais baixas (até R$2 mil e R$2–10 mil), indicando que o programa alcança um perfil de
+		beneficiário com menor poder aquisitivo formal.
+	</p>
+	<div class="chart-wide">
+		<VerticalStackedBarChart
+			data={portePagamentosData}
+			keys={[...PORTE_BAND_KEYS]}
+			labels={PORTE_BAND_LABELS}
+			colors={categorical8}
+			format={(v: number) => `${v.toFixed(1)}%`}
+			yLabel="% dos beneficiários"
+			normalize={true}
+			showLegend={true}
+			height={420}
+		/>
+	</div>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     TERRITÓRIOS ESPECIAIS — VALOR POR TIPO
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-special-territory">
+	<h3>Valor total destinado por tipo de território especial</h3>
+	<p>
+		Entre os repasses que chegaram a territórios especiais, as <strong>favelas e comunidades
+		urbanas</strong> concentram a maior parte dos recursos — muito acima dos demais territórios.
+		Quilombos e territórios indígenas, que concentram populações historicamente marginalizadas,
+		receberam volumes muito menores em termos absolutos.
+	</p>
+	<HorizontalBarChart
+		data={specialTerritoryBarData}
+		color={colorScales.teal[2]}
+		format={(v: number) =>
+			new Intl.NumberFormat('pt-BR', {
+				style: 'currency',
+				currency: 'BRL',
+				notation: 'compact',
+				maximumFractionDigits: 1,
+			}).format(v)}
+		xLabel="Valor total (R$)"
+		margin={{ top: 20, right: 80, bottom: 40, left: 280 }}
 	/>
 </ScrollSection>
 

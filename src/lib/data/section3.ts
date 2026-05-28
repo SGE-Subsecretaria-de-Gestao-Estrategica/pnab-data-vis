@@ -4,6 +4,7 @@ import csvAgeGroupSexoRaw from '../../../data/section_3/aggregate_valor_quantity
 import csvAgeGroupRegionRaw from '../../../data/section_3/aggregate_value_quantity_by_age_group_region_wide.csv?raw';
 import csvSexoPropRaw from '../../../data/section_3/aggregate_contemplados_by_sexo_proportion.csv?raw';
 import csvPfPjRaw from '../../../data/section_3/aggregate_contemplados_pf_pj_proportion.csv?raw';
+import csvCboRaw  from '../../../data/section_4/aggregate_cbo_rais.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -46,6 +47,18 @@ export const pyramidData = ageGroupSexoRows.map((r) => ({
 	left: +r.quantidade_contemplados_masculino,
 	right: +r.quantidade_contemplados_feminino,
 }));
+
+// ── Top 20 atividades econômicas (CBO/RAIS) ───────────────────────────────────
+function toTitleCase(s: string) {
+	return s
+		.toLowerCase()
+		.split(' ')
+		.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+		.join(' ');
+}
+export const top20CboData = parseCSV(csvCboRaw)
+	.slice(0, 20)
+	.map((d) => ({ label: toTitleCase(d.cbo_descricao_rais), value: +d.soma_quantidade }));
 
 // ── Faixa etária por região ───────────────────────────────────────────────────
 const ageGroupRegionRows = parseCSV(csvAgeGroupRegionRaw);

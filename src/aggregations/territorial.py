@@ -454,8 +454,6 @@ def executed_value_n_contemplados_qty_by(df_cubo, by_filter):
         )
 
     return df_final
-
-
 def aggregate_capital_interior_summary(
     df_cubo: pd.DataFrame
 ) -> pd.DataFrame:
@@ -472,6 +470,11 @@ def aggregate_capital_interior_summary(
     - Masculino
 
     Retorna uma tabela com uma linha.
+
+    Observação:
+    - Percentuais retornam em escala decimal, isto é:
+      0.57 = 57%.
+    - Valores monetários não são arredondados.
     """
 
     tipo_ente_normalizado = (
@@ -552,44 +555,44 @@ def aggregate_capital_interior_summary(
         "valor_total_capital": [valor_total_capital],
         "quantidade_total_capital": [quantidade_total_capital],
         "percentual_valor_capital": [
-            valor_total_capital / valor_total_geral * 100
+            valor_total_capital / valor_total_geral
             if valor_total_geral > 0 else np.nan
         ],
         "percentual_quantidade_capital": [
-            quantidade_total_capital / quantidade_total_geral * 100
+            quantidade_total_capital / quantidade_total_geral
             if quantidade_total_geral > 0 else np.nan
         ],
 
         "quantidade_feminino_capital": [quantidade_feminino_capital],
         "percentual_feminino_capital": [
-            quantidade_feminino_capital / quantidade_total_capital * 100
+            quantidade_feminino_capital / quantidade_total_capital
             if quantidade_total_capital > 0 else np.nan
         ],
         "quantidade_masculino_capital": [quantidade_masculino_capital],
         "percentual_masculino_capital": [
-            quantidade_masculino_capital / quantidade_total_capital * 100
+            quantidade_masculino_capital / quantidade_total_capital
             if quantidade_total_capital > 0 else np.nan
         ],
 
         "valor_total_interior": [valor_total_interior],
         "quantidade_total_interior": [quantidade_total_interior],
         "percentual_valor_interior": [
-            valor_total_interior / valor_total_geral * 100
+            valor_total_interior / valor_total_geral
             if valor_total_geral > 0 else np.nan
         ],
         "percentual_quantidade_interior": [
-            quantidade_total_interior / quantidade_total_geral * 100
+            quantidade_total_interior / quantidade_total_geral
             if quantidade_total_geral > 0 else np.nan
         ],
 
         "quantidade_feminino_interior": [quantidade_feminino_interior],
         "percentual_feminino_interior": [
-            quantidade_feminino_interior / quantidade_total_interior * 100
+            quantidade_feminino_interior / quantidade_total_interior
             if quantidade_total_interior > 0 else np.nan
         ],
         "quantidade_masculino_interior": [quantidade_masculino_interior],
         "percentual_masculino_interior": [
-            quantidade_masculino_interior / quantidade_total_interior * 100
+            quantidade_masculino_interior / quantidade_total_interior
             if quantidade_total_interior > 0 else np.nan
         ],
     })
@@ -620,8 +623,9 @@ def aggregate_capital_interior_summary(
     ]
 
     df_resultado[colunas_valor] = (
-        np.ceil(df_resultado[colunas_valor])
-        .astype("Int64")
+        df_resultado[colunas_valor]
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
     )
 
     df_resultado[colunas_quantidade] = (
@@ -632,11 +636,11 @@ def aggregate_capital_interior_summary(
 
     df_resultado[colunas_percentual] = (
         df_resultado[colunas_percentual]
-        .round(2)
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
     )
 
     return df_resultado
-
 
 def aggregate_execution_by_porte_with_estado(
     df_cubo: pd.DataFrame

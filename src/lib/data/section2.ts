@@ -7,6 +7,7 @@ import csvStateRaw from '../../../data/section_2/aggregate_execution_by_person_t
 import csvUfRaw    from '../../../data/section_2/aggregate_execution_by_person_type_uf.csv?raw';
 import csvMunRaw   from '../../../data/section_2/aggregate_execution_by_person_type_municipality.csv?raw';
 import csvRangeRaw from '../../../data/section_2/values_range_by_brazil.csv?raw';
+import csvPorteRaw from '../../../data/section_1/values_by_population_size.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -223,6 +224,55 @@ export const UF_BAND_LABELS: Record<string, string> = {
 	de1ma10m:   'R$1–10M',
 	acima10m:   '>R$10M',
 };
+
+// ── BigNumbers por esfera (estado vs município) ────────────────────────────────
+export const percCPFEstados     = +stCPF.perc_qtde_contemplados  * 100;
+export const percCNPJEstados    = +stCNPJ.perc_qtde_contemplados * 100;
+export const percCPFMunicipios  = +munCPF.perc_qtde_contemplados  * 100;
+export const percCNPJMunicipios = +munCNPJ.perc_qtde_contemplados * 100;
+
+// ── Porte municipal — distribuição de pagamentos por faixa de valor (row 38) ──
+const PORTE_NAME_MAP: Record<string, string> = {
+	'4_grande':     'Grande',
+	'1_pequeno_i':  'Pequeno I',
+	'2_pequeno_ii': 'Pequeno II',
+	'3_medio':      'Médio',
+};
+const PORTE_SORT: Record<string, number> = {
+	'1_pequeno_i': 0, '2_pequeno_ii': 1, '3_medio': 2, '4_grande': 3,
+};
+const PORTE_CSV_BANDS = [
+	'Até 2 mil', '2 a 10 mil', '10 a 50 mil', '50 a 200 mil',
+	'200 a 500 mil', '500 mil a 1 milhão', '1 milhão a 10 milhões', 'Acima de 10 milhões',
+] as const;
+
+const porteRowsS2 = parseCSV(csvPorteRaw)
+	.filter((d) => d.porte_populacional in PORTE_NAME_MAP)
+	.sort((a, b) => PORTE_SORT[a.porte_populacional] - PORTE_SORT[b.porte_populacional]);
+
+export const PORTE_BAND_KEYS = [
+	'ate2k', 'de2a10k', 'de10a50k', 'de50a200k', 'de200a500k', 'de500ka1m', 'de1ma10m', 'acima10m',
+] as const;
+export const PORTE_BAND_LABELS: Record<string, string> = {
+	ate2k: 'Até R$2k', de2a10k: 'R$2–10k', de10a50k: 'R$10–50k', de50a200k: 'R$50–200k',
+	de200a500k: 'R$200–500k', de500ka1m: 'R$500k–1M', de1ma10m: 'R$1–10M', acima10m: '>R$10M',
+};
+
+export const portePagamentosData = porteRowsS2.map((d) => {
+	const bands = PORTE_CSV_BANDS.map((k) => +(d[k] ?? 0));
+	const total = bands.reduce((s, v) => s + v, 0) || 1;
+	return {
+		label:      PORTE_NAME_MAP[d.porte_populacional],
+		ate2k:      (bands[0] / total) * 100,
+		de2a10k:    (bands[1] / total) * 100,
+		de10a50k:   (bands[2] / total) * 100,
+		de50a200k:  (bands[3] / total) * 100,
+		de200a500k: (bands[4] / total) * 100,
+		de500ka1m:  (bands[5] / total) * 100,
+		de1ma10m:   (bands[6] / total) * 100,
+		acima10m:   (bands[7] / total) * 100,
+	};
+});
 
 export const ufBandPercData = [...stateRows]
 	.map((row) => {

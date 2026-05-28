@@ -31,6 +31,13 @@
 		ufBandPercData,
 		UF_BAND_KEYS,
 		UF_BAND_LABELS,
+		percCPFEstados,
+		percCNPJEstados,
+		percCPFMunicipios,
+		percCNPJMunicipios,
+		portePagamentosData,
+		PORTE_BAND_KEYS,
+		PORTE_BAND_LABELS,
 	} from '$lib/data/section2';
 
 	const formatBRL = (v: number) =>
@@ -194,6 +201,38 @@
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
+     GRANDES NÚMEROS — CPF/CNPJ POR ESFERA
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-esfera-bignumbers">
+	<h3>O perfil muda conforme a esfera executora</h3>
+	<p>
+		A composição entre pessoas físicas e jurídicas varia significativamente entre estados e
+		municípios. Os estados concentram mais entidades; os municípios têm base mais ampla de
+		pessoas físicas.
+	</p>
+	<div class="bignumbers-row">
+		<div class="bignumber-cell">
+			<BigNumber value={percCPFEstados.toFixed(1)} suffix="%" fontSize={64} />
+			<p class="bignumber-caption">dos pagamentos de estados foram para pessoas físicas</p>
+		</div>
+		<div class="bignumber-cell">
+			<BigNumber value={percCNPJEstados.toFixed(1)} suffix="%" fontSize={64} />
+			<p class="bignumber-caption">dos pagamentos de estados foram para pessoas jurídicas</p>
+		</div>
+	</div>
+	<div class="bignumbers-row">
+		<div class="bignumber-cell">
+			<BigNumber value={percCPFMunicipios.toFixed(1)} suffix="%" fontSize={64} />
+			<p class="bignumber-caption">dos pagamentos de municípios foram para pessoas físicas</p>
+		</div>
+		<div class="bignumber-cell">
+			<BigNumber value={percCNPJMunicipios.toFixed(1)} suffix="%" fontSize={64} />
+			<p class="bignumber-caption">dos pagamentos de municípios foram para pessoas jurídicas</p>
+		</div>
+	</div>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
      DIVERGING — A DIVISÃO DO VALOR POR ESFERA
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-2-diverging">
@@ -294,6 +333,33 @@
 		format={formatBRL}
 		showLabels={true}
 	/>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PORTE MUNICIPAL — DISTRIBUIÇÃO DE PAGAMENTOS POR FAIXA
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-porte">
+	<h3>Distribuição dos pagamentos por porte de município</h3>
+	<p>
+		Municípios de <strong>grande porte</strong> concentram proporcionalmente mais pagamentos
+		nas faixas mais altas — reflexo do maior peso de CNPJs e entidades culturais nessas cidades.
+		Já os municípios <strong>Pequenos I</strong> têm a maior fatia de pagamentos nas faixas
+		mais baixas (até R$2 mil e R$2–10 mil), indicando que o programa alcança um perfil de
+		beneficiário com menor poder aquisitivo formal.
+	</p>
+	<div class="chart-wide">
+		<VerticalStackedBarChart
+			data={portePagamentosData}
+			keys={[...PORTE_BAND_KEYS]}
+			labels={PORTE_BAND_LABELS}
+			colors={categorical8}
+			format={(v: number) => `${v.toFixed(1)}%`}
+			yLabel="% dos beneficiários"
+			normalize={true}
+			showLegend={true}
+			height={420}
+		/>
+	</div>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════

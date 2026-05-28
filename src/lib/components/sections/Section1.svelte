@@ -39,6 +39,12 @@
 		silhouetteRegionData,
 		silhouetteRegionPopData,
 		states,
+		valorRuralTotal,
+		capitalInteriorStackedData,
+		percInteriorPagamentos,
+		valorInteriorTotal,
+		specialTerritoryCount,
+		specialTerritoryValue,
 	} from '$lib/data/section1';
 
 	// ── Flags via import.meta.glob ──────────────────────────────────────────────
@@ -534,6 +540,44 @@
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
+     CAPITAL vs INTERIOR
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-1-capital-interior">
+	<h3>Interior concentra a esmagadora maioria dos agentes contemplados</h3>
+	<p>
+		Dos recursos executados pelos estados, <strong>{percInteriorPagamentos}%</strong> chegaram
+		a agentes das cidades do interior — com o total destinado ao interior somando
+		<strong>{formatBRL(valorInteriorTotal)}</strong>.
+		O contraste é ainda mais expressivo no número de beneficiários: quase toda a base contemplada
+		está fora das capitais.
+	</p>
+	<div class="bignumbers-row">
+		<div class="bignumber-cell">
+			<BigNumber value={percInteriorPagamentos.toFixed(1)} suffix="%" fontSize={72} />
+			<p class="bignumber-caption">dos pagamentos foram para contemplados em cidades do interior</p>
+		</div>
+		<div class="bignumber-cell">
+			<BigNumber value={formatBRL(valorInteriorTotal)} fontSize={72} />
+			<p class="bignumber-caption">destinados a agentes culturais do interior</p>
+		</div>
+	</div>
+	<p style="margin-top: 2rem;">
+		A comparação entre valor recebido e agentes contemplados — por tipo de município — revela
+		que as capitais concentram proporcionalmente mais recursos do que beneficiários.
+	</p>
+	<div style="padding-left: 60px; margin-top: 1rem;">
+		<HorizontalStackedBarChart
+			data={capitalInteriorStackedData}
+			keys={['capital', 'interior']}
+			labels={{ capital: 'Capital', interior: 'Interior' }}
+			colors={[colorScales.orange[2], colorScales.blue[2]]}
+			format={formatPercFix}
+			showTotalLabel={false}
+		/>
+	</div>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
      URBANO vs RURAL POR UF
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-1-zone">
@@ -548,6 +592,12 @@
 		dificilmente ultrapassam 15% do total. <strong>Rondônia e Distrito Federal</strong> têm as
 		menores proporções rurais.
 	</p>
+	<div class="bignumbers-row" style="margin-bottom: 1.5rem;">
+		<div class="bignumber-cell">
+			<BigNumber value={formatBRL(valorRuralTotal)} fontSize={72} />
+			<p class="bignumber-caption">foram destinados a agentes em zona rural</p>
+		</div>
+	</div>
 	<HorizontalStackedBarChart
 		data={zoneData}
 		keys={['valor_rural', 'valor_urbano']}
@@ -667,6 +717,22 @@
 		<strong>{percPopulacaoEspecial}%</strong> da população vive nesses territórios, mas apenas
 		<strong>{percRecursoEspecial}%</strong> dos recursos chegaram até eles.
 	</p>
+	<div class="bignumbers-row">
+		<div class="bignumber-cell">
+			<BigNumber
+				value={specialTerritoryCount.toLocaleString('pt-BR')}
+				fontSize={72}
+			/>
+			<p class="bignumber-caption">agentes culturais contemplados em Favelas, Quilombos e Territórios Indígenas</p>
+		</div>
+		<div class="bignumber-cell">
+			<BigNumber
+				value={formatBRL(specialTerritoryValue)}
+				fontSize={72}
+			/>
+			<p class="bignumber-caption">destinados a agentes em territórios especiais</p>
+		</div>
+	</div>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
 			<BigNumber

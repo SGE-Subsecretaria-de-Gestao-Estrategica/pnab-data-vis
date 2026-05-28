@@ -1,5 +1,7 @@
 <script lang="ts">
 	import ScrollSection from '$lib/components/ScrollSection.svelte';
+	import BodySilhouette from '$lib/components/BodySilhouette.svelte';
+	import EnterpriseSilhouette from '$lib/components/EnterpriseSilhouette.svelte';
 	import {
 		BigNumber,
 		HorizontalBarChart,
@@ -14,6 +16,15 @@
 		colorScales,
 		categorical8,
 	} from 'sniic-design-system';
+
+	const bodyAnnotations = [
+		{ side: 'right' as const, pointX: 230, pointY: 68,  boxX: 445, boxY: 20,  title: 'Identidade',       subtitle: 'Homem negro.',                color: '#265c4f', circleRadius: 16 },
+		{ side: 'right' as const, pointX: 154, pointY: 155, boxX: 445, boxY: 105, title: 'Território',        subtitle: 'Nordeste.',                    color: '#4271b5', circleRadius: 12 },
+		{ side: 'right' as const, pointX: 226, pointY: 220, boxX: 445, boxY: 190, title: 'Idade',             subtitle: '45 anos.',                     color: '#ea662f', circleRadius: 12 },
+		{ side: 'right' as const, pointX: 334, pointY: 255, boxX: 445, boxY: 275, title: 'Trabalho',          subtitle: 'Professor.',                   color: '#a44c7f', circleRadius: 12 },
+		{ side: 'right' as const, pointX: 260, pointY: 380, boxX: 445, boxY: 360, title: 'Escolaridade',      subtitle: 'Ensino superior completo.',    color: '#81a72f', circleRadius: 12 },
+		{ side: 'right' as const, pointX: 250, pointY: 520, boxX: 445, boxY: 445, title: 'Valor repassado',   subtitle: 'Aporte de R$ 12 mil.',         color: '#cb4034', circleRadius: 12 },
+	];
 	import {
 		percSemVinculo,
 		percComVinculo,
@@ -58,6 +69,27 @@
 		Nesta seção, analisamos como essa divisão entre trabalhadores com e sem vínculo formal
 		se distribui por faixa etária, escolaridade, região, sexo, raça/cor e unidade federativa.
 	</p>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PERSONA — PERFIL DO BENEFICIÁRIO
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-4-persona">
+	<h3>Um retrato do beneficiário</h3>
+	<p>
+		Para dar rosto aos números, vejamos um perfil concreto: um homem negro, professor do
+		Nordeste, com ensino superior completo, que recebeu um aporte de <strong>R$ 12 mil</strong>
+		pela política. À direita, o mercado formal organizado — o mesmo ao qual a maioria dos
+		contemplados <em>não</em> possui vínculo.
+	</p>
+	<div class="silhouette-row">
+		<div class="silhouette-col">
+			<BodySilhouette annotations={bodyAnnotations} />
+		</div>
+		<div class="silhouette-col">
+			<EnterpriseSilhouette />
+		</div>
+	</div>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -299,6 +331,24 @@
 </ScrollSection>
 
 <style>
+	.silhouette-row {
+		display: flex;
+		gap: 1rem;
+		flex-wrap: wrap;
+		margin-top: 1.5rem;
+	}
+
+	.silhouette-col {
+		flex: 1 1 300px;
+		min-width: 0;
+	}
+
+	.silhouette-col :global(svg) {
+		width: 100%;
+		height: auto;
+		display: block;
+	}
+
 	.bignumbers-row {
 		display: flex;
 		gap: 2rem;

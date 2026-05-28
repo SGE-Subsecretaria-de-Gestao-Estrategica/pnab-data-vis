@@ -234,9 +234,9 @@ export const ufSplitData = ufRows.map((d) => {
 	};
 });
 
-// ── Urbano vs Rural por UF (executed_value_zone_by_state.csv) ─────────────────
-export const zoneData = parseCSV(csvZoneRaw)
-	.map((d) => ({ label: d.uf, valor_urbano: +d.valor_urbano, valor_rural: +d.valor_rural }))
+// ── Urbano vs Rural por UF (executed_value_zone_by_uf.csv) ───────────────────
+export const zoneData = parseCSV(csvZoneUfRaw)
+	.map((d) => ({ label: d.uf, valor_urbano: +d.valor_uf_urbano, valor_rural: +d.valor_uf_rural }))
 	.sort(
 		(a, b) =>
 			b.valor_rural / (b.valor_urbano + b.valor_rural) -
@@ -343,7 +343,9 @@ export const ufData = ufRows.map((d) => {
 });
 
 // ── Zona municipal (UF total − estado) ────────────────────────────────────
-const zoneStateMap = Object.fromEntries(zoneData.map((d) => [d.label, d]));
+const zoneStateRaw = parseCSV(csvZoneRaw)
+	.map((d) => ({ label: d.uf, valor_urbano: +d.valor_urbano, valor_rural: +d.valor_rural }));
+const zoneStateMap = Object.fromEntries(zoneStateRaw.map((d) => [d.label, d]));
 
 export const zoneMunicipalityData = parseCSV(csvZoneUfRaw)
 	.map((d) => {

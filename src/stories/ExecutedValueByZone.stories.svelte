@@ -35,7 +35,7 @@ Este padrão levanta questões estruturais sobre o alcance do programa em zonas 
   });
 </script>
 
-<Story name="Proporção Urbano/Rural por UF (Governo Estadual)">
+<Story name="Proporção Urbano/Rural por UF (Total UF)">
   {#snippet template()}
     <HorizontalStackedBarChart
       data={zoneData}
@@ -63,7 +63,7 @@ Este padrão levanta questões estruturais sobre o alcance do programa em zonas 
   {/snippet}
 </Story>
 
-<Story name="Proporção Urbano/Rural por UF com Bandeiras (Governo Estadual)">
+<Story name="Proporção Urbano/Rural por UF com Bandeiras (Total UF)">
   {#snippet template()}
     <HorizontalStackedBarChart
       data={zoneData}
@@ -74,6 +74,7 @@ Este padrão levanta questões estruturais sobre o alcance do programa em zonas 
       format={(v) => `R$ ${(v / 1e6).toFixed(1)}M`}
       showTotalLabel={true}
       icons={stateFlags}
+      iconSize={20}
     />
   {/snippet}
 </Story>
@@ -89,6 +90,7 @@ Este padrão levanta questões estruturais sobre o alcance do programa em zonas 
       format={(v) => `R$ ${(v / 1e6).toFixed(1)}M`}
       showTotalLabel={true}
       icons={stateFlags}
+      iconSize={20}
     />
   {/snippet}
 </Story>

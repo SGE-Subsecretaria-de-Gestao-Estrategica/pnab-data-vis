@@ -183,3 +183,39 @@ export const ufRankingData = [...ufRows4]
 		label: r.uf,
 		value: +r.percentual_contemplados_com_vinculo_trabalho_formal * 100,
 	}));
+
+// ── Por UF × Região (correlação) ────────────────────────────────────────────────
+const regionForUF: Record<string, string> = {
+	AC: 'Norte',  AM: 'Norte',  AP: 'Norte',  PA: 'Norte',  RO: 'Norte',  RR: 'Norte',  TO: 'Norte',
+	AL: 'Nordeste', BA: 'Nordeste', CE: 'Nordeste', MA: 'Nordeste', PB: 'Nordeste',
+	PE: 'Nordeste', PI: 'Nordeste', RN: 'Nordeste', SE: 'Nordeste',
+	DF: 'Centro-Oeste', GO: 'Centro-Oeste', MS: 'Centro-Oeste', MT: 'Centro-Oeste',
+	ES: 'Sudeste', MG: 'Sudeste', RJ: 'Sudeste', SP: 'Sudeste',
+	PR: 'Sul', RS: 'Sul', SC: 'Sul',
+};
+
+// lighter shade = sem vínculo, darker shade = com vínculo
+// shades from colorScales: [0]=lightest … [4]=darkest
+const regionColorPairs: Record<string, [string, string]> = {
+	Nordeste:       ['#f7bf95', '#ab4723'], // orange [1] / [3]
+	Sudeste:        ['#9fbbe0', '#2e4e8a'], // blue   [1] / [3]
+	Norte:          ['#95c0b7', '#255c4f'], // teal   [1] / [3]
+	Sul:            ['#c3d992', '#5d7920'], // lime   [1] / [3]
+	'Centro-Oeste': ['#d5a6c8', '#773561'], // purple [1] / [3]
+};
+
+const regionOrderCorr = ['Nordeste', 'Sudeste', 'Norte', 'Sul', 'Centro-Oeste'];
+
+export const ufByRegionGroups = regionOrderCorr.map((regiao) => ({
+	regiao,
+	colors: regionColorPairs[regiao] as [string, string],
+	avgInformal: +regionRows4.find((r) => r.regiao === regiao)!.percentual_contemplados_sem_vinculo_trabalho_formal * 100,
+	data: [...ufRows4]
+		.filter((r) => regionForUF[r.uf] === regiao)
+		.sort((a, b) => +b.percentual_contemplados_sem_vinculo_trabalho_formal - +a.percentual_contemplados_sem_vinculo_trabalho_formal)
+		.map((r) => ({
+			label:       r.uf,
+			sem_vinculo: +r.percentual_contemplados_sem_vinculo_trabalho_formal * 100,
+			com_vinculo: +r.percentual_contemplados_com_vinculo_trabalho_formal * 100,
+		})),
+}));

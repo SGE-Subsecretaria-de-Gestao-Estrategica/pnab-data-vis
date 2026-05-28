@@ -45,6 +45,7 @@
 		racaCorSexoHeatmapData,
 		ufSilhouetteData,
 		ufRankingData,
+		ufByRegionGroups,
 	} from '$lib/data/section4';
 
 	const formatBRL  = (v: number) =>
@@ -330,6 +331,69 @@
 	/>
 </ScrollSection>
 
+<!-- ══════════════════════════════════════════════════════════════════════════
+     POR REGIÃO — CORES POR REGIÃO
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-4-region-color">
+	<h3>Comparativo regional: informalidade e vínculo formal</h3>
+	<p>
+		Cada região tem um perfil distinto. O <strong>Nordeste</strong> lidera a informalidade
+		com quase 60% de beneficiários sem vínculo formal. <strong>Centro-Oeste</strong> e
+		<strong>Norte</strong> ficam próximos de 50%, enquanto <strong>Sudeste</strong> e
+		<strong>Sul</strong> têm a maior proporção de trabalhadores formais.
+	</p>
+	<p class="chart-legend">
+		Tons mais claros = sem vínculo formal &nbsp;·&nbsp; Tons mais escuros = com vínculo formal
+	</p>
+	<div class="region-compare">
+		{#each ufByRegionGroups as { regiao, colors, avgInformal }}
+			<div class="rc-row">
+				<span class="rc-label">{regiao}</span>
+				<div class="rc-bar">
+					<div class="rc-seg" style="width: {avgInformal}%; background: {colors[0]}" title="Sem vínculo: {formatPctN(avgInformal)}"></div>
+					<div class="rc-seg" style="width: {100 - avgInformal}%; background: {colors[1]}" title="Com vínculo: {formatPctN(100 - avgInformal)}"></div>
+				</div>
+				<span class="rc-pct">{formatPctN(avgInformal)} sem vínculo</span>
+			</div>
+		{/each}
+	</div>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     POR UF × REGIÃO — CORRELAÇÃO
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-4-uf-region-corr">
+	<h3>Estados do Nordeste concentram a maior informalidade do país</h3>
+	<p>
+		Cruzando os dados estaduais com o recorte regional, vemos que os estados com
+		maior proporção de trabalhadores sem vínculo formal estão quase todos no
+		<strong>Nordeste</strong>. Piauí (66,9%), Pernambuco e Paraíba lideram dentro
+		da região. No outro extremo, <strong>Amapá, Acre e Rondônia</strong>, no Norte,
+		são os estados com maior formalização relativa.
+	</p>
+	<p class="chart-legend">
+		<span>Tons mais claros</span> = sem vínculo formal &nbsp;·&nbsp;
+		<span>Tons mais escuros</span> = com vínculo formal
+	</p>
+	{#each ufByRegionGroups as { regiao, colors, avgInformal, data }}
+		<div class="region-block">
+			<div class="region-header">
+				<span class="region-swatch" style="background: {colors[1]}"></span>
+				<strong>{regiao}</strong>
+				<span class="region-avg">média: {formatPctN(avgInformal)} sem vínculo</span>
+			</div>
+			<HorizontalStackedBarChart
+				{data}
+				keys={[...ageGroupKeys]}
+				labels={ageGroupLabels}
+				{colors}
+				format={formatPct}
+				showTotalLabel={false}
+			/>
+		</div>
+	{/each}
+</ScrollSection>
+
 <style>
 	.silhouette-row {
 		display: flex;
@@ -373,4 +437,73 @@
 		opacity: 0.75;
 		max-width: 20ch;
 	}
+
+	.chart-legend {
+		font-size: 0.82rem;
+		opacity: 0.65;
+		margin-bottom: 1rem;
+	}
+
+	.region-compare {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		margin-top: 1rem;
+	}
+
+	.rc-row {
+		display: grid;
+		grid-template-columns: 9rem 1fr 10rem;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	.rc-label {
+		font-size: 0.9rem;
+		font-weight: 600;
+		text-align: right;
+	}
+
+	.rc-bar {
+		display: flex;
+		height: 28px;
+		border-radius: 4px;
+		overflow: hidden;
+	}
+
+	.rc-seg {
+		height: 100%;
+		transition: width 0.4s ease;
+	}
+
+	.rc-pct {
+		font-size: 0.78rem;
+		opacity: 0.65;
+	}
+
+	.region-block {
+		margin-bottom: 2rem;
+	}
+
+	.region-header {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 0.25rem;
+	}
+
+	.region-swatch {
+		display: inline-block;
+		width: 12px;
+		height: 12px;
+		border-radius: 3px;
+		flex-shrink: 0;
+	}
+
+	.region-avg {
+		font-size: 0.8rem;
+		opacity: 0.6;
+		margin-left: auto;
+	}
+
 </style>

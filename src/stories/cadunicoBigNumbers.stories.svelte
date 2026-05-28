@@ -8,6 +8,15 @@
     qtdContempladosCadunico,
     qtdDocumentosUnicos,
     valorRecebidoCadunico,
+    percValorCadunico,
+    percFemCadunico,
+    perc2554Cadunico,
+    percUrbanoCadunico,
+    percPequenoPorteCadunico,
+    percBolsaFamilia,
+    valorBolsaFamilia,
+    percBpc,
+    valorBpc,
   } from '$lib/data/section5';
 
   // @ts-ignore
@@ -28,13 +37,18 @@
       docs: {
         description: {
           component: `
-**Contemplados inscritos no Cadastro Único**
+**Grandes números — CadÚnico**
 
-O cruzamento dos dados da Política Nacional Aldir Blanc com o Cadastro Único (CadÚnico) revela que **${formatPct(percContempladosCadunico)}** das pessoas físicas contempladas integram o cadastro — evidência de que a política alcançou populações em situação de vulnerabilidade econômica.
+Cruzamento dos contemplados da Aldir Blanc com o Cadastro Único (CadÚnico).
 
-Ao todo, **${formatNum(qtdContempladosCadunico)} pessoas** foram identificadas no CadÚnico, com **${formatNum(qtdDocumentosUnicos)} documentos únicos** no cruzamento. O valor total repassado a esse grupo foi de **${formatBRL(valorRecebidoCadunico)}**.
+- **${formatPct(percContempladosCadunico)}** das pessoas físicas contempladas estão no CadÚnico (${formatNum(qtdContempladosCadunico)} pessoas, ${formatNum(qtdDocumentosUnicos)} documentos únicos).
+- O valor repassado a esse grupo foi de **${formatBRL(valorRecebidoCadunico)}**, representando **${formatPct(percValorCadunico)}** dos recursos totais.
+- **${formatPct(percFemCadunico)}** são mulheres; **${formatPct(perc2554Cadunico)}** têm entre 25 e 54 anos.
+- **${formatPct(percUrbanoCadunico)}** vivem em área urbana; **${formatPct(percPequenoPorteCadunico)}** em municípios de pequeno porte.
+- **${formatPct(percBolsaFamilia)}** são beneficiários do Bolsa Família (${formatBRL(valorBolsaFamilia)} repassados).
+- **${formatPct(percBpc)}** são beneficiários do BPC (${formatBRL(valorBpc)} repassados).
 
-**Fonte**: \`aggregate_cadunico_summary.csv\`.
+**Fonte**: \`aggregate_cadunico_summary.csv\`, \`aggregate_cadunico_profile_summary_by_sexo.csv\`, \`aggregate_cadunico_profile_summary_by_faixa_etaria.csv\`, \`aggregate_cadunico_by_situacao_domicilio.csv\`, \`aggregate_cadunico_by_population_size.csv\`, \`aggregate_bolsa_familia_summary.csv\`, \`aggregate_bpc_summary.csv\`.
           `,
         },
       },
@@ -63,5 +77,59 @@ Ao todo, **${formatNum(qtdContempladosCadunico)} pessoas** foram identificadas n
 <Story name="BigNumber — valor repassado ao grupo CadÚnico">
   {#snippet template()}
     <BigNumber value={formatBRL(valorRecebidoCadunico)} fontSize={72} />
+  {/snippet}
+</Story>
+
+<Story name="BigNumber — % dos recursos totais destinados ao CadÚnico">
+  {#snippet template()}
+    <BigNumber value={formatPct(percValorCadunico)} fontSize={96} />
+  {/snippet}
+</Story>
+
+<Story name="BigNumber — % feminino no CadÚnico">
+  {#snippet template()}
+    <BigNumber value={formatPct(percFemCadunico)} fontSize={96} />
+  {/snippet}
+</Story>
+
+<Story name="BigNumber — % faixa 25-54 anos no CadÚnico">
+  {#snippet template()}
+    <BigNumber value={formatPct(perc2554Cadunico)} fontSize={96} />
+  {/snippet}
+</Story>
+
+<Story name="BigNumber — % urbano no CadÚnico">
+  {#snippet template()}
+    <BigNumber value={formatPct(percUrbanoCadunico)} fontSize={96} />
+  {/snippet}
+</Story>
+
+<Story name="BigNumber — % pequeno porte no CadÚnico">
+  {#snippet template()}
+    <BigNumber value={formatPct(percPequenoPorteCadunico)} fontSize={96} />
+  {/snippet}
+</Story>
+
+<Story name="BigNumber — % Bolsa Família">
+  {#snippet template()}
+    <BigNumber value={formatPct(percBolsaFamilia)} fontSize={96} />
+  {/snippet}
+</Story>
+
+<Story name="BigNumber — valor Bolsa Família">
+  {#snippet template()}
+    <BigNumber value={formatBRL(valorBolsaFamilia)} fontSize={72} />
+  {/snippet}
+</Story>
+
+<Story name="BigNumber — % BPC">
+  {#snippet template()}
+    <BigNumber value={formatPct(percBpc)} fontSize={96} />
+  {/snippet}
+</Story>
+
+<Story name="BigNumber — valor BPC">
+  {#snippet template()}
+    <BigNumber value={formatBRL(valorBpc)} fontSize={72} />
   {/snippet}
 </Story>

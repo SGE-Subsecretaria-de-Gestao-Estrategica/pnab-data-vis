@@ -38,6 +38,7 @@
 		portePagamentosData,
 		PORTE_BAND_KEYS,
 		PORTE_BAND_LABELS,
+		specialTerritoryBarData,
 	} from '$lib/data/section2';
 
 	const formatBRL = (v: number) =>
@@ -360,6 +361,32 @@
 			height={420}
 		/>
 	</div>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     TERRITÓRIOS ESPECIAIS — VALOR POR TIPO
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-special-territory">
+	<h3>Valor total destinado por tipo de território especial</h3>
+	<p>
+		Entre os repasses que chegaram a territórios especiais, as <strong>favelas e comunidades
+		urbanas</strong> concentram a maior parte dos recursos — muito acima dos demais territórios.
+		Quilombos e territórios indígenas, que concentram populações historicamente marginalizadas,
+		receberam volumes muito menores em termos absolutos.
+	</p>
+	<HorizontalBarChart
+		data={specialTerritoryBarData}
+		color={colorScales.teal[2]}
+		format={(v: number) =>
+			new Intl.NumberFormat('pt-BR', {
+				style: 'currency',
+				currency: 'BRL',
+				notation: 'compact',
+				maximumFractionDigits: 1,
+			}).format(v)}
+		xLabel="Valor total (R$)"
+		margin={{ top: 20, right: 80, bottom: 40, left: 280 }}
+	/>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════

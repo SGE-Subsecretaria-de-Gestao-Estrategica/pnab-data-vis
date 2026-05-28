@@ -3,11 +3,12 @@
 
 import { stateRows } from '$lib/data/section1';
 
-import csvStateRaw from '../../../data/section_2/aggregate_execution_by_person_type_state.csv?raw';
-import csvUfRaw    from '../../../data/section_2/aggregate_execution_by_person_type_uf.csv?raw';
-import csvMunRaw   from '../../../data/section_2/aggregate_execution_by_person_type_municipality.csv?raw';
-import csvRangeRaw from '../../../data/section_2/values_range_by_brazil.csv?raw';
-import csvPorteRaw from '../../../data/section_1/values_by_population_size.csv?raw';
+import csvStateRaw         from '../../../data/section_2/aggregate_execution_by_person_type_state.csv?raw';
+import csvUfRaw            from '../../../data/section_2/aggregate_execution_by_person_type_uf.csv?raw';
+import csvMunRaw           from '../../../data/section_2/aggregate_execution_by_person_type_municipality.csv?raw';
+import csvRangeRaw         from '../../../data/section_2/values_range_by_brazil.csv?raw';
+import csvPorteRaw         from '../../../data/section_1/values_by_population_size.csv?raw';
+import csvSpecialTerritRaw from '../../../data/section_1/values_by_special_territory_uf.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -273,6 +274,13 @@ export const portePagamentosData = porteRowsS2.map((d) => {
 		acima10m:   (bands[7] / total) * 100,
 	};
 });
+
+// ── Row 40: Valor total por território especial (HorizontalBarChart) ──────────
+const SPECIAL_EXCLUDE = new Set(['Não especial', 'Não informado']);
+export const specialTerritoryBarData = parseCSV(csvSpecialTerritRaw)
+	.filter((r) => !SPECIAL_EXCLUDE.has(r.cod_tipo_nome))
+	.map((r) => ({ label: r.cod_tipo_nome, value: +r.valor_transacao }))
+	.sort((a, b) => b.value - a.value);
 
 export const ufBandPercData = [...stateRows]
 	.map((row) => {

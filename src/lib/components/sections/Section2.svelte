@@ -11,6 +11,7 @@
 		colorPairs,
 		colorScales,
 		categorical8,
+		categorical3,
 		AnnotationBox
 	} from 'sniic-design-system';
 	import {
@@ -42,6 +43,9 @@
 		specialTerritoryBarData,
 		brasilBoxPlotData,
 		estadosBoxPlotData,
+		terrEspeciaisData,
+		TERR_KEYS,
+		TERR_LABELS,
 	} from '$lib/data/section2';
 
 	const formatBRL = (v: number) =>
@@ -417,6 +421,29 @@
 		xLabel="Valor total (R$)"
 		margin={{ top: 20, right: 80, bottom: 40, left: 280 }}
 	/>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     HORIZONTAL STACKED — TERRITÓRIOS ESPECIAIS POR UF/ESTADO/MUNICÍPIO
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-terr-especiais-uf">
+	<h3>Contemplados em territórios especiais por estado e esfera executora</h3>
+	<p>
+		Cada barra representa um estado, mostrando quantos agentes culturais em territórios especiais
+		foram atendidos por cada esfera executora: repasses diretos da <strong>UF</strong>,
+		execução pelo <strong>governo estadual</strong> e execução pelos <strong>municípios</strong>.
+	</p>
+	<div class="chart-wide">
+		<HorizontalStackedBarChart
+			data={terrEspeciaisData}
+			keys={[...TERR_KEYS]}
+			labels={TERR_LABELS}
+			colors={categorical3}
+			format={formatBRL}
+			showTotalLabel={true}
+			rowHeight={36}
+		/>
+	</div>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════

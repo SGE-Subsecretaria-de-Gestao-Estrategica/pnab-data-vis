@@ -1,0 +1,44 @@
+<script module>
+  // @ts-ignore
+  import { defineMeta } from '@storybook/addon-svelte-csf';
+  import { HorizontalStackedBarChart, categorical3 } from 'sniic-design-system';
+  // @ts-ignore
+  import { terrEspeciaisData, TERR_KEYS, TERR_LABELS } from '$lib/data/section2';
+
+  // @ts-ignore
+  const formatBRL = (v) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', maximumFractionDigits: 1 }).format(v);
+
+  const { Story } = defineMeta({
+    title: 'Section 2/terrEspeciaisByUf',
+    component: HorizontalStackedBarChart,
+    tags: ['autodocs'],
+    parameters: {
+      docs: {
+        description: {
+          component: `
+**Valor destinado a territórios especiais por estado e esfera executora**
+
+Cada barra representa um estado, mostrando o valor total (R$) destinado a agentes culturais em territórios especiais, dividido por esfera executora: repasses diretos da **UF**, execução pelo **governo estadual** e execução pelos **municípios**.
+
+**Fonte**: \`territorios_especiais_por_uf.csv\`, \`territorios_especiais_por_estado.csv\`, \`territorios_especiais_por_municipio.csv\`.
+          `,
+        },
+      },
+    },
+  });
+</script>
+
+<Story name="HorizontalStackedBarChart — valor em territórios especiais por UF e esfera">
+  {#snippet template()}
+    <HorizontalStackedBarChart
+      data={terrEspeciaisData}
+      keys={[...TERR_KEYS]}
+      labels={TERR_LABELS}
+      colors={categorical3}
+      format={formatBRL}
+      showTotalLabel={true}
+      rowHeight={36}
+    />
+  {/snippet}
+</Story>

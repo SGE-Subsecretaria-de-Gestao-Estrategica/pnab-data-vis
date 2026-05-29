@@ -13,6 +13,9 @@ import csvFaixaUfRaw       from '../../../data/section_2/aggregate_faixa_valor_j
 import csvFaixaStateRaw    from '../../../data/section_2/aggregate_faixa_valor_ju_wide_by_state.csv?raw';
 import csvAuxQuartisBrasilRaw from '../../../data/section_2/aux_quartis_estados_brasil.csv?raw';
 import csvQuartisEstadosRaw from '../../../data/section_2/quartis_estados.csv?raw';
+import csvTerrUfRaw      from '../../../data/section_2/territorios_especiais_por_uf.csv?raw';
+import csvTerrEstadoRaw  from '../../../data/section_2/territorios_especiais_por_estado.csv?raw';
+import csvTerrMunRaw     from '../../../data/section_2/territorios_especiais_por_municipio.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -333,6 +336,33 @@ export const brasilBoxPlotData = [
 		},
 	},
 ];
+
+// ── HorizontalStackedBarChart — territórios especiais por UF/estado/município ──
+const terrUfRows     = parseCSV(csvTerrUfRaw);
+const terrEstadoRows = parseCSV(csvTerrEstadoRaw);
+const terrMunRows    = parseCSV(csvTerrMunRaw);
+
+const terrByUf     = Object.fromEntries(terrUfRows.map((r)     => [r.uf, +r.valor_transacao_territorios_especiais]));
+const terrByEstado = Object.fromEntries(terrEstadoRows.map((r) => [r.uf, +r.valor_transacao_territorios_especiais]));
+const terrByMun    = Object.fromEntries(terrMunRows.map((r)    => [r.uf, +r.valor_transacao_territorios_especiais]));
+
+const allUFs = [...new Set([...Object.keys(terrByUf), ...Object.keys(terrByEstado), ...Object.keys(terrByMun)])].sort();
+
+export const TERR_KEYS   = ['uf', 'estado', 'municipio'] as const;
+export const TERR_LABELS: Record<string, string> = {
+	uf:        'UF',
+	estado:    'Estado',
+	municipio: 'Município',
+};
+
+export const terrEspeciaisData = allUFs
+	.map((uf) => ({
+		label:     uf,
+		uf:        terrByUf[uf]     ?? 0,
+		estado:    terrByEstado[uf] ?? 0,
+		municipio: terrByMun[uf]    ?? 0,
+	}))
+	.sort((a, b) => (b.uf + b.estado + b.municipio) - (a.uf + a.estado + a.municipio));
 
 // ── BoxPlot — quartis por estado (quartis_estados.csv) ────────────────────────
 export const estadosBoxPlotData = parseCSV(csvQuartisEstadosRaw).map((row) => ({

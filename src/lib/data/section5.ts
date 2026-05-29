@@ -10,6 +10,7 @@ import csvDomicilioRaw     from '../../../data/section_5/aggregate_cadunico_by_s
 import csvPorteRaw         from '../../../data/section_5/aggregate_cadunico_by_population_size.csv?raw';
 import csvUfRaw            from '../../../data/section_5/aggregate_cadunico_by_uf.csv?raw';
 import csvValorGrupoRaw    from '../../../data/section_5/aggregate_cadunico_by_value_group.csv?raw';
+import csvValorPnabRaw     from '../../../data/section_2/values_range_by_brazil_v2.csv?raw';
 import csvBolsaFamiliaRaw  from '../../../data/section_5/aggregate_bolsa_familia_summary.csv?raw';
 import csvBpcRaw           from '../../../data/section_5/aggregate_bpc_summary.csv?raw';
 
@@ -131,11 +132,38 @@ export const cadunicoUfData = ufRows5
 	}))
 	.sort((a, b) => b.value - a.value);
 
+// Grouped UF data: [% CadÚnico penetration, % UF share of national PNAB]
+export const cadunicoUfGroupedData = ufRows5
+	.map((r) => ({
+		label: r.uf,
+		values: [
+			(+r.qtd_contemplados_cadunico / +r.qtd_contemplados_total_uf) * 100,
+			+r.perc_qtd_total_brasil * 100,
+		],
+	}))
+	.sort((a, b) => b.values[0] - a.values[0]);
+
 // ── Faixa de valor recebido ────────────────────────────────────────────────────
 const valorGrupoRows = parseCSV(csvValorGrupoRaw);
+const valorPnabRows  = parseCSV(csvValorPnabRaw);
+
+// Map PNAB total % by faixa label for easy lookup
+const valorPnabByFaixa = Object.fromEntries(
+	valorPnabRows.map((r) => [r.faixa_vlr_pago_ju_bbagil, +r['% de contemplados'] * 100])
+);
+
 export const cadunicoValorData = valorGrupoRows.map((r) => ({
 	label: r.faixa_vlr_pago_ju_bbagil,
 	value: +r.percentual_quantidade * 100,
+}));
+
+// Grouped: [% within CadÚnico, % within all PNAB]
+export const valorGroupedData = valorGrupoRows.map((r) => ({
+	label: r.faixa_vlr_pago_ju_bbagil,
+	values: [
+		+r.percentual_quantidade * 100,
+		valorPnabByFaixa[r.faixa_vlr_pago_ju_bbagil] ?? 0,
+	],
 }));
 
 // ── Bolsa Família ──────────────────────────────────────────────────────────────

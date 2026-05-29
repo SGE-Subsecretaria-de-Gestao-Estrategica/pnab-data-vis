@@ -10,6 +10,7 @@
 		colorScales,
 		categorical8,
 	} from 'sniic-design-system';
+	import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
 	import {
 		percContempladosCadunico,
 		qtdContempladosCadunico,
@@ -27,8 +28,9 @@
 		domicilioTreemapData,
 		percPequenoPorteCadunico,
 		porteTreemapData5,
-		cadunicoUfData,
+		cadunicoUfGroupedData,
 		cadunicoValorData,
+		valorGroupedData,
 		percBolsaFamilia,
 		valorBolsaFamilia,
 		percBpc,
@@ -237,12 +239,12 @@
 		reflexo da maior vulnerabilidade socioeconômica dessas regiões. O Distrito Federal e
 		estados do Sul apresentam as menores taxas de penetração.
 	</p>
-	<HorizontalBarChart
-		data={cadunicoUfData}
-		color={colorScales.teal[2]}
+	<HorizontalGroupedBarChart
+		data={cadunicoUfGroupedData}
+		seriesLabels={['% contemplados da UF no CadÚnico', '% agentes culturais PNAB (Brasil)']}
+		colors={[colorScales.teal[2], colorScales.orange[2]]}
 		format={formatPctFixed}
-		xLabel="% dos contemplados da UF no CadÚnico"
-		margin={{ top: 20, right: 80, bottom: 40, left: 50 }}
+		margin={{ top: 28, right: 90, bottom: 40, left: 50 }}
 	/>
 </ScrollSection>
 
@@ -256,12 +258,12 @@
 		ficaram abaixo de R$10 mil — concentração ainda maior do que a observada no conjunto geral
 		da Aldir Blanc.
 	</p>
-	<HorizontalBarChart
-		data={cadunicoValorData}
-		color={colorScales.blue[2]}
+	<HorizontalGroupedBarChart
+		data={valorGroupedData}
+		seriesLabels={['% agentes culturais PNAB/CadÚnico', '% agentes culturais PNAB']}
+		colors={[colorScales.blue[2], colorScales.red[2]]}
 		format={formatPctFixed}
-		xLabel="% dos beneficiários CadÚnico"
-		margin={{ top: 20, right: 80, bottom: 40, left: 160 }}
+		margin={{ top: 28, right: 90, bottom: 40, left: 160 }}
 	/>
 </ScrollSection>
 

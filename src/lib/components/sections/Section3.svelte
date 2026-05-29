@@ -25,6 +25,8 @@
 		ageGroupRegionKeys,
 		ageGroupRegionLabels,
 		top20CboData,
+		valorTotalPJ,
+		valorTotalMEI,
 	} from '$lib/data/section3';
 
 	const formatNum = (v: number) => v.toLocaleString('pt-BR');
@@ -96,6 +98,16 @@
 		Apenas 19,3% correspondem a organizações formais como associações, coletivos e empresas
 		culturais.
 	</p>
+	<div class="bignumbers-row">
+		<div class="bignumber-cell">
+			<BigNumber value={formatBRL(valorTotalPJ)} fontSize={72} />
+			<p class="bignumber-caption">recebidos por pessoas jurídicas (55,9%)</p>
+		</div>
+		<div class="bignumber-cell">
+			<BigNumber value={formatBRL(valorTotalMEI)} fontSize={72} />
+			<p class="bignumber-caption">recebidos por MEIs dentre as pessoas jurídicas (8,4%)</p>
+		</div>
+	</div>
 	<div class="donut-single">
 		<DonutChart
 			data={pfPjDonutData}

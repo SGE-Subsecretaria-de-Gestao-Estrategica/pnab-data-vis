@@ -3880,3 +3880,195 @@ def resumo_faixa_valor_por_porte(
     df_final[cols_numericas] = df_final[cols_numericas].fillna(0)
 
     return df_final
+
+def resumo_territorios_especiais_por_uf(
+    df_cubo: pd.DataFrame,
+    visao: str = "UF",
+    coluna_uf: str = "uf",
+    coluna_tipo_ente: str = "tipo_ente",
+    coluna_territorio: str = "cod_tipo_nome",
+    coluna_quantidade: str = "quantidade",
+    coluna_valor: str = "valor_transacao",
+    base_percentual: str = "total_uf",
+) -> pd.DataFrame:
+    """
+    Gera uma visão por UF dos recursos e contemplados em territórios especiais.
+
+    Mantém apenas:
+    - Favela e Comunidade Urbana
+    - Agrupamento quilombola
+    - Agrupamento indígena
+
+    Parâmetros
+    ----------
+    visao : str
+        - "ESTADO": filtra tipo_ente == "ESTADO"
+        - "UF": não filtra tipo_ente, considerando estados + municípios
+
+    base_percentual : str
+        - "total_uf": percentual de cada território em relação ao total da UF.
+        - "territorios_especiais": percentual de cada território em relação apenas
+          à soma dos três territórios especiais.
+
+    Retorno
+    -------
+    pd.DataFrame
+        DataFrame com uma linha por UF.
+    """
+
+    visao = visao.upper().strip()
+
+    if visao not in ["ESTADO", "UF"]:
+        raise ValueError("visao deve ser 'ESTADO' ou 'UF'.")
+
+    if base_percentual not in ["total_uf", "territorios_especiais"]:
+        raise ValueError(
+            "base_percentual deve ser 'total_uf' ou 'territorios_especiais'."
+        )
+
+    territorios_mantidos = [
+        "Favela e Comunidade Urbana",
+        "Agrupamento quilombola",
+        "Agrupamento indígena",
+    ]
+
+    nome_colunas = {
+        "Favela e Comunidade Urbana": "favela_comunidade_urbana",
+        "Agrupamento quilombola": "agrupamento_quilombola",
+        "Agrupamento indígena": "agrupamento_indigena",
+    }
+
+    df = df_cubo.copy()
+
+    if visao == "ESTADO":
+        df = df[df[coluna_tipo_ente] == "ESTADO"].copy()
+
+    # Total geral da UF, antes de filtrar os territórios especiais
+    total_uf = (
+        df
+        .groupby(coluna_uf, dropna=False)
+        .agg(
+            total_qtd_contemplados_uf=(coluna_quantidade, "sum"),
+            total_valor_transacao_uf=(coluna_valor, "sum"),
+        )
+        .reset_index()
+    )
+
+    # Base apenas com os três territórios especiais
+    df_terr = df[df[coluna_territorio].isin(territorios_mantidos)].copy()
+
+    # Agrega por UF e território
+    df_agg = (
+        df_terr
+        .groupby([coluna_uf, coluna_territorio], dropna=False)
+        .agg(
+            qtd_contemplados=(coluna_quantidade, "sum"),
+            valor_transacao=(coluna_valor, "sum"),
+        )
+        .reset_index()
+    )
+
+    # Soma dos três territórios especiais por UF
+    total_territorios_uf = (
+        df_agg
+        .groupby(coluna_uf, dropna=False)
+        .agg(
+            qtd_contemplados_territorios_especiais=("qtd_contemplados", "sum"),
+            valor_transacao_territorios_especiais=("valor_transacao", "sum"),
+        )
+        .reset_index()
+    )
+
+    # DataFrame-base da saída
+    df_final = (
+        total_uf
+        .merge(total_territorios_uf, on=coluna_uf, how="left")
+    )
+
+    df_final[
+        [
+            "qtd_contemplados_territorios_especiais",
+            "valor_transacao_territorios_especiais",
+        ]
+    ] = df_final[
+        [
+            "qtd_contemplados_territorios_especiais",
+            "valor_transacao_territorios_especiais",
+        ]
+    ].fillna(0)
+
+    # Percentual da soma dos três territórios especiais dentro da UF
+    df_final["perc_qtd_contemplados_territorios_especiais_uf"] = np.where(
+        df_final["total_qtd_contemplados_uf"] > 0,
+        df_final["qtd_contemplados_territorios_especiais"]
+        / df_final["total_qtd_contemplados_uf"],
+        0,
+    )
+
+    df_final["perc_valor_transacao_territorios_especiais_uf"] = np.where(
+        df_final["total_valor_transacao_uf"] > 0,
+        df_final["valor_transacao_territorios_especiais"]
+        / df_final["total_valor_transacao_uf"],
+        0,
+    )
+
+    # Junta totais para calcular os percentuais individuais
+    df_agg = (
+        df_agg
+        .merge(total_uf, on=coluna_uf, how="left")
+        .merge(total_territorios_uf, on=coluna_uf, how="left")
+    )
+
+    if base_percentual == "total_uf":
+        df_agg["perc_qtd_contemplados"] = np.where(
+            df_agg["total_qtd_contemplados_uf"] > 0,
+            df_agg["qtd_contemplados"] / df_agg["total_qtd_contemplados_uf"],
+            0,
+        )
+
+        df_agg["perc_valor_transacao"] = np.where(
+            df_agg["total_valor_transacao_uf"] > 0,
+            df_agg["valor_transacao"] / df_agg["total_valor_transacao_uf"],
+            0,
+        )
+
+    else:
+        df_agg["perc_qtd_contemplados"] = np.where(
+            df_agg["qtd_contemplados_territorios_especiais"] > 0,
+            df_agg["qtd_contemplados"]
+            / df_agg["qtd_contemplados_territorios_especiais"],
+            0,
+        )
+
+        df_agg["perc_valor_transacao"] = np.where(
+            df_agg["valor_transacao_territorios_especiais"] > 0,
+            df_agg["valor_transacao"]
+            / df_agg["valor_transacao_territorios_especiais"],
+            0,
+        )
+
+    # Cria colunas abertas para cada território especial
+    for territorio, nome in nome_colunas.items():
+        df_aux = (
+            df_agg[df_agg[coluna_territorio] == territorio]
+            [[
+                coluna_uf,
+                "qtd_contemplados",
+                "perc_qtd_contemplados",
+                "valor_transacao",
+                "perc_valor_transacao",
+            ]]
+            .rename(columns={
+                "qtd_contemplados": f"qtd_contemplados_{nome}",
+                "perc_qtd_contemplados": f"perc_qtd_contemplados_{nome}",
+                "valor_transacao": f"valor_transacao_{nome}",
+                "perc_valor_transacao": f"perc_valor_transacao_{nome}",
+            })
+        )
+
+        df_final = df_final.merge(df_aux, on=coluna_uf, how="left")
+
+    cols_numericas = df_final.columns.drop(coluna_uf)
+    df_final[cols_numericas] = df_final[cols_numericas].fillna(0)
+
+    return df_final

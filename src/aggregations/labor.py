@@ -562,10 +562,11 @@ def aggregate_vinculo_formal_labor_by_sexo(
         .reset_index(drop=True)
     )
 
+
 def aggregate_vinculo_formal_labor_by_age_group(
     df_cubo: pd.DataFrame,
     col_faixa_etaria: str = "faixa_etaria",
-    col_flag: str = "flag_join_rais",
+    col_vinculo: str = "tipo_vinculo_agregado_rais",
     col_quantidade: str = "quantidade",
     col_valor: str = "valor_transacao",
 ) -> pd.DataFrame:
@@ -574,23 +575,33 @@ def aggregate_vinculo_formal_labor_by_age_group(
     com e sem vínculo formal de trabalho.
 
     Considera apenas:
+    - tipo_documento == CPF
     - faixa_etaria não nula
-    - flag_join_rais não nula
+
+    Regras:
+    - Sem vínculo formal: tipo_vinculo_agregado_rais missing, nulo ou vazio
+    - Com vínculo formal: tipo_vinculo_agregado_rais preenchido
     """
 
     df = df_cubo.copy()
 
-    df = df[df['tipo_documento'] == 'CPF']
+    df = df[df["tipo_documento"] == "CPF"].copy()
 
     df = df.loc[
         df[col_faixa_etaria].notna()
-        & df[col_flag].notna()
     ].copy()
 
-    df["situacao_vinculo_formal"] = df[col_flag].map({
-        False: "sem_vinculo_trabalho_formal",
-        True: "com_vinculo_trabalho_formal",
-    })
+    vinculo_preenchido = (
+        df[col_vinculo].notna()
+        & ~df[col_vinculo]
+            .astype(str)
+            .str.strip()
+            .str.lower()
+            .isin(["", "nan", "none", "null", "<na>"])
+    )
+
+    df["situacao_vinculo_formal"] = "sem_vinculo_trabalho_formal"
+    df.loc[vinculo_preenchido, "situacao_vinculo_formal"] = "com_vinculo_trabalho_formal"
 
     resumo = (
         df
@@ -639,7 +650,6 @@ def aggregate_vinculo_formal_labor_by_age_group(
         + tabela["valor_pago_com_vinculo_trabalho_formal"]
     )
 
-    # Percentuais dentro da própria faixa etária
     tabela["percentual_contemplados_sem_vinculo_trabalho_formal"] = (
         tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
         / tabela["numero_contemplados_total"]
@@ -660,7 +670,6 @@ def aggregate_vinculo_formal_labor_by_age_group(
         / tabela["valor_pago_total"]
     ).fillna(0)
 
-    # Participação de cada faixa etária no total geral
     tabela["percentual_numero_contemplados_no_total_geral"] = (
         tabela["numero_contemplados_total"]
         / tabela["numero_contemplados_total"].sum()
@@ -671,7 +680,6 @@ def aggregate_vinculo_formal_labor_by_age_group(
         / tabela["valor_pago_total"].sum()
     ).fillna(0)
 
-    # Participação de cada faixa etária no total geral com/sem vínculo
     tabela["percentual_numero_contemplados_sem_vinculo_no_total_geral"] = (
         tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
         / tabela["numero_contemplados_sem_vinculo_trabalho_formal"].sum()
@@ -726,7 +734,7 @@ def aggregate_vinculo_formal_labor_by_age_group(
 def aggregate_vinculo_formal_labor_by_raca_cor(
     df_cubo: pd.DataFrame,
     col_raca_cor: str = "raca_cor_desc_description",
-    col_flag: str = "flag_join_rais",
+    col_vinculo: str = "tipo_vinculo_agregado_rais",
     col_quantidade: str = "quantidade",
     col_valor: str = "valor_transacao",
 ) -> pd.DataFrame:
@@ -735,23 +743,35 @@ def aggregate_vinculo_formal_labor_by_raca_cor(
     com e sem vínculo formal de trabalho.
 
     Considera apenas:
+    - tipo_documento == CPF
     - raca_cor_desc_description não nula
-    - flag_join_rais não nula
+
+    Regras:
+    - Sem vínculo formal: tipo_vinculo_agregado_rais missing, nulo ou vazio
+    - Com vínculo formal: tipo_vinculo_agregado_rais preenchido
     """
 
     df = df_cubo.copy()
 
-    df = df[df['tipo_documento'] == 'CPF']
+    df = df[df["tipo_documento"] == "CPF"].copy()
+
+    df = df[df['raca_cor_desc_description']!='Não informado']
 
     df = df.loc[
         df[col_raca_cor].notna()
-        & df[col_flag].notna()
     ].copy()
 
-    df["situacao_vinculo_formal"] = df[col_flag].map({
-        False: "sem_vinculo_trabalho_formal",
-        True: "com_vinculo_trabalho_formal",
-    })
+    vinculo_preenchido = (
+        df[col_vinculo].notna()
+        & ~df[col_vinculo]
+            .astype(str)
+            .str.strip()
+            .str.lower()
+            .isin(["", "nan", "none", "null", "<na>"])
+    )
+
+    df["situacao_vinculo_formal"] = "sem_vinculo_trabalho_formal"
+    df.loc[vinculo_preenchido, "situacao_vinculo_formal"] = "com_vinculo_trabalho_formal"
 
     resumo = (
         df
@@ -918,9 +938,7 @@ def aggregate_raca_cor_vinculo_formal_labor_by_sexo(
     df = df_cubo.copy()
 
     df = df[df['tipo_documento'] == 'CPF']
-
-    
-
+   
     df = df.loc[
         df[col_raca_cor].notna()
         & df[col_flag].notna()

@@ -13,6 +13,8 @@ import csvSpecialMunRaw from '../../../data/section_1/values_by_special_territor
 import csvBnRaw         from '../../../data/section_1/bignumber1.csv?raw';
 import csvRegionUfRaw   from '../../../data/section_1/executed_value_by_region_uf.csv?raw';
 import csvCapitalRaw    from '../../../data/section_1/aggregate_values_by_capital.csv?raw';
+import csvSpecialUfRaw  from '../../../data/section_1/values_by_special_territory_uf.csv?raw';
+import csvPorteMeanRaw  from '../../../data/section_1/population_size_mean.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -234,6 +236,19 @@ export const ufSplitData = ufRows.map((d) => {
 	};
 });
 
+// ── Urbano vs Rural por UF — contagem de contemplados (executed_value_by_state.csv) ──
+export const zoneQtdData = parseCSV(csvStateRaw)
+	.map((d) => ({
+		label:       d.uf,
+		qtde_urbano: +d.qtde_urbano,
+		qtde_rural:  +d.qtde_rural,
+	}))
+	.sort(
+		(a, b) =>
+			b.qtde_rural / (b.qtde_urbano + b.qtde_rural) -
+			a.qtde_rural / (a.qtde_urbano + a.qtde_rural)
+	);
+
 // ── Urbano vs Rural por UF (executed_value_zone_by_uf.csv) ───────────────────
 export const zoneData = parseCSV(csvZoneUfRaw)
 	.map((d) => ({ label: d.uf, valor_urbano: +d.valor_uf_urbano, valor_rural: +d.valor_uf_rural }))
@@ -392,9 +407,37 @@ const rawSpecial = parseCSV(csvSpecialRaw);
 export const specialTerritoryCount = rawSpecial.reduce((s, d) => s + +d['Quantidade de contemplados'], 0);
 export const specialTerritoryValue = rawSpecial.reduce((s, d) => s + +d['Valor (R$)'], 0);
 
+// ── Métricas completas: 4 variáveis por território especial ───────────────────
+const specialUfRows = parseCSV(csvSpecialUfRaw);
+const shortLabelMap: Record<string, string> = {
+	'Favela e Comunidade Urbana': 'Favela / Com. Urbana',
+	'Agrupamento quilombola':     'Quilombola',
+	'Agrupamento indígena':       'Indígena',
+};
+export const specialTerritoriesMetrics = specialUfRows.map((d) => {
+	const ibge = rawSpecial.find((r) => r.territorio === d.cod_tipo_nome);
+	return {
+		territorio:     d.cod_tipo_nome,
+		shortLabel:     shortLabelMap[d.cod_tipo_nome] ?? d.cod_tipo_nome,
+		valor:          +d.valor_transacao,
+		perc_recurso:   +d.perc_valor_transacao * 100,
+		perc_agentes:   +d.perc_quantidade_contemplados * 100,
+		perc_populacao: ibge ? +ibge['% população no território'] : 0,
+	};
+});
+
 // ── Rural total (sum across all UFs from zone UF data) ────────────────────────
 export const valorRuralTotal = parseCSV(csvZoneUfRaw)
 	.reduce((s, d) => s + +d.valor_uf_rural, 0);
+
+// ── Contemplados em zona rural (estado + município) ────────────────────────────
+const _qtdeRuralState = parseCSV(csvStateRaw).reduce((s, d) => s + +d.qtde_rural, 0);
+const _qtdeRuralMun   = parseCSV(csvMunRaw).reduce((s, d) => s + +d.qtde_rural, 0);
+const _qtdeTotalState = parseCSV(csvStateRaw).reduce((s, d) => s + +d.qtde_contemplados, 0);
+const _qtdeTotalMun   = parseCSV(csvMunRaw).reduce((s, d) => s + (+d.qtde_rural + +d.qtde_urbano), 0);
+export const qtdeRuralTotal  = _qtdeRuralState + _qtdeRuralMun;
+export const percRuralQtde   = (qtdeRuralTotal / (_qtdeTotalState + _qtdeTotalMun)) * 100;
+export const percRuralValor  = (valorRuralTotal / parseCSV(csvZoneUfRaw).reduce((s, d) => s + +d.valor_uf, 0)) * 100;
 
 // ── Capital vs Interior (aggregate_values_by_capital.csv) ─────────────────────
 const [capitalRow] = parseCSV(csvCapitalRaw);
@@ -414,3 +457,14 @@ export const capitalInteriorStackedData = [
 // ── Interior (pre-computed from executed_value_by_municipality.csv) ────────────
 export const percInteriorPagamentos  = 65.5;
 export const valorInteriorTotal      = 1_754_685_854;
+
+// ── Valor médio por município por porte (population_size_mean.csv) ─────────────
+export const porteMeanData = parseCSV(csvPorteMeanRaw)
+	.filter((d) => d['Tipo de município'])
+	.map((d) => ({
+		label: porteNameMap[d['Tipo de município']] ?? d['Tipo de município'],
+		value: +d['Valor médio por município'],
+		total: +d['Valor total por Porte'],
+		qtd:   +d['Quantidade de municípios por Porte'],
+	}))
+	.sort((a, b) => b.value - a.value);

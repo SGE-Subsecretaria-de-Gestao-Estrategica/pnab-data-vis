@@ -17,7 +17,20 @@
     porteStackedLabels,
     porteStackedData,
     porteRaw,
+    porteMeanData,
   } from '$lib/data/section1';
+
+  // @ts-ignore
+  const formatBRLM  = (v) => `R$ ${(v / 1e6).toFixed(1)}M`;
+  // @ts-ignore
+  const formatBRLpc = (v) =>
+    `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const pmMaxTotal = Math.max(...porteMeanData.map((d) => d.total));
+  const pmMaxAvg   = Math.max(...porteMeanData.map((d) => d.value));
+  const pmBarW     = 290;
+  const pmRowH     = 82;
+  const pmLabelW   = 150;
 
   const porteLegend = porteRaw.map((d, i) => ({ label: d.porte, color: categorical8[i] }));
 
@@ -116,5 +129,47 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
         showTotalLabel={true}
       />
     </div>
+  {/snippet}
+</Story>
+
+<Story name="Dual Bars — Valor Total e Médio por Porte">
+  {#snippet template()}
+    <svg
+      viewBox="0 0 560 {30 + porteMeanData.length * pmRowH}"
+      style="width: 100%; max-width: 560px; overflow: visible; display: block; font-family: system-ui, sans-serif;"
+      role="img"
+      aria-label="Valor total e médio por porte de município"
+    >
+      <!-- Legend -->
+      <rect x={pmLabelW}       y={2}  width={12} height={12} fill={categorical8[0]} rx={2} />
+      <text x={pmLabelW + 16}  y={12} font-size="10" fill="#334155" dominant-baseline="middle">Valor total executado</text>
+      <rect x={pmLabelW + 170} y={2}  width={12} height={12} fill={categorical8[2]} rx={2} />
+      <text x={pmLabelW + 186} y={12} font-size="10" fill="#334155" dominant-baseline="middle">Valor médio por município</text>
+
+      {#each porteMeanData as d, i}
+        {@const rowY   = 30 + i * pmRowH}
+        {@const wTotal = (d.total / pmMaxTotal) * pmBarW}
+        {@const wAvg   = (d.value / pmMaxAvg)   * pmBarW}
+
+        <!-- Category label + municipality count -->
+        <text x={0} y={rowY + 14} font-size="13" font-weight="700" fill="#334155" dominant-baseline="middle">{d.label}</text>
+        <text x={0} y={rowY + 30} font-size="11" fill="#334155" opacity="0.55" dominant-baseline="middle">{d.qtd.toLocaleString('pt-BR')} municípios</text>
+
+        <!-- Total value bar -->
+        <rect x={pmLabelW} y={rowY}      width={pmBarW} height={16} fill="#f1f5f9" rx={2} />
+        <rect x={pmLabelW} y={rowY}      width={wTotal} height={16} fill={categorical8[0]} rx={2} />
+        <text x={pmLabelW + wTotal + 6}  y={rowY + 12}  font-size="11" font-weight="600" fill="#334155" dominant-baseline="middle">{formatBRLM(d.total)}</text>
+
+        <!-- Avg value bar -->
+        <rect x={pmLabelW} y={rowY + 24} width={pmBarW} height={16} fill="#f1f5f9" rx={2} />
+        <rect x={pmLabelW} y={rowY + 24} width={wAvg}   height={16} fill={categorical8[2]} rx={2} />
+        <text x={pmLabelW + wAvg + 6}    y={rowY + 36}  font-size="11" font-weight="600" fill="#334155" dominant-baseline="middle">{formatBRLpc(d.value)}</text>
+
+        <!-- Row divider -->
+        {#if i < porteMeanData.length - 1}
+          <line x1={0} y1={rowY + pmRowH - 8} x2={560} y2={rowY + pmRowH - 8} stroke="#e2e8f0" stroke-width={1} />
+        {/if}
+      {/each}
+    </svg>
   {/snippet}
 </Story>

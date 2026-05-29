@@ -5,6 +5,7 @@
 		BigNumber,
 		HorizontalBarChart,
 		HorizontalStackedBarChart,
+		VerticalStackedBarChart,
 		DivergingBarChart,
 		BubbleChart,
 		ProportionalAreaChart,
@@ -29,17 +30,21 @@
 		boxPlotData, regionMedianData,
 		heatmapData,
 		percapitaData, ufSplitData,
-		zoneData,
+		zoneData, zoneQtdData,
 		porteTreemapData, porteDivergingData, porteBubbleData,
-		porteStackedKeys, porteStackedLabels, porteStackedData,
+		porteStackedKeys, porteStackedLabels, porteStackedData, porteMeanData,
 		percRecursoEspecial, percPopulacaoEspecial, specialDivergingData,
 		specialStackedData,
+		specialTerritoriesMetrics,
 		ufData,
 		silhouetteStateData,
 		silhouetteRegionData,
 		silhouetteRegionPopData,
 		states,
 		valorRuralTotal,
+		qtdeRuralTotal,
+		percRuralQtde,
+		percRuralValor,
 		capitalInteriorStackedData,
 		percInteriorPagamentos,
 		valorInteriorTotal,
@@ -594,8 +599,20 @@
 	</p>
 	<div class="bignumbers-row" style="margin-bottom: 1.5rem;">
 		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorRuralTotal)} fontSize={72} />
-			<p class="bignumber-caption">foram destinados a agentes em zona rural</p>
+			<BigNumber
+				value={qtdeRuralTotal.toLocaleString('pt-BR')}
+				fontSize={72}
+			/>
+			<p class="bignumber-perc">({percRuralQtde.toFixed(1).replace('.', ',')}%)</p>
+			<p class="bignumber-caption">foram os contemplados em zona rural</p>
+		</div>
+		<div class="bignumber-cell">
+			<BigNumber
+				value={`R$${valorRuralTotal.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+				fontSize={72}
+			/>
+			<p class="bignumber-perc">({percRuralValor.toFixed(1).replace('.', ',')}%)</p>
+			<p class="bignumber-caption">foi o recurso destinado</p>
 		</div>
 	</div>
 	<HorizontalStackedBarChart
@@ -607,6 +624,19 @@
 		showTotalLabel={true}
 		icons={stateFlags}
 		iconSize={20}
+	/>
+	<p style="margin-top: 2rem;">
+		O mesmo padrão se repete quando analisamos o número de <strong>agentes contemplados</strong>
+		por zona. Estados estão ordenados pela maior proporção rural.
+	</p>
+	<VerticalStackedBarChart
+		data={zoneQtdData}
+		keys={['qtde_rural', 'qtde_urbano']}
+		labels={{ qtde_urbano: 'Urbano', qtde_rural: 'Rural' }}
+		colors={[colorScales.red[2], colorScales.blue[2]]}
+		normalize={true}
+		height={320}
+		sortDirection="desc"
 	/>
 </ScrollSection>
 
@@ -707,6 +737,69 @@
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
+     PORTE MUNICIPAL — VALOR MÉDIO POR MUNICÍPIO
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-1-porte-mean">
+	<h3>Municípios grandes recebem, em média, 28 vezes mais que os pequenos</h3>
+	<p>
+		O valor médio recebido por cada município varia drasticamente conforme o porte.
+		Um município de <strong>grande porte</strong> recebeu, em média,
+		<strong>R$ 2,2 milhões</strong> — enquanto um município <strong>Pequeno I</strong>
+		ficou com apenas <strong>R$ 78 mil</strong>. A diferença reflete tanto o critério
+		de rateio pelo FPM quanto a capacidade institucional de absorver recursos.
+	</p>
+	<p>
+		Apesar de os municípios <strong>Pequenos I</strong> serem mais de dez vezes mais
+		numerosos que os Grandes, o volume total destinado a eles é três vezes menor.
+	</p>
+
+	{@const pmMaxTotal = Math.max(...porteMeanData.map((d) => d.total))}
+	{@const pmMaxAvg   = Math.max(...porteMeanData.map((d) => d.value))}
+	{@const pmBarW     = 290}
+	{@const pmRowH     = 82}
+	{@const pmLabelW   = 150}
+	{@const pmRows     = porteMeanData.length}
+
+	<svg
+		viewBox="0 0 560 {30 + pmRows * pmRowH}"
+		style="width: 100%; overflow: visible; display: block; margin-top: 1.5rem;"
+		role="img"
+		aria-label="Valor total e médio por porte de município"
+	>
+		<!-- Legend -->
+		<rect x={pmLabelW}      y={2}  width={12} height={12} fill={categorical8[0]} rx={2} />
+		<text x={pmLabelW + 16} y={12} class="pm-legend">Valor total executado</text>
+		<rect x={pmLabelW + 170} y={2}  width={12} height={12} fill={categorical8[2]} rx={2} />
+		<text x={pmLabelW + 186} y={12} class="pm-legend">Valor médio por município</text>
+
+		{#each porteMeanData as d, i}
+			{@const rowY   = 30 + i * pmRowH}
+			{@const wTotal = (d.total / pmMaxTotal) * pmBarW}
+			{@const wAvg   = (d.value / pmMaxAvg)   * pmBarW}
+
+			<!-- Category label + municipality count -->
+			<text x={0} y={rowY + 14} class="pm-category">{d.label}</text>
+			<text x={0} y={rowY + 30} class="pm-qtd">{d.qtd.toLocaleString('pt-BR')} municípios</text>
+
+			<!-- Total value bar -->
+			<rect x={pmLabelW} y={rowY}      width={pmBarW} height={16} fill="#f1f5f9" rx={2} />
+			<rect x={pmLabelW} y={rowY}      width={wTotal} height={16} fill={categorical8[0]} rx={2} />
+			<text x={pmLabelW + wTotal + 6}  y={rowY + 12}  class="pm-value">{formatBRLM(d.total)}</text>
+
+			<!-- Avg value bar -->
+			<rect x={pmLabelW} y={rowY + 24} width={pmBarW} height={16} fill="#f1f5f9" rx={2} />
+			<rect x={pmLabelW} y={rowY + 24} width={wAvg}   height={16} fill={categorical8[2]} rx={2} />
+			<text x={pmLabelW + wAvg + 6}    y={rowY + 36}  class="pm-value">{formatBRLpc(d.value)}</text>
+
+			<!-- Row divider -->
+			{#if i < pmRows - 1}
+				<line x1={0} y1={rowY + pmRowH - 8} x2={560} y2={rowY + pmRowH - 8} class="pm-divider" />
+			{/if}
+		{/each}
+	</svg>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
      TERRITÓRIOS ESPECIAIS — GRANDES NÚMEROS
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-1-special-bignumber">
@@ -742,15 +835,77 @@
 			/>
 			<p class="bignumber-caption">da população brasileira vive em Favelas, Quilombos e Territórios Indígenas</p>
 		</div>
-		<div class="bignumber-cell">
+		<!-- <div class="bignumber-cell">
 			<BigNumber
 				value={percRecursoEspecial}
 				suffix="%"
 				fontSize={72}
 			/>
 			<p class="bignumber-caption">dos recursos do PNAB chegaram a Favelas, Quilombos e Territórios Indígenas</p>
-		</div>
+		</div> -->
 	</div>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     TERRITÓRIOS ESPECIAIS — 4 VARIÁVEIS
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-1-special-metrics">
+	<h3>Quatro dimensões da sub-representação</h3>
+	<p>
+		A comparação entre quatro indicadores — valor transferido, participação nos recursos executados,
+		participação dos agentes contemplados e peso demográfico — revela o mesmo padrão em todos os
+		territórios: a fatia da <strong>população</strong> supera amplamente a fatia de
+		<strong>recursos</strong> e de <strong>agentes contemplados</strong>.
+	</p>
+	<p>
+		O território com maior lacuna proporcional é o <strong>indígena</strong>: representa
+		0,83% da população, mas recebeu apenas 0,18% dos recursos e teve 0,15% dos agentes
+		contemplados — menos de um quinto do que sua presença demográfica justificaria.
+	</p>
+	<svg
+		viewBox="0 0 560 310"
+		style="width: 100%; overflow: visible; display: block; margin-top: 1.5rem;"
+		role="img"
+		aria-label="Comparação de quatro métricas por território especial"
+	>
+		<!-- Legend -->
+		<rect x={0}   y={2}  width={12} height={12} fill={categorical8[0]} rx={2} />
+		<text x={16}  y={12} class="st-legend">% da população no território</text>
+		<rect x={190} y={2}  width={12} height={12} fill={categorical8[2]} rx={2} />
+		<text x={206} y={12} class="st-legend">% dos recursos executados</text>
+		<rect x={370} y={2}  width={12} height={12} fill={categorical8[4]} rx={2} />
+		<text x={386} y={12} class="st-legend">% dos agentes contemplados</text>
+
+		{#each specialTerritoriesMetrics as d, ti}
+			{@const blockY = 30 + ti * 92}
+			{@const w0 = d.perc_populacao / 10 * 290}
+			{@const w1 = d.perc_recurso   / 10 * 290}
+			{@const w2 = d.perc_agentes   / 10 * 290}
+
+			<!-- Territory header -->
+			<text x={0}   y={blockY + 10} class="st-territory">{d.shortLabel}</text>
+			<text x={560} y={blockY + 10} text-anchor="end" class="st-valor">{formatBRL(d.valor)}</text>
+			<line x1={0} y1={blockY + 16} x2={560} y2={blockY + 16} class="st-separator" />
+
+			<!-- % da população -->
+			<text x={154} y={blockY + 34} text-anchor="end" class="st-label">% da população</text>
+			<rect x={160} y={blockY + 22} width={290} height={14} fill="#f1f5f9" rx={2} />
+			<rect x={160} y={blockY + 22} width={w0}  height={14} fill={categorical8[0]} rx={2} />
+			<text x={160 + w0 + 5} y={blockY + 33} class="st-value">{d.perc_populacao.toFixed(2)}%</text>
+
+			<!-- % dos recursos -->
+			<text x={154} y={blockY + 56} text-anchor="end" class="st-label">% dos recursos</text>
+			<rect x={160} y={blockY + 44} width={290} height={14} fill="#f1f5f9" rx={2} />
+			<rect x={160} y={blockY + 44} width={w1}  height={14} fill={categorical8[2]} rx={2} />
+			<text x={160 + w1 + 5} y={blockY + 55} class="st-value">{d.perc_recurso.toFixed(2)}%</text>
+
+			<!-- % dos agentes -->
+			<text x={154} y={blockY + 78} text-anchor="end" class="st-label">% dos agentes</text>
+			<rect x={160} y={blockY + 66} width={290} height={14} fill="#f1f5f9" rx={2} />
+			<rect x={160} y={blockY + 66} width={w2}  height={14} fill={categorical8[4]} rx={2} />
+			<text x={160 + w2 + 5} y={blockY + 77} class="st-value">{d.perc_agentes.toFixed(2)}%</text>
+		{/each}
+	</svg>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -852,6 +1007,14 @@
 		margin: 1.5rem 0 0.25rem;
 	}
 
+	.bignumber-perc {
+		font-size: 1.4rem;
+		font-weight: 600;
+		text-align: center;
+		opacity: 0.65;
+		margin: -0.25rem 0 0;
+	}
+
 	.bignumber-caption {
 		font-size: 0.95rem;
 		color: var(--color-text);
@@ -888,5 +1051,76 @@
 		font-size: 11px;
 		fill: var(--color-text, #334155);
 		dominant-baseline: middle;
+	}
+
+	:global(.st-legend) {
+		font-size: 10px;
+		fill: var(--color-text, #334155);
+		dominant-baseline: middle;
+	}
+
+	:global(.st-territory) {
+		font-size: 12px;
+		font-weight: 700;
+		fill: var(--color-text, #334155);
+		dominant-baseline: middle;
+	}
+
+	:global(.st-valor) {
+		font-size: 11px;
+		fill: var(--color-text, #334155);
+		opacity: 0.55;
+		dominant-baseline: middle;
+	}
+
+	:global(.st-separator) {
+		stroke: var(--color-border, #e2e8f0);
+		stroke-width: 1;
+	}
+
+	:global(.st-label) {
+		font-size: 11px;
+		fill: var(--color-text, #334155);
+		opacity: 0.7;
+		dominant-baseline: middle;
+	}
+
+	:global(.st-value) {
+		font-size: 11px;
+		font-weight: 600;
+		fill: var(--color-text, #334155);
+		dominant-baseline: middle;
+	}
+
+	:global(.pm-legend) {
+		font-size: 10px;
+		fill: var(--color-text, #334155);
+		dominant-baseline: middle;
+	}
+
+	:global(.pm-category) {
+		font-size: 13px;
+		font-weight: 700;
+		fill: var(--color-text, #334155);
+		dominant-baseline: middle;
+	}
+
+	:global(.pm-qtd) {
+		font-size: 11px;
+		fill: var(--color-text, #334155);
+		opacity: 0.55;
+		dominant-baseline: middle;
+	}
+
+	:global(.pm-value) {
+		font-size: 11px;
+		font-weight: 600;
+		fill: var(--color-text, #334155);
+		dominant-baseline: middle;
+	}
+
+	:global(.pm-divider) {
+		stroke: var(--color-border, #e2e8f0);
+		stroke-width: 1;
 	}
 </style>

@@ -31,6 +31,7 @@
 		ufBandPercData,
 		UF_BAND_KEYS,
 		UF_BAND_LABELS,
+		stateBandPercData,
 		percCPFEstados,
 		percCNPJEstados,
 		percCPFMunicipios,
@@ -39,6 +40,8 @@
 		PORTE_BAND_KEYS,
 		PORTE_BAND_LABELS,
 		specialTerritoryBarData,
+		brasilBoxPlotData,
+		estadosBoxPlotData,
 	} from '$lib/data/section2';
 
 	const formatBRL = (v: number) =>
@@ -78,8 +81,9 @@
 	</svg>
 	<h2>Como os pagamentos foram estruturados?</h2>
 	<p>Como vimos no capítulo anterior, entre os <strong>166.886</strong> agentes culturais contemplados, 81% são pessoas físicas e 19% são pessoas jurídicas.</p>
-	
-	<ScrollSection id="section-2-faixas-bignumbers">
+</ScrollSection>
+
+<ScrollSection id="section-2-faixas-bignumbers">
 		<div class="faixas-bignumbers-row">
 			<div class="faixa-bignumber-cell">
 				<BigNumber value={29} suffix="%" fontSize={64} />
@@ -176,6 +180,32 @@
 		</div>
 	</ScrollSection>
 
+	<!-- ══════════════════════════════════════════════════════════════════════════
+     VERTICAL STACKED — FAIXA DE VALOR PAGO × ESTADO (EXECUTOR ESTADUAL)
+     ══════════════════════════════════════════════════════════════════════════ -->
+	<ScrollSection id="section-2-estado-faixas">
+		<h3>Perfil de pagamentos por estado (executor estadual)</h3>
+		<p>
+			Cada barra representa um estado, ordenado pela <strong>proporção de beneficiários
+			nas faixas mais altas</strong> (acima de R$50 mil) nos repasses executados
+			diretamente pelos governos estaduais.
+		</p>
+		<div class="chart-wide">
+			<VerticalStackedBarChart
+				data={stateBandPercData}
+				keys={[...UF_BAND_KEYS]}
+				labels={UF_BAND_LABELS}
+				colors={categorical8}
+				format={(v: number) => `${v.toFixed(1)}%`}
+				yLabel="% dos beneficiários"
+				normalize={true}
+				showLegend={true}
+				height={480}
+			/>
+		</div>
+	</ScrollSection>
+
+<ScrollSection id="section-2-cpf-cnpj-bignumber">
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
 			<BigNumber
@@ -390,6 +420,56 @@
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
+     BOXPLOT — DISTRIBUIÇÃO GERAL DE VALORES — BRASIL
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-boxplot-brasil">
+	<h3>Distribuição geral dos valores recebidos no Brasil</h3>
+	<p>
+		O box plot abaixo sintetiza a distribuição dos valores recebidos por todos os agentes
+		culturais contemplados no Brasil. A mediana é de <strong>R$30.000</strong> — metade
+		dos beneficiários recebeu menos do que isso. O intervalo interquartil vai de
+		<strong>R$12.500</strong> (Q1) a <strong>R$60.000</strong> (Q3), e o percentil 99
+		alcança <strong>R$500.000</strong>.
+	</p>
+	<BoxPlotChart
+		data={brasilBoxPlotData}
+		xLabel="Abrangência"
+		yLabel="Valor recebido (R$)"
+		format={formatBRL}
+		showOutliers={false}
+	/>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     BOXPLOT — DISTRIBUIÇÃO DE PAGAMENTOS POR ESTADO
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-boxplot-estados">
+	<h3>Distribuição dos pagamentos por estado</h3>
+	<p>
+		Cada caixa representa a distribuição dos valores recebidos pelos agentes culturais de um estado,
+		com base nos quartis calculados a partir das faixas de pagamento. A linha central indica a
+		<strong>mediana</strong>; as extremidades da caixa mostram o 1º e 3º quartis;
+		os bigodes se estendem até os percentis 1 e 99.
+	</p>
+	<p>
+		Estados como <strong>SP, RS e GO</strong> apresentam medianas e dispersões muito mais elevadas,
+		refletindo maior concentração de entidades (CNPJs) e pagamentos de alto valor.
+		No outro extremo, estados como <strong>RO, PB e RR</strong> têm distribuições mais comprimidas
+		nas faixas inferiores, indicando um perfil predominante de beneficiários individuais.
+	</p>
+	<div class="chart-wide">
+		<BoxPlotChart
+			data={estadosBoxPlotData}
+			xLabel="Estado"
+			yLabel="Valor recebido (R$)"
+			format={formatBRL}
+			showOutliers={false}
+			height={440}
+		/>
+	</div>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
      BOXPLOT — DISPERSÃO DE VALORES CPF vs CNPJ
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-2-boxplot">
@@ -452,8 +532,9 @@
 
 	.faixas-bignumbers-row {
 		display: grid;
-		grid-template-columns: auto auto 1fr;
+		grid-template-columns: auto auto auto;
 		align-items: center;
+		justify-content: center;
 		column-gap: 1.5rem;
 		row-gap: 0.5rem;
 		margin-top: 1.5rem;

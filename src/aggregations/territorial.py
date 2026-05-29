@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+import unicodedata
+import re
+
 
 
 def executed_value_n_contemplados_qty_by(df_cubo, by_filter):
@@ -3709,127 +3712,171 @@ def make_boxplot_df_faixa_valor(
     return df_boxplot
 
 
-import pandas as pd
-import re
-import unicodedata
 
-
-def _slugify_faixa(texto: str) -> str:
+def _slugify(texto: str) -> str:
     """
-    Converte o nome da faixa em um sufixo seguro para nome de coluna.
+    Converte texto para formato seguro de nome de coluna.
     Ex.: 'Até 2 mil' -> 'ate_2_mil'
     """
     texto = str(texto).strip().lower()
-
     texto = unicodedata.normalize("NFKD", texto)
     texto = "".join(c for c in texto if not unicodedata.combining(c))
-
     texto = re.sub(r"[^a-z0-9]+", "_", texto)
     texto = re.sub(r"_+", "_", texto).strip("_")
-
     return texto
 
 
-def resumo_faixas_valor_pago(
+def resumo_faixa_valor_por_porte(
     df_cubo: pd.DataFrame,
     visao: str = "UF",
-    tipo_ente_col: str = "tipo_ente",
-    faixa_col: str = "faixa_vlr_pago_ju_bbagil",
-    quantidade_col: str = "quantidade",
-    valor_col: str = "valor_transacao",
+    coluna_tipo_ente: str = "tipo_ente",
+    coluna_porte: str = "porte_populacional",
+    coluna_faixa: str = "faixa_vlr_pago_ju_bbagil",
+    coluna_quantidade: str = "quantidade",
+    coluna_valor: str = "valor_transacao",
     ordem_faixas: list | None = None,
+    percentual_por_linha: bool = True,
 ) -> pd.DataFrame:
     """
-    Gera um DataFrame com uma coluna para cada faixa de valor pago,
-    trazendo quantidade de contemplados, percentual da quantidade,
-    valor transacionado e percentual do valor.
+    Retorna uma tabela com uma linha por porte populacional e colunas pivotadas
+    por faixa de valor pago.
+
+    Para cada faixa, cria:
+    - qtd_contemplados_{faixa}
+    - perc_qtd_contemplados_{faixa}
+    - valor_transacao_{faixa}
+    - perc_valor_transacao_{faixa}
 
     Parâmetros
     ----------
     df_cubo : pd.DataFrame
-        DataFrame base.
+        DataFrame de entrada.
 
     visao : str, default "UF"
-        Recorte da análise:
+        Define o recorte da análise:
         - "ESTADO": filtra tipo_ente == "ESTADO"
         - "MUNICIPIO": filtra tipo_ente == "MUNICIPIO"
-        - "UF": não filtra tipo_ente, considerando ESTADO + MUNICIPIO
+        - "UF": não filtra tipo_ente, considerando estados + municípios
 
-    tipo_ente_col : str
-        Nome da coluna de tipo de ente.
+    coluna_tipo_ente : str
+        Coluna que identifica o tipo do ente.
 
-    faixa_col : str
-        Nome da coluna com as faixas de valor pago.
+    coluna_porte : str
+        Coluna de porte populacional. Cada linha da saída será um porte.
 
-    quantidade_col : str
-        Nome da coluna de quantidade de contemplados.
+    coluna_faixa : str
+        Coluna com as faixas de valor pago.
 
-    valor_col : str
-        Nome da coluna de valor transacionado.
+    coluna_quantidade : str
+        Coluna de quantidade de contemplados.
 
-    ordem_faixas : list, opcional
-        Ordem desejada das faixas no resultado.
+    coluna_valor : str
+        Coluna de valor da transação.
 
-    Retorna
+    ordem_faixas : list | None
+        Ordem desejada das faixas. Se None, usa a ordem encontrada no DataFrame.
+
+    percentual_por_linha : bool
+        Se True, calcula percentuais dentro de cada porte populacional.
+        Se False, calcula percentuais sobre o total geral da visão filtrada.
+
+    Retorno
     -------
     pd.DataFrame
-        DataFrame com uma linha e colunas pivotadas por faixa.
+        DataFrame consolidado por porte populacional.
     """
 
     visao = visao.upper().strip()
 
     if visao not in ["ESTADO", "MUNICIPIO", "UF"]:
-        raise ValueError("O parâmetro 'visao' deve ser: 'ESTADO', 'MUNICIPIO' ou 'UF'.")
+        raise ValueError("visao deve ser 'ESTADO', 'MUNICIPIO' ou 'UF'.")
 
     df = df_cubo.copy()
 
-    if visao in ["ESTADO", "MUNICIPIO"]:
-        df = df[df[tipo_ente_col] == visao].copy()
+    if visao == "ESTADO":
+        df = df[df[coluna_tipo_ente] == "ESTADO"].copy()
 
-    df = df[df[faixa_col].notna()].copy()
+    elif visao == "MUNICIPIO":
+        df = df[df[coluna_tipo_ente] == "MUNICIPIO"].copy()
+
+    # Remove registros sem porte ou faixa
+    df = df.dropna(subset=[coluna_porte, coluna_faixa])
 
     if ordem_faixas is None:
-        ordem_faixas = [
-            "Até 2 mil",
-            "2 a 10 mil",
-            "10 a 50 mil",
-            "50 a 200 mil",
-            "200 a 500 mil",
-            "500 mil a 1 milhão",
-            "1 milhão a 10 milhões",
-            "Acima de 10 milhões",
-        ]
+        ordem_faixas = list(df[coluna_faixa].dropna().unique())
 
+    # Agrega quantidade e valor por porte e faixa
     df_agg = (
         df
-        .groupby(faixa_col, dropna=False)
+        .groupby([coluna_porte, coluna_faixa], dropna=False)
         .agg(
-            qtd_contemplados=(quantidade_col, "sum"),
-            valor_transacao=(valor_col, "sum"),
+            qtd_contemplados=(coluna_quantidade, "sum"),
+            valor_transacao=(coluna_valor, "sum"),
         )
-        .reindex(ordem_faixas)
-        .fillna(0)
+        .reset_index()
     )
 
-    total_qtd = df_agg["qtd_contemplados"].sum()
-    total_valor = df_agg["valor_transacao"].sum()
+    # Totais por porte
+    totais_porte = (
+        df_agg
+        .groupby(coluna_porte)
+        .agg(
+            total_qtd_contemplados=("qtd_contemplados", "sum"),
+            total_valor_transacao=("valor_transacao", "sum"),
+        )
+        .reset_index()
+    )
 
-    resultado = {
-        "visao": visao,
-        "qtd_contemplados_total": total_qtd,
-        "valor_transacao_total": total_valor,
-    }
+    df_agg = df_agg.merge(totais_porte, on=coluna_porte, how="left")
 
-    for faixa, row in df_agg.iterrows():
-        sufixo = _slugify_faixa(faixa)
+    if percentual_por_linha:
+        df_agg["perc_qtd_contemplados"] = (
+            df_agg["qtd_contemplados"] / df_agg["total_qtd_contemplados"]
+        )
 
-        qtd = row["qtd_contemplados"]
-        valor = row["valor_transacao"]
+        df_agg["perc_valor_transacao"] = (
+            df_agg["valor_transacao"] / df_agg["total_valor_transacao"]
+        )
 
-        resultado[f"qtd_contemplados_{sufixo}"] = qtd
-        resultado[f"perc_qtd_contemplados_{sufixo}"] = qtd / total_qtd if total_qtd else 0
+    else:
+        total_qtd_geral = df_agg["qtd_contemplados"].sum()
+        total_valor_geral = df_agg["valor_transacao"].sum()
 
-        resultado[f"valor_transacao_{sufixo}"] = valor
-        resultado[f"perc_valor_transacao_{sufixo}"] = valor / total_valor if total_valor else 0
+        df_agg["perc_qtd_contemplados"] = (
+            df_agg["qtd_contemplados"] / total_qtd_geral
+        )
 
-    return pd.DataFrame([resultado])
+        df_agg["perc_valor_transacao"] = (
+            df_agg["valor_transacao"] / total_valor_geral
+        )
+
+    # Monta tabela final em formato wide
+    df_final = totais_porte.copy()
+
+    for faixa in ordem_faixas:
+        slug = _slugify(faixa)
+
+        df_faixa = (
+            df_agg[df_agg[coluna_faixa] == faixa]
+            [[
+                coluna_porte,
+                "qtd_contemplados",
+                "perc_qtd_contemplados",
+                "valor_transacao",
+                "perc_valor_transacao",
+            ]]
+            .rename(columns={
+                "qtd_contemplados": f"qtd_contemplados_{slug}",
+                "perc_qtd_contemplados": f"perc_qtd_contemplados_{slug}",
+                "valor_transacao": f"valor_transacao_{slug}",
+                "perc_valor_transacao": f"perc_valor_transacao_{slug}",
+            })
+        )
+
+        df_final = df_final.merge(df_faixa, on=coluna_porte, how="left")
+
+    # Preenche faixas inexistentes com zero
+    cols_numericas = df_final.columns.drop(coluna_porte)
+    df_final[cols_numericas] = df_final[cols_numericas].fillna(0)
+
+    return df_final

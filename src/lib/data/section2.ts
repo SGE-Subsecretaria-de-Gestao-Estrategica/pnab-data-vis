@@ -348,9 +348,8 @@ const terrByMun    = Object.fromEntries(terrMunRows.map((r)    => [r.uf, +r.valo
 
 const allUFs = [...new Set([...Object.keys(terrByUf), ...Object.keys(terrByEstado), ...Object.keys(terrByMun)])].sort();
 
-export const TERR_KEYS   = ['uf', 'estado', 'municipio'] as const;
+export const TERR_KEYS   = ['estado', 'municipio'] as const;
 export const TERR_LABELS: Record<string, string> = {
-	uf:        'UF',
 	estado:    'Estado',
 	municipio: 'Município',
 };
@@ -358,11 +357,10 @@ export const TERR_LABELS: Record<string, string> = {
 export const terrEspeciaisData = allUFs
 	.map((uf) => ({
 		label:     uf,
-		uf:        terrByUf[uf]     ?? 0,
 		estado:    terrByEstado[uf] ?? 0,
 		municipio: terrByMun[uf]    ?? 0,
 	}))
-	.sort((a, b) => (b.uf + b.estado + b.municipio) - (a.uf + a.estado + a.municipio));
+	.sort((a, b) => (b.estado + b.municipio) - (a.estado + a.municipio));
 
 // ── BoxPlot — quartis por estado (quartis_estados.csv) ────────────────────────
 export const estadosBoxPlotData = parseCSV(csvQuartisEstadosRaw).map((row) => ({

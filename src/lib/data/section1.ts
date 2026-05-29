@@ -441,6 +441,7 @@ const _metroRow      = localResidRows.find((d) => d.local_residencia_contemplado
 const _capitalRow2   = localResidRows.find((d) => d.local_residencia_contemplados === 'Capital')!;
 
 export const percInteriorContemplados = +_interiorRow.percentual_quantidade * 100;  // ~58.14
+export const percInteriorPagamentos   = +_interiorRow.percentual_valor       * 100;
 export const valorInteriorTotal       = +_interiorRow.valor_total;                  // ~966,747,807
 
 export const capitalInteriorStackedData = [

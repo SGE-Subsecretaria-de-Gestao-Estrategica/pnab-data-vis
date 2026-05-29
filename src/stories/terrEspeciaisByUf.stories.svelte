@@ -1,7 +1,9 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart, categorical3 } from 'sniic-design-system';
+  import { HorizontalStackedBarChart } from 'sniic-design-system';
+
+  const COLORS = ['#F5C842', '#2B6CB0'];
   // @ts-ignore
   import { terrEspeciaisData, TERR_KEYS, TERR_LABELS } from '$lib/data/section2';
 
@@ -35,7 +37,7 @@ Cada barra representa um estado, mostrando o valor total (R$) destinado a agente
       data={terrEspeciaisData}
       keys={[...TERR_KEYS]}
       labels={TERR_LABELS}
-      colors={categorical3}
+      colors={COLORS}
       format={formatBRL}
       showTotalLabel={true}
       rowHeight={36}

@@ -3,50 +3,30 @@
 	import {
 		BigNumber,
 		HorizontalBarChart,
-		HorizontalStackedBarChart,
 		VerticalStackedBarChart,
-		DivergingBarChart,
-		ProportionalAreaChart,
 		BoxPlotChart,
-		colorPairs,
+		AnnotationBox,
 		colorScales,
 		categorical8,
-		categorical3,
-		AnnotationBox
 	} from 'sniic-design-system';
 	import {
-		percBenefCPF,
-		percValorCNPJ,
-		totalBenefCPF,
-		totalBenefCNPJ,
-		valorDivergingData,
-		benefVsValorData,
 		faixaDistData,
 		faixaValorPercData,
 		regiaoDistData,
-		bandStackedData,
-		BAND_STACK_KEYS,
-		BAND_LABELS,
-		mediaPorTipoData,
-		boxPlotData,
 		ufBandPercData,
 		UF_BAND_KEYS,
 		UF_BAND_LABELS,
 		stateBandPercData,
-		percCPFEstados,
-		percCNPJEstados,
-		percCPFMunicipios,
-		percCNPJMunicipios,
 		portePagamentosData,
 		PORTE_BAND_KEYS,
 		PORTE_BAND_LABELS,
 		specialTerritoryBarData,
-		brasilBoxPlotData,
-		estadosBoxPlotData,
 		terrEspeciaisData,
 		TERR_KEYS,
 		TERR_LABELS,
+		estadosBoxPlotData,
 	} from '$lib/data/section2';
+	import { HorizontalStackedBarChart, categorical3 } from 'sniic-design-system';
 
 	const formatBRL = (v: number) =>
 		new Intl.NumberFormat('pt-BR', {
@@ -56,433 +36,159 @@
 			maximumFractionDigits: 1,
 		}).format(v);
 
-	const formatPct = (v: number) =>
+	const formatPct  = (v: number) =>
 		v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
-
 	const formatPctFixed = (v: number) => `${v.toFixed(1)}%`;
 </script>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
-     GRANDES NÚMEROS — MUITOS CPFs, POUCO DINHEIRO
+     INTRODUÇÃO
      ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-2-bignumber">
-	<h2>2. Como os recursos se traduziram em pagamentos aos agentes culturais?</h2>
+<ScrollSection id="section-2-intro">
+	<h2>2. Como os recursos foram distribuídos aos agentes culturais?</h2>
 	<p>
-		Depois de entendermos a distribuição dos recursos nos territórios, vamos identificar e analisar a forma como esses recursos foram operacionalizados em pagamentos aos agentes culturais.
+		Depois de entendermos a distribuição dos recursos nos territórios, vamos identificar e analisar as tendências da distribuição dos recursos para os contemplados da Aldir Blanc.
 	</p>
-	<svg width={600} height={130} style="overflow: hidden; margin-top: 1rem;">
+	<svg width={600} height={220} style="overflow: hidden; margin-top: 1rem;">
 		<AnnotationBox
 			title=""
-			subtitle={"A partir do cruzamento dos dados de agentes culturais contemplados pela Política Nacional Aldir Blanc com bases da Receita Federal."}
+			subtitle={'As análises apresentadas neste capítulo resultam do banco de dados do BB\nágil e cruzamentos entre a quantidade de pagamentos e o recurso executado\ncom variáveis territoriais (unidade federativa, região, estado, municípios e\nterritórios especiais) e faixas de valores. O BB ágil registra o repasse de\nrecursos dos entes federados para os agentes contemplados pela Política\nNacional Aldir Blanc, podendo uma mesma pessoa ou organização ter recebido\nmais de uma vez, por mais de um ente. Assim, ao longo do texto utilizamos os\ntermos "contemplados", "agentes culturais contemplados" para fazer referência\na esta característica da base de dados.'}
 			boxX={0}
 			boxY={0}
-			boxWidth={600}
+			boxWidth={560}
 			pointX={-30}
-			pointY={63}
+			pointY={82}
 			showTitle={false}
 			circleRadius={0}
 		/>
 	</svg>
-	<h2>Como os pagamentos foram estruturados?</h2>
-	<p>Como vimos no capítulo anterior, entre os <strong>166.886</strong> agentes culturais contemplados, 81% são pessoas físicas e 19% são pessoas jurídicas.</p>
-</ScrollSection>
-
-<ScrollSection id="section-2-faixas-bignumbers">
-		<div class="faixas-bignumbers-row">
-			<div class="faixa-bignumber-cell">
-				<BigNumber value={29} suffix="%" fontSize={64} />
-				<p class="faixa-bignumber-count">49.037 agentes</p>
-				<p class="faixa-bignumber-caption">receberam até R$2 mil</p>
-			</div>
-			<div class="faixa-bignumber-cell">
-				<BigNumber value={42} suffix="%" fontSize={64} />
-				<p class="faixa-bignumber-count">70.493 agentes</p>
-				<p class="faixa-bignumber-caption">receberam entre R$2 e R$10 mil</p>
-			</div>
-			<div class="faixa-bignumber-cell">
-				<BigNumber value={23} suffix="%" fontSize={64} />
-				<p class="faixa-bignumber-count">37.661 agentes</p>
-				<p class="faixa-bignumber-caption">receberam entre R$10 e R$50 mil</p>
-			</div>
-			<div class="faixa-bignumber-cell">
-				<BigNumber value={5} suffix="%" fontSize={64} />
-				<p class="faixa-bignumber-count">8.348 agentes</p>
-				<p class="faixa-bignumber-caption">receberam entre R$50 e R$200 mil</p>
-			</div>
-			<div class="faixa-bignumber-cell">
-				<BigNumber value={1} suffix="%" fontSize={64} />
-				<p class="faixa-bignumber-count">1.347 agentes</p>
-				<p class="faixa-bignumber-caption">receberam mais de R$200 mil</p>
-			</div>
-		</div>
-	</ScrollSection>
-
-	<ScrollSection id="section-2-faixas-valor">
-		<h3>Onde está o dinheiro? A concentração nas faixas intermediárias</h3>
-		<p>
-			Enquanto a maioria dos agentes recebe valores pequenos, o grosso dos recursos se concentra
-			nas faixas intermediárias e altas. As faixas de <strong>R$10 a R$200 mil</strong> absorvem
-			<strong>60%</strong> do total executado.
-		</p>
-		<HorizontalBarChart
-			data={faixaValorPercData}
-			color={colorScales.blue[2]}
-			format={formatPct}
-			xLabel="% do valor total"
-			margin={{ top: 20, right: 80, bottom: 40, left: 200 }}
-		/>
-		<p>Aproximadamente R$ 2,1 bilhões, o equivalente a 75% do orçamento total executado, foram destinados a mais de 165 mil agentes culturais, o que representa 99% do total dos contemplados da política. Esse volume de recursos financiou projetos, bolsas e subsídios com valores individuais de até R$ 200 mil.</p>
-		<p>Do ponto de vista da distribuição dos pagamentos, observa-se forte predominância de repasses de menor valor:  71% dos agentes culturais receberam até 10 mil reais. Embora tais pagamentos sejam majoritários em termos de quantidade de agentes, eles representam uma fração reduzida do orçamento (15%).</p>
-		<p>As faixas intermediárias, entre R$ 10 mil e R$ 200 mil, desempenham papel central, representando 60% dos recursos. Essas compreendem cerca de 30% dos agentes culturais contemplados.</p>
-		<p>Diante desses dados, percebe-se que a execução da Aldir Blanc articula alcance social ampliado e financiamento de projetos de diferentes escalas, sem se restringir a um único perfil de beneficiário ou de valor.</p>
-	</ScrollSection>
-	
-	<ScrollSection id="section-2-distribuicao-pagamentos">
-		<h2>Distribuição de pagamentos por região</h2>
-		<p>Veremos a seguir como foi a distribuição da quantidade de pagamentos da Política pelas regiões do país.</p>
-		<HorizontalBarChart       
-     		data={regiaoDistData}   
-     		color={colorScales.blue[
-          +2]}                           
-      		format={formatPct}      
-      		xLabel="% dos agentes culturais"                      
-      		margin={{ top: 20, right:80, bottom: 40, left: 140 }}
-      	/>
-		<p>As regiões Norte, Centro-Oeste e Sul apresentaram uma proporção de agentes culturais contemplados com  recursos da Aldir Blanc muito semelhante à participaçãoproporção de sua população em relação à população nacional.</p>
-		<p><strong>Maior distribuição:</strong> a região Nordeste liderou a distribuição de recursos da política, beneficiando o maior número de agentes culturais, com 47,7% do total de contemplados da Aldir Blanc, quase metade do total.</p>
-		<p><strong>Menor distribuição:</strong> o Sudeste apresentou uma proporção de agentes culturais contemplados inferior à proporção da população nacional. Isso indica que a região concentrou mais os recursos em um número menor de agentes.</p>
-
-		<!-- ══════════════════════════════════════════════════════════════════════════
-     	VERTICAL STACKED — FAIXA DE VALOR PAGO × UF
-    	 ══════════════════════════════════════════════════════════════════════════ -->
-		<h3>Qual o perfil de pagamentos de cada estado?</h3>
-		<p>
-			Cada barra representa um estado, ordenado pelos que têm <strong>maior proporção de
-			beneficiários nas faixas mais altas</strong> (acima de R$50 mil) — à esquerda estão
-			os estados com mais pagamentos concentrados em valores elevados; à direita, os que
-			atendem quase exclusivamente faixas pequenas.
-		</p>
-		<p>
-			Estados como <strong>DF, RJ e SP</strong> têm fatias relevantes acima de R$50 mil —
-			reflexo do peso de CNPJs e entidades de maior porte nesses territórios.
-			No extremo oposto, estados do Nordeste como <strong>PI, PB e RN</strong> têm suas barras
-			dominadas pelas faixas de até R$10 mil, indicando que o programa atinge principalmente
-			pequenos agricultores e extrativistas nesses locais.
-		</p>
-		<div class="chart-wide">
-			<VerticalStackedBarChart
-				data={ufBandPercData}
-				keys={[...UF_BAND_KEYS]}
-				labels={UF_BAND_LABELS}
-				colors={categorical8}
-				format={(v:any) => `${v.toFixed(1)}%`}
-				yLabel="% dos beneficiários"
-				normalize={true}
-				showLegend={true}
-				height={480}
-			/>
-		</div>
-	</ScrollSection>
-
-	<!-- ══════════════════════════════════════════════════════════════════════════
-     VERTICAL STACKED — FAIXA DE VALOR PAGO × ESTADO (EXECUTOR ESTADUAL)
-     ══════════════════════════════════════════════════════════════════════════ -->
-	<ScrollSection id="section-2-estado-faixas">
-		<h3>Perfil de pagamentos por estado (executor estadual)</h3>
-		<p>
-			Cada barra representa um estado, ordenado pela <strong>proporção de beneficiários
-			nas faixas mais altas</strong> (acima de R$50 mil) nos repasses executados
-			diretamente pelos governos estaduais.
-		</p>
-		<div class="chart-wide">
-			<VerticalStackedBarChart
-				data={stateBandPercData}
-				keys={[...UF_BAND_KEYS]}
-				labels={UF_BAND_LABELS}
-				colors={categorical8}
-				format={(v: number) => `${v.toFixed(1)}%`}
-				yLabel="% dos beneficiários"
-				normalize={true}
-				showLegend={true}
-				height={480}
-			/>
-		</div>
-	</ScrollSection>
-
-<ScrollSection id="section-2-cpf-cnpj-bignumber">
-	<div class="bignumbers-row">
-		<div class="bignumber-cell">
-			<BigNumber
-				value={percBenefCPF.toFixed(1)}
-				suffix="%"
-				fontSize={80}
-			/>
-			<p class="bignumber-caption">dos beneficiários são pessoas físicas (CPF)</p>
-		</div>
-		<div class="bignumber-cell">
-			<BigNumber
-				value={percValorCNPJ.toFixed(1)}
-				suffix="%"
-				fontSize={80}
-			/>
-			<p class="bignumber-caption">do valor total foi para entidades (CNPJ)</p>
-		</div>
-	</div>
-	<p>
-		São <strong>{totalBenefCPF.toLocaleString('pt-BR')}</strong> pessoas físicas contra
-		<strong>{totalBenefCNPJ.toLocaleString('pt-BR')}</strong> entidades — uma razão de quase
-		<strong>4 para 1</strong> em número, mas o dinheiro segue na direção oposta.
-	</p>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
-     GRANDES NÚMEROS — CPF/CNPJ POR ESFERA
+     2.1 / 2.1.1 — DISTRIBUIÇÃO POR FAIXAS DE VALORES (NACIONAL)
      ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-2-esfera-bignumbers">
-	<h3>O perfil muda conforme a esfera executora</h3>
+<ScrollSection id="section-2-21">
+	<h2>2.1. Como os pagamentos e recursos foram distribuídos?</h2>
+	<h3>2.1.1. Distribuição de pagamentos e recursos nas unidades federativas, por faixas de valores</h3>
 	<p>
-		A composição entre pessoas físicas e jurídicas varia significativamente entre estados e
-		municípios. Os estados concentram mais entidades; os municípios têm base mais ampla de
-		pessoas físicas.
+		Para analisar se houve concentração dos recursos em poucos contemplados, analisamos os pagamentos realizados pelas unidades federativas, por faixas de valores.
 	</p>
-	<div class="bignumbers-row">
-		<div class="bignumber-cell">
-			<BigNumber value={percCPFEstados.toFixed(1)} suffix="%" fontSize={64} />
-			<p class="bignumber-caption">dos pagamentos de estados foram para pessoas físicas</p>
-		</div>
-		<div class="bignumber-cell">
-			<BigNumber value={percCNPJEstados.toFixed(1)} suffix="%" fontSize={64} />
-			<p class="bignumber-caption">dos pagamentos de estados foram para pessoas jurídicas</p>
-		</div>
-	</div>
-	<div class="bignumbers-row">
-		<div class="bignumber-cell">
-			<BigNumber value={percCPFMunicipios.toFixed(1)} suffix="%" fontSize={64} />
-			<p class="bignumber-caption">dos pagamentos de municípios foram para pessoas físicas</p>
-		</div>
-		<div class="bignumber-cell">
-			<BigNumber value={percCNPJMunicipios.toFixed(1)} suffix="%" fontSize={64} />
-			<p class="bignumber-caption">dos pagamentos de municípios foram para pessoas jurídicas</p>
-		</div>
-	</div>
-</ScrollSection>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     DIVERGING — A DIVISÃO DO VALOR POR ESFERA
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-2-diverging">
-	<h3>O desequilíbrio varia por esfera — e é maior nos estados</h3>
 	<p>
-		A proporção do valor destinada a CPF ou CNPJ muda conforme a esfera executora.
-		Nos repasses <strong>estaduais</strong>, o CNPJ domina com quase dois terços do valor
-		(64,7%) — mesmo representando apenas 32% dos beneficiários desse nível.
-		Nos <strong>municípios</strong>, a divisão é quase equilibrada (53/47%), mas o CNPJ
-		ainda supera sua representação em número de beneficiários (17%).
+		Do ponto de vista da distribuição dos pagamentos, observa-se forte predominância de repasses de menor valor: <strong>71,6%</strong> dos contemplados receberam valores até 10 mil reais. Do outro lado, contemplados que receberam valores acima de 200 mil reais representam somente <strong>0,8%</strong> dos contemplados pela Aldir Blanc.
 	</p>
-	<DivergingBarChart
-		data={valorDivergingData}
-		leftLabel="CPF — % do valor"
-		rightLabel="CNPJ — % do valor"
-		referenceValue={50}
-		referenceLabel="Equidade"
-		colors={colorPairs.blueOrange}
-		marginLeft={220}
-	/>
-	<h4 class="subsection-label">O "flip": beneficiários vs valor recebido</h4>
 	<p>
-		A inversão fica explícita quando comparamos as duas dimensões lado a lado.
-		No eixo de <strong>beneficiários</strong>, o CPF domina com 80,7%.
-		No eixo de <strong>valor recebido</strong>, o CNPJ vira maioria (55,9%).
-		A mesma esquerda-direita, lados trocados.
-	</p>
-	<HorizontalStackedBarChart
-		data={benefVsValorData}
-		keys={['cpf', 'cnpj']}
-		labels={{ cpf: 'CPF', cnpj: 'CNPJ' }}
-		colors={colorPairs.blueOrange}
-		format={formatPctFixed}
-		showTotalLabel={false}
-	/>
-</ScrollSection>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     HORIZONTAL BAR — DISTRIBUIÇÃO NACIONAL POR FAIXA
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-2-faixas">
-	<h3>A maioria recebe menos de R$10 mil</h3>
-	<p>
-		Olhando todos os <strong>166.886 beneficiários</strong> do Brasil, a distribuição é
-		fortemente concentrada nos valores mais baixos. Mais de <strong>71%</strong> receberam
-		até R$10 mil — enquanto menos de <strong>0,1%</strong> recebeu acima de R$500 mil.
-		A cauda direita existe, mas é muito fina.
+		Embora a maioria dos contemplados estejam concentrados nas faixas de valores até 10 mil reais, os recursos repassados para este grupo representam somente <strong>15,2%</strong> dos recursos totais executados pela Aldir Blanc. A maior parte do recurso (<strong>31,5%</strong>) foi destinado para contemplados que receberam entre R$ 10 mil e R$ 50 mil.
 	</p>
 	<HorizontalBarChart
 		data={faixaDistData}
 		color={colorScales.blue[2]}
 		format={formatPct}
-		xLabel="% dos beneficiários"
-		margin={{ top: 20, right: 80, bottom: 40, left: 160 }}
+		xLabel="% dos contemplados"
+		margin={{ top: 20, right: 80, bottom: 40, left: 200 }}
+	/>
+	<HorizontalBarChart
+		data={faixaValorPercData}
+		color={colorScales.blue[2]}
+		format={formatPct}
+		xLabel="% do valor total executado"
+		margin={{ top: 20, right: 80, bottom: 40, left: 200 }}
 	/>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
-     STACKED — FAIXAS POR TIPO CPF vs CNPJ
+     2.1.1 — DISTRIBUIÇÃO POR UF E FAIXA (STACKED)
      ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-2-faixas-tipo">
-	<h3>Perfis completamente opostos: CPF concentrado em baixo valor, CNPJ distribuído até milhões</h3>
+<ScrollSection id="section-2-uf-faixas">
+	<div class="chart-wide">
+		<VerticalStackedBarChart
+			data={ufBandPercData}
+			keys={[...UF_BAND_KEYS]}
+			labels={UF_BAND_LABELS}
+			colors={categorical8}
+			format={formatPctFixed}
+			yLabel="% dos contemplados"
+			normalize={true}
+			showLegend={true}
+			height={480}
+		/>
+	</div>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     2.2 — DISTRIBUIÇÃO NOS ESTADOS (REGIÕES)
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-22">
+	<h2>2.2. Como os pagamentos e recursos foram distribuídos nos Estados?</h2>
 	<p>
-		Quando separamos CPF de CNPJ, surgem dois mundos diferentes.
-		As <strong>pessoas físicas</strong> se concentram nas faixas de até R$10 mil —
-		mais de <strong>79%</strong> dos seus beneficiários estão ali.
-		As <strong>entidades</strong> têm distribuição muito mais espalhada: quase
-		<strong>57%</strong> receberam acima de R$10 mil, e há beneficiários em todas
-		as faixas até dezenas de milhões.
+		Veremos a seguir como foi a distribuição da quantidade de pagamentos da Política pelas regiões do país.
 	</p>
-	<HorizontalStackedBarChart
-		data={bandStackedData}
-		keys={BAND_STACK_KEYS}
-		labels={BAND_LABELS}
-		colors={categorical8}
-		format={formatPctFixed}
-		showTotalLabel={false}
+	<div class="regioes-list">
+		<p><strong>14.504 (8,7%)</strong> contemplados no Norte</p>
+		<p><strong>79.446 (47,6%)</strong> contemplados no Nordeste</p>
+		<p><strong>9.335 (5,6%)</strong> contemplados no Centro-Oeste</p>
+		<p><strong>45.655 (27,4%)</strong> contemplados no Sudeste</p>
+		<p><strong>17.946 (10,8%)</strong> contemplados no Sul</p>
+	</div>
+	<HorizontalBarChart
+		data={regiaoDistData}
+		color={colorScales.blue[2]}
+		format={formatPct}
+		xLabel="% dos agentes culturais"
+		margin={{ top: 20, right: 80, bottom: 40, left: 140 }}
 	/>
-</ScrollSection>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     PROPORCIONAL — VALOR MÉDIO POR BENEFICIÁRIO
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-2-proporcional">
-	<h3>Em média, cada CNPJ recebe 6,5× mais que cada CPF</h3>
 	<p>
-		A área de cada círculo é proporcional ao <strong>valor médio recebido por beneficiário</strong>.
-		O CNPJ registra uma média de <strong>R$62.742</strong> por entidade;
-		o CPF, apenas <strong>R$9.634</strong> por pessoa.
-		A diferença de escala — visível na área — resume em forma o que os números dizem:
-		cada entidade recebe, em média, o equivalente ao que <strong>6,5 pessoas físicas</strong>
-		receberiam juntas.
+		As regiões Norte, Centro-Oeste e Sul apresentaram uma proporção de agentes culturais contemplados com recursos da Aldir Blanc muito semelhante à participação de sua população em relação à população nacional.
 	</p>
-	<ProportionalAreaChart
-		data={mediaPorTipoData}
-		maxRadius={130}
-		colors={colorPairs.blueOrange}
-		format={formatBRL}
-		showLabels={true}
-	/>
+	<p>
+		A região Nordeste liderou em quantidade de contemplados, com <strong>47,7%</strong> do total de contemplados da Aldir Blanc, quase metade do total. Já o Sudeste apresentou uma proporção de agentes culturais contemplados inferior à proporção da população nacional. Isso indica que a região concentrou mais os recursos em um número menor de agentes.
+	</p>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
-     PORTE MUNICIPAL — DISTRIBUIÇÃO DE PAGAMENTOS POR FAIXA
+     2.2.1 — DISTRIBUIÇÃO POR FAIXAS NOS ESTADOS
      ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-2-porte">
-	<h3>Distribuição dos pagamentos por porte de município</h3>
+<ScrollSection id="section-2-221">
+	<h3>2.2.1. Distribuição de pagamentos e recursos nos Estados, por faixas de valores</h3>
 	<p>
-		Municípios de <strong>grande porte</strong> concentram proporcionalmente mais pagamentos
-		nas faixas mais altas — reflexo do maior peso de CNPJs e entidades culturais nessas cidades.
-		Já os municípios <strong>Pequenos I</strong> têm a maior fatia de pagamentos nas faixas
-		mais baixas (até R$2 mil e R$2–10 mil), indicando que o programa alcança um perfil de
-		beneficiário com menor poder aquisitivo formal.
+		Ao analisar as faixas de valores conseguimos visualizar como cada Estado escolheu distribuir os recursos.
+	</p>
+	<p>
+		Este gráfico apresenta como os contemplados pelos Estados foram distribuídos nas faixas de valores analisadas, a partir dos valores que receberam. Pode-se ver que a maioria dos contemplados na Aldir Blanc receberam valores entre 10 e 50 mil reais, o que equivale a <strong>51,9%</strong>.
+	</p>
+	<p>
+		Os contemplados com valores entre 50 e 200 mil reais se destacam como o segundo grupo mais representativo, responsáveis por <strong>22,3%</strong> do total. Os estados do Rio Grande do Sul (71,5%), Mato Grosso (70,3%), Distrito Federal (63,2%), Goiás (45,9%) e Rio de Janeiro (43,6%) apresentaram as maiores proporções de recursos destinados aos contemplados nessa faixa de valor.
+	</p>
+	<p>
+		Por outro lado, os contemplados que receberam entre 2 e 10 mil reais aparecem logo em seguida, representando <strong>20,3%</strong> do total dos contemplados pelos Estados. Paraíba (49,7%), Rondônia (48,4%), Piauí (46,6%), Mato Grosso do Sul (46%) e Roraima (44,2%) foram os Estados que mais fizeram pagamentos para contemplados nesta faixa de valor.
 	</p>
 	<div class="chart-wide">
 		<VerticalStackedBarChart
-			data={portePagamentosData}
-			keys={[...PORTE_BAND_KEYS]}
-			labels={PORTE_BAND_LABELS}
+			data={stateBandPercData}
+			keys={[...UF_BAND_KEYS]}
+			labels={UF_BAND_LABELS}
 			colors={categorical8}
-			format={(v: number) => `${v.toFixed(1)}%`}
-			yLabel="% dos beneficiários"
+			format={formatPctFixed}
+			yLabel="% dos contemplados"
 			normalize={true}
 			showLegend={true}
-			height={420}
+			height={480}
 		/>
 	</div>
+	<p style="margin-top: 1.5rem;">
+		Enquanto a maioria dos pagamentos ficaram na faixa de valor de 10 a 50 mil reais, a maior parte dos recursos executados pelos Estados se encontram na faixa de valor de 50 a 200 mil reais (<strong>35,1%</strong>). É um padrão observado na maioria dos estados, sobretudo no Rio Grande do Sul (69,4%), Mato Grosso (59,4%) e Piauí (58%).
+	</p>
+	<p>
+		Amapá, Distrito Federal, Pará e São Paulo se destacam dessa tendência, ao destinar mais de <strong>60%</strong> do total de recursos executados a pagamentos acima de 200 mil reais.
+	</p>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
-     TERRITÓRIOS ESPECIAIS — VALOR POR TIPO
+     2.2.2 — TENDÊNCIAS, DISTRIBUIÇÕES E CONCENTRAÇÕES NOS ESTADOS
      ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-2-special-territory">
-	<h3>Valor total destinado por tipo de território especial</h3>
+<ScrollSection id="section-2-222">
+	<h3>2.2.2. Tendências, distribuições e concentrações nos Estados</h3>
 	<p>
-		Entre os repasses que chegaram a territórios especiais, as <strong>favelas e comunidades
-		urbanas</strong> concentram a maior parte dos recursos — muito acima dos demais territórios.
-		Quilombos e territórios indígenas, que concentram populações historicamente marginalizadas,
-		receberam volumes muito menores em termos absolutos.
-	</p>
-	<HorizontalBarChart
-		data={specialTerritoryBarData}
-		color={colorScales.teal[2]}
-		format={(v: number) =>
-			new Intl.NumberFormat('pt-BR', {
-				style: 'currency',
-				currency: 'BRL',
-				notation: 'compact',
-				maximumFractionDigits: 1,
-			}).format(v)}
-		xLabel="Valor total (R$)"
-		margin={{ top: 20, right: 80, bottom: 40, left: 280 }}
-	/>
-</ScrollSection>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     HORIZONTAL STACKED — TERRITÓRIOS ESPECIAIS POR UF/ESTADO/MUNICÍPIO
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-2-terr-especiais-uf">
-	<h3>Contemplados em territórios especiais por estado e esfera executora</h3>
-	<p>
-		Cada barra representa um estado, mostrando quantos agentes culturais em territórios especiais
-		foram atendidos por cada esfera executora: repasses diretos da <strong>UF</strong>,
-		execução pelo <strong>governo estadual</strong> e execução pelos <strong>municípios</strong>.
-	</p>
-	<div class="chart-wide">
-		<HorizontalStackedBarChart
-			data={terrEspeciaisData}
-			keys={[...TERR_KEYS]}
-			labels={TERR_LABELS}
-			colors={categorical3}
-			format={formatBRL}
-			showTotalLabel={true}
-			rowHeight={36}
-		/>
-	</div>
-</ScrollSection>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     BOXPLOT — DISTRIBUIÇÃO GERAL DE VALORES — BRASIL
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-2-boxplot-brasil">
-	<h3>Distribuição geral dos valores recebidos no Brasil</h3>
-	<p>
-		O box plot abaixo sintetiza a distribuição dos valores recebidos por todos os agentes
-		culturais contemplados no Brasil. A mediana é de <strong>R$30.000</strong> — metade
-		dos beneficiários recebeu menos do que isso. O intervalo interquartil vai de
-		<strong>R$12.500</strong> (Q1) a <strong>R$60.000</strong> (Q3), e o percentil 99
-		alcança <strong>R$500.000</strong>.
-	</p>
-	<BoxPlotChart
-		data={brasilBoxPlotData}
-		xLabel="Abrangência"
-		yLabel="Valor recebido (R$)"
-		format={formatBRL}
-		showOutliers={false}
-	/>
-</ScrollSection>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     BOXPLOT — DISTRIBUIÇÃO DE PAGAMENTOS POR ESTADO
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-2-boxplot-estados">
-	<h3>Distribuição dos pagamentos por estado</h3>
-	<p>
-		Cada caixa representa a distribuição dos valores recebidos pelos agentes culturais de um estado,
-		com base nos quartis calculados a partir das faixas de pagamento. A linha central indica a
-		<strong>mediana</strong>; as extremidades da caixa mostram o 1º e 3º quartis;
-		os bigodes se estendem até os percentis 1 e 99.
-	</p>
-	<p>
-		Estados como <strong>SP, RS e GO</strong> apresentam medianas e dispersões muito mais elevadas,
-		refletindo maior concentração de entidades (CNPJs) e pagamentos de alto valor.
-		No outro extremo, estados como <strong>RO, PB e RR</strong> têm distribuições mais comprimidas
-		nas faixas inferiores, indicando um perfil predominante de beneficiários individuais.
+		A organização dos recursos por quartis possibilita analisar a distribuição dos pagamentos de menores e maiores valores. Nesse sentido, observou-se que os valores do primeiro quartil situaram-se, em geral, entre 10 e 30 mil reais, enquanto os valores do terceiro quartil concentraram-se predominantemente entre 30 e 80 mil reais na maior parte dos estados.
 	</p>
 	<div class="chart-wide">
 		<BoxPlotChart
@@ -494,33 +200,227 @@
 			height={440}
 		/>
 	</div>
+	<p style="margin-top: 1.5rem;">
+		O Estado de Rondônia se destaca por apresentar o menor valor no primeiro quartil, indicando que os menores pagamentos realizados pelo estado foram inferiores aos observados pelos demais estados (R$ 2.893). São Paulo aparece no outro extremo, com o maior valor no terceiro quartil, evidenciando a presença de pagamentos mais elevados dentre todos os estados (R$ 30.000).
+	</p>
+	<p>
+		O cálculo da mediana permite identificar os valores centrais dos pagamentos no universo analisado. A partir desta análise, percebemos que os Estados tiveram uma tendência de realizar pagamentos em torno de <strong>R$ 30.000</strong> para seus contemplados.
+	</p>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
-     BOXPLOT — DISPERSÃO DE VALORES CPF vs CNPJ
+     2.3 — MUNICÍPIOS — GRANDES NÚMEROS
      ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-2-boxplot">
-	<h3>A dispersão revela a concentração extrema do CNPJ</h3>
-	<p>
-		O box plot compara a distribuição completa de valores entre CPF e CNPJ.
-		A <strong>mediana do CPF</strong> é R$3.800 — metade das pessoas físicas recebeu
-		menos do que isso. A <strong>mediana do CNPJ</strong> é R$13.500 — mais de três vezes maior.
-	</p>
-	<p>
-		Mas o contraste mais expressivo está na dispersão: a caixa do CNPJ
-		(entre Q1 e Q3, estimados por interpolação nas faixas de valor)
-		se estende de ~R$6.400 a ~R$45.600, enquanto a do CPF vai de ~R$1.500 a ~R$9.300.
-		O Q1 do CNPJ já supera o Q3 do CPF. São distribuições que mal se tocam.
-	</p>
-	<BoxPlotChart
-		data={boxPlotData}
-		xLabel="Tipo de beneficiário"
-		yLabel="Valor recebido (R$)"
-		format={formatBRL}
-		showOutliers={false}
-	/>
+<ScrollSection id="section-2-23">
+	<h2>2.3. Como os pagamentos e recursos foram distribuídos nos municípios?</h2>
+	<div class="bignumbers-row">
+		<div class="bignumber-cell">
+			<BigNumber value="144.836" fontSize={72} />
+			<p class="bignumber-perc">(86,8%)</p>
+			<p class="bignumber-caption">dos contemplados totais da Aldir Blanc receberam recursos através dos municípios</p>
+		</div>
+		<div class="bignumber-cell">
+			<BigNumber value="R$1,4bi" fontSize={72} />
+			<p class="bignumber-perc">(49%)</p>
+			<p class="bignumber-caption">foi o valor executado pelos municípios</p>
+		</div>
+	</div>
 </ScrollSection>
 
+<!-- ══════════════════════════════════════════════════════════════════════════
+     2.3.1 — DISTRIBUIÇÃO NOS MUNICÍPIOS POR PORTE
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-231">
+	<h3>2.3.1. Distribuição dos pagamentos e recursos nos municípios</h3>
+	<p>
+		Municípios de diferentes portes populacionais distribuíram de forma distinta os pagamentos aos seus contemplados. Enquanto os municípios de pequeno e médio porte concentraram os pagamentos em valores até 10 mil reais, os municípios de grande porte concentraram os pagamentos na faixa de valor de 10 a 50 mil reais.
+	</p>
+	<p>
+		Nos municípios de pequeno porte I, <strong>91,3%</strong> dos contemplados receberam até R$ 10 mil. Dentro desse grupo, <strong>50,1%</strong> receberam pagamentos de até R$ 2 mil. Essa concentração nas faixas de menor valor também se mantém elevada nos municípios de pequeno porte II, onde <strong>87,7%</strong> dos contemplados receberam até R$ 10 mil, e nos municípios de médio porte, com <strong>75,9%</strong>. Já nos municípios de grande porte, a participação dos pagamentos de até R$ 10 mil cai para <strong>49%</strong>. Nesse grupo, a faixa de R$ 10 mil a R$ 50 mil representa, sozinha, <strong>42,7%</strong> dos pagamentos.
+	</p>
+	<div class="chart-wide">
+		<VerticalStackedBarChart
+			data={portePagamentosData}
+			keys={[...PORTE_BAND_KEYS]}
+			labels={PORTE_BAND_LABELS}
+			colors={categorical8}
+			format={formatPctFixed}
+			yLabel="% dos contemplados"
+			normalize={true}
+			showLegend={true}
+			height={420}
+		/>
+	</div>
+	<p style="margin-top: 1.5rem;">
+		Nos municípios de pequeno porte I e II, observa-se uma concentração do recurso executado na faixa de R$ 2 mil a R$ 10 mil. Já nos municípios de médio e grande porte, percebe-se a destinação do recurso para faixas de maiores valores, com a concentração presente na faixa de R$ 10 mil a R$ 50 mil.
+	</p>
+	<p>
+		Quando observados todos os municípios da base em conjunto, <strong>70,3%</strong> dos recursos executados se concentraram em pagamentos de até R$ 50 mil.
+	</p>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     2.3.2 — TENDÊNCIAS, DISTRIBUIÇÕES E CONCENTRAÇÕES NOS MUNICÍPIOS
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-232">
+	<h3>2.3.2. Tendências, distribuições e concentrações nos municípios</h3>
+	<p>
+		A análise dos quartis mostra uma tendência já esperada por parte dos municípios, em que municípios de pequeno porte repassaram menores valores, enquanto municípios de grande porte destinaram maiores valores para seus contemplados. Enquanto a tendência dos valores do primeiro quartil nos municípios de pequeno porte I foi de <strong>R$ 1.013</strong>, nos municípios de grande porte o primeiro quartil ficou em <strong>R$ 5.000</strong>, indicando valores mais elevados mesmo entre os contemplados que receberam menos recursos.
+	</p>
+	<p>
+		Por outro lado, os valores do terceiro quartil nos municípios de grande porte chegaram a <strong>R$ 25.000</strong>, valor cerca de 5 vezes maior que o terceiro quartil observado nos municípios de pequeno porte (<strong>R$ 4.600</strong>). Esse resultado sugere uma tendência de maior concentração de pagamentos em faixas mais elevadas nos municípios de grande porte.
+	</p>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     2.4 — TERRITÓRIOS ESPECIAIS — GRANDES NÚMEROS
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-special">
+	<h2>2.4. Como os pagamentos e recursos foram distribuídos nos territórios especiais?</h2>
+	<div class="bignumbers-row">
+		<div class="bignumber-cell">
+			<BigNumber value="5.290" fontSize={72} />
+			<p class="bignumber-perc">(3,2% do total)</p>
+			<p class="bignumber-caption">pagamentos direcionados para contemplados em agrupamentos indígenas, quilombolas e favelas e comunidades urbanas</p>
+		</div>
+		<div class="bignumber-cell">
+			<BigNumber value="R$150,6mi" fontSize={72} />
+			<p class="bignumber-perc">(5,3% do total)</p>
+			<p class="bignumber-caption">foi o valor total repassado para estes contemplados</p>
+		</div>
+	</div>
+	<p style="margin-top: 2rem;">
+		Mais da metade do recurso destinado para territórios especiais foi feito por quatro unidades federativas: Pará, Amazonas, Bahia e Pernambuco. Só o governo do estado e os municípios do Pará foram responsáveis por destinar o equivalente a <strong>22,6%</strong> dos recursos para estes territórios.
+	</p>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     2.4 — TERRITÓRIOS ESPECIAIS — GRÁFICO POR UF
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-special-uf">
+	<div class="chart-wide">
+		<HorizontalStackedBarChart
+			data={terrEspeciaisData}
+			keys={[...TERR_KEYS]}
+			labels={TERR_LABELS}
+			colors={categorical3}
+			format={formatBRL}
+			showTotalLabel={true}
+			rowHeight={36}
+		/>
+	</div>
+	<p style="margin-top: 1.5rem;">
+		Do montante total destinado aos territórios especiais, <strong>R$ 91.459.463 (60,7%)</strong> foram destinados pelos governos estaduais. Esse valor representa 6,3% de todo o recurso executado pelos Estados.
+	</p>
+	<p>
+		Destacam-se os governos estaduais do Pará, Amapá e Amazonas que, proporcionalmente, mais destinaram recursos para os territórios especiais. O Pará destinou <strong>37,8%</strong> dos recursos executados, o Amapá direcionou <strong>27,6%</strong> e o Amazonas direcionou <strong>23,3%</strong>.
+	</p>
+	<p>
+		Somente 10 Estados destinaram recursos para os três territórios especiais trabalhados pela pesquisa: Minas Gerais, Pernambuco, Bahia, Rio Grande do Norte, Ceará, Paraná, Santa Catarina, Alagoas, Paraíba e Mato Grosso do Sul.
+	</p>
+	<p>
+		Já entre os municípios, <strong>49,8%</strong> dos contemplados em territórios especiais receberam pagamentos através dos municípios de grande porte. Foram estes municípios que também direcionaram a maior quantidade de recursos para os territórios especiais: <strong>R$ 47.049.600</strong>, o equivalente a 79,6% do valor total destinado pelos municípios.
+	</p>
+	<p>
+		A partir da análise da mediana, percebe-se que a tendência dos pagamentos destinados aos territórios especiais se concentraram na faixa de R$ 10 mil a R$ 50 mil.
+	</p>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     2.4 — AGRUPAMENTOS INDÍGENAS
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-indigenas">
+	<h3>Tendências dos pagamentos e recursos destinados aos agrupamentos indígenas</h3>
+	<div class="bignumbers-row">
+		<div class="bignumber-cell">
+			<BigNumber value="R$5,1mi" fontSize={64} />
+			<p class="bignumber-caption">foi o valor total destinado aos agrupamentos indígenas</p>
+		</div>
+		<div class="bignumber-cell">
+			<BigNumber value="254" fontSize={64} />
+			<p class="bignumber-caption">foi o total de contemplados destes territórios que receberam recursos</p>
+		</div>
+	</div>
+	<p style="margin-top: 1.5rem;">
+		A maioria dos pagamentos das Unidades Federativas direcionados para os agrupamentos indígenas foram na faixa de valor de 2 até 10 mil reais.
+	</p>
+	<p>
+		Ao todo, os Estados destinaram <strong>R$ 3.969.151</strong> para os agrupamentos indígenas, o que representa <strong>0,3%</strong> dos recursos executados pelos Estados.
+	</p>
+	<p>
+		Os governos estaduais da Paraíba, Pernambuco e Mato Grosso do Sul foram os Estados que mais fizeram pagamentos para agrupamentos indígenas. O recurso destinado pelo Governo da Paraíba corresponde a <strong>25%</strong> do valor total destinado por entes estaduais aos agrupamentos indígenas.
+	</p>
+	<p>
+		Os municípios fizeram <strong>143 pagamentos</strong> para agrupamentos indígenas, com 44% desses pagamentos feitos por municípios de Pequeno Porte I. Os contemplados pelos municípios em agrupamentos indígenas, no geral, receberam recursos na faixa de valor de 2 a 10 mil reais.
+	</p>
+	<p>
+		Já a maior parte dos recursos destinados por municípios aos territórios indígenas foram provenientes dos municípios de Grande Porte, responsáveis por um aporte de <strong>R$ 666.694 (60%)</strong>.
+	</p>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     2.4 — AGRUPAMENTOS QUILOMBOLAS
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-quilombolas">
+	<h3>Tendências dos pagamentos e recursos destinados aos agrupamentos quilombolas</h3>
+	<div class="bignumbers-row">
+		<div class="bignumber-cell">
+			<BigNumber value="R$7,4mi" fontSize={64} />
+			<p class="bignumber-caption">foi o recurso total destinado aos agrupamentos quilombolas</p>
+		</div>
+		<div class="bignumber-cell">
+			<BigNumber value="481" fontSize={64} />
+			<p class="bignumber-caption">foi o total de pagamentos feitos para contemplados destes territórios</p>
+		</div>
+	</div>
+	<p style="margin-top: 1.5rem;">
+		Bahia, Maranhão e Minas Gerais foram as Unidades Federativas que fizeram mais pagamentos para contemplados em agrupamentos quilombolas. A Bahia, sozinha, é responsável por <strong>39,5%</strong> destes pagamentos e os três estados juntos foram responsáveis por <strong>52,8%</strong> dos recursos destinados a este território: um total de R$ 3.891.114.
+	</p>
+	<p>
+		Esse destaque da Bahia se deve, no entanto, aos municípios do Estado, que foram responsáveis por <strong>177 dos 190 pagamentos</strong> destinados a contemplados em agrupamentos quilombolas.
+	</p>
+	<p>
+		O Governo de Minas Gerais foi o que destinou, proporcionalmente, o maior valor em relação ao total destinado pelos Estados para os contemplados em territórios quilombolas: cerca de <strong>23,5%</strong> dos mais de 1 milhão de reais. Em sua maioria, os pagamentos de Minas Gerais foram na faixa de valor de 10 a 50 mil reais.
+	</p>
+	<p>
+		Já entre os municípios, os de Pequeno Porte I concentraram <strong>43,2%</strong> dos 391 pagamentos realizados. Em termos de valor, a maior participação ficou com os municípios de Grande Porte, responsáveis por <strong>34%</strong> dos quase R$ 3 milhões executados.
+	</p>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     2.4 — FAVELAS E COMUNIDADES URBANAS
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-favelas">
+	<h3>Tendências dos pagamentos e recursos destinados às favelas e comunidades urbanas</h3>
+	<div class="bignumbers-row">
+		<div class="bignumber-cell">
+			<BigNumber value="R$138mi" fontSize={64} />
+			<p class="bignumber-caption">foi o valor total destinado às favelas e comunidades urbanas</p>
+		</div>
+		<div class="bignumber-cell">
+			<BigNumber value="4.555" fontSize={64} />
+			<p class="bignumber-caption">foi o total de pagamentos feitos para contemplados destes territórios</p>
+		</div>
+	</div>
+	<p style="margin-top: 1.5rem;">
+		Os contemplados de favelas e comunidades urbanas receberam <strong>86,1%</strong> dos pagamentos direcionados aos territórios especiais e foram destinatários de <strong>91,7%</strong> de todo o recurso destinado a esses territórios.
+	</p>
+	<p>
+		Pará, Pernambuco e Bahia foram as Unidades Federativas responsáveis pela maior parte dos pagamentos. No Pará, o Governo do Estado e os municípios, somados, também foram responsáveis por quase <strong>24,5%</strong> de todo o recurso destinado às favelas e comunidades urbanas, um montante equivalente a R$ 33.878.759.
+	</p>
+	<p>
+		Este destaque do Pará se deve à atuação do Governo do Estado, que foi responsável por <strong>81,2%</strong> de todo recurso repassado pela Unidade Federativa para as favelas e comunidades urbanas, um montante de R$ 27.501.773.
+	</p>
+	<p>
+		Os estados foram responsáveis por <strong>60%</strong> de todo o valor repassado para contemplados em favelas e comunidades urbanas e, juntos, o Pará, Amazonas, Pernambuco e Bahia foram os que mais destinaram recursos para estes territórios. Mato Grosso foi o único estado que não direcionou recursos para contemplados em favelas e comunidades urbanas.
+	</p>
+	<p>
+		A maioria dos pagamentos realizados pelos estados ficaram na faixa entre 10 e 50 mil reais.
+	</p>
+	<p>
+		Os <strong>40%</strong> de recursos destinados pelos municípios aos contemplados em favelas e comunidades urbanas ficaram, em sua maioria, sob responsabilidade dos municípios de Grande Porte: estes foram responsáveis por <strong>R$ 45.395.705</strong>, um equivalente a 55,6% de todo o recurso repassado por municípios do país.
+	</p>
+</ScrollSection>
 
 <style>
 	.bignumbers-row {
@@ -537,6 +437,15 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.5rem;
+		margin-top: 1.5rem;
+	}
+
+	.bignumber-perc {
+		font-size: 1.4rem;
+		font-weight: 600;
+		text-align: center;
+		opacity: 0.65;
+		margin: -0.25rem 0 0;
 	}
 
 	.bignumber-caption {
@@ -544,45 +453,19 @@
 		color: var(--color-text);
 		text-align: center;
 		opacity: 0.75;
-		max-width: 20ch;
+		max-width: 22ch;
 	}
 
-	.subsection-label {
-		margin-top: 2.5rem;
+	.regioes-list {
+		margin: 1.5rem 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
 	}
 
-	:global(#section-2-faixas-bignumbers) {
+	.regioes-list p {
 		margin: 0;
-		min-height: unset;
-		padding: 0;
-	}
-
-	.faixas-bignumbers-row {
-		display: grid;
-		grid-template-columns: auto auto auto;
-		align-items: center;
-		justify-content: center;
-		column-gap: 1.5rem;
-		row-gap: 0.5rem;
-		margin-top: 1.5rem;
-	}
-
-	.faixa-bignumber-cell {
-		display: contents;
-	}
-
-	.faixa-bignumber-count {
-		font-size: 1.4rem;
-		font-weight: 600;
-		color: var(--color-text);
-		margin: 0;
-	}
-
-	.faixa-bignumber-caption {
-		font-size: 1.2rem;
-		color: var(--color-text);
-		opacity: 0.75;
-		margin: 0;
+		font-size: 1.1rem;
 	}
 
 	.chart-wide {
@@ -591,12 +474,7 @@
 		margin-right: -1rem;
 	}
 
-	.section-2-faixas-valor {
-		padding: 0;
-	}
-
 	p {
 		margin-top: 1.5rem;
 	}
-
 </style>

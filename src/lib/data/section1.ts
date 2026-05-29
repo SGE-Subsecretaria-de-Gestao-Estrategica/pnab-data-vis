@@ -15,6 +15,7 @@ import csvRegionUfRaw   from '../../../data/section_1/executed_value_by_region_u
 import csvCapitalRaw    from '../../../data/section_1/aggregate_values_by_capital.csv?raw';
 import csvSpecialUfRaw  from '../../../data/section_1/values_by_special_territory_uf.csv?raw';
 import csvPorteMeanRaw  from '../../../data/section_1/population_size_mean.csv?raw';
+import csvLocalResidRaw from '../../../data/section_1/aggregate_by_local_residencia_uf.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -97,10 +98,7 @@ interface StateRow {
 	'R$2–10k':     number;
 	'R$10–50k':    number;
 	'R$50–200k':   number;
-	'R$200–500k':  number;
-	'R$500k–1M':   number;
-	'R$1–10M':     number;
-	'>R$10M':      number;
+	'>R$200k':     number;
 }
 
 export const stateRows: StateRow[] = parseCSV(csvUfRaw).map((d) => ({
@@ -111,13 +109,10 @@ export const stateRows: StateRow[] = parseCSV(csvUfRaw).map((d) => ({
 	qtde_contemplados:    +d.qtde_contemplados,
 	mediana_valor:        +d.mediana_valor,
 	'Até R$2k':   +d['Até 2 mil'],
-	'R$2–10k':    +d['2 a 10 mil'],
-	'R$10–50k':   +d['10 a 50 mil'],
-	'R$50–200k':  +d['50 a 200 mil'],
-	'R$200–500k': +d['200 a 500 mil'],
-	'R$500k–1M':  +d['500 mil a 1 milhão'],
-	'R$1–10M':    +d['1 milhão a 10 milhões'],
-	'>R$10M':     +d['Acima de 10 milhões'],
+	'R$2–10k':    +d['De 2 a 10 mil'],
+	'R$10–50k':   +d['De 10 a 50 mil'],
+	'R$50–200k':  +d['De 50 a 200 mil'],
+	'>R$200k':    +d['Acima de 200 mil'],
 }));
 
 export const states = Object.fromEntries(
@@ -199,7 +194,7 @@ export const regionMedianData = regionOrder.map((regiao) => {
 
 // ── Heatmap: estados × faixas de valor pago ───────────────────────────────────
 export const heatmapBuckets = [
-	'Até R$2k', 'R$2–10k', 'R$10–50k', 'R$50–200k', 'R$200–500k', 'R$500k–1M', 'R$1–10M', '>R$10M',
+	'Até R$2k', 'R$2–10k', 'R$10–50k', 'R$50–200k', '>R$200k',
 ] as const;
 
 export const heatmapStates = [...stateRows]
@@ -439,24 +434,29 @@ export const qtdeRuralTotal  = _qtdeRuralState + _qtdeRuralMun;
 export const percRuralQtde   = (qtdeRuralTotal / (_qtdeTotalState + _qtdeTotalMun)) * 100;
 export const percRuralValor  = (valorRuralTotal / parseCSV(csvZoneUfRaw).reduce((s, d) => s + +d.valor_uf, 0)) * 100;
 
-// ── Capital vs Interior (aggregate_values_by_capital.csv) ─────────────────────
-const [capitalRow] = parseCSV(csvCapitalRaw);
+// ── Capital vs Região Metropolitana vs Interior (aggregate_by_local_residencia_uf.csv) ──
+const localResidRows = parseCSV(csvLocalResidRaw);
+const _interiorRow   = localResidRows.find((d) => d.local_residencia_contemplados === 'Interior')!;
+const _metroRow      = localResidRows.find((d) => d.local_residencia_contemplados === 'Regiao Metropolitana')!;
+const _capitalRow2   = localResidRows.find((d) => d.local_residencia_contemplados === 'Capital')!;
+
+export const percInteriorContemplados = +_interiorRow.percentual_quantidade * 100;  // ~58.14
+export const valorInteriorTotal       = +_interiorRow.valor_total;                  // ~966,747,807
+
 export const capitalInteriorStackedData = [
 	{
-		label:    '% do valor recebido',
-		capital:  +capitalRow.percentual_valor_capital,
-		interior: +capitalRow.percentual_valor_interior,
+		label:         '% do valor recebido',
+		capital:       +_capitalRow2.percentual_valor    * 100,
+		metropolitana: +_metroRow.percentual_valor       * 100,
+		interior:      +_interiorRow.percentual_valor    * 100,
 	},
 	{
-		label:    '% dos agentes contemplados',
-		capital:  +capitalRow.percentual_quantidade_capital,
-		interior: +capitalRow.percentual_quantidade_interior,
+		label:         '% dos agentes contemplados',
+		capital:       +_capitalRow2.percentual_quantidade * 100,
+		metropolitana: +_metroRow.percentual_quantidade    * 100,
+		interior:      +_interiorRow.percentual_quantidade * 100,
 	},
 ];
-
-// ── Interior (pre-computed from executed_value_by_municipality.csv) ────────────
-export const percInteriorPagamentos  = 65.5;
-export const valorInteriorTotal      = 1_754_685_854;
 
 // ── Valor médio por município por porte (population_size_mean.csv) ─────────────
 export const porteMeanData = parseCSV(csvPorteMeanRaw)

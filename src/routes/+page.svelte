@@ -15,10 +15,10 @@
 
 	const sections = [
 		{ id: 'section-1-intro', label: '1. Onde o dinheiro da PNAB chegou?' },
-		{ id: 'section-2-bignumber', label: '2. Como o recurso foi distribuido?' },
-		{ id: 'section-3-intro', label: '3. Quem recebeu os recursos culturais?' },
-		{ id: 'section-4-intro', label: '4. Como atuam os trabalhadores culturais?' },
-		{ id: 'section-5-intro', label: '5. Cultura e desigualdade social' },
+		{ id: 'section-2-intro', label: '2. Como o recurso foi distribuido?' },
+		{ id: 'section-3-intro', label: '3. Quem acessou os recursos da PNAB?' },
+		{ id: 'section-4-intro', label: '4. Trabalhadores formais da PNAB' },
+		{ id: 'section-5-intro', label: '5. Agentes em vulnerabilidade social' },
 		{ id: 'section-6', label: '6. Quais ações a Aldir Blanc apoiou?' },
 		{ id: 'section-7', label: '7. Seção 7' }
 	];

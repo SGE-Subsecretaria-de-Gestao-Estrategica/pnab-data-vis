@@ -3509,3 +3509,201 @@ def aggregate_faixa_valor_ju_wide_by_uf(
     )
 
     return df_resultado
+
+def make_boxplot_df_faixa_valor(
+    df_aux: pd.DataFrame,
+    by_filter: str = "ESTADO",
+) -> pd.DataFrame:
+    """
+    Gera DataFrame em formato longo para montar boxplot dos valores
+    recebidos e da quantidade de contemplados por faixa de valor pago.
+
+    Como df_aux está desagrupado, cada linha representa um contemplado.
+    Portanto, a quantidade de contemplados é calculada pela contagem
+    de linhas em cada grupo de UF e faixa de valor.
+
+    Parâmetros
+    ----------
+    df_aux : pd.DataFrame
+        DataFrame com as colunas:
+        - tipo_ente_bbagil
+        - uf_bbagil
+        - faixa_vlr_pago_ju_bbagil
+        - valor_transacao_total_bbagil
+
+    by_filter : str
+        Recorte da análise:
+        - "ESTADO": considera apenas tipo_ente_bbagil == "ESTADO"
+        - "MUNICIPIO": considera apenas tipo_ente_bbagil == "MUNICIPIO"
+        - "UF": considera ESTADO + MUNICIPIO
+
+    Retorna
+    -------
+    pd.DataFrame
+        DataFrame em formato longo, pronto para boxplot.
+
+        Colunas:
+        - visao
+        - uf_bbagil
+        - faixa_vlr_pago_ju_bbagil
+        - metrica
+        - valor_boxplot
+        - unidade_observacao
+    """
+
+    by_filter = by_filter.upper().strip()
+
+    df = df_aux.copy()
+
+    colunas_obrigatorias = [
+        "tipo_ente_bbagil",
+        "uf_bbagil",
+        "faixa_vlr_pago_ju_bbagil",
+        "valor_transacao_total_bbagil",
+    ]
+
+    colunas_ausentes = [
+        col for col in colunas_obrigatorias
+        if col not in df.columns
+    ]
+
+    if colunas_ausentes:
+        raise ValueError(
+            f"As seguintes colunas não existem no DataFrame: {colunas_ausentes}"
+        )
+
+    df["tipo_ente_norm"] = (
+        df["tipo_ente_bbagil"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+    )
+
+    if by_filter == "ESTADO":
+        df = df[df["tipo_ente_norm"].eq("ESTADO")].copy()
+
+    elif by_filter == "MUNICIPIO":
+        df = df[df["tipo_ente_norm"].eq("MUNICIPIO")].copy()
+
+    elif by_filter == "UF":
+        df = df[df["tipo_ente_norm"].isin(["ESTADO", "MUNICIPIO"])].copy()
+
+    else:
+        raise ValueError("by_filter deve ser 'ESTADO', 'MUNICIPIO' ou 'UF'.")
+
+    ordem_faixas = [
+        "Até 2 mil",
+        "De 2 a 10 mil",
+        "De 10 a 50 mil",
+        "De 50 a 200 mil",
+        "Acima de 200 mil",
+    ]
+
+    df["valor_transacao_total_bbagil"] = pd.to_numeric(
+        df["valor_transacao_total_bbagil"],
+        errors="coerce"
+    )
+
+    df["faixa_vlr_pago_ju_bbagil"] = (
+        df["faixa_vlr_pago_ju_bbagil"]
+        .astype(str)
+        .str.strip()
+    )
+
+    df = df[
+        df["faixa_vlr_pago_ju_bbagil"].isin(ordem_faixas)
+    ].copy()
+
+    df = df.dropna(
+        subset=[
+            "uf_bbagil",
+            "faixa_vlr_pago_ju_bbagil",
+            "valor_transacao_total_bbagil",
+        ]
+    ).copy()
+
+    df["faixa_vlr_pago_ju_bbagil"] = pd.Categorical(
+        df["faixa_vlr_pago_ju_bbagil"],
+        categories=ordem_faixas,
+        ordered=True
+    )
+
+    df["visao"] = by_filter
+
+    # --------------------------------------------------
+    # 1. Base para boxplot dos valores recebidos
+    #    Unidade: cada linha é um contemplado
+    # --------------------------------------------------
+
+    df_boxplot_valor = df[
+        [
+            "visao",
+            "uf_bbagil",
+            "faixa_vlr_pago_ju_bbagil",
+            "valor_transacao_total_bbagil",
+        ]
+    ].copy()
+
+    df_boxplot_valor = df_boxplot_valor.rename(
+        columns={
+            "valor_transacao_total_bbagil": "valor_boxplot"
+        }
+    )
+
+    df_boxplot_valor["metrica"] = "valor_transacao_total_bbagil"
+    df_boxplot_valor["unidade_observacao"] = "contemplado"
+
+    # --------------------------------------------------
+    # 2. Base para boxplot da quantidade de contemplados
+    #    Unidade: UF x faixa de valor
+    # --------------------------------------------------
+
+    df_boxplot_quantidade = (
+        df
+        .groupby(
+            ["visao", "uf_bbagil", "faixa_vlr_pago_ju_bbagil"],
+            observed=True
+        )
+        .size()
+        .reset_index(name="valor_boxplot")
+    )
+
+    df_boxplot_quantidade["metrica"] = "quantidade_contemplados"
+    df_boxplot_quantidade["unidade_observacao"] = "uf_faixa"
+
+    # --------------------------------------------------
+    # Junta as duas bases em formato longo
+    # --------------------------------------------------
+
+    df_boxplot = pd.concat(
+        [
+            df_boxplot_valor,
+            df_boxplot_quantidade,
+        ],
+        ignore_index=True
+    )
+
+    df_boxplot = df_boxplot[
+        [
+            "visao",
+            "uf_bbagil",
+            "faixa_vlr_pago_ju_bbagil",
+            "metrica",
+            "valor_boxplot",
+            "unidade_observacao",
+        ]
+    ]
+
+    df_boxplot = (
+        df_boxplot
+        .sort_values(
+            [
+                "metrica",
+                "uf_bbagil",
+                "faixa_vlr_pago_ju_bbagil",
+            ]
+        )
+        .reset_index(drop=True)
+    )
+
+    return df_boxplot

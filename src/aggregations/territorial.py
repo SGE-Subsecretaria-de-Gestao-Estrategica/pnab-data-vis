@@ -207,7 +207,7 @@ def executed_value_n_contemplados_qty_by(df_cubo, by_filter):
         df
         .pivot_table(
             index="uf",
-            columns="faixa_vlr_pago",
+            columns="faixa_vlr_pago_ju_bbagil",
             values="quantidade",
             aggfunc="sum",
             fill_value=0
@@ -3707,3 +3707,129 @@ def make_boxplot_df_faixa_valor(
     )
 
     return df_boxplot
+
+
+import pandas as pd
+import re
+import unicodedata
+
+
+def _slugify_faixa(texto: str) -> str:
+    """
+    Converte o nome da faixa em um sufixo seguro para nome de coluna.
+    Ex.: 'Até 2 mil' -> 'ate_2_mil'
+    """
+    texto = str(texto).strip().lower()
+
+    texto = unicodedata.normalize("NFKD", texto)
+    texto = "".join(c for c in texto if not unicodedata.combining(c))
+
+    texto = re.sub(r"[^a-z0-9]+", "_", texto)
+    texto = re.sub(r"_+", "_", texto).strip("_")
+
+    return texto
+
+
+def resumo_faixas_valor_pago(
+    df_cubo: pd.DataFrame,
+    visao: str = "UF",
+    tipo_ente_col: str = "tipo_ente",
+    faixa_col: str = "faixa_vlr_pago_ju_bbagil",
+    quantidade_col: str = "quantidade",
+    valor_col: str = "valor_transacao",
+    ordem_faixas: list | None = None,
+) -> pd.DataFrame:
+    """
+    Gera um DataFrame com uma coluna para cada faixa de valor pago,
+    trazendo quantidade de contemplados, percentual da quantidade,
+    valor transacionado e percentual do valor.
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        DataFrame base.
+
+    visao : str, default "UF"
+        Recorte da análise:
+        - "ESTADO": filtra tipo_ente == "ESTADO"
+        - "MUNICIPIO": filtra tipo_ente == "MUNICIPIO"
+        - "UF": não filtra tipo_ente, considerando ESTADO + MUNICIPIO
+
+    tipo_ente_col : str
+        Nome da coluna de tipo de ente.
+
+    faixa_col : str
+        Nome da coluna com as faixas de valor pago.
+
+    quantidade_col : str
+        Nome da coluna de quantidade de contemplados.
+
+    valor_col : str
+        Nome da coluna de valor transacionado.
+
+    ordem_faixas : list, opcional
+        Ordem desejada das faixas no resultado.
+
+    Retorna
+    -------
+    pd.DataFrame
+        DataFrame com uma linha e colunas pivotadas por faixa.
+    """
+
+    visao = visao.upper().strip()
+
+    if visao not in ["ESTADO", "MUNICIPIO", "UF"]:
+        raise ValueError("O parâmetro 'visao' deve ser: 'ESTADO', 'MUNICIPIO' ou 'UF'.")
+
+    df = df_cubo.copy()
+
+    if visao in ["ESTADO", "MUNICIPIO"]:
+        df = df[df[tipo_ente_col] == visao].copy()
+
+    df = df[df[faixa_col].notna()].copy()
+
+    if ordem_faixas is None:
+        ordem_faixas = [
+            "Até 2 mil",
+            "2 a 10 mil",
+            "10 a 50 mil",
+            "50 a 200 mil",
+            "200 a 500 mil",
+            "500 mil a 1 milhão",
+            "1 milhão a 10 milhões",
+            "Acima de 10 milhões",
+        ]
+
+    df_agg = (
+        df
+        .groupby(faixa_col, dropna=False)
+        .agg(
+            qtd_contemplados=(quantidade_col, "sum"),
+            valor_transacao=(valor_col, "sum"),
+        )
+        .reindex(ordem_faixas)
+        .fillna(0)
+    )
+
+    total_qtd = df_agg["qtd_contemplados"].sum()
+    total_valor = df_agg["valor_transacao"].sum()
+
+    resultado = {
+        "visao": visao,
+        "qtd_contemplados_total": total_qtd,
+        "valor_transacao_total": total_valor,
+    }
+
+    for faixa, row in df_agg.iterrows():
+        sufixo = _slugify_faixa(faixa)
+
+        qtd = row["qtd_contemplados"]
+        valor = row["valor_transacao"]
+
+        resultado[f"qtd_contemplados_{sufixo}"] = qtd
+        resultado[f"perc_qtd_contemplados_{sufixo}"] = qtd / total_qtd if total_qtd else 0
+
+        resultado[f"valor_transacao_{sufixo}"] = valor
+        resultado[f"perc_valor_transacao_{sufixo}"] = valor / total_valor if total_valor else 0
+
+    return pd.DataFrame([resultado])

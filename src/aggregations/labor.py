@@ -238,11 +238,10 @@ def aggregate_vinculo_formal_labor_by_region(
         .reset_index(drop=True)
     )
 
-
 def aggregate_vinculo_formal_labor_by_uf(
     df_cubo: pd.DataFrame,
     col_uf: str = "uf",
-    col_flag: str = "flag_join_rais",
+    col_vinculo: str = "tipo_vinculo_agregado_rais",
     col_quantidade: str = "quantidade",
     col_valor: str = "valor_transacao",
 ) -> pd.DataFrame:
@@ -253,19 +252,23 @@ def aggregate_vinculo_formal_labor_by_uf(
     - percentuais dentro da própria UF
     - participação da UF no total geral
     - participação da UF no total geral por tipo de vínculo
+
+    Regras:
+    - Sem vínculo formal: tipo_vinculo_agregado_rais missing, nulo ou vazio
+    - Com vínculo formal: tipo_vinculo_agregado_rais preenchido
     """
 
     df = df_cubo.copy()
 
-    df = df[df['tipo_documento'] == 'CPF']
+    df = df[df["tipo_documento"] == "CPF"].copy()
 
-    # Mantém apenas casos em que a informação de vínculo existe
-    df = df.loc[df[col_flag].notna()].copy()
+    vinculo_preenchido = (
+        df[col_vinculo].notna()
+        & df[col_vinculo].astype(str).str.strip().ne("")
+    )
 
-    df["situacao_vinculo_formal"] = df[col_flag].map({
-        False: "sem_vinculo_trabalho_formal",
-        True: "com_vinculo_trabalho_formal",
-    })
+    df["situacao_vinculo_formal"] = "sem_vinculo_trabalho_formal"
+    df.loc[vinculo_preenchido, "situacao_vinculo_formal"] = "com_vinculo_trabalho_formal"
 
     resumo = (
         df
@@ -305,7 +308,7 @@ def aggregate_vinculo_formal_labor_by_uf(
             tabela[col] = 0
 
     tabela["numero_contemplados_total"] = (
-        tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
+        tabela["numero_contemplados_sem_vinculo_trabalho_formal"] 
         + tabela["numero_contemplados_com_vinculo_trabalho_formal"]
     )
 
@@ -314,7 +317,6 @@ def aggregate_vinculo_formal_labor_by_uf(
         + tabela["valor_pago_com_vinculo_trabalho_formal"]
     )
 
-    # Percentuais dentro da própria UF
     tabela["percentual_contemplados_sem_vinculo_trabalho_formal"] = (
         tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
         / tabela["numero_contemplados_total"]
@@ -335,7 +337,6 @@ def aggregate_vinculo_formal_labor_by_uf(
         / tabela["valor_pago_total"]
     ).fillna(0)
 
-    # Participação da UF no total geral, independentemente do vínculo
     tabela["percentual_numero_contemplados_no_total_geral"] = (
         tabela["numero_contemplados_total"]
         / tabela["numero_contemplados_total"].sum()
@@ -346,7 +347,6 @@ def aggregate_vinculo_formal_labor_by_uf(
         / tabela["valor_pago_total"].sum()
     ).fillna(0)
 
-    # Participação da UF no total geral de contemplados com/sem vínculo
     tabela["percentual_numero_contemplados_sem_vinculo_no_total_geral"] = (
         tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
         / tabela["numero_contemplados_sem_vinculo_trabalho_formal"].sum()
@@ -357,7 +357,6 @@ def aggregate_vinculo_formal_labor_by_uf(
         / tabela["numero_contemplados_com_vinculo_trabalho_formal"].sum()
     ).fillna(0)
 
-    # Participação da UF no total geral de valor pago com/sem vínculo
     tabela["percentual_valor_pago_sem_vinculo_no_total_geral"] = (
         tabela["valor_pago_sem_vinculo_trabalho_formal"]
         / tabela["valor_pago_sem_vinculo_trabalho_formal"].sum()
@@ -397,12 +396,13 @@ def aggregate_vinculo_formal_labor_by_uf(
         .sort_values(col_uf)
         .reset_index(drop=True)
     )
+import pandas as pd
 
 
 def aggregate_vinculo_formal_labor_by_sexo(
     df_cubo: pd.DataFrame,
     col_sexo: str = "Sexo",
-    col_flag: str = "flag_join_rais",
+    col_vinculo: str = "tipo_vinculo_agregado_rais",
     col_quantidade: str = "quantidade",
     col_valor: str = "valor_transacao",
 ) -> pd.DataFrame:
@@ -411,23 +411,29 @@ def aggregate_vinculo_formal_labor_by_sexo(
     com e sem vínculo formal de trabalho.
 
     Considera apenas:
+    - tipo_documento == CPF
     - Sexo == Masculino ou Feminino
-    - flag_join_rais não nulo
+
+    Regras:
+    - Sem vínculo formal: tipo_vinculo_agregado_rais missing, nulo ou vazio
+    - Com vínculo formal: tipo_vinculo_agregado_rais preenchido
     """
 
     df = df_cubo.copy()
 
-    df = df[df['tipo_documento'] == 'CPF']
+    df = df[df["tipo_documento"] == "CPF"].copy()
 
     df = df.loc[
         df[col_sexo].isin(["Masculino", "Feminino"])
-        & df[col_flag].notna()
     ].copy()
 
-    df["situacao_vinculo_formal"] = df[col_flag].map({
-        False: "sem_vinculo_trabalho_formal",
-        True: "com_vinculo_trabalho_formal",
-    })
+    vinculo_preenchido = (
+        df[col_vinculo].notna()
+        & df[col_vinculo].astype(str).str.strip().ne("")
+    )
+
+    df["situacao_vinculo_formal"] = "sem_vinculo_trabalho_formal"
+    df.loc[vinculo_preenchido, "situacao_vinculo_formal"] = "com_vinculo_trabalho_formal"
 
     resumo = (
         df
@@ -476,7 +482,6 @@ def aggregate_vinculo_formal_labor_by_sexo(
         + tabela["valor_pago_com_vinculo_trabalho_formal"]
     )
 
-    # Percentuais dentro do próprio Sexo
     tabela["percentual_contemplados_sem_vinculo_trabalho_formal"] = (
         tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
         / tabela["numero_contemplados_total"]
@@ -497,7 +502,6 @@ def aggregate_vinculo_formal_labor_by_sexo(
         / tabela["valor_pago_total"]
     ).fillna(0)
 
-    # Participação de cada Sexo no total geral
     tabela["percentual_numero_contemplados_no_total_geral"] = (
         tabela["numero_contemplados_total"]
         / tabela["numero_contemplados_total"].sum()
@@ -508,7 +512,6 @@ def aggregate_vinculo_formal_labor_by_sexo(
         / tabela["valor_pago_total"].sum()
     ).fillna(0)
 
-    # Participação de cada Sexo no total geral com/sem vínculo
     tabela["percentual_numero_contemplados_sem_vinculo_no_total_geral"] = (
         tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
         / tabela["numero_contemplados_sem_vinculo_trabalho_formal"].sum()
@@ -558,7 +561,6 @@ def aggregate_vinculo_formal_labor_by_sexo(
         .sort_values(col_sexo)
         .reset_index(drop=True)
     )
-
 
 def aggregate_vinculo_formal_labor_by_age_group(
     df_cubo: pd.DataFrame,
@@ -1548,3 +1550,171 @@ def aggregate_cbo_rais(df_cubo: pd.DataFrame) -> pd.DataFrame:
     ).reset_index(drop=True)
 
     return df_resultado
+
+
+def aggregate_vinculo_formal_labor_by_age_group(
+    df_cubo: pd.DataFrame,
+    col_faixa_etaria: str = "faixa_etaria",
+    col_vinculo: str = "tipo_vinculo_agregado_rais",
+    col_quantidade: str = "quantidade",
+    col_valor: str = "valor_transacao",
+) -> pd.DataFrame:
+    """
+    Cria um DataFrame com uma linha por faixa etária, comparando contemplados
+    com e sem vínculo formal de trabalho.
+
+    Considera apenas:
+    - tipo_documento == CPF
+    - faixa_etaria não nula
+
+    Regras:
+    - Sem vínculo formal: tipo_vinculo_agregado_rais missing, nulo ou vazio
+    - Com vínculo formal: tipo_vinculo_agregado_rais preenchido
+    """
+
+    df = df_cubo.copy()
+
+    df = df[df["tipo_documento"] == "CPF"].copy()
+
+    df = df.loc[
+        df[col_faixa_etaria].notna()
+    ].copy()
+
+    vinculo_preenchido = (
+        df[col_vinculo].notna()
+        & ~df[col_vinculo]
+            .astype(str)
+            .str.strip()
+            .str.lower()
+            .isin(["", "nan", "none", "null", "<na>"])
+    )
+
+    df["situacao_vinculo_formal"] = "sem_vinculo_trabalho_formal"
+    df.loc[vinculo_preenchido, "situacao_vinculo_formal"] = "com_vinculo_trabalho_formal"
+
+    resumo = (
+        df
+        .groupby([col_faixa_etaria, "situacao_vinculo_formal"], dropna=False)
+        .agg(
+            numero_contemplados=(col_quantidade, "sum"),
+            valor_pago=(col_valor, "sum"),
+        )
+        .reset_index()
+    )
+
+    tabela = (
+        resumo
+        .pivot(
+            index=col_faixa_etaria,
+            columns="situacao_vinculo_formal",
+            values=["numero_contemplados", "valor_pago"],
+        )
+    )
+
+    tabela.columns = [
+        f"{metrica}_{situacao}"
+        for metrica, situacao in tabela.columns
+    ]
+
+    tabela = tabela.reset_index().fillna(0)
+
+    colunas_esperadas = [
+        "numero_contemplados_sem_vinculo_trabalho_formal",
+        "numero_contemplados_com_vinculo_trabalho_formal",
+        "valor_pago_sem_vinculo_trabalho_formal",
+        "valor_pago_com_vinculo_trabalho_formal",
+    ]
+
+    for col in colunas_esperadas:
+        if col not in tabela.columns:
+            tabela[col] = 0
+
+    tabela["numero_contemplados_total"] = (
+        tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
+        + tabela["numero_contemplados_com_vinculo_trabalho_formal"]
+    )
+
+    tabela["valor_pago_total"] = (
+        tabela["valor_pago_sem_vinculo_trabalho_formal"]
+        + tabela["valor_pago_com_vinculo_trabalho_formal"]
+    )
+
+    tabela["percentual_contemplados_sem_vinculo_trabalho_formal"] = (
+        tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
+        / tabela["numero_contemplados_total"]
+    ).fillna(0)
+
+    tabela["percentual_contemplados_com_vinculo_trabalho_formal"] = (
+        tabela["numero_contemplados_com_vinculo_trabalho_formal"]
+        / tabela["numero_contemplados_total"]
+    ).fillna(0)
+
+    tabela["percentual_valor_pago_sem_vinculo_trabalho_formal"] = (
+        tabela["valor_pago_sem_vinculo_trabalho_formal"]
+        / tabela["valor_pago_total"]
+    ).fillna(0)
+
+    tabela["percentual_valor_pago_com_vinculo_trabalho_formal"] = (
+        tabela["valor_pago_com_vinculo_trabalho_formal"]
+        / tabela["valor_pago_total"]
+    ).fillna(0)
+
+    tabela["percentual_numero_contemplados_no_total_geral"] = (
+        tabela["numero_contemplados_total"]
+        / tabela["numero_contemplados_total"].sum()
+    ).fillna(0)
+
+    tabela["percentual_valor_pago_no_total_geral"] = (
+        tabela["valor_pago_total"]
+        / tabela["valor_pago_total"].sum()
+    ).fillna(0)
+
+    tabela["percentual_numero_contemplados_sem_vinculo_no_total_geral"] = (
+        tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
+        / tabela["numero_contemplados_sem_vinculo_trabalho_formal"].sum()
+    ).fillna(0)
+
+    tabela["percentual_numero_contemplados_com_vinculo_no_total_geral"] = (
+        tabela["numero_contemplados_com_vinculo_trabalho_formal"]
+        / tabela["numero_contemplados_com_vinculo_trabalho_formal"].sum()
+    ).fillna(0)
+
+    tabela["percentual_valor_pago_sem_vinculo_no_total_geral"] = (
+        tabela["valor_pago_sem_vinculo_trabalho_formal"]
+        / tabela["valor_pago_sem_vinculo_trabalho_formal"].sum()
+    ).fillna(0)
+
+    tabela["percentual_valor_pago_com_vinculo_no_total_geral"] = (
+        tabela["valor_pago_com_vinculo_trabalho_formal"]
+        / tabela["valor_pago_com_vinculo_trabalho_formal"].sum()
+    ).fillna(0)
+
+    colunas_finais = [
+        col_faixa_etaria,
+
+        "numero_contemplados_sem_vinculo_trabalho_formal",
+        "numero_contemplados_com_vinculo_trabalho_formal",
+        "numero_contemplados_total",
+
+        "percentual_contemplados_sem_vinculo_trabalho_formal",
+        "percentual_contemplados_com_vinculo_trabalho_formal",
+        "percentual_numero_contemplados_no_total_geral",
+        "percentual_numero_contemplados_sem_vinculo_no_total_geral",
+        "percentual_numero_contemplados_com_vinculo_no_total_geral",
+
+        "valor_pago_sem_vinculo_trabalho_formal",
+        "valor_pago_com_vinculo_trabalho_formal",
+        "valor_pago_total",
+
+        "percentual_valor_pago_sem_vinculo_trabalho_formal",
+        "percentual_valor_pago_com_vinculo_trabalho_formal",
+        "percentual_valor_pago_no_total_geral",
+        "percentual_valor_pago_sem_vinculo_no_total_geral",
+        "percentual_valor_pago_com_vinculo_no_total_geral",
+    ]
+
+    return (
+        tabela[colunas_finais]
+        .sort_values(col_faixa_etaria)
+        .reset_index(drop=True)
+    )

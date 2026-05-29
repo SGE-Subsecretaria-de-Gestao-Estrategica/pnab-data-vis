@@ -77,7 +77,7 @@ def aggregate_vinculo_formal_labor(
 def aggregate_vinculo_formal_labor_by_region(
     df_cubo: pd.DataFrame,
     col_regiao: str = "regiao",
-    col_flag: str = "flag_join_rais",
+    col_vinculo: str = "tipo_vinculo_agregado_rais",
     col_quantidade: str = "quantidade",
     col_valor: str = "valor_transacao",
 ) -> pd.DataFrame:
@@ -88,19 +88,24 @@ def aggregate_vinculo_formal_labor_by_region(
     - percentuais dentro da própria região
     - participação da região no total geral
     - participação da região no total geral por tipo de vínculo
+
+    Regras:
+    - Sem vínculo formal: tipo_vinculo_agregado_rais missing, nulo ou vazio
+    - Com vínculo formal: tipo_vinculo_agregado_rais preenchido
     """
 
     df = df_cubo.copy()
 
-    df = df[df['tipo_documento'] == 'CPF']
+    df = df[df["tipo_documento"] == "CPF"].copy()
 
-    # Mantém apenas casos em que a informação de vínculo existe
-    df = df.loc[df[col_flag].notna()].copy()
+    # Preenchido = com vínculo formal
+    vinculo_preenchido = (
+        df[col_vinculo].notna()
+        & df[col_vinculo].astype(str).str.strip().ne("")
+    )
 
-    df["situacao_vinculo_formal"] = df[col_flag].map({
-        False: "sem_vinculo_trabalho_formal",
-        True: "com_vinculo_trabalho_formal",
-    })
+    df["situacao_vinculo_formal"] = "sem_vinculo_trabalho_formal"
+    df.loc[vinculo_preenchido, "situacao_vinculo_formal"] = "com_vinculo_trabalho_formal"
 
     resumo = (
         df

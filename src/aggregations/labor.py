@@ -1,28 +1,36 @@
 import pandas as pd
 
-
 def aggregate_vinculo_formal_labor(
     df_cubo: pd.DataFrame,
-    col_flag: str = "flag_join_rais",
+    col_vinculo: str = "tipo_vinculo_agregado_rais",
     col_quantidade: str = "quantidade",
     col_valor: str = "valor_transacao",
+    col_tipo_documento: str = "tipo_documento",
 ) -> pd.DataFrame:
     """
     Cria um DataFrame de uma linha com quantidade, valor pago e percentuais
     por existência de vínculo formal de trabalho.
 
     Regras:
-    - Sem vínculo formal: flag_join_rais == False
-    - Com vínculo formal: flag_join_rais == True
-    - Valores nulos na flag são desconsiderados
+    - Com vínculo formal: tipo_vinculo_agregado_rais preenchida
+    - Sem vínculo formal: tipo_vinculo_agregado_rais nula ou vazia
+    - Considera apenas registros de CPF
     """
 
     df = df_cubo.copy()
 
-    df = df[df['tipo_documento'] == 'CPF']
+    # Mantém apenas CPF
+    df = df[df[col_tipo_documento] == "CPF"].copy()
 
-    sem_vinculo = df[col_flag] == False
-    com_vinculo = df[col_flag] == True
+    # Trata strings vazias como missing
+    vinculo_preenchido = (
+        df[col_vinculo]
+        .notna()
+        & df[col_vinculo].astype(str).str.strip().ne("")
+    )
+
+    com_vinculo = vinculo_preenchido
+    sem_vinculo = ~vinculo_preenchido
 
     qtd_sem_vinculo = df.loc[sem_vinculo, col_quantidade].sum()
     qtd_com_vinculo = df.loc[com_vinculo, col_quantidade].sum()
@@ -56,8 +64,15 @@ def aggregate_vinculo_formal_labor(
         ),
     }])
 
-    return resultado
+    cols_percentuais = [
+        "percentual_contemplados_sem_vinculo_trabalho_formal",
+        "percentual_contemplados_com_vinculo_trabalho_formal",
+        "percentual_valor_pago_sem_vinculo_trabalho_formal",
+        "percentual_valor_pago_com_vinculo_trabalho_formal",
+    ]
+    resultado[cols_percentuais] = resultado[cols_percentuais].round(3)
 
+    return resultado
 
 def aggregate_vinculo_formal_labor_by_region(
     df_cubo: pd.DataFrame,

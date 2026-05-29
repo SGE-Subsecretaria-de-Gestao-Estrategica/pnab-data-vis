@@ -3918,8 +3918,8 @@ def resumo_territorios_especiais_por_uf(
 
     visao = visao.upper().strip()
 
-    if visao not in ["ESTADO", "UF"]:
-        raise ValueError("visao deve ser 'ESTADO' ou 'UF'.")
+    if visao not in ["ESTADO", "UF", "MUNICIPIO"]:
+        raise ValueError("visao deve ser 'ESTADO' ou 'UF' ou MUNICIPIO.")
 
     if base_percentual not in ["total_uf", "territorios_especiais"]:
         raise ValueError(
@@ -3942,6 +3942,11 @@ def resumo_territorios_especiais_por_uf(
 
     if visao == "ESTADO":
         df = df[df[coluna_tipo_ente] == "ESTADO"].copy()
+    
+
+    elif visao == "MUNICIPIO":
+        df = df[df[coluna_tipo_ente] == "MUNICIPIO"].copy()
+    
 
     # Total geral da UF, antes de filtrar os territórios especiais
     total_uf = (

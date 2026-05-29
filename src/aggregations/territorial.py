@@ -207,7 +207,7 @@ def executed_value_n_contemplados_qty_by(df_cubo, by_filter):
         df
         .pivot_table(
             index="uf",
-            columns="faixa_vlr_pago_ju_bbagil",
+            columns="faixa_vlr_pago",
             values="quantidade",
             aggfunc="sum",
             fill_value=0
@@ -215,11 +215,6 @@ def executed_value_n_contemplados_qty_by(df_cubo, by_filter):
         .reset_index()
     )
     
-    df_exec_uf_faixa_vlr = df_exec_uf_faixa_vlr.rename(
-        columns={
-            'faixa_vlr_pago_ju_bbagil': 'faixa_vlr_pago'
-        }
-    )
 
     # ------------------------------------------------------------
     # Quantidade por tipo_documento

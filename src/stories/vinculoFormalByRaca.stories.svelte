@@ -6,7 +6,7 @@
   import { racaCorBarData, racaCorTreemapData } from '$lib/data/section4';
 
   // @ts-ignore
-  const formatN = (v) => v.toLocaleString('pt-BR');
+  const formatN = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
   const { Story } = defineMeta({
     title: 'Section 4/vinculoFormalByRaca',
@@ -34,7 +34,7 @@ O treemap torna visível a concentração: Parda e Branca juntas ocupam mais de 
       data={racaCorBarData}
       color={categorical8[0]}
       format={formatN}
-      xLabel="Beneficiários com vínculo formal"
+      xLabel="% do total de beneficiários com vínculo formal"
       margin={{ top: 20, right: 60, bottom: 40, left: 120 }}
     />
   {/snippet}

@@ -105,6 +105,22 @@ export const escolaridadeBarData = [...escRows]
 		value: +r.numero_contemplados_com_vinculo_trabalho_formal,
 	}));
 
+// Average value paid per formal worker, sorted ascending
+export const escolaridadeValorMedioData = [...escRows]
+	.map((r) => ({
+		label: escShort[r.escolaridade_agregado_rais] ?? r.escolaridade_agregado_rais,
+		value: +r.valor_pago_com_vinculo_trabalho_formal / +r.numero_contemplados_com_vinculo_trabalho_formal,
+	}))
+	.sort((a, b) => a.value - b.value);
+
+// Proportional share of formal workers by education level, sorted ascending
+export const escolaridadeProporcionalData = [...escRows]
+	.map((r) => ({
+		label: escShort[r.escolaridade_agregado_rais] ?? r.escolaridade_agregado_rais,
+		value: +r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
+	}))
+	.sort((a, b) => a.value - b.value);
+
 // ── Por região ──────────────────────────────────────────────────────────────────
 const regionRows4 = parseCSV(csvRegionRaw);
 
@@ -139,17 +155,17 @@ const racaCorRows = parseCSV(csvRacaCorRaw).filter(
 );
 
 export const racaCorBarData = [...racaCorRows]
-	.sort((a, b) => +b.numero_contemplados_com_vinculo_trabalho_formal - +a.numero_contemplados_com_vinculo_trabalho_formal)
+	.sort((a, b) => +b.percentual_numero_contemplados_com_vinculo_no_total_geral - +a.percentual_numero_contemplados_com_vinculo_no_total_geral)
 	.map((r) => ({
 		label: shortRaceLabel(r.raca_cor_desc_description),
-		value: +r.numero_contemplados_com_vinculo_trabalho_formal,
+		value: +r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
 	}));
 
 export const racaCorTreemapData = {
 	name:     'root',
 	children: racaCorRows.map((r) => ({
 		name:  shortRaceLabel(r.raca_cor_desc_description),
-		value: +r.numero_contemplados_com_vinculo_trabalho_formal,
+		value: +r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
 	})),
 };
 

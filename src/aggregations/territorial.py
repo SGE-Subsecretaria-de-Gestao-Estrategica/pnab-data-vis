@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+import unicodedata
+import re
+
 
 
 def executed_value_n_contemplados_qty_by(df_cubo, by_filter):
@@ -207,13 +210,14 @@ def executed_value_n_contemplados_qty_by(df_cubo, by_filter):
         df
         .pivot_table(
             index="uf",
-            columns="faixa_vlr_pago",
+            columns="faixa_vlr_pago_ju_bbagil",
             values="quantidade",
             aggfunc="sum",
             fill_value=0
         )
         .reset_index()
     )
+    
 
     # ------------------------------------------------------------
     # Quantidade por tipo_documento
@@ -455,7 +459,6 @@ def executed_value_n_contemplados_qty_by(df_cubo, by_filter):
 
     return df_final
 
-
 def aggregate_capital_interior_summary(
     df_cubo: pd.DataFrame
 ) -> pd.DataFrame:
@@ -463,15 +466,22 @@ def aggregate_capital_interior_summary(
     Gera resumo agregado de valor e quantidade para capitais e interior.
 
     Considera apenas registros de MUNICIPIO.
+
     Divide os municípios entre:
-    - capital
-    - interior
+    - capital: definida pela coluna flag_capital;
+    - interior: definido pela coluna categoria_municipio_ibge,
+      quando o valor for "Interior" ou "Regiao Metropolitana".
 
     Também calcula quantidade e percentual de contemplados por Sexo:
     - Feminino
     - Masculino
 
     Retorna uma tabela com uma linha.
+
+    Observação:
+    - Percentuais retornam em escala decimal, isto é:
+      0.57 = 57%.
+    - Valores monetários não são arredondados.
     """
 
     tipo_ente_normalizado = (
@@ -491,6 +501,17 @@ def aggregate_capital_interior_summary(
         df_municipios["flag_capital"]
         .astype(str)
         .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    categoria_municipio_normalizada = (
+        df_municipios["categoria_municipio_ibge"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
         .str.normalize("NFKD")
         .str.encode("ascii", errors="ignore")
         .str.decode("utf-8")
@@ -512,7 +533,10 @@ def aggregate_capital_interior_summary(
     ].copy()
 
     df_interior = df_municipios[
-        ~flag_capital_normalizada.isin(["TRUE", "1", "SIM", "S"])
+        categoria_municipio_normalizada.isin([
+            "INTERIOR",
+            "REGIAO METROPOLITANA"
+        ])
     ].copy()
 
     valor_total_capital = df_capital["valor_transacao"].sum()
@@ -552,44 +576,44 @@ def aggregate_capital_interior_summary(
         "valor_total_capital": [valor_total_capital],
         "quantidade_total_capital": [quantidade_total_capital],
         "percentual_valor_capital": [
-            valor_total_capital / valor_total_geral * 100
+            valor_total_capital / valor_total_geral
             if valor_total_geral > 0 else np.nan
         ],
         "percentual_quantidade_capital": [
-            quantidade_total_capital / quantidade_total_geral * 100
+            quantidade_total_capital / quantidade_total_geral
             if quantidade_total_geral > 0 else np.nan
         ],
 
         "quantidade_feminino_capital": [quantidade_feminino_capital],
         "percentual_feminino_capital": [
-            quantidade_feminino_capital / quantidade_total_capital * 100
+            quantidade_feminino_capital / quantidade_total_capital
             if quantidade_total_capital > 0 else np.nan
         ],
         "quantidade_masculino_capital": [quantidade_masculino_capital],
         "percentual_masculino_capital": [
-            quantidade_masculino_capital / quantidade_total_capital * 100
+            quantidade_masculino_capital / quantidade_total_capital
             if quantidade_total_capital > 0 else np.nan
         ],
 
         "valor_total_interior": [valor_total_interior],
         "quantidade_total_interior": [quantidade_total_interior],
         "percentual_valor_interior": [
-            valor_total_interior / valor_total_geral * 100
+            valor_total_interior / valor_total_geral
             if valor_total_geral > 0 else np.nan
         ],
         "percentual_quantidade_interior": [
-            quantidade_total_interior / quantidade_total_geral * 100
+            quantidade_total_interior / quantidade_total_geral
             if quantidade_total_geral > 0 else np.nan
         ],
 
         "quantidade_feminino_interior": [quantidade_feminino_interior],
         "percentual_feminino_interior": [
-            quantidade_feminino_interior / quantidade_total_interior * 100
+            quantidade_feminino_interior / quantidade_total_interior
             if quantidade_total_interior > 0 else np.nan
         ],
         "quantidade_masculino_interior": [quantidade_masculino_interior],
         "percentual_masculino_interior": [
-            quantidade_masculino_interior / quantidade_total_interior * 100
+            quantidade_masculino_interior / quantidade_total_interior
             if quantidade_total_interior > 0 else np.nan
         ],
     })
@@ -620,8 +644,9 @@ def aggregate_capital_interior_summary(
     ]
 
     df_resultado[colunas_valor] = (
-        np.ceil(df_resultado[colunas_valor])
-        .astype("Int64")
+        df_resultado[colunas_valor]
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
     )
 
     df_resultado[colunas_quantidade] = (
@@ -632,11 +657,11 @@ def aggregate_capital_interior_summary(
 
     df_resultado[colunas_percentual] = (
         df_resultado[colunas_percentual]
-        .round(2)
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
     )
 
     return df_resultado
-
 
 def aggregate_execution_by_porte_with_estado(
     df_cubo: pd.DataFrame
@@ -1275,7 +1300,7 @@ def aggregate_execution_by_porte_with_estado(
     ]
 
     # ------------------------------------------------------------
-    # 20. Arredondar valores monetários para cima
+    # 20. Converter tipos sem arredondar valores monetários
     # ------------------------------------------------------------
 
     colunas_valor = [
@@ -1293,20 +1318,18 @@ def aggregate_execution_by_porte_with_estado(
         + colunas_media_valor_tipo_documento
     )
 
-    df_porte[
+    colunas_valor_todas = (
         colunas_valor
         + colunas_valor_tipo_documento_todas
         + colunas_valor_sexo
-    ] = (
-        np.ceil(
-            df_porte[
-                colunas_valor
-                + colunas_valor_tipo_documento_todas
-                + colunas_valor_sexo
-            ]
-        )
+    )
+
+    # Mantém valores monetários como decimal, sem ceil, sem round e sem converter para inteiro
+    df_porte[colunas_valor_todas] = (
+        df_porte[colunas_valor_todas]
+        .apply(pd.to_numeric, errors="coerce")
         .fillna(0)
-        .astype("Int64")
+        .astype("Float64")
     )
 
     colunas_quantidade = [
@@ -1317,18 +1340,17 @@ def aggregate_execution_by_porte_with_estado(
         "total_qtd_sexo_valido",
     ]
 
-    df_porte[
+    colunas_quantidade_todas = (
         colunas_quantidade
         + colunas_faixa_vlr_pago
         + colunas_qtd_tipo_documento
         + colunas_qtd_sexo
-    ] = (
-        df_porte[
-            colunas_quantidade
-            + colunas_faixa_vlr_pago
-            + colunas_qtd_tipo_documento
-            + colunas_qtd_sexo
-        ]
+    )
+
+    # Quantidades continuam como inteiros
+    df_porte[colunas_quantidade_todas] = (
+        df_porte[colunas_quantidade_todas]
+        .apply(pd.to_numeric, errors="coerce")
         .fillna(0)
         .astype("Int64")
     )
@@ -1665,6 +1687,8 @@ def aggregate_special_territories_by(
 
     df_agg = df_agg[colunas_finais]
 
+    df_agg = df_agg[df_agg['cod_tipo_nome'].isin(["Favela e Comunidade Urbana","Agrupamento quilombola","Agrupamento indígena"])]
+
     return df_agg
 
 def generate_special_territories_brazil_view(
@@ -1675,11 +1699,17 @@ def generate_special_territories_brazil_view(
 
     Considera:
     - valor total Brasil = ESTADO + MUNICIPIO;
+    - quantidade total de contemplados PNAB = soma da coluna quantidade;
     - população Brasil = população dos ESTADOS, uma vez por UF;
     - territórios:
         - Favela e Comunidade Urbana
         - Agrupamento quilombola
         - Agrupamento indígena
+
+    Observação:
+    - A coluna "% de agentes contemplados" representa:
+      quantidade de contemplados naquela categoria /
+      quantidade total de contemplados da PNAB.
     """
 
     # ------------------------------------------------------------
@@ -1728,11 +1758,12 @@ def generate_special_territories_brazil_view(
     }
 
     # ------------------------------------------------------------
-    # 5. Valor total Brasil
+    # 5. Valor total Brasil e quantidade total de contemplados PNAB
     # Estado + municípios
     # ------------------------------------------------------------
 
     valor_total_brasil = df_territorio["valor_transacao"].sum()
+    quantidade_total_pnab = df_territorio["quantidade"].sum()
 
     # ------------------------------------------------------------
     # 6. População total Brasil
@@ -1786,8 +1817,8 @@ def generate_special_territories_brazil_view(
     )
 
     df_vis_territorio_brasil["perc_agentes_contemplados"] = np.where(
-        populacao_brasil > 0,
-        df_vis_territorio_brasil["quantidade_contemplados"] / populacao_brasil,
+        quantidade_total_pnab > 0,
+        df_vis_territorio_brasil["quantidade_contemplados"] / quantidade_total_pnab,
         0
     )
 
@@ -1812,11 +1843,11 @@ def generate_special_territories_brazil_view(
     )
 
     df_vis_territorio_brasil["perc_recurso_total"] = (
-        df_vis_territorio_brasil["perc_recurso_total"] * 100
+        df_vis_territorio_brasil["perc_recurso_total"]
     ).round(2)
 
     df_vis_territorio_brasil["perc_agentes_contemplados"] = (
-        df_vis_territorio_brasil["perc_agentes_contemplados"] * 100
+        df_vis_territorio_brasil["perc_agentes_contemplados"]
     ).round(2)
 
     # ------------------------------------------------------------
@@ -1846,7 +1877,6 @@ def generate_special_territories_brazil_view(
     )
 
     return df_vis_territorio_brasil
-
 
 def aggregate_faixa_valor_by(
     df_cubo: pd.DataFrame,
@@ -2545,3 +2575,1505 @@ def aggregate_execution_summary_by_scope(
     )
 
     return df_agregado
+
+
+def resumo_valor_por_porte_municipio(
+    df_cubo: pd.DataFrame,
+    filtrar_municipios: bool = True
+) -> pd.DataFrame:
+    """
+    Gera resumo por porte populacional do município.
+
+    Colunas retornadas:
+    - Tipo de município
+    - Quantidade de municípios por Porte
+    - Valor total por Porte
+    - Valor médio por município
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        Base principal contendo as colunas:
+        - porte_populacional
+        - ente
+        - valor_transacao
+        - tipo_ente, caso filtrar_municipios=True
+
+    filtrar_municipios : bool
+        Se True, mantém apenas registros em que tipo_ente == 'MUNICIPIO'.
+    """
+
+    df = df_cubo.copy()
+
+    if filtrar_municipios and "tipo_ente" in df.columns:
+        df = df[df["tipo_ente"].eq("MUNICIPIO")].copy()
+
+    resumo = (
+        df
+        .groupby("porte_populacional", dropna=False)
+        .agg(
+            quantidade_municipios_por_porte=("ente", "nunique"),
+            valor_total_por_porte=("valor_transacao", "sum")
+        )
+        .reset_index()
+    )
+
+    resumo["valor_medio_por_municipio"] = (
+        resumo["valor_total_por_porte"] / resumo["quantidade_municipios_por_porte"]
+    )
+
+    resumo = resumo.rename(columns={
+        "porte_populacional": "Tipo de município",
+        "quantidade_municipios_por_porte": "Quantidade de municípios por Porte",
+        "valor_total_por_porte": "Valor total por Porte",
+        "valor_medio_por_municipio": "Valor médio por município"
+    })
+
+    return resumo
+
+
+def aggregate_by_local_residencia(
+    df_cubo: pd.DataFrame,
+    visao: str = "uf",
+    tipo_documento: str | None = None
+) -> pd.DataFrame:
+    """
+    Agrega quantidade de contemplados, valor total, número de municípios
+    e percentuais por local de residência.
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        DataFrame com as colunas:
+        - local_residencia_contemplados
+        - quantidade
+        - valor_transacao
+        - tipo_ente
+        - ente
+        - tipo_documento
+
+    visao : str
+        Define o filtro da análise:
+        - "estado": considera apenas tipo_ente == "ESTADO"
+        - "municipio": considera apenas tipo_ente == "MUNICIPIO"
+        - "uf": não filtra tipo_ente
+
+    tipo_documento : str | None
+        Define filtro opcional por tipo de documento.
+        Exemplo:
+        - tipo_documento="CPF" filtra apenas registros com tipo_documento == "CPF"
+        - None não aplica filtro
+
+    Observação
+    ----------
+    Percentuais retornam em escala decimal:
+    - 0.57 = 57%
+    """
+
+    visao = visao.lower().strip()
+
+    if visao not in ["estado", "municipio", "uf"]:
+        raise ValueError("visao deve ser 'estado', 'municipio' ou 'uf'.")
+
+    df = df_cubo.copy()
+
+    df["tipo_ente_norm"] = (
+        df["tipo_ente"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    if tipo_documento is not None:
+        tipo_documento_norm = (
+            str(tipo_documento)
+            .upper()
+            .strip()
+        )
+
+        df["tipo_documento_norm"] = (
+            df["tipo_documento"]
+            .astype(str)
+            .str.upper()
+            .str.strip()
+        )
+
+        df = df[df["tipo_documento_norm"].eq(tipo_documento_norm)].copy()
+
+    if visao == "estado":
+        df = df[df["tipo_ente_norm"].eq("ESTADO")].copy()
+
+    elif visao == "municipio":
+        df = df[df["tipo_ente_norm"].eq("MUNICIPIO")].copy()
+
+    categorias = [
+        "Interior",
+        "Regiao Metropolitana",
+        "Capital"
+    ]
+
+    df["local_residencia_contemplados"] = pd.Categorical(
+        df["local_residencia_contemplados"],
+        categories=categorias,
+        ordered=True
+    )
+
+    df_resultado = (
+        df
+        .groupby("local_residencia_contemplados", observed=False)
+        .agg(
+            numero_municipios=("ente", "nunique"),
+            quantidade_contemplados=("quantidade", "sum"),
+            valor_total=("valor_transacao", "sum")
+        )
+        .reset_index()
+    )
+
+    quantidade_total = df_resultado["quantidade_contemplados"].sum()
+    valor_total_geral = df_resultado["valor_total"].sum()
+
+    df_resultado["percentual_quantidade"] = np.where(
+        quantidade_total > 0,
+        df_resultado["quantidade_contemplados"] / quantidade_total,
+        np.nan
+    )
+
+    df_resultado["percentual_valor"] = np.where(
+        valor_total_geral > 0,
+        df_resultado["valor_total"] / valor_total_geral,
+        np.nan
+    )
+
+    df_resultado["visao"] = visao
+
+    df_resultado["tipo_documento_filtro"] = (
+        tipo_documento if tipo_documento is not None else "Todos"
+    )
+
+    df_resultado["numero_municipios"] = (
+        df_resultado["numero_municipios"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado["quantidade_contemplados"] = (
+        df_resultado["quantidade_contemplados"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado["valor_total"] = (
+        pd.to_numeric(df_resultado["valor_total"], errors="coerce")
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    df_resultado["percentual_quantidade"] = (
+        pd.to_numeric(df_resultado["percentual_quantidade"], errors="coerce")
+        .astype("Float64")
+    )
+
+    df_resultado["percentual_valor"] = (
+        pd.to_numeric(df_resultado["percentual_valor"], errors="coerce")
+        .astype("Float64")
+    )
+
+    return df_resultado
+
+
+def aggregate_faixa_valor_ju_by(
+    df_cubo: pd.DataFrame,
+    by_filter: str = "UF"
+) -> pd.DataFrame:
+    """
+    Agrega quantidade de contemplados e valor total por faixa de valor pago
+    usando a coluna faixa_vlr_pago_ju_bbagil.
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        Base principal.
+
+    by_filter : str
+        Recorte territorial usado na agregação.
+
+        Opções:
+        - "ESTADO": considera apenas registros estaduais.
+        - "MUNICIPIO": considera apenas registros municipais.
+        - "UF": considera ESTADO + MUNICIPIO.
+
+    Retorna
+    -------
+    pd.DataFrame
+        Tabela com quantidade, valor total e percentuais por faixa de valor.
+    """
+
+    by_filter = by_filter.upper()
+
+    # ------------------------------------------------------------
+    # 1. Copiar base
+    # ------------------------------------------------------------
+
+    df_faixa = df_cubo.copy()
+
+    # ------------------------------------------------------------
+    # 2. Normalizar tipo_ente
+    # ------------------------------------------------------------
+
+    df_faixa["tipo_ente_norm"] = (
+        df_faixa["tipo_ente"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    # ------------------------------------------------------------
+    # 3. Aplicar filtro territorial
+    # ------------------------------------------------------------
+
+    if by_filter == "ESTADO":
+        df_faixa = df_faixa[
+            df_faixa["tipo_ente_norm"].eq("ESTADO")
+        ].copy()
+
+    elif by_filter == "MUNICIPIO":
+        df_faixa = df_faixa[
+            df_faixa["tipo_ente_norm"].eq("MUNICIPIO")
+        ].copy()
+
+    elif by_filter == "UF":
+        df_faixa = df_faixa[
+            df_faixa["tipo_ente_norm"].isin(["ESTADO", "MUNICIPIO"])
+        ].copy()
+
+    else:
+        raise ValueError("by_filter deve ser 'ESTADO', 'MUNICIPIO' ou 'UF'.")
+
+    # ------------------------------------------------------------
+    # 4. Ordem desejada das faixas
+    # ------------------------------------------------------------
+
+    ordem_faixa_vlr_pago = [
+        "Até 2 mil",
+        "De 2 a 10 mil",
+        "De 10 a 50 mil",
+        "De 50 a 200 mil",
+        "Acima de 200 mil"
+    ]
+
+    # ------------------------------------------------------------
+    # 5. Tratar faixa_vlr_pago_ju_bbagil
+    # ------------------------------------------------------------
+
+    df_faixa["faixa_vlr_pago_ju_bbagil_tratada"] = (
+        df_faixa["faixa_vlr_pago_ju_bbagil"]
+        .fillna("Não informado")
+    )
+
+    # ------------------------------------------------------------
+    # 6. Agregar por faixa de valor
+    # ------------------------------------------------------------
+
+    df_faixa_vlr = (
+        df_faixa
+        .groupby("faixa_vlr_pago_ju_bbagil_tratada", as_index=False)
+        .agg(
+            quantidade_contemplados=("quantidade", "sum"),
+            valor_total=("valor_transacao", "sum")
+        )
+    )
+
+    # ------------------------------------------------------------
+    # 7. Garantir que todas as faixas apareçam
+    # ------------------------------------------------------------
+
+    df_faixa_vlr = (
+        df_faixa_vlr
+        .set_index("faixa_vlr_pago_ju_bbagil_tratada")
+        .reindex(ordem_faixa_vlr_pago, fill_value=0)
+        .reset_index()
+    )
+
+    # ------------------------------------------------------------
+    # 8. Calcular percentuais
+    # ------------------------------------------------------------
+
+    total_contemplados = df_faixa_vlr["quantidade_contemplados"].sum()
+    valor_total_geral = df_faixa_vlr["valor_total"].sum()
+
+    df_faixa_vlr["perc_quantidade_contemplados"] = np.where(
+        total_contemplados > 0,
+        df_faixa_vlr["quantidade_contemplados"] / total_contemplados,
+        0
+    )
+
+    df_faixa_vlr["perc_valor_total"] = np.where(
+        valor_total_geral > 0,
+        df_faixa_vlr["valor_total"] / valor_total_geral,
+        0
+    )
+
+    # ------------------------------------------------------------
+    # 9. Formatar tipos sem arredondar valores
+    # ------------------------------------------------------------
+
+    df_faixa_vlr["quantidade_contemplados"] = (
+        df_faixa_vlr["quantidade_contemplados"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_faixa_vlr["valor_total"] = (
+        pd.to_numeric(df_faixa_vlr["valor_total"], errors="coerce")
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    df_faixa_vlr["perc_quantidade_contemplados"] = (
+        pd.to_numeric(
+            df_faixa_vlr["perc_quantidade_contemplados"],
+            errors="coerce"
+        )
+        .astype("Float64")
+    )
+
+    df_faixa_vlr["perc_valor_total"] = (
+        pd.to_numeric(
+            df_faixa_vlr["perc_valor_total"],
+            errors="coerce"
+        )
+        .astype("Float64")
+    )
+
+    # ------------------------------------------------------------
+    # 10. Renomear colunas finais
+    # ------------------------------------------------------------
+
+    df_faixa_vlr = (
+        df_faixa_vlr
+        .rename(columns={
+            "faixa_vlr_pago_ju_bbagil_tratada": "faixa_vlr_pago_ju_bbagil",
+            "quantidade_contemplados": "Quantidade de contemplados",
+            "perc_quantidade_contemplados": "% de contemplados",
+            "valor_total": "Valor total",
+            "perc_valor_total": "% do valor total"
+        })
+    )
+
+    return df_faixa_vlr 
+
+
+
+def aggregate_faixa_valor_ju_by_uf(
+    df_cubo: pd.DataFrame,
+    by_filter: str = "UF"
+) -> pd.DataFrame:
+    """
+    Agrega, para cada UF, a quantidade de contemplados e o valor total
+    por faixa de valor pago, usando a coluna faixa_vlr_pago_ju_bbagil.
+
+    Também calcula:
+    - percentual da quantidade da faixa em relação ao total de contemplados da UF;
+    - percentual do valor da faixa em relação ao valor total executado na UF.
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        Base principal.
+
+    by_filter : str
+        Recorte territorial usado na agregação.
+
+        Opções:
+        - "ESTADO": considera apenas registros estaduais.
+        - "MUNICIPIO": considera apenas registros municipais.
+        - "UF": considera ESTADO + MUNICIPIO.
+
+    Retorna
+    -------
+    pd.DataFrame
+        Tabela longa com UF, faixa de valor, quantidade, valor e percentuais.
+    """
+
+    by_filter = by_filter.upper().strip()
+
+    # ------------------------------------------------------------
+    # 1. Copiar base
+    # ------------------------------------------------------------
+
+    df = df_cubo.copy()
+
+    # ------------------------------------------------------------
+    # 2. Normalizar tipo_ente
+    # ------------------------------------------------------------
+
+    df["tipo_ente_norm"] = (
+        df["tipo_ente"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    # ------------------------------------------------------------
+    # 3. Aplicar filtro territorial
+    # ------------------------------------------------------------
+
+    if by_filter == "ESTADO":
+        df = df[
+            df["tipo_ente_norm"].eq("ESTADO")
+        ].copy()
+
+    elif by_filter == "MUNICIPIO":
+        df = df[
+            df["tipo_ente_norm"].eq("MUNICIPIO")
+        ].copy()
+
+    elif by_filter == "UF":
+        df = df[
+            df["tipo_ente_norm"].isin(["ESTADO", "MUNICIPIO"])
+        ].copy()
+
+    else:
+        raise ValueError("by_filter deve ser 'ESTADO', 'MUNICIPIO' ou 'UF'.")
+
+    # ------------------------------------------------------------
+    # 4. Ordem desejada das faixas
+    # ------------------------------------------------------------
+
+    ordem_faixa_vlr_pago = [
+        "Até 2 mil",
+        "De 2 a 10 mil",
+        "De 10 a 50 mil",
+        "De 50 a 200 mil",
+        "Acima de 200 mil"
+    ]
+
+    # ------------------------------------------------------------
+    # 5. Tratar faixa_vlr_pago_ju_bbagil
+    # ------------------------------------------------------------
+
+    df["faixa_vlr_pago_ju_bbagil_tratada"] = (
+        df["faixa_vlr_pago_ju_bbagil"]
+        .fillna("Não informado")
+        .astype(str)
+        .str.strip()
+    )
+
+    # ------------------------------------------------------------
+    # 6. Agregar por UF e faixa de valor
+    # ------------------------------------------------------------
+
+    df_resultado = (
+        df
+        .groupby(
+            ["uf", "faixa_vlr_pago_ju_bbagil_tratada"],
+            as_index=False
+        )
+        .agg(
+            quantidade_contemplados=("quantidade", "sum"),
+            valor_total=("valor_transacao", "sum")
+        )
+    )
+
+    # ------------------------------------------------------------
+    # 7. Garantir todas as combinações UF x faixa
+    # ------------------------------------------------------------
+
+    ufs = sorted(df["uf"].dropna().unique())
+
+    index_completo = pd.MultiIndex.from_product(
+        [ufs, ordem_faixa_vlr_pago],
+        names=["uf", "faixa_vlr_pago_ju_bbagil_tratada"]
+    )
+
+    df_resultado = (
+        df_resultado
+        .set_index(["uf", "faixa_vlr_pago_ju_bbagil_tratada"])
+        .reindex(index_completo, fill_value=0)
+        .reset_index()
+    )
+
+    # ------------------------------------------------------------
+    # 8. Calcular totais por UF
+    # ------------------------------------------------------------
+
+    df_totais_uf = (
+        df_resultado
+        .groupby("uf", as_index=False)
+        .agg(
+            total_contemplados_uf=("quantidade_contemplados", "sum"),
+            valor_total_uf=("valor_total", "sum")
+        )
+    )
+
+    df_resultado = df_resultado.merge(
+        df_totais_uf,
+        on="uf",
+        how="left"
+    )
+
+    # ------------------------------------------------------------
+    # 9. Calcular percentuais dentro da UF
+    # ------------------------------------------------------------
+
+    df_resultado["perc_quantidade_contemplados_uf"] = np.where(
+        df_resultado["total_contemplados_uf"].ne(0),
+        df_resultado["quantidade_contemplados"] / df_resultado["total_contemplados_uf"],
+        np.nan
+    )
+
+    df_resultado["perc_valor_total_uf"] = np.where(
+        df_resultado["valor_total_uf"].ne(0),
+        df_resultado["valor_total"] / df_resultado["valor_total_uf"],
+        np.nan
+    )
+
+    # ------------------------------------------------------------
+    # 10. Formatar tipos sem arredondar valores
+    # ------------------------------------------------------------
+
+    df_resultado["quantidade_contemplados"] = (
+        df_resultado["quantidade_contemplados"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado["total_contemplados_uf"] = (
+        df_resultado["total_contemplados_uf"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado["valor_total"] = (
+        pd.to_numeric(df_resultado["valor_total"], errors="coerce")
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    df_resultado["valor_total_uf"] = (
+        pd.to_numeric(df_resultado["valor_total_uf"], errors="coerce")
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    df_resultado["perc_quantidade_contemplados_uf"] = (
+        pd.to_numeric(
+            df_resultado["perc_quantidade_contemplados_uf"],
+            errors="coerce"
+        )
+        .astype("Float64")
+    )
+
+    df_resultado["perc_valor_total_uf"] = (
+        pd.to_numeric(
+            df_resultado["perc_valor_total_uf"],
+            errors="coerce"
+        )
+        .astype("Float64")
+    )
+
+    # ------------------------------------------------------------
+    # 11. Renomear colunas finais
+    # ------------------------------------------------------------
+
+    df_resultado = (
+        df_resultado
+        .rename(columns={
+            "faixa_vlr_pago_ju_bbagil_tratada": "faixa_vlr_pago_ju_bbagil",
+            "quantidade_contemplados": "Quantidade de contemplados",
+            "valor_total": "Valor total da faixa",
+            "total_contemplados_uf": "Total de contemplados da UF",
+            "valor_total_uf": "Valor total da UF",
+            "perc_quantidade_contemplados_uf": "% de contemplados na UF",
+            "perc_valor_total_uf": "% do valor da UF"
+        })
+        [
+            [
+                "uf",
+                "faixa_vlr_pago_ju_bbagil",
+                "Quantidade de contemplados",
+                "% de contemplados na UF",
+                "Valor total da faixa",
+                "% do valor da UF",
+                "Total de contemplados da UF",
+                "Valor total da UF"
+            ]
+        ]
+    )
+
+    return df_resultado
+
+def aggregate_faixa_valor_ju_wide_by_uf(
+    df_cubo: pd.DataFrame,
+    by_filter: str = "UF"
+) -> pd.DataFrame:
+    """
+    Agrega, para cada UF, quantidade de contemplados e valor total
+    por faixa de valor pago, em formato largo.
+
+    Usa a coluna:
+    - faixa_vlr_pago_ju_bbagil
+
+    Para cada faixa, cria colunas de:
+    - quantidade;
+    - percentual da quantidade dentro da UF;
+    - valor;
+    - percentual do valor dentro da UF.
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        Base principal.
+
+    by_filter : str
+        Recorte territorial usado na agregação.
+
+        Opções:
+        - "ESTADO": considera apenas registros estaduais.
+        - "MUNICIPIO": considera apenas registros municipais.
+        - "UF": considera ESTADO + MUNICIPIO.
+
+    Retorna
+    -------
+    pd.DataFrame
+        Tabela com uma linha por UF e faixas de valor como colunas.
+
+    Observação
+    ----------
+    Percentuais retornam em escala decimal:
+    - 0.34 = 34%
+
+    Não há arredondamento dos valores.
+    """
+
+    by_filter = by_filter.upper().strip()
+
+    # ------------------------------------------------------------
+    # 1. Copiar base
+    # ------------------------------------------------------------
+
+    df = df_cubo.copy()
+
+    # ------------------------------------------------------------
+    # 2. Normalizar tipo_ente
+    # ------------------------------------------------------------
+
+    df["tipo_ente_norm"] = (
+        df["tipo_ente"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    # ------------------------------------------------------------
+    # 3. Aplicar filtro territorial
+    # ------------------------------------------------------------
+
+    if by_filter == "ESTADO":
+        df = df[
+            df["tipo_ente_norm"].eq("ESTADO")
+        ].copy()
+
+    elif by_filter == "MUNICIPIO":
+        df = df[
+            df["tipo_ente_norm"].eq("MUNICIPIO")
+        ].copy()
+
+    elif by_filter == "UF":
+        df = df[
+            df["tipo_ente_norm"].isin(["ESTADO", "MUNICIPIO"])
+        ].copy()
+
+    else:
+        raise ValueError("by_filter deve ser 'ESTADO', 'MUNICIPIO' ou 'UF'.")
+
+    # ------------------------------------------------------------
+    # 4. Definir faixas e nomes das colunas
+    # ------------------------------------------------------------
+
+    ordem_faixa_vlr_pago = [
+        "Até 2 mil",
+        "De 2 a 10 mil",
+        "De 10 a 50 mil",
+        "De 50 a 200 mil",
+        "Acima de 200 mil"
+    ]
+
+    nomes_colunas_faixa = {
+        "Até 2 mil": "ate_2_mil",
+        "De 2 a 10 mil": "de_2_a_10_mil",
+        "De 10 a 50 mil": "de_10_a_50_mil",
+        "De 50 a 200 mil": "de_50_a_200_mil",
+        "Acima de 200 mil": "acima_de_200_mil"
+    }
+
+    # ------------------------------------------------------------
+    # 5. Tratar faixa_vlr_pago_ju_bbagil
+    # ------------------------------------------------------------
+
+    df["faixa_vlr_pago_ju_bbagil_tratada"] = (
+        df["faixa_vlr_pago_ju_bbagil"]
+        .fillna("Não informado")
+        .astype(str)
+        .str.strip()
+    )
+
+    # ------------------------------------------------------------
+    # 6. Calcular totais por UF
+    # ------------------------------------------------------------
+
+    df_totais_uf = (
+        df
+        .groupby("uf", as_index=False)
+        .agg(
+            total_contemplados_uf=("quantidade", "sum"),
+            valor_total_uf=("valor_transacao", "sum")
+        )
+    )
+
+    # ------------------------------------------------------------
+    # 7. Agregar por UF e faixa
+    # ------------------------------------------------------------
+
+    df_faixa_uf = (
+        df
+        .loc[df["faixa_vlr_pago_ju_bbagil_tratada"].isin(ordem_faixa_vlr_pago)]
+        .groupby(
+            ["uf", "faixa_vlr_pago_ju_bbagil_tratada"],
+            as_index=False
+        )
+        .agg(
+            quantidade_contemplados=("quantidade", "sum"),
+            valor_total=("valor_transacao", "sum")
+        )
+    )
+
+    # ------------------------------------------------------------
+    # 8. Criar pivots de quantidade e valor
+    # ------------------------------------------------------------
+
+    df_qtd_pivot = (
+        df_faixa_uf
+        .pivot_table(
+            index="uf",
+            columns="faixa_vlr_pago_ju_bbagil_tratada",
+            values="quantidade_contemplados",
+            aggfunc="sum",
+            fill_value=0
+        )
+        .reindex(columns=ordem_faixa_vlr_pago, fill_value=0)
+        .reset_index()
+    )
+
+    df_valor_pivot = (
+        df_faixa_uf
+        .pivot_table(
+            index="uf",
+            columns="faixa_vlr_pago_ju_bbagil_tratada",
+            values="valor_total",
+            aggfunc="sum",
+            fill_value=0
+        )
+        .reindex(columns=ordem_faixa_vlr_pago, fill_value=0)
+        .reset_index()
+    )
+
+    # ------------------------------------------------------------
+    # 9. Montar base final com uma linha por UF
+    # ------------------------------------------------------------
+
+    df_resultado = df_totais_uf.copy()
+
+    df_resultado = df_resultado.merge(
+        df_qtd_pivot,
+        on="uf",
+        how="left"
+    )
+
+    df_resultado = df_resultado.merge(
+        df_valor_pivot,
+        on="uf",
+        how="left",
+        suffixes=("_qtd", "_valor")
+    )
+
+    # ------------------------------------------------------------
+    # 10. Criar colunas finais por faixa
+    # ------------------------------------------------------------
+
+    for faixa in ordem_faixa_vlr_pago:
+        nome_faixa = nomes_colunas_faixa[faixa]
+
+        coluna_qtd_origem = f"{faixa}_qtd"
+        coluna_valor_origem = f"{faixa}_valor"
+
+        if coluna_qtd_origem not in df_resultado.columns:
+            df_resultado[coluna_qtd_origem] = 0
+
+        if coluna_valor_origem not in df_resultado.columns:
+            df_resultado[coluna_valor_origem] = 0
+
+        df_resultado[f"qtd_{nome_faixa}"] = df_resultado[coluna_qtd_origem]
+
+        df_resultado[f"perc_qtd_{nome_faixa}"] = np.where(
+            df_resultado["total_contemplados_uf"].ne(0),
+            df_resultado[coluna_qtd_origem] / df_resultado["total_contemplados_uf"],
+            np.nan
+        )
+
+        df_resultado[f"valor_{nome_faixa}"] = df_resultado[coluna_valor_origem]
+
+        df_resultado[f"perc_valor_{nome_faixa}"] = np.where(
+            df_resultado["valor_total_uf"].ne(0),
+            df_resultado[coluna_valor_origem] / df_resultado["valor_total_uf"],
+            np.nan
+        )
+
+    # ------------------------------------------------------------
+    # 11. Selecionar e ordenar colunas finais
+    # ------------------------------------------------------------
+
+    colunas_finais = [
+        "uf",
+        "total_contemplados_uf",
+        "valor_total_uf"
+    ]
+
+    for faixa in ordem_faixa_vlr_pago:
+        nome_faixa = nomes_colunas_faixa[faixa]
+
+        colunas_finais.extend([
+            f"qtd_{nome_faixa}",
+            f"perc_qtd_{nome_faixa}",
+            f"valor_{nome_faixa}",
+            f"perc_valor_{nome_faixa}"
+        ])
+
+    df_resultado = df_resultado[colunas_finais].copy()
+
+    # ------------------------------------------------------------
+    # 12. Formatar tipos sem arredondar valores
+    # ------------------------------------------------------------
+
+    colunas_quantidade = [
+        col for col in df_resultado.columns
+        if col.startswith("qtd_") or col == "total_contemplados_uf"
+    ]
+
+    colunas_valor = [
+        col for col in df_resultado.columns
+        if col.startswith("valor_") or col == "valor_total_uf"
+    ]
+
+    colunas_percentual = [
+        col for col in df_resultado.columns
+        if col.startswith("perc_")
+    ]
+
+    df_resultado[colunas_quantidade] = (
+        df_resultado[colunas_quantidade]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado[colunas_valor] = (
+        df_resultado[colunas_valor]
+        .apply(pd.to_numeric, errors="coerce")
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    df_resultado[colunas_percentual] = (
+        df_resultado[colunas_percentual]
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
+    )
+
+    # ------------------------------------------------------------
+    # 13. Ordenar por UF
+    # ------------------------------------------------------------
+
+    df_resultado = (
+        df_resultado
+        .sort_values("uf")
+        .reset_index(drop=True)
+    )
+
+    return df_resultado
+
+def make_boxplot_df_faixa_valor(
+    df_aux: pd.DataFrame,
+    by_filter: str = "ESTADO",
+) -> pd.DataFrame:
+    """
+    Gera DataFrame em formato longo para montar boxplot dos valores
+    recebidos e da quantidade de contemplados por faixa de valor pago.
+
+    Como df_aux está desagrupado, cada linha representa um contemplado.
+    Portanto, a quantidade de contemplados é calculada pela contagem
+    de linhas em cada grupo de UF e faixa de valor.
+
+    Parâmetros
+    ----------
+    df_aux : pd.DataFrame
+        DataFrame com as colunas:
+        - tipo_ente_bbagil
+        - uf_bbagil
+        - faixa_vlr_pago_ju_bbagil
+        - valor_transacao_total_bbagil
+
+    by_filter : str
+        Recorte da análise:
+        - "ESTADO": considera apenas tipo_ente_bbagil == "ESTADO"
+        - "MUNICIPIO": considera apenas tipo_ente_bbagil == "MUNICIPIO"
+        - "UF": considera ESTADO + MUNICIPIO
+
+    Retorna
+    -------
+    pd.DataFrame
+        DataFrame em formato longo, pronto para boxplot.
+
+        Colunas:
+        - visao
+        - uf_bbagil
+        - faixa_vlr_pago_ju_bbagil
+        - metrica
+        - valor_boxplot
+        - unidade_observacao
+    """
+
+    by_filter = by_filter.upper().strip()
+
+    df = df_aux.copy()
+
+    colunas_obrigatorias = [
+        "tipo_ente_bbagil",
+        "uf_bbagil",
+        "faixa_vlr_pago_ju_bbagil",
+        "valor_transacao_total_bbagil",
+    ]
+
+    colunas_ausentes = [
+        col for col in colunas_obrigatorias
+        if col not in df.columns
+    ]
+
+    if colunas_ausentes:
+        raise ValueError(
+            f"As seguintes colunas não existem no DataFrame: {colunas_ausentes}"
+        )
+
+    df["tipo_ente_norm"] = (
+        df["tipo_ente_bbagil"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+    )
+
+    if by_filter == "ESTADO":
+        df = df[df["tipo_ente_norm"].eq("ESTADO")].copy()
+
+    elif by_filter == "MUNICIPIO":
+        df = df[df["tipo_ente_norm"].eq("MUNICIPIO")].copy()
+
+    elif by_filter == "UF":
+        df = df[df["tipo_ente_norm"].isin(["ESTADO", "MUNICIPIO"])].copy()
+
+    else:
+        raise ValueError("by_filter deve ser 'ESTADO', 'MUNICIPIO' ou 'UF'.")
+
+    ordem_faixas = [
+        "Até 2 mil",
+        "De 2 a 10 mil",
+        "De 10 a 50 mil",
+        "De 50 a 200 mil",
+        "Acima de 200 mil",
+    ]
+
+    df["valor_transacao_total_bbagil"] = pd.to_numeric(
+        df["valor_transacao_total_bbagil"],
+        errors="coerce"
+    )
+
+    df["faixa_vlr_pago_ju_bbagil"] = (
+        df["faixa_vlr_pago_ju_bbagil"]
+        .astype(str)
+        .str.strip()
+    )
+
+    df = df[
+        df["faixa_vlr_pago_ju_bbagil"].isin(ordem_faixas)
+    ].copy()
+
+    df = df.dropna(
+        subset=[
+            "uf_bbagil",
+            "faixa_vlr_pago_ju_bbagil",
+            "valor_transacao_total_bbagil",
+        ]
+    ).copy()
+
+    df["faixa_vlr_pago_ju_bbagil"] = pd.Categorical(
+        df["faixa_vlr_pago_ju_bbagil"],
+        categories=ordem_faixas,
+        ordered=True
+    )
+
+    df["visao"] = by_filter
+
+    # --------------------------------------------------
+    # 1. Base para boxplot dos valores recebidos
+    #    Unidade: cada linha é um contemplado
+    # --------------------------------------------------
+
+    df_boxplot_valor = df[
+        [
+            "visao",
+            "uf_bbagil",
+            "faixa_vlr_pago_ju_bbagil",
+            "valor_transacao_total_bbagil",
+        ]
+    ].copy()
+
+    df_boxplot_valor = df_boxplot_valor.rename(
+        columns={
+            "valor_transacao_total_bbagil": "valor_boxplot"
+        }
+    )
+
+    df_boxplot_valor["metrica"] = "valor_transacao_total_bbagil"
+    df_boxplot_valor["unidade_observacao"] = "contemplado"
+
+    # --------------------------------------------------
+    # 2. Base para boxplot da quantidade de contemplados
+    #    Unidade: UF x faixa de valor
+    # --------------------------------------------------
+
+    df_boxplot_quantidade = (
+        df
+        .groupby(
+            ["visao", "uf_bbagil", "faixa_vlr_pago_ju_bbagil"],
+            observed=True
+        )
+        .size()
+        .reset_index(name="valor_boxplot")
+    )
+
+    df_boxplot_quantidade["metrica"] = "quantidade_contemplados"
+    df_boxplot_quantidade["unidade_observacao"] = "uf_faixa"
+
+    # --------------------------------------------------
+    # Junta as duas bases em formato longo
+    # --------------------------------------------------
+
+    df_boxplot = pd.concat(
+        [
+            df_boxplot_valor,
+            df_boxplot_quantidade,
+        ],
+        ignore_index=True
+    )
+
+    df_boxplot = df_boxplot[
+        [
+            "visao",
+            "uf_bbagil",
+            "faixa_vlr_pago_ju_bbagil",
+            "metrica",
+            "valor_boxplot",
+            "unidade_observacao",
+        ]
+    ]
+
+    df_boxplot = (
+        df_boxplot
+        .sort_values(
+            [
+                "metrica",
+                "uf_bbagil",
+                "faixa_vlr_pago_ju_bbagil",
+            ]
+        )
+        .reset_index(drop=True)
+    )
+
+    return df_boxplot
+
+
+
+def _slugify(texto: str) -> str:
+    """
+    Converte texto para formato seguro de nome de coluna.
+    Ex.: 'Até 2 mil' -> 'ate_2_mil'
+    """
+    texto = str(texto).strip().lower()
+    texto = unicodedata.normalize("NFKD", texto)
+    texto = "".join(c for c in texto if not unicodedata.combining(c))
+    texto = re.sub(r"[^a-z0-9]+", "_", texto)
+    texto = re.sub(r"_+", "_", texto).strip("_")
+    return texto
+
+
+def resumo_faixa_valor_por_porte(
+    df_cubo: pd.DataFrame,
+    visao: str = "UF",
+    coluna_tipo_ente: str = "tipo_ente",
+    coluna_porte: str = "porte_populacional",
+    coluna_faixa: str = "faixa_vlr_pago_ju_bbagil",
+    coluna_quantidade: str = "quantidade",
+    coluna_valor: str = "valor_transacao",
+    ordem_faixas: list | None = None,
+    percentual_por_linha: bool = True,
+) -> pd.DataFrame:
+    """
+    Retorna uma tabela com uma linha por porte populacional e colunas pivotadas
+    por faixa de valor pago.
+
+    Para cada faixa, cria:
+    - qtd_contemplados_{faixa}
+    - perc_qtd_contemplados_{faixa}
+    - valor_transacao_{faixa}
+    - perc_valor_transacao_{faixa}
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        DataFrame de entrada.
+
+    visao : str, default "UF"
+        Define o recorte da análise:
+        - "ESTADO": filtra tipo_ente == "ESTADO"
+        - "MUNICIPIO": filtra tipo_ente == "MUNICIPIO"
+        - "UF": não filtra tipo_ente, considerando estados + municípios
+
+    coluna_tipo_ente : str
+        Coluna que identifica o tipo do ente.
+
+    coluna_porte : str
+        Coluna de porte populacional. Cada linha da saída será um porte.
+
+    coluna_faixa : str
+        Coluna com as faixas de valor pago.
+
+    coluna_quantidade : str
+        Coluna de quantidade de contemplados.
+
+    coluna_valor : str
+        Coluna de valor da transação.
+
+    ordem_faixas : list | None
+        Ordem desejada das faixas. Se None, usa a ordem encontrada no DataFrame.
+
+    percentual_por_linha : bool
+        Se True, calcula percentuais dentro de cada porte populacional.
+        Se False, calcula percentuais sobre o total geral da visão filtrada.
+
+    Retorno
+    -------
+    pd.DataFrame
+        DataFrame consolidado por porte populacional.
+    """
+
+    visao = visao.upper().strip()
+
+    if visao not in ["ESTADO", "MUNICIPIO", "UF"]:
+        raise ValueError("visao deve ser 'ESTADO', 'MUNICIPIO' ou 'UF'.")
+
+    df = df_cubo.copy()
+
+    if visao == "ESTADO":
+        df = df[df[coluna_tipo_ente] == "ESTADO"].copy()
+
+    elif visao == "MUNICIPIO":
+        df = df[df[coluna_tipo_ente] == "MUNICIPIO"].copy()
+
+    # Remove registros sem porte ou faixa
+    df = df.dropna(subset=[coluna_porte, coluna_faixa])
+
+    if ordem_faixas is None:
+        ordem_faixas = list(df[coluna_faixa].dropna().unique())
+
+    # Agrega quantidade e valor por porte e faixa
+    df_agg = (
+        df
+        .groupby([coluna_porte, coluna_faixa], dropna=False)
+        .agg(
+            qtd_contemplados=(coluna_quantidade, "sum"),
+            valor_transacao=(coluna_valor, "sum"),
+        )
+        .reset_index()
+    )
+
+    # Totais por porte
+    totais_porte = (
+        df_agg
+        .groupby(coluna_porte)
+        .agg(
+            total_qtd_contemplados=("qtd_contemplados", "sum"),
+            total_valor_transacao=("valor_transacao", "sum"),
+        )
+        .reset_index()
+    )
+
+    df_agg = df_agg.merge(totais_porte, on=coluna_porte, how="left")
+
+    if percentual_por_linha:
+        df_agg["perc_qtd_contemplados"] = (
+            df_agg["qtd_contemplados"] / df_agg["total_qtd_contemplados"]
+        )
+
+        df_agg["perc_valor_transacao"] = (
+            df_agg["valor_transacao"] / df_agg["total_valor_transacao"]
+        )
+
+    else:
+        total_qtd_geral = df_agg["qtd_contemplados"].sum()
+        total_valor_geral = df_agg["valor_transacao"].sum()
+
+        df_agg["perc_qtd_contemplados"] = (
+            df_agg["qtd_contemplados"] / total_qtd_geral
+        )
+
+        df_agg["perc_valor_transacao"] = (
+            df_agg["valor_transacao"] / total_valor_geral
+        )
+
+    # Monta tabela final em formato wide
+    df_final = totais_porte.copy()
+
+    for faixa in ordem_faixas:
+        slug = _slugify(faixa)
+
+        df_faixa = (
+            df_agg[df_agg[coluna_faixa] == faixa]
+            [[
+                coluna_porte,
+                "qtd_contemplados",
+                "perc_qtd_contemplados",
+                "valor_transacao",
+                "perc_valor_transacao",
+            ]]
+            .rename(columns={
+                "qtd_contemplados": f"qtd_contemplados_{slug}",
+                "perc_qtd_contemplados": f"perc_qtd_contemplados_{slug}",
+                "valor_transacao": f"valor_transacao_{slug}",
+                "perc_valor_transacao": f"perc_valor_transacao_{slug}",
+            })
+        )
+
+        df_final = df_final.merge(df_faixa, on=coluna_porte, how="left")
+
+    # Preenche faixas inexistentes com zero
+    cols_numericas = df_final.columns.drop(coluna_porte)
+    df_final[cols_numericas] = df_final[cols_numericas].fillna(0)
+
+    return df_final
+
+def resumo_territorios_especiais_por_uf(
+    df_cubo: pd.DataFrame,
+    visao: str = "UF",
+    coluna_uf: str = "uf",
+    coluna_tipo_ente: str = "tipo_ente",
+    coluna_territorio: str = "cod_tipo_nome",
+    coluna_quantidade: str = "quantidade",
+    coluna_valor: str = "valor_transacao",
+    base_percentual: str = "total_uf",
+) -> pd.DataFrame:
+    """
+    Gera uma visão por UF dos recursos e contemplados em territórios especiais.
+
+    Mantém apenas:
+    - Favela e Comunidade Urbana
+    - Agrupamento quilombola
+    - Agrupamento indígena
+
+    Parâmetros
+    ----------
+    visao : str
+        - "ESTADO": filtra tipo_ente == "ESTADO"
+        - "UF": não filtra tipo_ente, considerando estados + municípios
+
+    base_percentual : str
+        - "total_uf": percentual de cada território em relação ao total da UF.
+        - "territorios_especiais": percentual de cada território em relação apenas
+          à soma dos três territórios especiais.
+
+    Retorno
+    -------
+    pd.DataFrame
+        DataFrame com uma linha por UF.
+    """
+
+    visao = visao.upper().strip()
+
+    if visao not in ["ESTADO", "UF", "MUNICIPIO"]:
+        raise ValueError("visao deve ser 'ESTADO' ou 'UF' ou MUNICIPIO.")
+
+    if base_percentual not in ["total_uf", "territorios_especiais"]:
+        raise ValueError(
+            "base_percentual deve ser 'total_uf' ou 'territorios_especiais'."
+        )
+
+    territorios_mantidos = [
+        "Favela e Comunidade Urbana",
+        "Agrupamento quilombola",
+        "Agrupamento indígena",
+    ]
+
+    nome_colunas = {
+        "Favela e Comunidade Urbana": "favela_comunidade_urbana",
+        "Agrupamento quilombola": "agrupamento_quilombola",
+        "Agrupamento indígena": "agrupamento_indigena",
+    }
+
+    df = df_cubo.copy()
+
+    if visao == "ESTADO":
+        df = df[df[coluna_tipo_ente] == "ESTADO"].copy()
+    
+
+    elif visao == "MUNICIPIO":
+        df = df[df[coluna_tipo_ente] == "MUNICIPIO"].copy()
+    
+
+    # Total geral da UF, antes de filtrar os territórios especiais
+    total_uf = (
+        df
+        .groupby(coluna_uf, dropna=False)
+        .agg(
+            total_qtd_contemplados_uf=(coluna_quantidade, "sum"),
+            total_valor_transacao_uf=(coluna_valor, "sum"),
+        )
+        .reset_index()
+    )
+
+    # Base apenas com os três territórios especiais
+    df_terr = df[df[coluna_territorio].isin(territorios_mantidos)].copy()
+
+    # Agrega por UF e território
+    df_agg = (
+        df_terr
+        .groupby([coluna_uf, coluna_territorio], dropna=False)
+        .agg(
+            qtd_contemplados=(coluna_quantidade, "sum"),
+            valor_transacao=(coluna_valor, "sum"),
+        )
+        .reset_index()
+    )
+
+    # Soma dos três territórios especiais por UF
+    total_territorios_uf = (
+        df_agg
+        .groupby(coluna_uf, dropna=False)
+        .agg(
+            qtd_contemplados_territorios_especiais=("qtd_contemplados", "sum"),
+            valor_transacao_territorios_especiais=("valor_transacao", "sum"),
+        )
+        .reset_index()
+    )
+
+    # DataFrame-base da saída
+    df_final = (
+        total_uf
+        .merge(total_territorios_uf, on=coluna_uf, how="left")
+    )
+
+    df_final[
+        [
+            "qtd_contemplados_territorios_especiais",
+            "valor_transacao_territorios_especiais",
+        ]
+    ] = df_final[
+        [
+            "qtd_contemplados_territorios_especiais",
+            "valor_transacao_territorios_especiais",
+        ]
+    ].fillna(0)
+
+    # Percentual da soma dos três territórios especiais dentro da UF
+    df_final["perc_qtd_contemplados_territorios_especiais_uf"] = np.where(
+        df_final["total_qtd_contemplados_uf"] > 0,
+        df_final["qtd_contemplados_territorios_especiais"]
+        / df_final["total_qtd_contemplados_uf"],
+        0,
+    )
+
+    df_final["perc_valor_transacao_territorios_especiais_uf"] = np.where(
+        df_final["total_valor_transacao_uf"] > 0,
+        df_final["valor_transacao_territorios_especiais"]
+        / df_final["total_valor_transacao_uf"],
+        0,
+    )
+
+    # Junta totais para calcular os percentuais individuais
+    df_agg = (
+        df_agg
+        .merge(total_uf, on=coluna_uf, how="left")
+        .merge(total_territorios_uf, on=coluna_uf, how="left")
+    )
+
+    if base_percentual == "total_uf":
+        df_agg["perc_qtd_contemplados"] = np.where(
+            df_agg["total_qtd_contemplados_uf"] > 0,
+            df_agg["qtd_contemplados"] / df_agg["total_qtd_contemplados_uf"],
+            0,
+        )
+
+        df_agg["perc_valor_transacao"] = np.where(
+            df_agg["total_valor_transacao_uf"] > 0,
+            df_agg["valor_transacao"] / df_agg["total_valor_transacao_uf"],
+            0,
+        )
+
+    else:
+        df_agg["perc_qtd_contemplados"] = np.where(
+            df_agg["qtd_contemplados_territorios_especiais"] > 0,
+            df_agg["qtd_contemplados"]
+            / df_agg["qtd_contemplados_territorios_especiais"],
+            0,
+        )
+
+        df_agg["perc_valor_transacao"] = np.where(
+            df_agg["valor_transacao_territorios_especiais"] > 0,
+            df_agg["valor_transacao"]
+            / df_agg["valor_transacao_territorios_especiais"],
+            0,
+        )
+
+    # Cria colunas abertas para cada território especial
+    for territorio, nome in nome_colunas.items():
+        df_aux = (
+            df_agg[df_agg[coluna_territorio] == territorio]
+            [[
+                coluna_uf,
+                "qtd_contemplados",
+                "perc_qtd_contemplados",
+                "valor_transacao",
+                "perc_valor_transacao",
+            ]]
+            .rename(columns={
+                "qtd_contemplados": f"qtd_contemplados_{nome}",
+                "perc_qtd_contemplados": f"perc_qtd_contemplados_{nome}",
+                "valor_transacao": f"valor_transacao_{nome}",
+                "perc_valor_transacao": f"perc_valor_transacao_{nome}",
+            })
+        )
+
+        df_final = df_final.merge(df_aux, on=coluna_uf, how="left")
+
+    cols_numericas = df_final.columns.drop(coluna_uf)
+    df_final[cols_numericas] = df_final[cols_numericas].fillna(0)
+
+    return df_final

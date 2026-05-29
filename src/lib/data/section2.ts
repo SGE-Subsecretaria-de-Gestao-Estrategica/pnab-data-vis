@@ -9,6 +9,13 @@ import csvMunRaw           from '../../../data/section_2/aggregate_execution_by_
 import csvRangeRaw         from '../../../data/section_2/values_range_by_brazil.csv?raw';
 import csvPorteRaw         from '../../../data/section_1/values_by_population_size.csv?raw';
 import csvSpecialTerritRaw from '../../../data/section_1/values_by_special_territory_uf.csv?raw';
+import csvFaixaUfRaw       from '../../../data/section_2/aggregate_faixa_valor_ju_wide_by_uf.csv?raw';
+import csvFaixaStateRaw    from '../../../data/section_2/aggregate_faixa_valor_ju_wide_by_state.csv?raw';
+import csvAuxQuartisBrasilRaw from '../../../data/section_2/aux_quartis_estados_brasil.csv?raw';
+import csvQuartisEstadosRaw from '../../../data/section_2/quartis_estados.csv?raw';
+import csvTerrUfRaw      from '../../../data/section_2/territorios_especiais_por_uf.csv?raw';
+import csvTerrEstadoRaw  from '../../../data/section_2/territorios_especiais_por_estado.csv?raw';
+import csvTerrMunRaw     from '../../../data/section_2/territorios_especiais_por_municipio.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -212,18 +219,15 @@ export const boxPlotData = [
 ];
 
 // ── 7. VerticalStackedBarChart — faixa de valor pago × UF ─────────────────────
-// Fonte: stateRows (section 1, execução estadual). % dentro de cada UF.
+// Fonte: aggregate_faixa_valor_ju_wide_by_uf.csv (todos os executores por UF).
 // Ordenado pela % de beneficiários nas faixas mais altas (≥ R$50k) — decrescente.
-export const UF_BAND_KEYS  = ['ate2k', 'de2a10k', 'de10a50k', 'de50a200k', 'de200a500k', 'de500ka1m', 'de1ma10m', 'acima10m'] as const;
+export const UF_BAND_KEYS  = ['ate2k', 'de2a10k', 'de10a50k', 'de50a200k', 'acima200k'] as const;
 export const UF_BAND_LABELS: Record<string, string> = {
-	ate2k:      'Até R$2k',
-	de2a10k:    'R$2–10k',
-	de10a50k:   'R$10–50k',
-	de50a200k:  'R$50–200k',
-	de200a500k: 'R$200–500k',
-	de500ka1m:  'R$500k–1M',
-	de1ma10m:   'R$1–10M',
-	acima10m:   '>R$10M',
+	ate2k:     'Até R$2k',
+	de2a10k:   'R$2–10k',
+	de10a50k:  'R$10–50k',
+	de50a200k: 'R$50–200k',
+	acima200k: 'Acima R$200k',
 };
 
 // ── BigNumbers por esfera (estado vs município) ────────────────────────────────
@@ -282,25 +286,90 @@ export const specialTerritoryBarData = parseCSV(csvSpecialTerritRaw)
 	.map((r) => ({ label: r.cod_tipo_nome, value: +r.valor_transacao }))
 	.sort((a, b) => b.value - a.value);
 
-export const ufBandPercData = [...stateRows]
+const faixaUfRows    = parseCSV(csvFaixaUfRaw);
+export const faixaStateRows = parseCSV(csvFaixaStateRaw);
+
+export const ufBandPercData = faixaUfRows
 	.map((row) => {
-		const total =
-			row['Até R$2k'] + row['R$2–10k'] + row['R$10–50k'] + row['R$50–200k'] +
-			row['R$200–500k'] + row['R$500k–1M'] + row['R$1–10M'] + row['>R$10M'] || 1;
-		const highValuePct =
-			(row['R$50–200k'] + row['R$200–500k'] + row['R$500k–1M'] + row['R$1–10M'] + row['>R$10M']) / total;
+		const highValuePct = +row.perc_qtd_de_50_a_200_mil + +row.perc_qtd_acima_de_200_mil;
 		return {
-			label:      row.uf,
+			label:     row.uf,
 			_highValue: highValuePct,
-			ate2k:      (row['Até R$2k']    / total) * 100,
-			de2a10k:    (row['R$2–10k']     / total) * 100,
-			de10a50k:   (row['R$10–50k']    / total) * 100,
-			de50a200k:  (row['R$50–200k']   / total) * 100,
-			de200a500k: (row['R$200–500k']  / total) * 100,
-			de500ka1m:  (row['R$500k–1M']   / total) * 100,
-			de1ma10m:   (row['R$1–10M']     / total) * 100,
-			acima10m:   (row['>R$10M']      / total) * 100,
+			ate2k:     +row.perc_qtd_ate_2_mil       * 100,
+			de2a10k:   +row.perc_qtd_de_2_a_10_mil   * 100,
+			de10a50k:  +row.perc_qtd_de_10_a_50_mil  * 100,
+			de50a200k: +row.perc_qtd_de_50_a_200_mil * 100,
+			acima200k: +row.perc_qtd_acima_de_200_mil * 100,
 		};
 	})
 	.sort((a, b) => b._highValue - a._highValue)
 	.map(({ _highValue: _, ...rest }) => rest);
+
+// ── VerticalStackedBarChart — faixa de valor pago × estado (executor estadual) ─
+export const stateBandPercData = faixaStateRows
+	.map((row) => {
+		const highValuePct = +row.perc_qtd_de_50_a_200_mil + +row.perc_qtd_acima_de_200_mil;
+		return {
+			label:     row.uf,
+			_highValue: highValuePct,
+			ate2k:     +row.perc_qtd_ate_2_mil       * 100,
+			de2a10k:   +row.perc_qtd_de_2_a_10_mil   * 100,
+			de10a50k:  +row.perc_qtd_de_10_a_50_mil  * 100,
+			de50a200k: +row.perc_qtd_de_50_a_200_mil * 100,
+			acima200k: +row.perc_qtd_acima_de_200_mil * 100,
+		};
+	})
+	.sort((a, b) => b._highValue - a._highValue)
+	.map(({ _highValue: _, ...rest }) => rest);
+
+// ── BoxPlot — quartis Brasil (aux_quartis_estados_brasil.csv) ─────────────────
+const quartisBrasilRow = parseCSV(csvAuxQuartisBrasilRaw)[0];
+export const brasilBoxPlotData = [
+	{
+		label: 'Brasil',
+		stats: {
+			min:    +quartisBrasilRow.p1,
+			q1:     +quartisBrasilRow.p25,
+			median: +quartisBrasilRow.mediana,
+			q3:     +quartisBrasilRow.p75,
+			max:    +quartisBrasilRow.p99,
+		},
+	},
+];
+
+// ── HorizontalStackedBarChart — territórios especiais por UF/estado/município ──
+const terrUfRows     = parseCSV(csvTerrUfRaw);
+const terrEstadoRows = parseCSV(csvTerrEstadoRaw);
+const terrMunRows    = parseCSV(csvTerrMunRaw);
+
+const terrByUf     = Object.fromEntries(terrUfRows.map((r)     => [r.uf, +r.valor_transacao_territorios_especiais]));
+const terrByEstado = Object.fromEntries(terrEstadoRows.map((r) => [r.uf, +r.valor_transacao_territorios_especiais]));
+const terrByMun    = Object.fromEntries(terrMunRows.map((r)    => [r.uf, +r.valor_transacao_territorios_especiais]));
+
+const allUFs = [...new Set([...Object.keys(terrByUf), ...Object.keys(terrByEstado), ...Object.keys(terrByMun)])].sort();
+
+export const TERR_KEYS   = ['estado', 'municipio'] as const;
+export const TERR_LABELS: Record<string, string> = {
+	estado:    'Estado',
+	municipio: 'Município',
+};
+
+export const terrEspeciaisData = allUFs
+	.map((uf) => ({
+		label:     uf,
+		estado:    terrByEstado[uf] ?? 0,
+		municipio: terrByMun[uf]    ?? 0,
+	}))
+	.sort((a, b) => (b.estado + b.municipio) - (a.estado + a.municipio));
+
+// ── BoxPlot — quartis por estado (quartis_estados.csv) ────────────────────────
+export const estadosBoxPlotData = parseCSV(csvQuartisEstadosRaw).map((row) => ({
+	label: row.uf,
+	stats: {
+		min:    +row.p1,
+		q1:     +row.p25,
+		median: +row.mediana,
+		q3:     +row.p75,
+		max:    +row.p99,
+	},
+}));

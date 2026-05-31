@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 def aggregate_vinculo_formal_labor(
     df_cubo: pd.DataFrame,
@@ -745,6 +746,7 @@ def aggregate_vinculo_formal_labor_by_raca_cor(
     Considera apenas:
     - tipo_documento == CPF
     - raca_cor_desc_description não nula
+    - raca_cor_desc_description != "Não informado"
 
     Regras:
     - Sem vínculo formal: tipo_vinculo_agregado_rais missing, nulo ou vazio
@@ -755,12 +757,14 @@ def aggregate_vinculo_formal_labor_by_raca_cor(
 
     df = df[df["tipo_documento"] == "CPF"].copy()
 
-    df = df[df['raca_cor_desc_description']!='Não informado']
-
+    # Remove raça/cor sem informação
     df = df.loc[
         df[col_raca_cor].notna()
+        & df[col_raca_cor].astype(str).str.strip().str.lower().ne("não informado")
     ].copy()
 
+    # NÃO filtrar missing em col_vinculo.
+    # Missing em tipo_vinculo_agregado_rais significa "sem vínculo".
     vinculo_preenchido = (
         df[col_vinculo].notna()
         & ~df[col_vinculo]
@@ -820,7 +824,6 @@ def aggregate_vinculo_formal_labor_by_raca_cor(
         + tabela["valor_pago_com_vinculo_trabalho_formal"]
     )
 
-    # Percentuais dentro da própria raça/cor
     tabela["percentual_contemplados_sem_vinculo_trabalho_formal"] = (
         tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
         / tabela["numero_contemplados_total"]
@@ -841,7 +844,6 @@ def aggregate_vinculo_formal_labor_by_raca_cor(
         / tabela["valor_pago_total"]
     ).fillna(0)
 
-    # Participação de cada raça/cor no total geral
     tabela["percentual_numero_contemplados_no_total_geral"] = (
         tabela["numero_contemplados_total"]
         / tabela["numero_contemplados_total"].sum()
@@ -852,7 +854,6 @@ def aggregate_vinculo_formal_labor_by_raca_cor(
         / tabela["valor_pago_total"].sum()
     ).fillna(0)
 
-    # Participação de cada raça/cor no total geral com/sem vínculo
     tabela["percentual_numero_contemplados_sem_vinculo_no_total_geral"] = (
         tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
         / tabela["numero_contemplados_sem_vinculo_trabalho_formal"].sum()
@@ -1736,3 +1737,140 @@ def aggregate_vinculo_formal_labor_by_age_group(
         .sort_values(col_faixa_etaria)
         .reset_index(drop=True)
     )
+
+
+def resumo_raca_cor_com_vinculo_rais(
+    df_cubo: pd.DataFrame,
+    col_raca: str = "raca_cor_desc_description",
+    col_vinculo: str = "tipo_vinculo_agregado_rais",
+    col_qtd: str = "quantidade",
+    col_valor: str = "valor_transacao",
+) -> pd.DataFrame:
+    """
+    Retorna resumo por raça/cor considerando apenas contemplados com vínculo RAIS.
+
+    Regras:
+    - 'Não informado' é desconsiderado da análise;
+    - valores NaN em raça/cor também são desconsiderados;
+    - vínculo RAIS = tipo_vinculo_agregado_rais não missing;
+    - percentuais são calculados apenas sobre as categorias válidas.
+    """
+
+    df = df_cubo.copy()
+
+    # Remove raça/cor não informada e missing
+    df = df[
+        df[col_raca].notna()
+        & (df[col_raca].astype(str).str.strip() != "Não informado")
+    ].copy()
+
+    # Mantém apenas contemplados com vínculo RAIS
+    df = df[df[col_vinculo].notna()].copy()
+
+    # Agrega por raça/cor
+    resumo = (
+        df
+        .groupby(col_raca, dropna=False)
+        .agg(
+            qtd_contemplados_com_vinculo=(col_qtd, "sum"),
+            valor_transacao_com_vinculo=(col_valor, "sum"),
+        )
+        .reset_index()
+    )
+
+    # Totais válidos para cálculo dos percentuais
+    total_qtd = resumo["qtd_contemplados_com_vinculo"].sum()
+    total_valor = resumo["valor_transacao_com_vinculo"].sum()
+
+    resumo["perc_qtd_contemplados_com_vinculo"] = np.where(
+        total_qtd > 0,
+        resumo["qtd_contemplados_com_vinculo"] / total_qtd ,
+        0
+    )
+
+    resumo["perc_valor_transacao_com_vinculo"] = np.where(
+        total_valor > 0,
+        resumo["valor_transacao_com_vinculo"] / total_valor ,
+        0
+    )
+
+    # Ordena da maior para menor participação em quantidade
+    resumo = resumo.sort_values(
+        "qtd_contemplados_com_vinculo",
+        ascending=False
+    ).reset_index(drop=True)
+
+    return resumo
+import pandas as pd
+import numpy as np
+
+def resumo_escolaridade_com_vinculo_rais(
+    df_cubo: pd.DataFrame,
+    col_escolaridade: str = "escolaridade_agregado_rais",
+    col_vinculo: str = "tipo_vinculo_agregado_rais",
+    col_qtd: str = "quantidade",
+    col_valor: str = "valor_transacao",
+) -> pd.DataFrame:
+    """
+    Retorna resumo por escolaridade considerando apenas contemplados com vínculo RAIS.
+
+    Regras:
+    - vínculo RAIS = tipo_vinculo_agregado_rais não missing;
+    - categorias de escolaridade missing são desconsideradas;
+    - percentuais são calculados sobre o total de contemplados com vínculo;
+    - valor médio = soma do valor da categoria / quantidade de contemplados da categoria.
+    """
+
+    ordem_escolaridade = [
+        "Sem instrução e fundamental incompleto",
+        "Fundamental completo e médio incompleto",
+        "Médio completo e superior incompleto",
+        "Superior completo",
+        "Mestrado ou doutorado completo",
+    ]
+
+    df = df_cubo.copy()
+
+    # Remove escolaridade missing
+    df = df[df[col_escolaridade].notna()].copy()
+
+    # Mantém apenas categorias esperadas
+    df = df[df[col_escolaridade].isin(ordem_escolaridade)].copy()
+
+    # Mantém apenas contemplados com vínculo RAIS
+    df = df[df[col_vinculo].notna()].copy()
+
+    resumo = (
+        df
+        .groupby(col_escolaridade)
+        .agg(
+            qtd_contemplados_com_vinculo=(col_qtd, "sum"),
+            valor_transacao_com_vinculo=(col_valor, "sum"),
+        )
+        .reindex(ordem_escolaridade)
+        .fillna(0)
+        .reset_index()
+    )
+
+    total_qtd = resumo["qtd_contemplados_com_vinculo"].sum()
+    total_valor = resumo["valor_transacao_com_vinculo"].sum()
+
+    resumo["perc_qtd_contemplados_com_vinculo"] = np.where(
+        total_qtd > 0,
+        resumo["qtd_contemplados_com_vinculo"] / total_qtd * 100,
+        0
+    )
+
+    resumo["perc_valor_transacao_com_vinculo"] = np.where(
+        total_valor > 0,
+        resumo["valor_transacao_com_vinculo"] / total_valor * 100,
+        0
+    )
+
+    resumo["valor_medio_transacao_com_vinculo"] = np.where(
+        resumo["qtd_contemplados_com_vinculo"] > 0,
+        resumo["valor_transacao_com_vinculo"] / resumo["qtd_contemplados_com_vinculo"],
+        0
+    )
+
+    return resumo

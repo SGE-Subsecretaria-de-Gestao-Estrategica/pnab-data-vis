@@ -4077,3 +4077,331 @@ def resumo_territorios_especiais_por_uf(
     df_final[cols_numericas] = df_final[cols_numericas].fillna(0)
 
     return df_final
+
+
+def resumo_por_porte_populacional(df_aux: pd.DataFrame) -> pd.DataFrame:
+    """
+    Retorna um resumo por porte populacional.
+    """
+
+    df = df_aux.copy()
+    df = df[df['tipo_ente_bbagil'] == 'MUNICIPIO']
+
+    df_resumo = (
+        df
+        .groupby("porte_populacional", dropna=False)
+        .agg(
+            numero_municipios=("ente_bbagil", "nunique"),
+            valor_total_por_porte=("valor_transacao_total_bbagil", "sum"),
+            valor_medio_por_porte=("valor_transacao_total_bbagil", "mean"),
+            valor_mediano_por_porte=("valor_transacao_total_bbagil", "median"),
+            quantidade_contemplados_por_porte=("chave", "nunique")
+        )
+        .reset_index()
+    )
+
+    total_valor = df_resumo["valor_total_por_porte"].sum()
+    total_quantidade = df_resumo["quantidade_contemplados_por_porte"].sum()
+
+    df_resumo["percentual_valor_por_porte"] = (
+        df_resumo["valor_total_por_porte"] / total_valor
+    )
+
+    df_resumo["percentual_quantidade_contemplados_por_porte"] = (
+        df_resumo["quantidade_contemplados_por_porte"] / total_quantidade
+    )
+
+    ordem_portes = [
+        "1_pequeno_i",
+        "2_pequeno_ii",
+        "3_medio",
+        "4_grande"
+    ]
+
+    df_resumo["porte_populacional"] = pd.Categorical(
+        df_resumo["porte_populacional"],
+        categories=ordem_portes,
+        ordered=True
+    )
+
+    df_resumo = (
+        df_resumo
+        .sort_values("porte_populacional")
+        .reset_index(drop=True)
+    )
+
+    return df_resumo
+
+
+def adicionar_macrorregiao_percentuais_uf(
+    df_uf_cut: pd.DataFrame,
+    col_uf: str = "uf"
+) -> pd.DataFrame:
+    """
+    Adiciona macrorregião e percentuais por UF.
+
+    Percentuais retornam em escala decimal:
+    0.25 = 25%
+    """
+
+    uf_macrorregiao = {
+        # Norte
+        "AC": "Norte",
+        "AP": "Norte",
+        "AM": "Norte",
+        "PA": "Norte",
+        "RO": "Norte",
+        "RR": "Norte",
+        "TO": "Norte",
+
+        # Nordeste
+        "AL": "Nordeste",
+        "BA": "Nordeste",
+        "CE": "Nordeste",
+        "MA": "Nordeste",
+        "PB": "Nordeste",
+        "PE": "Nordeste",
+        "PI": "Nordeste",
+        "RN": "Nordeste",
+        "SE": "Nordeste",
+
+        # Centro-Oeste
+        "DF": "Centro-Oeste",
+        "GO": "Centro-Oeste",
+        "MT": "Centro-Oeste",
+        "MS": "Centro-Oeste",
+
+        # Sudeste
+        "ES": "Sudeste",
+        "MG": "Sudeste",
+        "RJ": "Sudeste",
+        "SP": "Sudeste",
+
+        # Sul
+        "PR": "Sul",
+        "RS": "Sul",
+        "SC": "Sul",
+    }
+
+    df = df_uf_cut.copy()
+
+    # Caso a UF esteja no índice, e não em uma coluna
+    if col_uf not in df.columns:
+        df = df.reset_index()
+
+        if col_uf not in df.columns:
+            raise ValueError(
+                f"A coluna '{col_uf}' não foi encontrada. "
+                "Verifique se a UF está em uma coluna ou ajuste o parâmetro col_uf."
+            )
+
+    df[col_uf] = df[col_uf].astype(str).str.upper().str.strip()
+
+    df["macrorregiao"] = df[col_uf].map(uf_macrorregiao)
+
+    ufs_sem_regiao = df.loc[df["macrorregiao"].isna(), col_uf].unique()
+
+    if len(ufs_sem_regiao) > 0:
+        raise ValueError(f"UFs sem macrorregião identificada: {ufs_sem_regiao}")
+
+    total_contemplados = df["qtde_contemplados"].sum()
+
+    df["perc_qtde_contemplados_total"] = np.where(
+        total_contemplados > 0,
+        df["qtde_contemplados"] / total_contemplados,
+        np.nan
+    )
+
+    total_contemplados_regiao = (
+        df.groupby("macrorregiao")["qtde_contemplados"]
+        .transform("sum")
+    )
+
+    df["perc_qtde_contemplados_regiao"] = np.where(
+        total_contemplados_regiao > 0,
+        df["qtde_contemplados"] / total_contemplados_regiao,
+        np.nan
+    )
+
+    total_valor_regiao = (
+        df.groupby("macrorregiao")["valor_executado_rs"]
+        .transform("sum")
+    )
+
+    df["valor_executado_perc_regiao"] = np.where(
+        total_valor_regiao > 0,
+        df["valor_executado_rs"] / total_valor_regiao,
+        np.nan
+    )
+
+    return df
+
+
+def criar_df_uf_cut_from_aux(
+    df_aux: pd.DataFrame,
+    col_uf: str = "uf_bbagil",
+    col_valor: str = "valor_transacao_total_bbagil",
+    col_chave: str = "chave",
+    col_populacao: str = "populacao",
+    col_tipo_ente: str = "tipo_ente_bbagil"
+) -> pd.DataFrame:
+    """
+    Cria uma tabela agregada por UF a partir da df_aux.
+
+    A população da UF é obtida apenas das linhas em que tipo_ente == 'ESTADO',
+    usando o primeiro valor de população encontrado para cada UF.
+
+    Percentuais retornam em escala decimal:
+    0.25 = 25%
+    """
+
+    df = df_aux.copy()
+
+    df[col_uf] = df[col_uf].astype(str).str.upper().str.strip()
+    df[col_tipo_ente] = df[col_tipo_ente].astype(str).str.upper().str.strip()
+
+    uf_macrorregiao = {
+        # Norte
+        "AC": "Norte",
+        "AP": "Norte",
+        "AM": "Norte",
+        "PA": "Norte",
+        "RO": "Norte",
+        "RR": "Norte",
+        "TO": "Norte",
+
+        # Nordeste
+        "AL": "Nordeste",
+        "BA": "Nordeste",
+        "CE": "Nordeste",
+        "MA": "Nordeste",
+        "PB": "Nordeste",
+        "PE": "Nordeste",
+        "PI": "Nordeste",
+        "RN": "Nordeste",
+        "SE": "Nordeste",
+
+        # Centro-Oeste
+        "DF": "Centro-Oeste",
+        "GO": "Centro-Oeste",
+        "MT": "Centro-Oeste",
+        "MS": "Centro-Oeste",
+
+        # Sudeste
+        "ES": "Sudeste",
+        "MG": "Sudeste",
+        "RJ": "Sudeste",
+        "SP": "Sudeste",
+
+        # Sul
+        "PR": "Sul",
+        "RS": "Sul",
+        "SC": "Sul",
+    }
+
+    df_uf = (
+        df
+        .groupby(col_uf, dropna=False)
+        .agg(
+            valor_executado_rs=(col_valor, "sum"),
+            min_valor=(col_valor, "min"),
+            mediana_valor=(col_valor, "median"),
+            max_valor=(col_valor, "max"),
+            media_valor=(col_valor, "mean"),
+            qtde_contemplados=(col_chave, "nunique")
+        )
+        .reset_index()
+        .rename(columns={col_uf: "uf"})
+    )
+
+    total_valor = df_uf["valor_executado_rs"].sum()
+
+    df_uf["valor_executado_perc"] = np.where(
+        total_valor > 0,
+        df_uf["valor_executado_rs"] / total_valor,
+        np.nan
+    )
+
+    df_pop_uf = (
+        df
+        .loc[df[col_tipo_ente].eq("ESTADO"), [col_uf, col_populacao]]
+        .dropna(subset=[col_populacao])
+        .drop_duplicates(subset=[col_uf])
+        .rename(columns={
+            col_uf: "uf",
+            col_populacao: "populacao_uf"
+        })
+    )
+
+    df_uf = df_uf.merge(
+        df_pop_uf,
+        on="uf",
+        how="left"
+    )
+
+    df_uf["valor_executado_percapita"] = np.where(
+        df_uf["populacao_uf"] > 0,
+        df_uf["valor_executado_rs"] / df_uf["populacao_uf"],
+        np.nan
+    )
+
+    df_uf["macrorregiao"] = df_uf["uf"].map(uf_macrorregiao)
+
+    ufs_sem_macrorregiao = df_uf.loc[
+        df_uf["macrorregiao"].isna(),
+        "uf"
+    ].unique()
+
+    if len(ufs_sem_macrorregiao) > 0:
+        raise ValueError(
+            f"UFs sem macrorregião identificada: {ufs_sem_macrorregiao}"
+        )
+
+    total_valor_regiao = (
+        df_uf
+        .groupby("macrorregiao")["valor_executado_rs"]
+        .transform("sum")
+    )
+
+    df_uf["valor_executado_perc_regiao"] = np.where(
+        total_valor_regiao > 0,
+        df_uf["valor_executado_rs"] / total_valor_regiao,
+        np.nan
+    )
+
+    total_contemplados_regiao = (
+        df_uf
+        .groupby("macrorregiao")["qtde_contemplados"]
+        .transform("sum")
+    )
+
+    df_uf["perc_qtde_contemplados_regiao"] = np.where(
+        total_contemplados_regiao > 0,
+        df_uf["qtde_contemplados"] / total_contemplados_regiao,
+        np.nan
+    )
+
+    df_uf = df_uf[
+        [
+            "uf",
+            "macrorregiao",
+            "valor_executado_rs",
+            "valor_executado_perc",
+            "valor_executado_perc_regiao",
+            "min_valor",
+            "mediana_valor",
+            "max_valor",
+            "media_valor",
+            "valor_executado_percapita",
+            "qtde_contemplados",
+            "perc_qtde_contemplados_regiao"
+        ]
+    ]
+
+    df_uf = (
+        df_uf
+        .sort_values(["macrorregiao", "valor_executado_rs"], ascending=[True, False])
+        .reset_index(drop=True)
+    )
+
+    return df_uf

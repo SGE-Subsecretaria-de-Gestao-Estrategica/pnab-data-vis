@@ -2638,34 +2638,15 @@ def aggregate_by_local_residencia(
     tipo_documento: str | None = None
 ) -> pd.DataFrame:
     """
-    Agrega quantidade de contemplados, valor total, número de municípios
-    e percentuais por local de residência.
+    Agrega quantidade de contemplados, valor total, número de municípios,
+    população e percentuais por local de residência.
 
-    Parâmetros
-    ----------
-    df_cubo : pd.DataFrame
-        DataFrame com as colunas:
-        - local_residencia_contemplados
-        - quantidade
-        - valor_transacao
-        - tipo_ente
-        - ente
-        - tipo_documento
+    A coluna sum_populacao se repete para cada município/estado que aparece.
+    Por isso, para calcular população, considera-se apenas o primeiro valor
+    de sum_populacao para cada combinação de:
+    - local_residencia_contemplados
+    - ente
 
-    visao : str
-        Define o filtro da análise:
-        - "estado": considera apenas tipo_ente == "ESTADO"
-        - "municipio": considera apenas tipo_ente == "MUNICIPIO"
-        - "uf": não filtra tipo_ente
-
-    tipo_documento : str | None
-        Define filtro opcional por tipo de documento.
-        Exemplo:
-        - tipo_documento="CPF" filtra apenas registros com tipo_documento == "CPF"
-        - None não aplica filtro
-
-    Observação
-    ----------
     Percentuais retornam em escala decimal:
     - 0.57 = 57%
     """
@@ -2732,8 +2713,31 @@ def aggregate_by_local_residencia(
         .reset_index()
     )
 
+    # População sem duplicar o mesmo ente dentro da mesma categoria
+    df_populacao = (
+        df
+        .dropna(subset=["sum_populacao"])
+        .sort_values(["local_residencia_contemplados", "ente"])
+        .drop_duplicates(
+            subset=["local_residencia_contemplados", "ente"],
+            keep="first"
+        )
+        .groupby("local_residencia_contemplados", observed=False)
+        .agg(
+            populacao=("sum_populacao", "sum")
+        )
+        .reset_index()
+    )
+
+    df_resultado = df_resultado.merge(
+        df_populacao,
+        on="local_residencia_contemplados",
+        how="left"
+    )
+
     quantidade_total = df_resultado["quantidade_contemplados"].sum()
     valor_total_geral = df_resultado["valor_total"].sum()
+    populacao_total = df_resultado["populacao"].sum()
 
     df_resultado["percentual_quantidade"] = np.where(
         quantidade_total > 0,
@@ -2744,6 +2748,12 @@ def aggregate_by_local_residencia(
     df_resultado["percentual_valor"] = np.where(
         valor_total_geral > 0,
         df_resultado["valor_total"] / valor_total_geral,
+        np.nan
+    )
+
+    df_resultado["perc_populacao"] = np.where(
+        populacao_total > 0,
+        df_resultado["populacao"] / populacao_total,
         np.nan
     )
 
@@ -2771,6 +2781,12 @@ def aggregate_by_local_residencia(
         .astype("Float64")
     )
 
+    df_resultado["populacao"] = (
+        pd.to_numeric(df_resultado["populacao"], errors="coerce")
+        .fillna(0)
+        .astype("Float64")
+    )
+
     df_resultado["percentual_quantidade"] = (
         pd.to_numeric(df_resultado["percentual_quantidade"], errors="coerce")
         .astype("Float64")
@@ -2781,8 +2797,12 @@ def aggregate_by_local_residencia(
         .astype("Float64")
     )
 
-    return df_resultado
+    df_resultado["perc_populacao"] = (
+        pd.to_numeric(df_resultado["perc_populacao"], errors="coerce")
+        .astype("Float64")
+    )
 
+    return df_resultado
 
 def aggregate_faixa_valor_ju_by(
     df_cubo: pd.DataFrame,

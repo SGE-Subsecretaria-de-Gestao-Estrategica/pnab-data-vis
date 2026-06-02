@@ -243,8 +243,8 @@
 	</p>
 	<ExecutedValueByStateMap
 		states={mediaValorByState}
-		metric="mediana_valor"
-		label="Mediana paga por estado"
+		metric="media_aparada_1pct_valor"
+		label="Média aparada (1%) paga por estado"
 		format={formatBRL}
 		showSideLegend={true}
 	/>

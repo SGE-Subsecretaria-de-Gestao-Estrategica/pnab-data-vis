@@ -430,13 +430,13 @@ export const estadosBoxPlotData = parseCSV(csvQuartisEstadosRaw).map((row) => ({
 }));
 
 // ── ChoroplethMap — ticket médio por estado (resumo_valores_uf_estado.csv) ────
-export const mediaValorByState: Record<string, { media_valor: number; mediana_valor: number }> =
+export const mediaValorByState: Record<string, { media_valor: number; mediana_valor: number; media_aparada_1pct_valor: number }> =
 	Object.fromEntries(
 		parseCSV(csvResumoValoresUfEstadoRaw)
 			.filter((r) => r.visao === 'ESTADO')
 			.flatMap((r) => {
 				const name = siglaToName[r.uf];
 				if (!name) return [];
-				return [[name, { media_valor: +r.media_valor, mediana_valor: +r.mediana_valor }]];
+				return [[name, { media_valor: +r.media_valor, mediana_valor: +r.mediana_valor, media_aparada_1pct_valor: +r.media_aparada_1pct_valor }]];
 			})
 	);

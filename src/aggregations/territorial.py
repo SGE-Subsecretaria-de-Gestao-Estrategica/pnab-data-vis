@@ -4275,6 +4275,19 @@ def criar_df_uf_cut_from_aux(
     0.25 = 25%
     """
 
+    def media_aparada_1pct_superior(x):
+        """
+        Calcula a média removendo os 1% maiores valores do grupo.
+        """
+        x = pd.to_numeric(x, errors="coerce").dropna()
+
+        if x.empty:
+            return np.nan
+
+        limite_superior = x.quantile(0.99)
+
+        return x[x <= limite_superior].mean()
+
     df = df_aux.copy()
 
     df[col_uf] = df[col_uf].astype(str).str.upper().str.strip()
@@ -4328,6 +4341,7 @@ def criar_df_uf_cut_from_aux(
             mediana_valor=(col_valor, "median"),
             max_valor=(col_valor, "max"),
             media_valor=(col_valor, "mean"),
+            media_aparada_1pct_valor=(col_valor, media_aparada_1pct_superior),
             qtde_contemplados=(col_chave, "nunique")
         )
         .reset_index()
@@ -4412,6 +4426,7 @@ def criar_df_uf_cut_from_aux(
             "mediana_valor",
             "max_valor",
             "media_valor",
+            "media_aparada_1pct_valor",
             "valor_executado_percapita",
             "qtde_contemplados",
             "perc_qtde_contemplados_regiao"

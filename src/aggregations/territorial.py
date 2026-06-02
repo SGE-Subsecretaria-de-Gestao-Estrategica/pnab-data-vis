@@ -3813,6 +3813,7 @@ def resumo_faixa_valor_por_porte(
 
     df = df_cubo.copy()
 
+
     if visao == "ESTADO":
         df = df[df[coluna_tipo_ente] == "ESTADO"].copy()
 
@@ -4104,6 +4105,19 @@ def resumo_por_porte_populacional(df_aux: pd.DataFrame) -> pd.DataFrame:
     Retorna um resumo por porte populacional.
     """
 
+    def media_aparada_1pct_superior(x):
+        """
+        Calcula a média removendo os 1% maiores valores do grupo.
+        """
+        x = pd.to_numeric(x, errors="coerce").dropna()
+
+        if x.empty:
+            return np.nan
+
+        limite_superior = x.quantile(0.99)
+
+        return x[x <= limite_superior].mean()
+
     df = df_aux.copy()
     df = df[df['tipo_ente_bbagil'] == 'MUNICIPIO']
 
@@ -4114,6 +4128,10 @@ def resumo_por_porte_populacional(df_aux: pd.DataFrame) -> pd.DataFrame:
             numero_municipios=("ente_bbagil", "nunique"),
             valor_total_por_porte=("valor_transacao_total_bbagil", "sum"),
             valor_medio_por_porte=("valor_transacao_total_bbagil", "mean"),
+            media_aparada_1pct_por_porte=(
+                "valor_transacao_total_bbagil",
+                media_aparada_1pct_superior
+            ),
             valor_mediano_por_porte=("valor_transacao_total_bbagil", "median"),
             quantidade_contemplados_por_porte=("chave", "nunique")
         )
@@ -4151,7 +4169,6 @@ def resumo_por_porte_populacional(df_aux: pd.DataFrame) -> pd.DataFrame:
     )
 
     return df_resumo
-
 
 def adicionar_macrorregiao_percentuais_uf(
     df_uf_cut: pd.DataFrame,

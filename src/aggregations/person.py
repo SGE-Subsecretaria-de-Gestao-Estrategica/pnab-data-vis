@@ -1436,3 +1436,129 @@ def aggregate_sexo_uf_ibge_pnab(
     )
 
     return df_resultado
+
+
+def aggregate_cnpj_natureza_juridica(
+    df_cubo: pd.DataFrame,
+    coluna_natureza: str = "naturezajuridica_agrupada_receita_cnpj",
+    coluna_valor: str = "valor_transacao",
+    coluna_quantidade: str = "quantidade",
+    coluna_tipo_documento: str = "tipo_documento"
+) -> pd.DataFrame:
+    """
+    Agrega apenas CNPJs por natureza jurídica agrupada.
+
+    Para cada categoria, retorna:
+    - quantidade de contemplados;
+    - percentual da quantidade sobre o total de CNPJs;
+    - valor recebido;
+    - percentual do valor sobre o total de CNPJs.
+
+    Percentuais retornam em escala decimal:
+    0.25 = 25%
+    """
+
+    categorias_natureza = [
+        "Microempresa-ME",
+        "MEI",
+        "Empresa de Pequeno Porte (EPP)",
+        "Administração Pública",
+        "Entidades sem fins lucrativos",
+        "Entidades Empresariais",
+    ]
+
+    df = df_cubo.copy()
+
+    df["tipo_documento_norm"] = (
+        df[coluna_tipo_documento]
+        .fillna("Não informado")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    df = df[df["tipo_documento_norm"].eq("CNPJ")].copy()
+
+    df[coluna_valor] = pd.to_numeric(
+        df[coluna_valor],
+        errors="coerce"
+    ).fillna(0)
+
+    df[coluna_quantidade] = pd.to_numeric(
+        df[coluna_quantidade],
+        errors="coerce"
+    ).fillna(0)
+
+    df[coluna_natureza] = (
+        df[coluna_natureza]
+        .fillna("Não informado")
+        .astype(str)
+        .str.strip()
+    )
+
+    df = df[df[coluna_natureza].isin(categorias_natureza)].copy()
+
+    df[coluna_natureza] = pd.Categorical(
+        df[coluna_natureza],
+        categories=categorias_natureza,
+        ordered=True
+    )
+
+    df_resultado = (
+        df
+        .groupby(coluna_natureza, observed=False)
+        .agg(
+            quantidade_contemplados=(coluna_quantidade, "sum"),
+            valor_contemplados=(coluna_valor, "sum")
+        )
+        .reset_index()
+        .rename(columns={coluna_natureza: "natureza_juridica"})
+    )
+
+    total_quantidade = df_resultado["quantidade_contemplados"].sum()
+    total_valor = df_resultado["valor_contemplados"].sum()
+
+    df_resultado["perc_quantidade_contemplados"] = np.where(
+        total_quantidade > 0,
+        df_resultado["quantidade_contemplados"] / total_quantidade,
+        np.nan
+    )
+
+    df_resultado["perc_valor_contemplados"] = np.where(
+        total_valor > 0,
+        df_resultado["valor_contemplados"] / total_valor,
+        np.nan
+    )
+
+    df_resultado["quantidade_contemplados"] = (
+        df_resultado["quantidade_contemplados"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado["valor_contemplados"] = (
+        df_resultado["valor_contemplados"]
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    df_resultado["perc_quantidade_contemplados"] = (
+        df_resultado["perc_quantidade_contemplados"]
+        .astype("Float64")
+    )
+
+    df_resultado["perc_valor_contemplados"] = (
+        df_resultado["perc_valor_contemplados"]
+        .astype("Float64")
+    )
+
+    df_resultado = (
+        df_resultado
+        .sort_values("natureza_juridica")
+        .reset_index(drop=True)
+    )
+
+    return df_resultado

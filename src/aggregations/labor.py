@@ -238,6 +238,8 @@ def aggregate_vinculo_formal_labor_by_region(
         .sort_values(col_regiao)
         .reset_index(drop=True)
     )
+import pandas as pd
+
 
 def aggregate_vinculo_formal_labor_by_uf(
     df_cubo: pd.DataFrame,
@@ -255,22 +257,52 @@ def aggregate_vinculo_formal_labor_by_uf(
     - participação da UF no total geral por tipo de vínculo
 
     Regras:
+    - Considera apenas tipo_documento == "CPF"
     - Sem vínculo formal: tipo_vinculo_agregado_rais missing, nulo ou vazio
     - Com vínculo formal: tipo_vinculo_agregado_rais preenchido
     """
 
+    required_columns = [
+        "tipo_documento",
+        col_uf,
+        col_vinculo,
+        col_quantidade,
+        col_valor,
+    ]
+
+    missing_columns = [
+        col for col in required_columns if col not in df_cubo.columns
+    ]
+
+    if missing_columns:
+        raise ValueError(
+            f"As seguintes colunas não existem no DataFrame: {missing_columns}"
+        )
+
     df = df_cubo.copy()
 
-    df = df[df["tipo_documento"] == "CPF"].copy()
+    # ------------------------------------------------------------
+    # 1. Filtra apenas CPF
+    # ------------------------------------------------------------
+    df = df[df["tipo_documento"].eq("CPF")].copy()
 
+    # ------------------------------------------------------------
+    # 2. Classifica vínculo formal
+    # ------------------------------------------------------------
     vinculo_preenchido = (
         df[col_vinculo].notna()
         & df[col_vinculo].astype(str).str.strip().ne("")
     )
 
     df["situacao_vinculo_formal"] = "sem_vinculo_trabalho_formal"
-    df.loc[vinculo_preenchido, "situacao_vinculo_formal"] = "com_vinculo_trabalho_formal"
+    df.loc[
+        vinculo_preenchido,
+        "situacao_vinculo_formal"
+    ] = "com_vinculo_trabalho_formal"
 
+    # ------------------------------------------------------------
+    # 3. Agrega por UF e situação de vínculo
+    # ------------------------------------------------------------
     resumo = (
         df
         .groupby([col_uf, "situacao_vinculo_formal"], dropna=False)
@@ -281,6 +313,9 @@ def aggregate_vinculo_formal_labor_by_uf(
         .reset_index()
     )
 
+    # ------------------------------------------------------------
+    # 4. Abre colunas para com/sem vínculo
+    # ------------------------------------------------------------
     tabela = (
         resumo
         .pivot(
@@ -308,8 +343,11 @@ def aggregate_vinculo_formal_labor_by_uf(
         if col not in tabela.columns:
             tabela[col] = 0
 
+    # ------------------------------------------------------------
+    # 5. Totais por UF
+    # ------------------------------------------------------------
     tabela["numero_contemplados_total"] = (
-        tabela["numero_contemplados_sem_vinculo_trabalho_formal"] 
+        tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
         + tabela["numero_contemplados_com_vinculo_trabalho_formal"]
     )
 
@@ -318,56 +356,128 @@ def aggregate_vinculo_formal_labor_by_uf(
         + tabela["valor_pago_com_vinculo_trabalho_formal"]
     )
 
+    # ------------------------------------------------------------
+    # 6. Percentuais dentro da própria UF
+    # ------------------------------------------------------------
     tabela["percentual_contemplados_sem_vinculo_trabalho_formal"] = (
         tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
-        / tabela["numero_contemplados_total"]
-    ).fillna(0)
+        .div(
+            tabela["numero_contemplados_total"]
+            .where(tabela["numero_contemplados_total"].ne(0))
+        )
+        .fillna(0)
+    )
 
     tabela["percentual_contemplados_com_vinculo_trabalho_formal"] = (
         tabela["numero_contemplados_com_vinculo_trabalho_formal"]
-        / tabela["numero_contemplados_total"]
-    ).fillna(0)
+        .div(
+            tabela["numero_contemplados_total"]
+            .where(tabela["numero_contemplados_total"].ne(0))
+        )
+        .fillna(0)
+    )
 
     tabela["percentual_valor_pago_sem_vinculo_trabalho_formal"] = (
         tabela["valor_pago_sem_vinculo_trabalho_formal"]
-        / tabela["valor_pago_total"]
-    ).fillna(0)
+        .div(
+            tabela["valor_pago_total"]
+            .where(tabela["valor_pago_total"].ne(0))
+        )
+        .fillna(0)
+    )
 
     tabela["percentual_valor_pago_com_vinculo_trabalho_formal"] = (
         tabela["valor_pago_com_vinculo_trabalho_formal"]
-        / tabela["valor_pago_total"]
-    ).fillna(0)
+        .div(
+            tabela["valor_pago_total"]
+            .where(tabela["valor_pago_total"].ne(0))
+        )
+        .fillna(0)
+    )
 
+    # ------------------------------------------------------------
+    # 7. Totais Brasil
+    # ------------------------------------------------------------
+    total_numero_contemplados_brasil = tabela["numero_contemplados_total"].sum()
+    total_valor_pago_brasil = tabela["valor_pago_total"].sum()
+
+    total_numero_sem_vinculo_brasil = (
+        tabela["numero_contemplados_sem_vinculo_trabalho_formal"].sum()
+    )
+
+    total_numero_com_vinculo_brasil = (
+        tabela["numero_contemplados_com_vinculo_trabalho_formal"].sum()
+    )
+
+    total_valor_sem_vinculo_brasil = (
+        tabela["valor_pago_sem_vinculo_trabalho_formal"].sum()
+    )
+
+    total_valor_com_vinculo_brasil = (
+        tabela["valor_pago_com_vinculo_trabalho_formal"].sum()
+    )
+
+    # ------------------------------------------------------------
+    # 8. Participação da UF no total Brasil geral
+    # ------------------------------------------------------------
     tabela["percentual_numero_contemplados_no_total_geral"] = (
         tabela["numero_contemplados_total"]
-        / tabela["numero_contemplados_total"].sum()
-    ).fillna(0)
+        / total_numero_contemplados_brasil
+        if total_numero_contemplados_brasil > 0
+        else 0
+    )
 
     tabela["percentual_valor_pago_no_total_geral"] = (
         tabela["valor_pago_total"]
-        / tabela["valor_pago_total"].sum()
-    ).fillna(0)
+        / total_valor_pago_brasil
+        if total_valor_pago_brasil > 0
+        else 0
+    )
 
+    # ------------------------------------------------------------
+    # 9. Participação da UF dentro do total Brasil por tipo de vínculo
+    # ------------------------------------------------------------
     tabela["percentual_numero_contemplados_sem_vinculo_no_total_geral"] = (
         tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
-        / tabela["numero_contemplados_sem_vinculo_trabalho_formal"].sum()
-    ).fillna(0)
+        / total_numero_sem_vinculo_brasil
+        if total_numero_sem_vinculo_brasil > 0
+        else 0
+    )
 
     tabela["percentual_numero_contemplados_com_vinculo_no_total_geral"] = (
         tabela["numero_contemplados_com_vinculo_trabalho_formal"]
-        / tabela["numero_contemplados_com_vinculo_trabalho_formal"].sum()
-    ).fillna(0)
+        / total_numero_com_vinculo_brasil
+        if total_numero_com_vinculo_brasil > 0
+        else 0
+    )
 
     tabela["percentual_valor_pago_sem_vinculo_no_total_geral"] = (
         tabela["valor_pago_sem_vinculo_trabalho_formal"]
-        / tabela["valor_pago_sem_vinculo_trabalho_formal"].sum()
-    ).fillna(0)
+        / total_valor_sem_vinculo_brasil
+        if total_valor_sem_vinculo_brasil > 0
+        else 0
+    )
 
     tabela["percentual_valor_pago_com_vinculo_no_total_geral"] = (
         tabela["valor_pago_com_vinculo_trabalho_formal"]
-        / tabela["valor_pago_com_vinculo_trabalho_formal"].sum()
-    ).fillna(0)
+        / total_valor_com_vinculo_brasil
+        if total_valor_com_vinculo_brasil > 0
+        else 0
+    )
 
+    # ------------------------------------------------------------
+    # 10. Nova coluna: com RAIS da UF sobre o total Brasil geral
+    # ------------------------------------------------------------
+    tabela["percentual_numero_contemplados_com_vinculo_no_total_brasil"] = (
+        tabela["numero_contemplados_com_vinculo_trabalho_formal"]
+        / total_numero_contemplados_brasil
+        if total_numero_contemplados_brasil > 0
+        else 0
+    )
+
+    # ------------------------------------------------------------
+    # 11. Ordem final das colunas
+    # ------------------------------------------------------------
     colunas_finais = [
         col_uf,
 
@@ -380,6 +490,7 @@ def aggregate_vinculo_formal_labor_by_uf(
         "percentual_numero_contemplados_no_total_geral",
         "percentual_numero_contemplados_sem_vinculo_no_total_geral",
         "percentual_numero_contemplados_com_vinculo_no_total_geral",
+        "percentual_numero_contemplados_com_vinculo_no_total_brasil",
 
         "valor_pago_sem_vinculo_trabalho_formal",
         "valor_pago_com_vinculo_trabalho_formal",
@@ -397,7 +508,6 @@ def aggregate_vinculo_formal_labor_by_uf(
         .sort_values(col_uf)
         .reset_index(drop=True)
     )
-import pandas as pd
 
 
 def aggregate_vinculo_formal_labor_by_sexo(

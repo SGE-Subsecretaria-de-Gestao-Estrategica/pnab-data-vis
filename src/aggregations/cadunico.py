@@ -1,9 +1,12 @@
 import pandas as pd
 
+import pandas as pd
+
 
 def aggregate_cadunico_summary(
     df_cubo: pd.DataFrame,
-    qtd_documentos_unicos_cadunico: int = 57_338
+    qtd_documentos_unicos_cadunico: int = 57_338,
+    corte_media_aparada: float = 0.01,
 ) -> pd.DataFrame:
     """
     Resume a participação de contemplados CPF que estão no CadÚnico.
@@ -15,6 +18,14 @@ def aggregate_cadunico_summary(
     - Usa a coluna valor_transacao como valor recebido
     - O número de documentos únicos no CadÚnico é informado externamente,
       pois não está disponível em df_cubo.
+
+    Métricas de média:
+    - media_valor_recebido_cadunico:
+        valor total recebido pelo público CadÚnico / quantidade de contemplados CadÚnico
+
+    - media_aparada_valor_recebido_cadunico:
+        média ponderada pelo número de contemplados, removendo o topo da distribuição
+        conforme corte_media_aparada. Por padrão, remove o 1% superior.
 
     Retorna uma tabela com uma linha.
     """
@@ -35,30 +46,131 @@ def aggregate_cadunico_summary(
             f"As seguintes colunas não existem no DataFrame: {missing_columns}"
         )
 
+    def calcular_media_aparada_ponderada(
+        df: pd.DataFrame,
+        col_valor_medio: str,
+        col_peso: str,
+        corte_superior: float = 0.01,
+    ) -> float:
+        """
+        Calcula média aparada ponderada, removendo o topo da distribuição.
+
+        Exemplo:
+        - corte_superior = 0.01 remove o 1% superior.
+        """
+
+        df_aux = df[[col_valor_medio, col_peso]].dropna().copy()
+
+        df_aux = df_aux.loc[
+            df_aux[col_peso].gt(0)
+        ].copy()
+
+        if df_aux.empty:
+            return 0
+
+        total_peso = df_aux[col_peso].sum()
+
+        if total_peso <= 0:
+            return 0
+
+        limite_peso = total_peso * (1 - corte_superior)
+
+        df_aux = df_aux.sort_values(col_valor_medio).reset_index(drop=True)
+        df_aux["peso_acumulado"] = df_aux[col_peso].cumsum()
+
+        valor_corte = df_aux.loc[
+            df_aux["peso_acumulado"].ge(limite_peso),
+            col_valor_medio,
+        ].iloc[0]
+
+        df_aparado = df_aux.loc[
+            df_aux[col_valor_medio].le(valor_corte)
+        ].copy()
+
+        peso_aparado = df_aparado[col_peso].sum()
+
+        if peso_aparado <= 0:
+            return 0
+
+        return (
+            df_aparado[col_valor_medio]
+            .mul(df_aparado[col_peso])
+            .sum()
+            / peso_aparado
+        )
+
+    # ------------------------------------------------------------
+    # 1. Filtra apenas CPF
+    # ------------------------------------------------------------
     df_cpf = df_cubo.loc[
         df_cubo["tipo_documento"].eq("CPF")
     ].copy()
 
-    df_cpf_cadunico = df_cpf[df_cpf["pessoaCad_cadunico"].notna()]
+    # ------------------------------------------------------------
+    # 2. Filtra CPF no CadÚnico
+    # ------------------------------------------------------------
+    df_cpf_cadunico = df_cpf.loc[
+        df_cpf["pessoaCad_cadunico"].eq(1.0)
+    ].copy()
 
+    # ------------------------------------------------------------
+    # 3. Totais gerais de CPF
+    # ------------------------------------------------------------
     total_contemplados_cpf = df_cpf["quantidade"].sum()
     total_valor_cpf = df_cpf["valor_transacao"].sum()
 
+    # ------------------------------------------------------------
+    # 4. Totais CadÚnico
+    # ------------------------------------------------------------
     qtd_contemplados_cadunico = df_cpf_cadunico["quantidade"].sum()
     valor_recebido_cadunico = df_cpf_cadunico["valor_transacao"].sum()
 
+    # ------------------------------------------------------------
+    # 5. Percentuais
+    # ------------------------------------------------------------
     perc_contemplados_cadunico = (
-        qtd_contemplados_cadunico / total_contemplados_cpf 
+        qtd_contemplados_cadunico / total_contemplados_cpf
         if total_contemplados_cpf > 0
         else 0
     )
 
     perc_valor_cadunico = (
-        valor_recebido_cadunico / total_valor_cpf 
+        valor_recebido_cadunico / total_valor_cpf
         if total_valor_cpf > 0
         else 0
     )
 
+    # ------------------------------------------------------------
+    # 6. Média simples do valor recebido pelo público CadÚnico
+    # ------------------------------------------------------------
+    media_valor_recebido_cadunico = (
+        valor_recebido_cadunico / qtd_contemplados_cadunico
+        if qtd_contemplados_cadunico > 0
+        else 0
+    )
+
+    # ------------------------------------------------------------
+    # 7. Média aparada do valor recebido pelo público CadÚnico
+    # ------------------------------------------------------------
+    df_cpf_cadunico["valor_medio_por_contemplado_linha"] = (
+        df_cpf_cadunico["valor_transacao"]
+        .div(
+            df_cpf_cadunico["quantidade"]
+            .where(df_cpf_cadunico["quantidade"].ne(0))
+        )
+        .fillna(0)
+    )
+
+    media_aparada_valor_recebido_cadunico = calcular_media_aparada_ponderada(
+        df=df_cpf_cadunico,
+        col_valor_medio="valor_medio_por_contemplado_linha",
+        col_peso="quantidade",
+        corte_superior=corte_media_aparada,
+    )
+
+    # ------------------------------------------------------------
+    # 8. Resultado final
+    # ------------------------------------------------------------
     df_resultado = pd.DataFrame(
         {
             "perc_contemplados_cadunico": [perc_contemplados_cadunico],
@@ -66,6 +178,10 @@ def aggregate_cadunico_summary(
             "qtd_documentos_unicos_cadunico": [qtd_documentos_unicos_cadunico],
             "valor_recebido_cadunico": [valor_recebido_cadunico],
             "perc_valor_cadunico": [perc_valor_cadunico],
+            "media_valor_recebido_cadunico": [media_valor_recebido_cadunico],
+            "media_aparada_valor_recebido_cadunico": [
+                media_aparada_valor_recebido_cadunico
+            ],
         }
     )
 

@@ -685,6 +685,7 @@ def aggregate_cadunico_by_population_size(df_cubo: pd.DataFrame) -> pd.DataFrame
         ]
     ]
 
+
 def aggregate_cadunico_by_uf(df_cubo: pd.DataFrame) -> pd.DataFrame:
     """
     Agrega, por UF, quantidade e valor de contemplados no CadÚnico
@@ -697,6 +698,7 @@ def aggregate_cadunico_by_uf(df_cubo: pd.DataFrame) -> pd.DataFrame:
     - Usa valor_transacao como valor recebido
 
     Percentuais calculados:
+    - percentual de contemplados CPF da UF que estão no CadÚnico
     - participação da UF no total Brasil de contemplados CadÚnico
     - participação da UF no total Brasil de contemplados CPF
     - participação da UF no valor Brasil de contemplados CadÚnico
@@ -720,12 +722,18 @@ def aggregate_cadunico_by_uf(df_cubo: pd.DataFrame) -> pd.DataFrame:
             f"As seguintes colunas não existem no DataFrame: {missing_columns}"
         )
 
+    # ------------------------------------------------------------
+    # 1. Filtra apenas CPF
+    # ------------------------------------------------------------
     df_cpf = df_cubo.loc[
         df_cubo["tipo_documento"].eq("CPF")
     ].copy()
 
     df_cpf["uf"] = df_cpf["uf"].fillna("Não informado")
 
+    # ------------------------------------------------------------
+    # 2. Total de contemplados CPF por UF
+    # ------------------------------------------------------------
     df_total_uf = (
         df_cpf
         .groupby("uf", dropna=False)
@@ -736,6 +744,9 @@ def aggregate_cadunico_by_uf(df_cubo: pd.DataFrame) -> pd.DataFrame:
         .reset_index()
     )
 
+    # ------------------------------------------------------------
+    # 3. Total de contemplados CPF no CadÚnico por UF
+    # ------------------------------------------------------------
     df_cadunico_uf = (
         df_cpf
         .loc[df_cpf["pessoaCad_cadunico"].eq(1.0)]
@@ -747,6 +758,9 @@ def aggregate_cadunico_by_uf(df_cubo: pd.DataFrame) -> pd.DataFrame:
         .reset_index()
     )
 
+    # ------------------------------------------------------------
+    # 4. Junta total CPF com total CadÚnico
+    # ------------------------------------------------------------
     df_resultado = df_total_uf.merge(
         df_cadunico_uf,
         on="uf",
@@ -765,44 +779,57 @@ def aggregate_cadunico_by_uf(df_cubo: pd.DataFrame) -> pd.DataFrame:
         ]
     ].fillna(0)
 
+    # ------------------------------------------------------------
+    # 5. Totais Brasil
+    # ------------------------------------------------------------
     total_qtd_cadunico_brasil = df_resultado["qtd_contemplados_cadunico"].sum()
     total_qtd_geral_brasil = df_resultado["qtd_contemplados_total_uf"].sum()
 
     total_valor_cadunico_brasil = df_resultado["valor_contemplados_cadunico"].sum()
     total_valor_geral_brasil = df_resultado["valor_contemplados_total_uf"].sum()
 
-    df_resultado["perc_qtd_cadunico_brasil"] = (
+    # ------------------------------------------------------------
+    # 6. Percentual de contemplados da UF que estão no CadÚnico
+    # ------------------------------------------------------------
+    df_resultado["perc_qtd_cadunico_na_uf"] = (
         df_resultado["qtd_contemplados_cadunico"]
-        / total_qtd_cadunico_brasil
-        
+        .div(
+            df_resultado["qtd_contemplados_total_uf"]
+            .where(df_resultado["qtd_contemplados_total_uf"].ne(0))
+        )
+        .fillna(0)
+    )
+
+    # ------------------------------------------------------------
+    # 7. Participação da UF no total Brasil
+    # ------------------------------------------------------------
+    df_resultado["perc_qtd_cadunico_brasil"] = (
+        df_resultado["qtd_contemplados_cadunico"] / total_qtd_cadunico_brasil
         if total_qtd_cadunico_brasil > 0
         else 0
     )
 
     df_resultado["perc_qtd_total_brasil"] = (
-        df_resultado["qtd_contemplados_total_uf"]
-        / total_qtd_geral_brasil
-        
+        df_resultado["qtd_contemplados_total_uf"] / total_qtd_geral_brasil
         if total_qtd_geral_brasil > 0
         else 0
     )
 
     df_resultado["perc_valor_cadunico_brasil"] = (
-        df_resultado["valor_contemplados_cadunico"]
-        / total_valor_cadunico_brasil
-        
+        df_resultado["valor_contemplados_cadunico"] / total_valor_cadunico_brasil
         if total_valor_cadunico_brasil > 0
         else 0
     )
 
     df_resultado["perc_valor_total_brasil"] = (
-        df_resultado["valor_contemplados_total_uf"]
-        / total_valor_geral_brasil
-        
+        df_resultado["valor_contemplados_total_uf"] / total_valor_geral_brasil
         if total_valor_geral_brasil > 0
         else 0
     )
 
+    # ------------------------------------------------------------
+    # 8. Ordenação final
+    # ------------------------------------------------------------
     df_resultado = (
         df_resultado
         .sort_values("qtd_contemplados_cadunico", ascending=False)
@@ -814,6 +841,7 @@ def aggregate_cadunico_by_uf(df_cubo: pd.DataFrame) -> pd.DataFrame:
             "uf",
             "qtd_contemplados_cadunico",
             "qtd_contemplados_total_uf",
+            "perc_qtd_cadunico_na_uf",
             "perc_qtd_cadunico_brasil",
             "perc_qtd_total_brasil",
             "valor_contemplados_cadunico",
@@ -1030,3 +1058,224 @@ def aggregate_bpc_summary(df_cubo: pd.DataFrame) -> pd.DataFrame:
     )
 
     return df_resultado
+
+
+
+def aggregate_cadunico_representacao_by_uf(
+    df_cubo: pd.DataFrame,
+    col_uf: str = "uf",
+    col_tipo_documento: str = "tipo_documento",
+    col_cadunico: str = "pessoaCad_cadunico",
+    col_quantidade: str = "quantidade",
+) -> pd.DataFrame:
+    """
+    Calcula, por UF, a comparação entre:
+
+    1. A distribuição da população cadastrada no CadÚnico no Brasil;
+    2. A distribuição dos contemplados PNAB que estão no CadÚnico.
+
+    Regras:
+    - Considera apenas tipo_documento == "CPF";
+    - Considera contemplado no CadÚnico quando pessoaCad_cadunico == 1.0;
+    - Usa a coluna quantidade como número de contemplados;
+    - Percentuais retornam em escala decimal, ou seja:
+        0.10 = 10%.
+
+    Principais colunas calculadas:
+    - perc_qtd_cadunico_brasil:
+        quanto a UF representa no total de pessoas cadastradas no CadÚnico no Brasil.
+
+    - perc_qtd_contemplados_cadunico:
+        quanto a UF representa no total de contemplados PNAB que estão no CadÚnico.
+
+    - razao_representacao_pnab_cadunico:
+        compara a participação da UF entre os contemplados PNAB no CadÚnico
+        com a participação da UF na população total do CadÚnico.
+        Valores acima de 1 indicam sobrerrepresentação na PNAB.
+    """
+
+    required_columns = [
+        col_uf,
+        col_tipo_documento,
+        col_cadunico,
+        col_quantidade,
+    ]
+
+    missing_columns = [
+        col for col in required_columns if col not in df_cubo.columns
+    ]
+
+    if missing_columns:
+        raise ValueError(
+            f"As seguintes colunas não existem no DataFrame: {missing_columns}"
+        )
+
+    # ------------------------------------------------------------
+    # 1. Base de referência: população e CadÚnico por UF
+    # ------------------------------------------------------------
+    df_ref_uf = pd.DataFrame({
+        "codigo_uf": [
+            11, 12, 13, 14, 15, 16, 17,
+            21, 22, 23, 24, 25, 26, 27, 28, 29,
+            31, 32, 33, 35,
+            41, 42, 43,
+            50, 51, 52, 53
+        ],
+        "uf": [
+            "RO", "AC", "AM", "RR", "PA", "AP", "TO",
+            "MA", "PI", "CE", "RN", "PB", "PE", "AL", "SE", "BA",
+            "MG", "ES", "RJ", "SP",
+            "PR", "SC", "RS",
+            "MS", "MT", "GO", "DF"
+        ],
+        "unidade_da_federacao": [
+            "Rondônia", "Acre", "Amazonas", "Roraima", "Pará", "Amapá", "Tocantins",
+            "Maranhão", "Piauí", "Ceará", "Rio Grande do Norte", "Paraíba",
+            "Pernambuco", "Alagoas", "Sergipe", "Bahia",
+            "Minas Gerais", "Espírito Santo", "Rio de Janeiro", "São Paulo",
+            "Paraná", "Santa Catarina", "Rio Grande do Sul",
+            "Mato Grosso do Sul", "Mato Grosso", "Goiás", "Distrito Federal"
+        ],
+        "populacao_ibge_2024": [
+            1746227, 880631, 4281209, 716793, 8664306, 802837, 1577342,
+            7010960, 3375646, 9233656, 3446071, 4145040, 9539029, 3220104,
+            2291077, 14850513,
+            21322691, 4102129, 17219679, 45973194,
+            11824665, 8058441, 11229915,
+            2901895, 3836399, 7350483, 2982818
+        ],
+        "qtd_pessoas_cadunico_uf": [
+            873792, 571102, 2716758, 412078, 5601544, 525802, 916427,
+            4633794, 2222147, 5745101, 2035308, 2568796, 5810408, 2046130,
+            1416112, 9426922,
+            8835783, 1801725, 6939360, 14214700,
+            4409296, 1822770, 3733440,
+            1426684, 1730035, 3332959, 959621
+        ],
+    })
+
+    # ------------------------------------------------------------
+    # 2. Filtra apenas CPF e contemplados no CadÚnico
+    # ------------------------------------------------------------
+    df_cpf_cadunico = df_cubo.loc[
+        df_cubo[col_tipo_documento].eq("CPF")
+        & df_cubo[col_cadunico].eq(1.0)
+    ].copy()
+
+    df_cpf_cadunico[col_uf] = df_cpf_cadunico[col_uf].fillna("Não informado")
+
+    # ------------------------------------------------------------
+    # 3. Agrega contemplados PNAB no CadÚnico por UF
+    # ------------------------------------------------------------
+    df_pnab_cadunico_uf = (
+        df_cpf_cadunico
+        .groupby(col_uf, dropna=False)
+        .agg(
+            qtd_contemplados_cadunico=(col_quantidade, "sum")
+        )
+        .reset_index()
+        .rename(columns={col_uf: "uf"})
+    )
+
+    # ------------------------------------------------------------
+    # 4. Junta referência CadÚnico com contemplados PNAB
+    # ------------------------------------------------------------
+    df_resultado = df_ref_uf.merge(
+        df_pnab_cadunico_uf,
+        on="uf",
+        how="left"
+    )
+
+    df_resultado["qtd_contemplados_cadunico"] = (
+        df_resultado["qtd_contemplados_cadunico"]
+        .fillna(0)
+    )
+
+    # ------------------------------------------------------------
+    # 5. Totais Brasil
+    # ------------------------------------------------------------
+    total_pessoas_cadunico_brasil = (
+        df_resultado["qtd_pessoas_cadunico_uf"].sum()
+    )
+
+    total_contemplados_cadunico_brasil = (
+        df_resultado["qtd_contemplados_cadunico"].sum()
+    )
+
+    # ------------------------------------------------------------
+    # 6. Percentuais principais
+    # ------------------------------------------------------------
+    df_resultado["perc_qtd_cadunico_brasil"] = (
+        df_resultado["qtd_pessoas_cadunico_uf"]
+        / total_pessoas_cadunico_brasil
+        if total_pessoas_cadunico_brasil > 0
+        else 0
+    )
+
+    df_resultado["perc_qtd_contemplados_cadunico"] = (
+        df_resultado["qtd_contemplados_cadunico"]
+        / total_contemplados_cadunico_brasil
+        if total_contemplados_cadunico_brasil > 0
+        else 0
+    )
+
+    # ------------------------------------------------------------
+    # 7. Métricas auxiliares úteis
+    # ------------------------------------------------------------
+
+    # Percentual da população da UF que está no CadÚnico
+    df_resultado["perc_populacao_uf_no_cadunico"] = (
+        df_resultado["qtd_pessoas_cadunico_uf"]
+        .div(
+            df_resultado["populacao_ibge_2024"]
+            .where(df_resultado["populacao_ibge_2024"].ne(0))
+        )
+        .fillna(0)
+    )
+
+    # Percentual de pessoas do CadÚnico da UF contempladas pela PNAB
+    df_resultado["perc_cadunico_uf_contemplado_pnab"] = (
+        df_resultado["qtd_contemplados_cadunico"]
+        .div(
+            df_resultado["qtd_pessoas_cadunico_uf"]
+            .where(df_resultado["qtd_pessoas_cadunico_uf"].ne(0))
+        )
+        .fillna(0)
+    )
+
+    # Razão de representação:
+    # participação da UF entre contemplados PNAB CadÚnico /
+    # participação da UF no CadÚnico Brasil
+    df_resultado["razao_representacao_pnab_cadunico"] = (
+        df_resultado["perc_qtd_contemplados_cadunico"]
+        .div(
+            df_resultado["perc_qtd_cadunico_brasil"]
+            .where(df_resultado["perc_qtd_cadunico_brasil"].ne(0))
+        )
+        .fillna(0)
+    )
+
+    # ------------------------------------------------------------
+    # 8. Ordenação final
+    # ------------------------------------------------------------
+    df_resultado = (
+        df_resultado
+        .sort_values("qtd_contemplados_cadunico", ascending=False)
+        .reset_index(drop=True)
+    )
+
+    return df_resultado[
+        [
+            "codigo_uf",
+            "uf",
+            "unidade_da_federacao",
+            "populacao_ibge_2024",
+            "qtd_pessoas_cadunico_uf",
+            "qtd_contemplados_cadunico",
+            "perc_qtd_cadunico_brasil",
+            "perc_qtd_contemplados_cadunico",
+            "perc_populacao_uf_no_cadunico",
+            "perc_cadunico_uf_contemplado_pnab",
+            "razao_representacao_pnab_cadunico",
+        ]
+    ]

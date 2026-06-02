@@ -17,6 +17,7 @@ import csvResumoValoresUfEstadoRaw from '../../../data/section_2/resumo_valores_
 import csvTerrUfRaw      from '../../../data/section_2/territorios_especiais_por_uf.csv?raw';
 import csvTerrEstadoRaw  from '../../../data/section_2/territorios_especiais_por_estado.csv?raw';
 import csvTerrMunRaw     from '../../../data/section_2/territorios_especiais_por_municipio.csv?raw';
+import csvFaixaValorPorteRaw from '../../../data/section_2/faixa_valor_porte_populacional.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -308,6 +309,24 @@ export const portePagamentosData = porteRowsS2.map((d) => {
 		acima10m:   (bands[7] / total) * 100,
 	};
 });
+
+export const porteValorPercData = parseCSV(csvFaixaValorPorteRaw)
+	.filter((d) => {
+		const p = d.porte_populacional?.trim();
+		return p && p !== '-99' && p in PORTE_NAME_MAP;
+	})
+	.sort((a, b) => PORTE_SORT[a.porte_populacional.trim()] - PORTE_SORT[b.porte_populacional.trim()])
+	.map((d) => {
+		const p = d.porte_populacional.trim();
+		return {
+			label:     PORTE_NAME_MAP[p],
+			ate2k:     +d.perc_valor_transacao_ate_2_mil        * 100,
+			de2a10k:   +d.perc_valor_transacao_de_2_a_10_mil    * 100,
+			de10a50k:  +d.perc_valor_transacao_de_10_a_50_mil   * 100,
+			de50a200k: +d.perc_valor_transacao_de_50_a_200_mil  * 100,
+			acima200k: +d.perc_valor_transacao_acima_de_200_mil * 100,
+		};
+	});
 
 // ── Row 40: Valor total por território especial (HorizontalBarChart) ──────────
 const SPECIAL_EXCLUDE = new Set(['Não especial', 'Não informado']);

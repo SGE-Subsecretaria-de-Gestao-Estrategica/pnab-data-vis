@@ -12,6 +12,7 @@
 	} from 'sniic-design-system';
 	import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
 	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
+	import VerticalStackedBarChartCustom from '$lib/components/VerticalStackedBarChartCustom.svelte';
 	import {
 		faixaGroupedData,
 		regiaoDistData,
@@ -24,6 +25,7 @@
 		portePagamentosData,
 		PORTE_BAND_KEYS,
 		PORTE_BAND_LABELS,
+		porteValorPercData,
 		specialTerritoryBarData,
 		terrEspeciaisData,
 		TERR_KEYS,
@@ -299,6 +301,20 @@
 	<p>
 		Quando observados todos os municípios da base em conjunto, <strong>70,3%</strong> dos recursos executados se concentraram em pagamentos de até R$ 50 mil.
 	</p>
+	<p>
+		O gráfico abaixo apresenta como o <strong>valor pago</strong> se distribuiu pelas faixas de valor em cada porte de município.
+	</p>
+	<div class="chart-wide">
+		<VerticalStackedBarChartCustom
+			data={porteValorPercData}
+			keys={[...UF_BAND_KEYS]}
+			labels={UF_BAND_LABELS}
+			colors={categorical8}
+			format={formatPctFixed}
+			normalize={true}
+			height={420}
+		/>
+	</div>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════

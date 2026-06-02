@@ -1,0 +1,21 @@
+,ranking_valor,cnae_principal,quantidade_contemplados,valor_transacao,perc_quantidade_contemplados,perc_valor_transacao,visao_cnae
+0,1,Atividades de organizações associativas ligadas à cultura e à arte,2736,222281615.9,0.1701915899477482,0.2637344911295681,CNAE cultural
+1,2,Produção musical,2532,83379775.69,0.15750186613585468,0.09892911126753998,CNAE cultural
+2,3,Produção teatral,1251,81944578.6,0.07781786514058224,0.09722626700545726,CNAE cultural
+3,4,Ensino de arte e cultura não especificado anteriormente,2424,76208049.92,0.1507837770589699,0.09041994401673739,CNAE cultural
+4,5,"Artes cênicas, espetáculos e atividades complementares não especificadas anteriormente",844,75254228.47,0.0525006220452849,0.0892882462210124,CNAE cultural
+5,6,"Atividades de produção cinematográfica, de vídeos e de programas de televisão não especificadas anteriormente",638,60918084.22,0.03968648917641204,0.07227858173200312,CNAE cultural
+6,7,Serviços de arquitetura,99,18495996.53,0.006158248320477731,0.021945279698561918,CNAE cultural
+7,8,Atividades de museus e de exploração de lugares e prédios históricos e atrações similares,82,18051711.12,0.005100771336153272,0.02141814034856117,CNAE cultural
+8,9,"Ensino de artes cênicas, exceto dança",346,16472144.85,0.02152276685742722,0.01954400377304116,CNAE cultural
+9,10,"Gestão de espaços para artes cênicas, espetáculos e outras atividades artísticas",66,14729970.0,0.004105498880318487,0.017476934053113496,CNAE cultural
+10,11,"Atividades de pós-produção cinematográfica, de vídeos e de programas de televisão não especificadas anteriormente",463,14668718.7,0.028800696690719083,0.017404260114825265,CNAE cultural
+11,12,Ensino de música,453,12108578.31,0.028178651405822343,0.014366684019100547,CNAE cultural
+12,13,Edição de livros,226,12105082.7,0.014058223438666334,0.014362536519448786,CNAE cultural
+13,14,Atividades de sonorização e de iluminação,378,9651763.65,0.023513311769096792,0.011451702671986978,CNAE cultural
+14,15,Estúdios cinematográficos,80,8508388.8,0.004976362279173924,0.010095102023687047,CNAE cultural
+15,16,"Atividades de produção de fotografias, exceto aérea e submarina",307,8389387.05,0.019096790246329935,0.009953907863959967,CNAE cultural
+16,17,Produção de espetáculos de dança,124,8372577.59,0.007713361532719582,0.009933963639776994,CNAE cultural
+17,18,Filmagem de festas e eventos,221,7271258.4,0.013747200796217964,0.008627261531418432,CNAE cultural
+18,19,Outras atividades de recreação e lazer não especificadas anteriormente,227,6959562.27,0.01412042796715601,0.008257437783737975,CNAE cultural
+19,20,Comércio varejista especializado de instrumentos musicais e acessórios,371,6032203.85,0.02307788006966907,0.007157138058080725,CNAE cultural

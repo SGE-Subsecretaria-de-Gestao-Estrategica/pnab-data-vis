@@ -1801,8 +1801,7 @@ def resumo_raca_cor_com_vinculo_rais(
     ).reset_index(drop=True)
 
     return resumo
-import pandas as pd
-import numpy as np
+
 
 def resumo_escolaridade_com_vinculo_rais(
     df_cubo: pd.DataFrame,

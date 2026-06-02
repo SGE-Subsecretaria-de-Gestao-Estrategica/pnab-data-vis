@@ -1562,3 +1562,332 @@ def aggregate_cnpj_natureza_juridica(
     )
 
     return df_resultado
+
+
+def aggregate_cnpj_natureza_juridica_por_regiao(
+    df_cubo: pd.DataFrame,
+    coluna_regiao: str = "regiao",
+    coluna_natureza: str = "naturezajuridica_agrupada_receita_cnpj",
+    coluna_valor: str = "valor_transacao",
+    coluna_quantidade: str = "quantidade",
+    coluna_tipo_documento: str = "tipo_documento"
+) -> pd.DataFrame:
+    """
+    Agrega apenas CNPJs por região e natureza jurídica.
+
+    Para cada região, mostra quanto cada categoria de natureza jurídica representa
+    em quantidade de contemplados e em valor recebido.
+
+    Os percentuais são calculados dentro de cada região.
+    Assim, para cada região:
+    - soma de perc_quantidade_contemplados = 1
+    - soma de perc_valor_contemplados = 1
+
+    Percentuais retornam em escala decimal:
+    0.25 = 25%
+    """
+
+    regioes = [
+        "Norte",
+        "Nordeste",
+        "Centro-Oeste",
+        "Sudeste",
+        "Sul"
+    ]
+
+    categorias_natureza = [
+        "Microempresa-ME",
+        "MEI",
+        "Empresa de Pequeno Porte (EPP)",
+        "Administração Pública",
+        "Entidades sem fins lucrativos",
+        "Entidades Empresariais",
+    ]
+
+    df = df_cubo.copy()
+
+    df["tipo_documento_norm"] = (
+        df[coluna_tipo_documento]
+        .fillna("Não informado")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    # Considera apenas CNPJ
+    df = df[df["tipo_documento_norm"].eq("CNPJ")].copy()
+
+    df[coluna_valor] = pd.to_numeric(
+        df[coluna_valor],
+        errors="coerce"
+    ).fillna(0)
+
+    df[coluna_quantidade] = pd.to_numeric(
+        df[coluna_quantidade],
+        errors="coerce"
+    ).fillna(0)
+
+    df[coluna_regiao] = (
+        df[coluna_regiao]
+        .fillna("Não informado")
+        .astype(str)
+        .str.strip()
+    )
+
+    df[coluna_natureza] = (
+        df[coluna_natureza]
+        .fillna("Não informado")
+        .astype(str)
+        .str.strip()
+    )
+
+    # Mantém apenas as categorias desejadas
+    df = df[
+        df[coluna_regiao].isin(regioes)
+        & df[coluna_natureza].isin(categorias_natureza)
+    ].copy()
+
+    df[coluna_regiao] = pd.Categorical(
+        df[coluna_regiao],
+        categories=regioes,
+        ordered=True
+    )
+
+    df[coluna_natureza] = pd.Categorical(
+        df[coluna_natureza],
+        categories=categorias_natureza,
+        ordered=True
+    )
+
+    df_resultado = (
+        df
+        .groupby([coluna_regiao, coluna_natureza], observed=False)
+        .agg(
+            quantidade_contemplados=(coluna_quantidade, "sum"),
+            valor_contemplados=(coluna_valor, "sum")
+        )
+        .reset_index()
+        .rename(columns={
+            coluna_regiao: "regiao",
+            coluna_natureza: "natureza_juridica"
+        })
+    )
+
+    totais_regiao = (
+        df_resultado
+        .groupby("regiao", observed=False)
+        .agg(
+            total_quantidade_regiao=("quantidade_contemplados", "sum"),
+            total_valor_regiao=("valor_contemplados", "sum")
+        )
+        .reset_index()
+    )
+
+    df_resultado = df_resultado.merge(
+        totais_regiao,
+        on="regiao",
+        how="left"
+    )
+
+    df_resultado["perc_quantidade_contemplados"] = np.where(
+        df_resultado["total_quantidade_regiao"] > 0,
+        df_resultado["quantidade_contemplados"] / df_resultado["total_quantidade_regiao"],
+        np.nan
+    )
+
+    df_resultado["perc_valor_contemplados"] = np.where(
+        df_resultado["total_valor_regiao"] > 0,
+        df_resultado["valor_contemplados"] / df_resultado["total_valor_regiao"],
+        np.nan
+    )
+
+    df_resultado["quantidade_contemplados"] = (
+        df_resultado["quantidade_contemplados"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado["total_quantidade_regiao"] = (
+        df_resultado["total_quantidade_regiao"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    colunas_valor = [
+        "valor_contemplados",
+        "total_valor_regiao"
+    ]
+
+    df_resultado[colunas_valor] = (
+        df_resultado[colunas_valor]
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    colunas_percentual = [
+        "perc_quantidade_contemplados",
+        "perc_valor_contemplados"
+    ]
+
+    df_resultado[colunas_percentual] = (
+        df_resultado[colunas_percentual]
+        .astype("Float64")
+    )
+
+    df_resultado = (
+        df_resultado
+        .sort_values(["regiao", "natureza_juridica"])
+        .reset_index(drop=True)
+    )
+
+    return df_resultado
+
+def top_cnaes_cnpj(
+    df_cubo: pd.DataFrame,
+    top_n: int = 20,
+    apenas_cnae_cultural: bool = True,
+    valor_flag_cnae_cultural: str = "CNAE CULTURAL",
+    coluna_tipo_documento: str = "tipo_documento",
+    coluna_cnae: str = "descr_cnae_principal_receita_cnpj",
+    coluna_flag_cnae: str = "flag_cnae_cultural",
+    coluna_valor: str = "valor_transacao",
+    coluna_quantidade: str = "quantidade"
+) -> pd.DataFrame:
+    """
+    Retorna os top CNAEs de CNPJs que mais receberam recursos.
+
+    Regras:
+    - filtra apenas tipo_documento == "CNPJ";
+    - se apenas_cnae_cultural=True, filtra flag_cnae_cultural == valor_flag_cnae_cultural;
+    - se apenas_cnae_cultural=False, não filtra por CNAE cultural;
+    - agrega por CNAE principal;
+    - ordena pelo maior valor recebido;
+    - calcula percentuais em relação ao total dos CNAEs considerados na base filtrada.
+
+    Percentuais retornam em escala decimal:
+    0.25 = 25%
+    """
+
+    df = df_cubo.copy()
+
+    df["tipo_documento_norm"] = (
+        df[coluna_tipo_documento]
+        .fillna("Não informado")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    # Filtra apenas CNPJ
+    df = df[df["tipo_documento_norm"].eq("CNPJ")].copy()
+
+    # Opcional: filtra apenas CNAE cultural
+    if apenas_cnae_cultural:
+        df["flag_cnae_norm"] = (
+            df[coluna_flag_cnae]
+            .fillna("Não informado")
+            .astype(str)
+            .str.upper()
+            .str.strip()
+            .str.normalize("NFKD")
+            .str.encode("ascii", errors="ignore")
+            .str.decode("utf-8")
+        )
+
+        valor_flag_norm = (
+            str(valor_flag_cnae_cultural)
+            .upper()
+            .strip()
+            .encode("ascii", errors="ignore")
+            .decode("utf-8")
+        )
+
+        df = df[df["flag_cnae_norm"].eq(valor_flag_norm)].copy()
+
+    df[coluna_valor] = pd.to_numeric(
+        df[coluna_valor],
+        errors="coerce"
+    ).fillna(0)
+
+    df[coluna_quantidade] = pd.to_numeric(
+        df[coluna_quantidade],
+        errors="coerce"
+    ).fillna(0)
+
+    df[coluna_cnae] = (
+        df[coluna_cnae]
+        .fillna("Não informado")
+        .astype(str)
+        .str.strip()
+    )
+
+    df_agg = (
+        df
+        .groupby(coluna_cnae, dropna=False)
+        .agg(
+            quantidade_contemplados=(coluna_quantidade, "sum"),
+            valor_transacao=(coluna_valor, "sum")
+        )
+        .reset_index()
+        .rename(columns={coluna_cnae: "cnae_principal"})
+    )
+
+    total_quantidade = df_agg["quantidade_contemplados"].sum()
+    total_valor = df_agg["valor_transacao"].sum()
+
+    df_agg["perc_quantidade_contemplados"] = np.where(
+        total_quantidade > 0,
+        df_agg["quantidade_contemplados"] / total_quantidade,
+        np.nan
+    )
+
+    df_agg["perc_valor_transacao"] = np.where(
+        total_valor > 0,
+        df_agg["valor_transacao"] / total_valor,
+        np.nan
+    )
+
+    df_resultado = (
+        df_agg
+        .sort_values("valor_transacao", ascending=False)
+        .head(top_n)
+        .reset_index(drop=True)
+    )
+
+    df_resultado.insert(0, "ranking_valor", range(1, len(df_resultado) + 1))
+
+    df_resultado["visao_cnae"] = np.where(
+        apenas_cnae_cultural,
+        "CNAE cultural",
+        "CNAE geral"
+    )
+
+    df_resultado["quantidade_contemplados"] = (
+        df_resultado["quantidade_contemplados"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado["valor_transacao"] = (
+        df_resultado["valor_transacao"]
+        .astype("Float64")
+    )
+
+    df_resultado[[
+        "perc_quantidade_contemplados",
+        "perc_valor_transacao"
+    ]] = (
+        df_resultado[[
+            "perc_quantidade_contemplados",
+            "perc_valor_transacao"
+        ]]
+        .astype("Float64")
+    )
+
+    return df_resultado

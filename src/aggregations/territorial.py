@@ -4259,6 +4259,7 @@ def adicionar_macrorregiao_percentuais_uf(
 
 def criar_df_uf_cut_from_aux(
     df_aux: pd.DataFrame,
+    by_filter: str = "UF",
     col_uf: str = "uf_bbagil",
     col_valor: str = "valor_transacao_total_bbagil",
     col_chave: str = "chave",
@@ -4267,6 +4268,13 @@ def criar_df_uf_cut_from_aux(
 ) -> pd.DataFrame:
     """
     Cria uma tabela agregada por UF a partir da df_aux.
+
+    Parâmetros
+    ----------
+    by_filter : str
+        Define a visão da análise:
+        - "UF": considera todos os registros, sem filtro de tipo_ente
+        - "ESTADO": considera apenas tipo_ente_bbagil == "ESTADO"
 
     A população da UF é obtida apenas das linhas em que tipo_ente == 'ESTADO',
     usando o primeiro valor de população encontrado para cada UF.
@@ -4288,10 +4296,33 @@ def criar_df_uf_cut_from_aux(
 
         return x[x <= limite_superior].mean()
 
+    by_filter = by_filter.upper().strip()
+
+    if by_filter not in ["UF", "ESTADO"]:
+        raise ValueError("by_filter deve ser 'UF' ou 'ESTADO'.")
+
     df = df_aux.copy()
 
     df[col_uf] = df[col_uf].astype(str).str.upper().str.strip()
-    df[col_tipo_ente] = df[col_tipo_ente].astype(str).str.upper().str.strip()
+
+    df[col_tipo_ente] = (
+        df[col_tipo_ente]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    # ------------------------------------------------------------
+    # Filtro da visão
+    # ------------------------------------------------------------
+
+    if by_filter == "ESTADO":
+        df = df[df[col_tipo_ente].eq("ESTADO")].copy()
+
+    # Se by_filter == "UF", mantém todos os registros.
 
     uf_macrorregiao = {
         # Norte
@@ -4356,9 +4387,27 @@ def criar_df_uf_cut_from_aux(
         np.nan
     )
 
+    # ------------------------------------------------------------
+    # População da UF vem sempre das linhas estaduais da base original
+    # ------------------------------------------------------------
+
+    df_pop = df_aux.copy()
+
+    df_pop[col_uf] = df_pop[col_uf].astype(str).str.upper().str.strip()
+
+    df_pop[col_tipo_ente] = (
+        df_pop[col_tipo_ente]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
     df_pop_uf = (
-        df
-        .loc[df[col_tipo_ente].eq("ESTADO"), [col_uf, col_populacao]]
+        df_pop
+        .loc[df_pop[col_tipo_ente].eq("ESTADO"), [col_uf, col_populacao]]
         .dropna(subset=[col_populacao])
         .drop_duplicates(subset=[col_uf])
         .rename(columns={
@@ -4415,10 +4464,13 @@ def criar_df_uf_cut_from_aux(
         np.nan
     )
 
+    df_uf["visao"] = by_filter
+
     df_uf = df_uf[
         [
             "uf",
             "macrorregiao",
+            "visao",
             "valor_executado_rs",
             "valor_executado_perc",
             "valor_executado_perc_regiao",
@@ -5066,3 +5118,145 @@ def resumo_por_regiao(
     )
 
     return df_resumo
+
+
+def tabela_resumo_estado_municipio(
+    df_aux: pd.DataFrame,
+    col_tipo_ente: str = "tipo_ente_bbagil",
+    col_valor: str = "valor_transacao_total_bbagil",
+    col_chave: str = "chave",
+    col_faixa: str = "faixa_vlr_pago_ju_bbagil",
+    formatar: bool = True
+) -> pd.DataFrame:
+    """
+    Cria uma tabela-resumo comparando Estados e Municípios.
+
+    Indicadores:
+    - Número de contemplados
+    - Ticket médio dos pagamentos, usando média aparada de 1%
+    - Concentração dos contemplados, por faixa de valor
+    - Concentração do recurso executado, por faixa de valor
+
+    Regras:
+    - Número de contemplados = nunique da coluna chave
+    - Ticket médio = média aparada, removendo os 1% maiores valores
+    - Concentração dos contemplados = faixa com maior número de contemplados
+    - Concentração do recurso executado = faixa com maior soma de valor
+    """
+
+    def media_aparada_1pct_superior(x):
+        x = pd.to_numeric(x, errors="coerce").dropna()
+
+        if x.empty:
+            return np.nan
+
+        limite_superior = x.quantile(0.99)
+
+        return x[x <= limite_superior].mean()
+
+    df = df_aux.copy()
+
+    df[col_tipo_ente] = (
+        df[col_tipo_ente]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    df[col_valor] = pd.to_numeric(
+        df[col_valor],
+        errors="coerce"
+    )
+
+    df = df[df[col_tipo_ente].isin(["ESTADO", "MUNICIPIO"])].copy()
+
+    mapa_tipo_ente = {
+        "ESTADO": "Estados",
+        "MUNICIPIO": "Municípios"
+    }
+
+    ordem_colunas = ["Estados", "Municípios"]
+
+    def formatar_numero_br(valor):
+        if pd.isna(valor):
+            return "-"
+
+        return f"{valor:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+    def formatar_moeda_br(valor):
+        if pd.isna(valor):
+            return "-"
+
+        return (
+            f"R$ {valor:,.0f}"
+            .replace(",", "X")
+            .replace(".", ",")
+            .replace("X", ".")
+        )
+
+    resultados = {}
+
+    for tipo_ente_norm, nome_coluna in mapa_tipo_ente.items():
+        df_tipo = df[df[col_tipo_ente].eq(tipo_ente_norm)].copy()
+
+        qtd_contemplados = df_tipo[col_chave].nunique()
+
+        ticket_medio_aparado = media_aparada_1pct_superior(
+            df_tipo[col_valor]
+        )
+
+        df_faixa = (
+            df_tipo
+            .dropna(subset=[col_faixa])
+            .groupby(col_faixa, as_index=False)
+            .agg(
+                qtd_contemplados=(col_chave, "nunique"),
+                valor_total=(col_valor, "sum")
+            )
+        )
+
+        if df_faixa.empty:
+            faixa_maior_qtd = np.nan
+            faixa_maior_valor = np.nan
+        else:
+            faixa_maior_qtd = (
+                df_faixa
+                .sort_values("qtd_contemplados", ascending=False)
+                .iloc[0][col_faixa]
+            )
+
+            faixa_maior_valor = (
+                df_faixa
+                .sort_values("valor_total", ascending=False)
+                .iloc[0][col_faixa]
+            )
+
+        if formatar:
+            resultados[nome_coluna] = {
+                "Número de contemplados": formatar_numero_br(qtd_contemplados),
+                "Ticket médio dos pagamentos": formatar_moeda_br(ticket_medio_aparado),
+                "Concentração dos contemplados, por faixa de valor": faixa_maior_qtd,
+                "Concentração do recurso executado, por faixa de valor": faixa_maior_valor
+            }
+        else:
+            resultados[nome_coluna] = {
+                "Número de contemplados": qtd_contemplados,
+                "Ticket médio dos pagamentos": ticket_medio_aparado,
+                "Concentração dos contemplados, por faixa de valor": faixa_maior_qtd,
+                "Concentração do recurso executado, por faixa de valor": faixa_maior_valor
+            }
+
+    df_resultado = (
+        pd.DataFrame(resultados)
+        .reset_index()
+        .rename(columns={"index": "indicador"})
+    )
+
+    df_resultado = df_resultado[
+        ["indicador"] + ordem_colunas
+    ]
+
+    return df_resultado

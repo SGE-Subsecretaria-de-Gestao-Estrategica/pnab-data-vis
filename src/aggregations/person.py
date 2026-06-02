@@ -1166,3 +1166,273 @@ def aggregate_cnpj_mei_proportion(
     )
 
     return df_resultado
+
+import pandas as pd
+import numpy as np
+
+def aggregate_sexo_uf_ibge_pnab(
+    df_cubo: pd.DataFrame,
+    col_uf: str = "uf",
+    col_sexo: str = "Sexo",
+    col_tipo_documento: str = "tipo_documento",
+    col_quantidade: str = "quantidade",
+    col_valor: str = "valor_transacao",
+) -> pd.DataFrame:
+    """
+    Retorna uma tabela por UF comparando:
+
+    - proporção masculina e feminina da população residente segundo IBGE 2022;
+    - quantidade de contemplados masculinos e femininos;
+    - percentual de contemplados masculinos e femininos dentro da UF;
+    - valor recebido por masculinos e femininos;
+    - percentual do valor recebido por masculinos e femininos dentro da UF.
+
+    Regras:
+    - considera apenas tipo_documento == 'CPF';
+    - considera apenas Sexo == Masculino ou Feminino/Femenino;
+    - percentuais da PNAB retornam em escala decimal:
+      0.52 = 52%;
+    - percentuais do IBGE também são convertidos para escala decimal.
+    """
+
+    df_ibge_sexo_uf = pd.DataFrame({
+        "uf": [
+            "RJ", "DF", "PE", "SE", "AL", "SP", "PB", "RS", "BA",
+            "RN", "CE", "PR", "MG", "ES", "PI", "MA", "GO", "MS",
+            "SC", "AP", "RO", "AM", "PA", "AC", "TO", "RR", "MT"
+        ],
+        "perc_ibge_masculino": [
+            47.2, 47.7, 47.7, 47.9, 47.9, 48.2, 48.3, 48.3, 48.3,
+            48.4, 48.4, 48.7, 48.8, 48.8, 48.9, 49.1, 49.1, 49.2,
+            49.3, 49.7, 49.8, 49.9, 49.9, 50.0, 50.1, 50.3, 50.3
+        ],
+        "perc_ibge_feminino": [
+            52.8, 52.3, 52.3, 52.1, 52.1, 51.8, 51.7, 51.7, 51.7,
+            51.6, 51.6, 51.3, 51.2, 51.2, 51.1, 50.9, 50.9, 50.8,
+            50.7, 50.3, 50.2, 50.1, 50.1, 50.0, 49.9, 49.7, 49.7
+        ]
+    })
+
+    # Converte IBGE para escala decimal
+    df_ibge_sexo_uf["perc_ibge_masculino"] = (
+        df_ibge_sexo_uf["perc_ibge_masculino"] / 100
+    )
+
+    df_ibge_sexo_uf["perc_ibge_feminino"] = (
+        df_ibge_sexo_uf["perc_ibge_feminino"] / 100
+    )
+
+    df = df_cubo.copy()
+
+    df[col_uf] = (
+        df[col_uf]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+    )
+
+    df["tipo_documento_norm"] = (
+        df[col_tipo_documento]
+        .fillna("Não informado")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+    )
+
+    df["sexo_norm"] = (
+        df[col_sexo]
+        .fillna("Não informado")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    df["sexo_norm"] = df["sexo_norm"].replace({
+        "FEMENINO": "FEMININO"
+    })
+
+    df = df[
+        (df["tipo_documento_norm"].eq("CPF")) &
+        (df["sexo_norm"].isin(["MASCULINO", "FEMININO"]))
+    ].copy()
+
+    df[col_quantidade] = pd.to_numeric(
+        df[col_quantidade],
+        errors="coerce"
+    ).fillna(0)
+
+    df[col_valor] = pd.to_numeric(
+        df[col_valor],
+        errors="coerce"
+    ).fillna(0)
+
+    df_agg = (
+        df
+        .groupby([col_uf, "sexo_norm"], as_index=False)
+        .agg(
+            quantidade_contemplados=(col_quantidade, "sum"),
+            valor_recebido=(col_valor, "sum")
+        )
+    )
+
+    df_qtd = (
+        df_agg
+        .pivot_table(
+            index=col_uf,
+            columns="sexo_norm",
+            values="quantidade_contemplados",
+            aggfunc="sum",
+            fill_value=0
+        )
+        .reset_index()
+    )
+
+    df_valor = (
+        df_agg
+        .pivot_table(
+            index=col_uf,
+            columns="sexo_norm",
+            values="valor_recebido",
+            aggfunc="sum",
+            fill_value=0
+        )
+        .reset_index()
+    )
+
+    df_resultado = df_qtd.merge(
+        df_valor,
+        on=col_uf,
+        how="outer",
+        suffixes=("_qtd", "_valor")
+    )
+
+    colunas_esperadas = [
+        "MASCULINO_qtd",
+        "FEMININO_qtd",
+        "MASCULINO_valor",
+        "FEMININO_valor"
+    ]
+
+    for coluna in colunas_esperadas:
+        if coluna not in df_resultado.columns:
+            df_resultado[coluna] = 0
+
+    df_resultado = df_resultado.rename(columns={
+        col_uf: "uf",
+        "MASCULINO_qtd": "quantidade_contemplados_masculino",
+        "FEMININO_qtd": "quantidade_contemplados_feminino",
+        "MASCULINO_valor": "valor_masculino",
+        "FEMININO_valor": "valor_feminino",
+    })
+
+    df_resultado["quantidade_contemplados_total"] = (
+        df_resultado["quantidade_contemplados_masculino"] +
+        df_resultado["quantidade_contemplados_feminino"]
+    )
+
+    df_resultado["valor_total"] = (
+        df_resultado["valor_masculino"] +
+        df_resultado["valor_feminino"]
+    )
+
+    df_resultado["perc_quantidade_contemplados_masculino"] = np.where(
+        df_resultado["quantidade_contemplados_total"] > 0,
+        df_resultado["quantidade_contemplados_masculino"] /
+        df_resultado["quantidade_contemplados_total"],
+        np.nan
+    )
+
+    df_resultado["perc_quantidade_contemplados_feminino"] = np.where(
+        df_resultado["quantidade_contemplados_total"] > 0,
+        df_resultado["quantidade_contemplados_feminino"] /
+        df_resultado["quantidade_contemplados_total"],
+        np.nan
+    )
+
+    df_resultado["perc_valor_masculino"] = np.where(
+        df_resultado["valor_total"] > 0,
+        df_resultado["valor_masculino"] / df_resultado["valor_total"],
+        np.nan
+    )
+
+    df_resultado["perc_valor_feminino"] = np.where(
+        df_resultado["valor_total"] > 0,
+        df_resultado["valor_feminino"] / df_resultado["valor_total"],
+        np.nan
+    )
+
+    df_resultado = df_resultado.merge(
+        df_ibge_sexo_uf,
+        on="uf",
+        how="left"
+    )
+
+    df_resultado = df_resultado[
+        [
+            "uf",
+
+            "perc_ibge_masculino",
+            "perc_ibge_feminino",
+
+            "quantidade_contemplados_total",
+            "quantidade_contemplados_masculino",
+            "perc_quantidade_contemplados_masculino",
+            "quantidade_contemplados_feminino",
+            "perc_quantidade_contemplados_feminino",
+
+            "valor_total",
+            "valor_masculino",
+            "perc_valor_masculino",
+            "valor_feminino",
+            "perc_valor_feminino",
+        ]
+    ]
+
+    colunas_quantidade = [
+        "quantidade_contemplados_total",
+        "quantidade_contemplados_masculino",
+        "quantidade_contemplados_feminino"
+    ]
+
+    colunas_valor = [
+        "valor_total",
+        "valor_masculino",
+        "valor_feminino"
+    ]
+
+    colunas_percentual = [
+        "perc_ibge_masculino",
+        "perc_ibge_feminino",
+        "perc_quantidade_contemplados_masculino",
+        "perc_quantidade_contemplados_feminino",
+        "perc_valor_masculino",
+        "perc_valor_feminino"
+    ]
+
+    df_resultado[colunas_quantidade] = (
+        df_resultado[colunas_quantidade]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado[colunas_valor] = (
+        df_resultado[colunas_valor]
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    df_resultado[colunas_percentual] = (
+        df_resultado[colunas_percentual]
+        .astype("Float64")
+    )
+
+    df_resultado = (
+        df_resultado
+        .sort_values("uf")
+        .reset_index(drop=True)
+    )
+
+    return df_resultado

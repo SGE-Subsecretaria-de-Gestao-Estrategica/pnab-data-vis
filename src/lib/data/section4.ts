@@ -9,6 +9,8 @@ import csvSexoRaw        from '../../../data/section_4/aggregate_vinculo_formal_
 import csvRacaCorRaw     from '../../../data/section_4/aggregate_vinculo_formal_labor_by_raca_cor.csv?raw';
 import csvRacaCorSexoRaw from '../../../data/section_4/aggregate_raca_cor_vinculo_formal_labor_by_sexo.csv?raw';
 import csvUfRaw          from '../../../data/section_4/aggregate_vinculo_formal_labor_by_uf.csv?raw';
+import csvUfIbgeRaw      from '../../../data/section_4/aggregate_vinculo_formal_labor_by_uf_ibge.csv?raw';
+import csvCboRaisRaw     from '../../../data/section_4/aggregate_cbo_rais.csv?raw';
 
 // Handles quoted fields with embedded commas (standard CSV)
 function parseCSV(text: string): Record<string, string>[] {
@@ -149,6 +151,22 @@ export const sexoDivergingData = sexoRows.map((r) => ({
 	rightPct: +r.percentual_contemplados_com_vinculo_trabalho_formal * 100,
 }));
 
+// Share of each sex among those with formal work (for grouped bar comparison)
+const _totalComVinculoSexo = sexoRows.reduce((s, r) => s + +r.numero_contemplados_com_vinculo_trabalho_formal, 0);
+
+export const sexoVinculoFormalGroupedData = [
+	{
+		label: 'PNAB',
+		fullLabel: 'Pessoas com vínculo formal de trabalho contempladas no PNAB',
+		values: sexoRows.map((r) => (+r.numero_contemplados_com_vinculo_trabalho_formal / _totalComVinculoSexo) * 100),
+	},
+	{
+		label: 'Brasil',
+		fullLabel: 'Pessoas com vínculo formal de trabalho no Brasil',
+		values: [45.0, 55.0], // Reference: RAIS 2024
+	},
+];
+
 // ── Por raça/cor ────────────────────────────────────────────────────────────────
 const racaCorRows = parseCSV(csvRacaCorRaw).filter(
 	(r) => r.raca_cor_desc_description !== 'Não informado'
@@ -161,11 +179,41 @@ export const racaCorBarData = [...racaCorRows]
 		value: +r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
 	}));
 
+// RAIS 2024 reference: racial composition of Brazil's formal workers
+const _raisRacaRef: Record<string, number> = {
+	'Amarela':     1.0,
+	'Branca':      45.0,
+	'Indígena':    0.3,
+	'Parda':       41.8,
+	'Preta/negra': 7.2,
+};
+
+export const racaCorGroupedData = [...racaCorRows]
+	.sort((a, b) => +b.percentual_numero_contemplados_com_vinculo_no_total_geral - +a.percentual_numero_contemplados_com_vinculo_no_total_geral)
+	.map((r) => {
+		const label = shortRaceLabel(r.raca_cor_desc_description);
+		return {
+			label,
+			values: [
+				+r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
+				_raisRacaRef[label] ?? 0,
+			],
+		};
+	});
+
 export const racaCorTreemapData = {
 	name:     'root',
 	children: racaCorRows.map((r) => ({
 		name:  shortRaceLabel(r.raca_cor_desc_description),
 		value: +r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
+	})),
+};
+
+export const racaCorTreemapValorData = {
+	name:     'root',
+	children: racaCorRows.map((r) => ({
+		name:  shortRaceLabel(r.raca_cor_desc_description),
+		value: +r.percentual_valor_pago_no_total_geral * 100,
 	})),
 };
 
@@ -185,6 +233,25 @@ export const racaCorSexoHeatmapData = racaDisplayOrder.flatMap((race) => {
 	];
 });
 
+// ── Por raça/cor × sexo (Vertical Grouped Bar) ──────────────────────────────────
+const _racaSexoOrder = ['Amarela', 'Branca', 'Indígena', 'Parda', 'Preta/negra'];
+const _racaSexoTotalQty   = racaCorSexoRows.reduce((s, r) => s + +r.numero_contemplados_total, 0);
+const _racaSexoTotalValor = racaCorSexoRows.reduce((s, r) => s + +r.valor_pago_total, 0);
+
+export const racaCorSexoGroupedData = _racaSexoOrder.map((race) => {
+	const r = racaCorSexoRows.find((d) => shortRaceLabel(d.raca_cor_desc_description) === race)!;
+	return {
+		label:     race,
+		fullLabel: r.raca_cor_desc_description,
+		values: [
+			(+r.numero_contemplados_feminino / _racaSexoTotalQty)   * 100,
+			(+r.valor_pago_feminino          / _racaSexoTotalValor) * 100,
+			(+r.numero_contemplados_masculino / _racaSexoTotalQty)  * 100,
+			(+r.valor_pago_masculino          / _racaSexoTotalValor) * 100,
+		],
+	};
+});
+
 // ── Por UF ─────────────────────────────────────────────────────────────────────
 const ufRows4 = parseCSV(csvUfRaw);
 
@@ -199,6 +266,88 @@ export const ufRankingData = [...ufRows4]
 		label: r.uf,
 		value: +r.percentual_contemplados_com_vinculo_trabalho_formal * 100,
 	}));
+
+// ── Por UF × IBGE (comparação formalização PNAB vs. população geral) ─────────────
+const ufIbgeRows = parseCSV(csvUfIbgeRaw);
+
+// Shared color pairs for IBGE comparison charts (UF and region).
+// light = % pop. geral, main = % PNAB. Sul uses yellow scale.
+const _ibgeRegionColors: Record<string, [string, string]> = {
+	Nordeste:       ['#f7bf95', '#ea662f'], // orange[1] / orange[2]
+	Sudeste:        ['#9fbbe0', '#4271b5'], // blue[1]   / blue[2]
+	Norte:          ['#95c0b7', '#317a68'], // teal[1]   / teal[2]
+	Sul:            ['#f9e6a1', '#f6c341'], // yellow[1] / yellow[2]
+	'Centro-Oeste': ['#d5a6c8', '#a44c7f'], // purple[1] / purple[2]
+};
+const _ibgeRegionForUF: Record<string, string> = {
+	AC: 'Norte',  AM: 'Norte',  AP: 'Norte',  PA: 'Norte',  RO: 'Norte',  RR: 'Norte',  TO: 'Norte',
+	AL: 'Nordeste', BA: 'Nordeste', CE: 'Nordeste', MA: 'Nordeste', PB: 'Nordeste',
+	PE: 'Nordeste', PI: 'Nordeste', RN: 'Nordeste', SE: 'Nordeste',
+	DF: 'Centro-Oeste', GO: 'Centro-Oeste', MS: 'Centro-Oeste', MT: 'Centro-Oeste',
+	ES: 'Sudeste', MG: 'Sudeste', RJ: 'Sudeste', SP: 'Sudeste',
+	PR: 'Sul', RS: 'Sul', SC: 'Sul',
+};
+
+// Total formal labor in Brazil (sum across all UFs) — used to compute each UF's share
+const _totalBrazilFormalLabor = ufIbgeRows.reduce((s, r) => s + +r.total_vinculos_a_rais_2024, 0);
+
+// Bar 1 (light): % of UF's formal labor out of Brazil's total formal labor (RAIS 2024)
+// Bar 2 (dark):  % of UF's PNAB formal participants out of all PNAB formal participants
+export const ufIbgeByRegionData = ['Nordeste', 'Sudeste', 'Norte', 'Sul', 'Centro-Oeste'].flatMap(
+	(regiao) => {
+		const [lightColor, darkColor] = _ibgeRegionColors[regiao];
+		const stateRows = [...ufIbgeRows]
+			.filter((r) => _ibgeRegionForUF[r.uf] === regiao)
+			.sort((a, b) =>
+				(+b.percentual_numero_contemplados_com_vinculo_no_total_geral - +b.total_vinculos_a_rais_2024 / _totalBrazilFormalLabor) -
+				(+a.percentual_numero_contemplados_com_vinculo_no_total_geral - +a.total_vinculos_a_rais_2024 / _totalBrazilFormalLabor)
+			)
+			.map((r) => ({
+				label: r.uf,
+				values: [
+					(+r.total_vinculos_a_rais_2024 / _totalBrazilFormalLabor) * 100,
+					+r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
+				],
+				colors: [lightColor, darkColor],
+			}));
+		return [{ label: regiao, values: [], isSeparator: true as const }, ...stateRows];
+	}
+);
+
+// Region-level comparison: PNAB formal % vs. general population formal %
+// General pop % aggregated from UF IBGE rows; PNAB % from region CSV.
+export const regionIbgeComparisonData = ['Nordeste', 'Sudeste', 'Norte', 'Sul', 'Centro-Oeste'].map(
+	(regiao) => {
+		const r = regionRows4.find((d) => d.regiao === regiao)!;
+		const ufSet = ufIbgeRows.filter((u) => _ibgeRegionForUF[u.uf] === regiao);
+		const totalFormal = ufSet.reduce((s, u) => s + +u.total_vinculos_a_rais_2024, 0);
+		const [lightColor, mainColor] = _ibgeRegionColors[regiao];
+		return {
+			label: regiao,
+			values: [
+				(totalFormal / _totalBrazilFormalLabor) * 100,
+				+r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
+			],
+			colors: [lightColor, mainColor],
+		};
+	}
+);
+
+export const regionIbgeComparisonLegend = [
+	{ label: '% RAIS', color: '#f7bf95', secondLabel: '% PNAB', secondColor: '#ea662f', groupLabel: 'Nordeste'      },
+	{ label: '% RAIS', color: '#9fbbe0', secondLabel: '% PNAB', secondColor: '#4271b5', groupLabel: 'Sudeste'       },
+	{ label: '% RAIS', color: '#95c0b7', secondLabel: '% PNAB', secondColor: '#317a68', groupLabel: 'Norte'         },
+	{ label: '% RAIS', color: '#f9e6a1', secondLabel: '% PNAB', secondColor: '#f6c341', groupLabel: 'Sul'           },
+	{ label: '% RAIS', color: '#d5a6c8', secondLabel: '% PNAB', secondColor: '#a44c7f', groupLabel: 'Centro-Oeste'  },
+];
+
+export const ufIbgeRegionLegend = [
+	{ label: '% RAIS', color: '#f7bf95', secondLabel: '% PNAB', secondColor: '#ea662f', groupLabel: 'Nordeste'      },
+	{ label: '% RAIS', color: '#9fbbe0', secondLabel: '% PNAB', secondColor: '#4271b5', groupLabel: 'Sudeste'       },
+	{ label: '% RAIS', color: '#95c0b7', secondLabel: '% PNAB', secondColor: '#317a68', groupLabel: 'Norte'         },
+	{ label: '% RAIS', color: '#f9e6a1', secondLabel: '% PNAB', secondColor: '#f6c341', groupLabel: 'Sul'           },
+	{ label: '% RAIS', color: '#d5a6c8', secondLabel: '% PNAB', secondColor: '#a44c7f', groupLabel: 'Centro-Oeste'  },
+];
 
 // ── Por UF × Região (correlação) ────────────────────────────────────────────────
 const regionForUF: Record<string, string> = {
@@ -235,3 +384,33 @@ export const ufByRegionGroups = regionOrderCorr.map((regiao) => ({
 			com_vinculo: +r.percentual_contemplados_com_vinculo_trabalho_formal * 100,
 		})),
 }));
+
+// ── CBO RAIS — infographic data ───────────────────────────────────────────────
+const cboRaisRows = parseCSV(csvCboRaisRaw);
+
+export const cboRaisTop20 = [...cboRaisRows]
+	.sort((a, b) => +a[''] - +b[''])
+	.slice(0, 20)
+	.map((r) => ({
+		posicao:       +r[''] + 1,
+		descricao:     r.cbo_descricao_rais.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()),
+		percValor:     +r.percentual_valor * 100,
+		percFormatted: `${(+r.percentual_valor * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`,
+	}));
+
+// Pre-computed SVG height (matches CboRaisTable layout constants)
+const _FS = 13, _LH = _FS * 1.4, _CW = _FS * 0.55, _DESC_W = 272, _PAD_Y = 10;
+function _wrapLines(text: string): number {
+	const maxCh = Math.max(1, Math.floor(_DESC_W / _CW));
+	const words = text.split(' ');
+	let lines = 1, cur = '';
+	for (const w of words) {
+		const cand = cur ? `${cur} ${w}` : w;
+		if (cand.length > maxCh && cur) { lines++; cur = w; } else cur = cand;
+	}
+	return lines;
+}
+export const cboRaisTableHeight = cboRaisTop20.reduce((h, e) => {
+	const minH = e.posicao <= 3 ? 54 : 42;
+	return h + Math.max(minH, _wrapLines(e.descricao) * _LH + _PAD_Y * 2);
+}, 40); // 40 = HEADER_H

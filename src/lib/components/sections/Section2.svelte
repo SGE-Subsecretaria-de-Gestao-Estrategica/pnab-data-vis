@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ScrollSection from '$lib/components/ScrollSection.svelte';
+	import ExecutedValueByStateMap from '$lib/components/ExecutedValueByStateMap.svelte';
 	import {
 		BigNumber,
 		HorizontalBarChart,
@@ -9,11 +10,14 @@
 		colorScales,
 		categorical8,
 	} from 'sniic-design-system';
+	import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
+	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
 	import {
-		faixaDistData,
-		faixaValorPercData,
+		faixaGroupedData,
 		regiaoDistData,
+		regiaoGroupedData,
 		ufBandPercData,
+		ufValorBandPercData,
 		UF_BAND_KEYS,
 		UF_BAND_LABELS,
 		stateBandPercData,
@@ -25,6 +29,7 @@
 		TERR_KEYS,
 		TERR_LABELS,
 		estadosBoxPlotData,
+		mediaValorByState,
 	} from '$lib/data/section2';
 	import { HorizontalStackedBarChart, categorical3 } from 'sniic-design-system';
 
@@ -79,19 +84,15 @@
 	<p>
 		Embora a maioria dos contemplados estejam concentrados nas faixas de valores até 10 mil reais, os recursos repassados para este grupo representam somente <strong>15,2%</strong> dos recursos totais executados pela Aldir Blanc. A maior parte do recurso (<strong>31,5%</strong>) foi destinado para contemplados que receberam entre R$ 10 mil e R$ 50 mil.
 	</p>
-	<HorizontalBarChart
-		data={faixaDistData}
-		color={colorScales.blue[2]}
+	<HorizontalGroupedBarChart
+		data={faixaGroupedData}
+		seriesLabels={['Número de Contemplados', 'Recurso Executado']}
+		colors={['#c0504d', '#4472c4']}
 		format={formatPct}
-		xLabel="% dos contemplados"
-		margin={{ top: 20, right: 80, bottom: 40, left: 200 }}
-	/>
-	<HorizontalBarChart
-		data={faixaValorPercData}
-		color={colorScales.blue[2]}
-		format={formatPct}
-		xLabel="% do valor total executado"
-		margin={{ top: 20, right: 80, bottom: 40, left: 200 }}
+		margin={{ top: 30, right: 90, bottom: 60, left: 160 }}
+		barHeight={18}
+		barPad={5}
+		legendBottom={true}
 	/>
 </ScrollSection>
 
@@ -115,6 +116,27 @@
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
+     2.1.1 — DISTRIBUIÇÃO DE RECURSOS POR UF E FAIXA (STACKED HORIZONTAL)
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-uf-recursos">
+	<h3>Distribuição dos Recursos Executados nas Unidades Federativas, por Faixa de Valor</h3>
+	<p>
+		O gráfico a seguir apresenta como os recursos executados em cada unidade federativa se distribuíram pelas faixas de valor. Unidades com tonalidade intensa nas faixas mais altas concentraram proporcionalmente mais recursos em pagamentos de maior valor.
+	</p>
+	<div class="chart-wide">
+		<HorizontalStackedBarChartCustom
+			data={ufValorBandPercData}
+			keys={[...UF_BAND_KEYS]}
+			labels={UF_BAND_LABELS}
+			colors={categorical8}
+			format={formatPct}
+			rowHeight={28}
+			marginLeft={40}
+		/>
+	</div>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
      2.2 — DISTRIBUIÇÃO NOS ESTADOS (REGIÕES)
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-2-22">
@@ -129,12 +151,15 @@
 		<p><strong>45.655 (27,4%)</strong> contemplados no Sudeste</p>
 		<p><strong>17.946 (10,8%)</strong> contemplados no Sul</p>
 	</div>
-	<HorizontalBarChart
-		data={regiaoDistData}
-		color={colorScales.blue[2]}
+	<HorizontalGroupedBarChart
+		data={regiaoGroupedData}
+		seriesLabels={['% agentes culturais', '% população']}
+		colors={['#c0504d', '#4472c4']}
 		format={formatPct}
-		xLabel="% dos agentes culturais"
-		margin={{ top: 20, right: 80, bottom: 40, left: 140 }}
+		margin={{ top: 30, right: 90, bottom: 60, left: 140 }}
+		barHeight={18}
+		barPad={5}
+		legendBottom={true}
 	/>
 	<p>
 		As regiões Norte, Centro-Oeste e Sul apresentaram uma proporção de agentes culturais contemplados com recursos da Aldir Blanc muito semelhante à participação de sua população em relação à população nacional.
@@ -206,6 +231,23 @@
 	<p>
 		O cálculo da mediana permite identificar os valores centrais dos pagamentos no universo analisado. A partir desta análise, percebemos que os Estados tiveram uma tendência de realizar pagamentos em torno de <strong>R$ 30.000</strong> para seus contemplados.
 	</p>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     2.2.3 — MAPA TICKET MÉDIO POR ESTADO
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-mapa-ticket-medio">
+	<h3>2.2.3. Ticket médio por estado</h3>
+	<p>
+		O mapa abaixo apresenta o valor médio por pagamento em cada estado. Estados com tonalidade mais intensa concentraram valores médios mais elevados por contemplado.
+	</p>
+	<ExecutedValueByStateMap
+		states={mediaValorByState}
+		metric="mediana_valor"
+		label="Mediana paga por estado"
+		format={formatBRL}
+		showSideLegend={true}
+	/>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════

@@ -6,21 +6,44 @@ from pathlib import Path
 
 
 def aggregate_contemplados_pf_pj_proportion(
-    df_cubo: pd.DataFrame
+    df_cubo: pd.DataFrame,
+    coluna_valor: str = "valor_transacao",
+    by_filter: str = 'UF'
 ) -> pd.DataFrame:
     """
-    Calcula a proporção entre quantidade de contemplados pessoas físicas e
-    pessoas jurídicas.
+    Calcula a proporção entre quantidade e valor recebido por
+    pessoas físicas e pessoas jurídicas.
 
     Usa:
     - CPF como pessoa física;
     - CNPJ como pessoa jurídica;
-    - quantidade como coluna de contagem de contemplados.
+    - quantidade como coluna de contagem de contemplados;
+    - valor_transacao como coluna de valor, por padrão.
 
     Retorna uma tabela com uma linha.
     """
 
+    def media_aparada_1pct_superior(x):
+        """
+        Calcula a média removendo os 1% maiores valores do grupo.
+        """
+        x = pd.to_numeric(x, errors="coerce").dropna()
+
+        if x.empty:
+            return np.nan
+
+        limite_superior = x.quantile(0.99)
+
+        return x[x <= limite_superior].mean()
+
     df = df_cubo.copy()
+
+    if by_filter == 'ESTADO':
+        df = df[df['tipo_ente'] == 'ESTADO']
+    elif by_filter == 'MUNICIPIO':
+        df = df[df['tipo_ente'] == 'MUNICIPIO']
+    else:
+        df = df.copy()
 
     df["tipo_documento_norm"] = (
         df["tipo_documento"]
@@ -31,6 +54,11 @@ def aggregate_contemplados_pf_pj_proportion(
         .str.normalize("NFKD")
         .str.encode("ascii", errors="ignore")
         .str.decode("utf-8")
+    )
+
+    df[coluna_valor] = pd.to_numeric(
+        df[coluna_valor],
+        errors="coerce"
     )
 
     quantidade_contemplados = df["quantidade"].sum()
@@ -47,19 +75,74 @@ def aggregate_contemplados_pf_pj_proportion(
         .sum()
     )
 
+    valor_contemplados = df[coluna_valor].sum()
+
+    valor_contemplados_pf = (
+        df
+        .loc[df["tipo_documento_norm"].eq("CPF"), coluna_valor]
+        .sum()
+    )
+
+    valor_contemplados_pj = (
+        df
+        .loc[df["tipo_documento_norm"].eq("CNPJ"), coluna_valor]
+        .sum()
+    )
+
+    valor_medio_contemplados_pf = (
+        valor_contemplados_pf / quantidade_contemplados_pf
+        if quantidade_contemplados_pf > 0 else np.nan
+    )
+
+    valor_medio_contemplados_pj = (
+        valor_contemplados_pj / quantidade_contemplados_pj
+        if quantidade_contemplados_pj > 0 else np.nan
+    )
+
+    media_aparada_1pct_valor_pf = media_aparada_1pct_superior(
+        df.loc[df["tipo_documento_norm"].eq("CPF"), coluna_valor]
+    )
+
+    media_aparada_1pct_valor_pj = media_aparada_1pct_superior(
+        df.loc[df["tipo_documento_norm"].eq("CNPJ"), coluna_valor]
+    )
+
     df_resultado = pd.DataFrame({
         "quantidade_contemplados": [quantidade_contemplados],
         "perc_quantidade_contemplados": [1],
+
         "quantidade_contemplados_pf": [quantidade_contemplados_pf],
         "perc_quantidade_contemplados_pf": [
             quantidade_contemplados_pf / quantidade_contemplados
             if quantidade_contemplados > 0 else np.nan
         ],
+
         "quantidade_contemplados_pj": [quantidade_contemplados_pj],
         "perc_quantidade_contemplados_pj": [
             quantidade_contemplados_pj / quantidade_contemplados
             if quantidade_contemplados > 0 else np.nan
         ],
+
+        "valor_contemplados": [valor_contemplados],
+        "perc_valor_contemplados": [1],
+
+        "valor_contemplados_pf": [valor_contemplados_pf],
+        "perc_valor_contemplados_pf": [
+            valor_contemplados_pf / valor_contemplados
+            if valor_contemplados > 0 else np.nan
+        ],
+
+        "valor_contemplados_pj": [valor_contemplados_pj],
+        "perc_valor_contemplados_pj": [
+            valor_contemplados_pj / valor_contemplados
+            if valor_contemplados > 0 else np.nan
+        ],
+
+        "valor_medio_contemplados_pf": [valor_medio_contemplados_pf],
+        "media_aparada_1pct_valor_pf": [media_aparada_1pct_valor_pf],
+
+        "valor_medio_contemplados_pj": [valor_medio_contemplados_pj],
+        "media_aparada_1pct_valor_pj": [media_aparada_1pct_valor_pj],
     })
 
     colunas_quantidade = [
@@ -68,10 +151,40 @@ def aggregate_contemplados_pf_pj_proportion(
         "quantidade_contemplados_pj",
     ]
 
+    colunas_valor = [
+        "valor_contemplados",
+        "valor_contemplados_pf",
+        "valor_contemplados_pj",
+        "valor_medio_contemplados_pf",
+        "media_aparada_1pct_valor_pf",
+        "valor_medio_contemplados_pj",
+        "media_aparada_1pct_valor_pj",
+    ]
+
+    colunas_percentual = [
+        "perc_quantidade_contemplados",
+        "perc_quantidade_contemplados_pf",
+        "perc_quantidade_contemplados_pj",
+        "perc_valor_contemplados",
+        "perc_valor_contemplados_pf",
+        "perc_valor_contemplados_pj",
+    ]
+
     df_resultado[colunas_quantidade] = (
         df_resultado[colunas_quantidade]
         .fillna(0)
         .astype("Int64")
+    )
+
+    df_resultado[colunas_valor] = (
+        df_resultado[colunas_valor]
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    df_resultado[colunas_percentual] = (
+        df_resultado[colunas_percentual]
+        .astype("Float64")
     )
 
     return df_resultado
@@ -829,5 +942,227 @@ def aggregate_value_quantity_by_age_group_region_wide(
             index=False,
             encoding="utf-8-sig"
         )
+
+    return df_resultado
+
+
+
+
+def aggregate_cnpj_mei_proportion(
+    df_cubo: pd.DataFrame,
+    coluna_valor: str = "valor_transacao",
+    coluna_quantidade: str = "quantidade",
+    coluna_tipo_documento: str = "tipo_documento",
+    coluna_mei: str = "cnpj_optante_mei",
+    by_filter: str = "UF"
+) -> pd.DataFrame:
+    """
+    Calcula, apenas entre CNPJs, a proporção de MEIs em quantidade de contemplados
+    e em valor recebido.
+
+    Regra:
+    - Considera apenas tipo_documento == "CNPJ"
+    - Considera MEI quando cnpj_optante_mei == 1
+
+    Retorna:
+    - quantidade de CNPJs contemplados
+    - quantidade de MEIs contemplados
+    - quantidade de não MEIs contemplados
+    - valor recebido por CNPJs
+    - valor recebido por MEIs
+    - valor recebido por não MEIs
+    - percentuais de quantidade e valor
+    - valor médio
+    - média aparada de 1%, removendo os maiores 1% valores
+
+    Percentuais retornam em escala decimal:
+    - 0.25 = 25%
+    """
+
+    def media_aparada_1pct_superior(x):
+        """
+        Calcula a média removendo os 1% maiores valores do grupo.
+        """
+        x = pd.to_numeric(x, errors="coerce").dropna()
+
+        if x.empty:
+            return np.nan
+
+        limite_superior = x.quantile(0.99)
+
+        return x[x <= limite_superior].mean()
+
+    df = df_cubo.copy()
+
+    if by_filter == 'ESTADO':
+        df = df[df['tipo_ente'] == 'ESTADO']
+    elif by_filter == 'MUNICIPIO':
+        df = df[df['tipo_ente'] == 'MUNICIPIO']
+    else:
+        df = df.copy()
+
+    df["tipo_documento_norm"] = (
+        df[coluna_tipo_documento]
+        .fillna("Não informado")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    df = df[df["tipo_documento_norm"].eq("CNPJ")].copy()
+
+    df[coluna_valor] = pd.to_numeric(
+        df[coluna_valor],
+        errors="coerce"
+    ).fillna(0)
+
+    df[coluna_quantidade] = pd.to_numeric(
+        df[coluna_quantidade],
+        errors="coerce"
+    ).fillna(0)
+
+    df["is_mei"] = df[coluna_mei].eq(1)
+
+    quantidade_contemplados_cnpj = df[coluna_quantidade].sum()
+
+    quantidade_contemplados_mei = (
+        df
+        .loc[df["is_mei"], coluna_quantidade]
+        .sum()
+    )
+
+    quantidade_contemplados_nao_mei = (
+        df
+        .loc[~df["is_mei"], coluna_quantidade]
+        .sum()
+    )
+
+    valor_contemplados_cnpj = df[coluna_valor].sum()
+
+    valor_contemplados_mei = (
+        df
+        .loc[df["is_mei"], coluna_valor]
+        .sum()
+    )
+
+    valor_contemplados_nao_mei = (
+        df
+        .loc[~df["is_mei"], coluna_valor]
+        .sum()
+    )
+
+    valor_medio_contemplados_cnpj = (
+        valor_contemplados_cnpj / quantidade_contemplados_cnpj
+        if quantidade_contemplados_cnpj > 0 else np.nan
+    )
+
+    valor_medio_contemplados_mei = (
+        valor_contemplados_mei / quantidade_contemplados_mei
+        if quantidade_contemplados_mei > 0 else np.nan
+    )
+
+    valor_medio_contemplados_nao_mei = (
+        valor_contemplados_nao_mei / quantidade_contemplados_nao_mei
+        if quantidade_contemplados_nao_mei > 0 else np.nan
+    )
+
+    media_aparada_1pct_valor_cnpj = media_aparada_1pct_superior(
+        df[coluna_valor]
+    )
+
+    media_aparada_1pct_valor_mei = media_aparada_1pct_superior(
+        df.loc[df["is_mei"], coluna_valor]
+    )
+
+    media_aparada_1pct_valor_nao_mei = media_aparada_1pct_superior(
+        df.loc[~df["is_mei"], coluna_valor]
+    )
+
+    df_resultado = pd.DataFrame({
+        "quantidade_contemplados_cnpj": [quantidade_contemplados_cnpj],
+        "perc_quantidade_contemplados_cnpj": [1],
+
+        "quantidade_contemplados_mei": [quantidade_contemplados_mei],
+        "perc_quantidade_contemplados_mei": [
+            quantidade_contemplados_mei / quantidade_contemplados_cnpj
+            if quantidade_contemplados_cnpj > 0 else np.nan
+        ],
+
+        "quantidade_contemplados_nao_mei": [quantidade_contemplados_nao_mei],
+        "perc_quantidade_contemplados_nao_mei": [
+            quantidade_contemplados_nao_mei / quantidade_contemplados_cnpj
+            if quantidade_contemplados_cnpj > 0 else np.nan
+        ],
+
+        "valor_contemplados_cnpj": [valor_contemplados_cnpj],
+        "perc_valor_contemplados_cnpj": [1],
+
+        "valor_contemplados_mei": [valor_contemplados_mei],
+        "perc_valor_contemplados_mei": [
+            valor_contemplados_mei / valor_contemplados_cnpj
+            if valor_contemplados_cnpj > 0 else np.nan
+        ],
+
+        "valor_contemplados_nao_mei": [valor_contemplados_nao_mei],
+        "perc_valor_contemplados_nao_mei": [
+            valor_contemplados_nao_mei / valor_contemplados_cnpj
+            if valor_contemplados_cnpj > 0 else np.nan
+        ],
+
+        "valor_medio_contemplados_cnpj": [valor_medio_contemplados_cnpj],
+        "valor_medio_contemplados_mei": [valor_medio_contemplados_mei],
+        "valor_medio_contemplados_nao_mei": [valor_medio_contemplados_nao_mei],
+
+        "media_aparada_1pct_valor_cnpj": [media_aparada_1pct_valor_cnpj],
+        "media_aparada_1pct_valor_mei": [media_aparada_1pct_valor_mei],
+        "media_aparada_1pct_valor_nao_mei": [media_aparada_1pct_valor_nao_mei],
+    })
+
+    colunas_quantidade = [
+        "quantidade_contemplados_cnpj",
+        "quantidade_contemplados_mei",
+        "quantidade_contemplados_nao_mei",
+    ]
+
+    colunas_valor = [
+        "valor_contemplados_cnpj",
+        "valor_contemplados_mei",
+        "valor_contemplados_nao_mei",
+        "valor_medio_contemplados_cnpj",
+        "valor_medio_contemplados_mei",
+        "valor_medio_contemplados_nao_mei",
+        "media_aparada_1pct_valor_cnpj",
+        "media_aparada_1pct_valor_mei",
+        "media_aparada_1pct_valor_nao_mei",
+    ]
+
+    colunas_percentual = [
+        "perc_quantidade_contemplados_cnpj",
+        "perc_quantidade_contemplados_mei",
+        "perc_quantidade_contemplados_nao_mei",
+        "perc_valor_contemplados_cnpj",
+        "perc_valor_contemplados_mei",
+        "perc_valor_contemplados_nao_mei",
+    ]
+
+    df_resultado[colunas_quantidade] = (
+        df_resultado[colunas_quantidade]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado[colunas_valor] = (
+        df_resultado[colunas_valor]
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    df_resultado[colunas_percentual] = (
+        df_resultado[colunas_percentual]
+        .astype("Float64")
+    )
 
     return df_resultado

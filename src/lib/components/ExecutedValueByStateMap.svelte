@@ -234,8 +234,8 @@
 </script>
 
 {#if showSideLegend}
-  <div bind:this={containerEl} style="width: 100%; display: flex; gap: 1.5rem; align-items: flex-start;">
-    <div bind:this={mapContainerEl} style="flex: 1 1 0; min-width: 0;">
+  <div bind:this={containerEl} class="side-legend-container">
+    <div bind:this={mapContainerEl} class="map-col">
       {#if geojson && pathFn && mapW > 0}
         <svg width={mapW} height={svgH}>
           <g transform={`translate(0, ${TOP_PAD})`}>
@@ -254,20 +254,26 @@
         </svg>
       {/if}
     </div>
-    <div class="side-legend">
+    <div class="legend-col">
+    <div class="legend-grid">
       {#if label}
-        <div class="legend-header">
-          <span class="legend-sigla">UF</span>
-          <span class="legend-value">{label}</span>
-        </div>
+        <div class="legend-title">{label}</div>
       {/if}
-      {#each [...stateEntries].sort((a, b) => b.val - a.val) as item (item.sigla)}
-        <div class="legend-row">
-          <span class="legend-swatch" style="background: {item.fill};"></span>
-          <span class="legend-sigla">{item.sigla}</span>
-          <span class="legend-value">{format(item.val)}</span>
-        </div>
-      {/each}
+      <div class="legend-table">
+        {#each [...stateEntries].sort((a, b) => b.val - a.val) as item (item.sigla)}
+          <div class="legend-cell">
+            <span class="legend-swatch" style="background: {item.fill};"></span>
+            <span class="legend-sigla">{item.sigla}</span>
+            <span class="legend-value">
+              {format(item.val)}
+              {#if formatLine2}
+                <span class="legend-value-line2">{formatLine2(item.row)}</span>
+              {/if}
+            </span>
+          </div>
+        {/each}
+      </div>
+    </div>
     </div>
   </div>
 {:else}
@@ -366,53 +372,73 @@
 {/if}
 
 <style>
-  .side-legend {
-    flex: 0 0 130px;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    overflow-y: auto;
-    font-size: 11px;
+  .side-legend-container {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 63% 1fr;
+    gap: 1.5rem;
+    align-items: center;
   }
 
-  .legend-header {
+  .map-col {
+    min-width: 0;
+  }
+
+  .legend-col {
+    min-width: 0;
     display: flex;
-    align-items: center;
-    gap: 6px;
-    padding-bottom: 4px;
-    margin-bottom: 2px;
-    border-bottom: 1px solid #d1d5db;
+    align-items: flex-start;
+  }
+
+  .legend-grid {
+    width: 100%;
+  }
+
+  .legend-title {
+    font-size: 14px;
     color: #6b7280;
-    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    margin-bottom: 12px;
   }
 
-  .legend-header .legend-sigla {
-    font-weight: 600;
+  .legend-table {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px 12px;
+    margin-bottom: 1rem;
   }
 
-  .legend-row {
+  .legend-cell {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
+    font-size: 12px;
   }
 
   .legend-swatch {
     flex-shrink: 0;
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     border-radius: 2px;
   }
 
   .legend-sigla {
     font-weight: 700;
-    width: 22px;
+    width: 24px;
   }
 
   .legend-value {
     flex: 1;
-    text-align: right;
     color: #374151;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+  }
+
+  .legend-value-line2 {
+    color: #9ca3af;
+    font-size: 10px;
   }
 </style>

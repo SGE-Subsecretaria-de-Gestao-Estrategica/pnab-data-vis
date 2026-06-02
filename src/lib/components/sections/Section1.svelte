@@ -159,8 +159,10 @@
 		<ExecutedValueByStateMap
 			{states}
 			metric="valor_executado_rs"
+			label="Valor executado"
 			format={formatBRL}
 			formatLine2={(row) => formatPercFix(row.valor_executado_perc * 100)}
+			showSideLegend={true}
 		/>
 	</div>
 	<p style="margin-top: 2rem;">

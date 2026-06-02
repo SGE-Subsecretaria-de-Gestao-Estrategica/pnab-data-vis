@@ -240,29 +240,38 @@ def aggregate_vinculo_formal_labor_by_region(
     )
 import pandas as pd
 
+import pandas as pd
+
 
 def aggregate_vinculo_formal_labor_by_uf(
     df_cubo: pd.DataFrame,
+    df_rais_uf: pd.DataFrame,
     col_uf: str = "uf",
     col_vinculo: str = "tipo_vinculo_agregado_rais",
     col_quantidade: str = "quantidade",
     col_valor: str = "valor_transacao",
+    col_uf_rais: str = "uf",
+    col_qtd_rais: str = "qtd_vinculos_formais_rais_2024",
 ) -> pd.DataFrame:
     """
     Cria um DataFrame com uma linha por UF, contendo:
-    - quantidade de contemplados com e sem vínculo formal
+    - quantidade de contemplados PNAB com e sem vínculo formal
     - valor pago com e sem vínculo formal
     - percentuais dentro da própria UF
-    - participação da UF no total geral
-    - participação da UF no total geral por tipo de vínculo
+    - participação da UF no total PNAB
+    - participação da UF no total PNAB por tipo de vínculo
+    - participação da UF no total Brasil da RAIS 2024
 
     Regras:
     - Considera apenas tipo_documento == "CPF"
     - Sem vínculo formal: tipo_vinculo_agregado_rais missing, nulo ou vazio
     - Com vínculo formal: tipo_vinculo_agregado_rais preenchido
+
+    A coluna percentual_vinculos_formais_rais_2024_brasil responde:
+    - De todos os vínculos formais da RAIS 2024 no Brasil, quanto está em cada UF.
     """
 
-    required_columns = [
+    required_columns_cubo = [
         "tipo_documento",
         col_uf,
         col_vinculo,
@@ -270,24 +279,40 @@ def aggregate_vinculo_formal_labor_by_uf(
         col_valor,
     ]
 
-    missing_columns = [
-        col for col in required_columns if col not in df_cubo.columns
+    missing_columns_cubo = [
+        col for col in required_columns_cubo if col not in df_cubo.columns
     ]
 
-    if missing_columns:
+    if missing_columns_cubo:
         raise ValueError(
-            f"As seguintes colunas não existem no DataFrame: {missing_columns}"
+            f"As seguintes colunas não existem no df_cubo: {missing_columns_cubo}"
         )
 
+    required_columns_rais = [
+        col_uf_rais,
+        col_qtd_rais,
+    ]
+
+    missing_columns_rais = [
+        col for col in required_columns_rais if col not in df_rais_uf.columns
+    ]
+
+    if missing_columns_rais:
+        raise ValueError(
+            f"As seguintes colunas não existem no df_rais_uf: {missing_columns_rais}"
+        )
+
+    # ------------------------------------------------------------
+    # 1. Filtra apenas CPF na PNAB
+    # ------------------------------------------------------------
     df = df_cubo.copy()
 
-    # ------------------------------------------------------------
-    # 1. Filtra apenas CPF
-    # ------------------------------------------------------------
-    df = df[df["tipo_documento"].eq("CPF")].copy()
+    df = df.loc[
+        df["tipo_documento"].eq("CPF")
+    ].copy()
 
     # ------------------------------------------------------------
-    # 2. Classifica vínculo formal
+    # 2. Classifica vínculo formal na PNAB
     # ------------------------------------------------------------
     vinculo_preenchido = (
         df[col_vinculo].notna()
@@ -295,13 +320,14 @@ def aggregate_vinculo_formal_labor_by_uf(
     )
 
     df["situacao_vinculo_formal"] = "sem_vinculo_trabalho_formal"
+
     df.loc[
         vinculo_preenchido,
         "situacao_vinculo_formal"
     ] = "com_vinculo_trabalho_formal"
 
     # ------------------------------------------------------------
-    # 3. Agrega por UF e situação de vínculo
+    # 3. Agrega PNAB por UF e situação de vínculo
     # ------------------------------------------------------------
     resumo = (
         df
@@ -313,9 +339,6 @@ def aggregate_vinculo_formal_labor_by_uf(
         .reset_index()
     )
 
-    # ------------------------------------------------------------
-    # 4. Abre colunas para com/sem vínculo
-    # ------------------------------------------------------------
     tabela = (
         resumo
         .pivot(
@@ -344,7 +367,7 @@ def aggregate_vinculo_formal_labor_by_uf(
             tabela[col] = 0
 
     # ------------------------------------------------------------
-    # 5. Totais por UF
+    # 4. Totais PNAB por UF
     # ------------------------------------------------------------
     tabela["numero_contemplados_total"] = (
         tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
@@ -357,7 +380,7 @@ def aggregate_vinculo_formal_labor_by_uf(
     )
 
     # ------------------------------------------------------------
-    # 6. Percentuais dentro da própria UF
+    # 5. Percentuais PNAB dentro da UF
     # ------------------------------------------------------------
     tabela["percentual_contemplados_sem_vinculo_trabalho_formal"] = (
         tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
@@ -396,7 +419,7 @@ def aggregate_vinculo_formal_labor_by_uf(
     )
 
     # ------------------------------------------------------------
-    # 7. Totais Brasil
+    # 6. Totais Brasil PNAB
     # ------------------------------------------------------------
     total_numero_contemplados_brasil = tabela["numero_contemplados_total"].sum()
     total_valor_pago_brasil = tabela["valor_pago_total"].sum()
@@ -418,25 +441,20 @@ def aggregate_vinculo_formal_labor_by_uf(
     )
 
     # ------------------------------------------------------------
-    # 8. Participação da UF no total Brasil geral
+    # 7. Participações PNAB no total Brasil
     # ------------------------------------------------------------
     tabela["percentual_numero_contemplados_no_total_geral"] = (
-        tabela["numero_contemplados_total"]
-        / total_numero_contemplados_brasil
+        tabela["numero_contemplados_total"] / total_numero_contemplados_brasil
         if total_numero_contemplados_brasil > 0
         else 0
     )
 
     tabela["percentual_valor_pago_no_total_geral"] = (
-        tabela["valor_pago_total"]
-        / total_valor_pago_brasil
+        tabela["valor_pago_total"] / total_valor_pago_brasil
         if total_valor_pago_brasil > 0
         else 0
     )
 
-    # ------------------------------------------------------------
-    # 9. Participação da UF dentro do total Brasil por tipo de vínculo
-    # ------------------------------------------------------------
     tabela["percentual_numero_contemplados_sem_vinculo_no_total_geral"] = (
         tabela["numero_contemplados_sem_vinculo_trabalho_formal"]
         / total_numero_sem_vinculo_brasil
@@ -466,17 +484,51 @@ def aggregate_vinculo_formal_labor_by_uf(
     )
 
     # ------------------------------------------------------------
-    # 10. Nova coluna: com RAIS da UF sobre o total Brasil geral
+    # 8. Calcula participação da UF na RAIS 2024 Brasil
     # ------------------------------------------------------------
-    tabela["percentual_numero_contemplados_com_vinculo_no_total_brasil"] = (
-        tabela["numero_contemplados_com_vinculo_trabalho_formal"]
-        / total_numero_contemplados_brasil
-        if total_numero_contemplados_brasil > 0
+    df_rais = df_rais_uf[[col_uf_rais, col_qtd_rais]].copy()
+
+    df_rais = df_rais.rename(
+        columns={
+            col_uf_rais: col_uf,
+            col_qtd_rais: "qtd_vinculos_formais_rais_2024",
+        }
+    )
+
+    total_vinculos_formais_rais_2024_brasil = (
+        df_rais["qtd_vinculos_formais_rais_2024"].sum()
+    )
+
+    df_rais["percentual_vinculos_formais_rais_2024_brasil"] = (
+        df_rais["qtd_vinculos_formais_rais_2024"]
+        / total_vinculos_formais_rais_2024_brasil
+        if total_vinculos_formais_rais_2024_brasil > 0
         else 0
     )
 
     # ------------------------------------------------------------
-    # 11. Ordem final das colunas
+    # 9. Junta RAIS 2024 na tabela PNAB
+    # ------------------------------------------------------------
+    tabela = tabela.merge(
+        df_rais,
+        on=col_uf,
+        how="left"
+    )
+
+    tabela[
+        [
+            "qtd_vinculos_formais_rais_2024",
+            "percentual_vinculos_formais_rais_2024_brasil",
+        ]
+    ] = tabela[
+        [
+            "qtd_vinculos_formais_rais_2024",
+            "percentual_vinculos_formais_rais_2024_brasil",
+        ]
+    ].fillna(0)
+
+    # ------------------------------------------------------------
+    # 10. Ordem final das colunas
     # ------------------------------------------------------------
     colunas_finais = [
         col_uf,
@@ -490,7 +542,9 @@ def aggregate_vinculo_formal_labor_by_uf(
         "percentual_numero_contemplados_no_total_geral",
         "percentual_numero_contemplados_sem_vinculo_no_total_geral",
         "percentual_numero_contemplados_com_vinculo_no_total_geral",
-        "percentual_numero_contemplados_com_vinculo_no_total_brasil",
+
+        "qtd_vinculos_formais_rais_2024",
+        "percentual_vinculos_formais_rais_2024_brasil",
 
         "valor_pago_sem_vinculo_trabalho_formal",
         "valor_pago_com_vinculo_trabalho_formal",
@@ -508,7 +562,6 @@ def aggregate_vinculo_formal_labor_by_uf(
         .sort_values(col_uf)
         .reset_index(drop=True)
     )
-
 
 def aggregate_vinculo_formal_labor_by_sexo(
     df_cubo: pd.DataFrame,

@@ -286,27 +286,16 @@ const porteRowsS2 = parseCSV(csvPorteRaw)
 	.filter((d) => d.porte_populacional in PORTE_NAME_MAP)
 	.sort((a, b) => PORTE_SORT[a.porte_populacional] - PORTE_SORT[b.porte_populacional]);
 
-export const PORTE_BAND_KEYS = [
-	'ate2k', 'de2a10k', 'de10a50k', 'de50a200k', 'de200a500k', 'de500ka1m', 'de1ma10m', 'acima10m',
-] as const;
-export const PORTE_BAND_LABELS: Record<string, string> = {
-	ate2k: 'Até R$2k', de2a10k: 'R$2–10k', de10a50k: 'R$10–50k', de50a200k: 'R$50–200k',
-	de200a500k: 'R$200–500k', de500ka1m: 'R$500k–1M', de1ma10m: 'R$1–10M', acima10m: '>R$10M',
-};
-
 export const portePagamentosData = porteRowsS2.map((d) => {
 	const bands = PORTE_CSV_BANDS.map((k) => +(d[k] ?? 0));
 	const total = bands.reduce((s, v) => s + v, 0) || 1;
 	return {
-		label:      PORTE_NAME_MAP[d.porte_populacional],
-		ate2k:      (bands[0] / total) * 100,
-		de2a10k:    (bands[1] / total) * 100,
-		de10a50k:   (bands[2] / total) * 100,
-		de50a200k:  (bands[3] / total) * 100,
-		de200a500k: (bands[4] / total) * 100,
-		de500ka1m:  (bands[5] / total) * 100,
-		de1ma10m:   (bands[6] / total) * 100,
-		acima10m:   (bands[7] / total) * 100,
+		label:     PORTE_NAME_MAP[d.porte_populacional],
+		ate2k:     (bands[0] / total) * 100,
+		de2a10k:   (bands[1] / total) * 100,
+		de10a50k:  (bands[2] / total) * 100,
+		de50a200k: (bands[3] / total) * 100,
+		acima200k: ((bands[4] + bands[5] + bands[6] + bands[7]) / total) * 100,
 	};
 });
 

@@ -23,8 +23,6 @@
 		UF_BAND_LABELS,
 		stateBandPercData,
 		portePagamentosData,
-		PORTE_BAND_KEYS,
-		PORTE_BAND_LABELS,
 		porteValorPercData,
 		specialTerritoryBarData,
 		terrEspeciaisData,
@@ -283,15 +281,13 @@
 		Nos municípios de pequeno porte I, <strong>91,3%</strong> dos contemplados receberam até R$ 10 mil. Dentro desse grupo, <strong>50,1%</strong> receberam pagamentos de até R$ 2 mil. Essa concentração nas faixas de menor valor também se mantém elevada nos municípios de pequeno porte II, onde <strong>87,7%</strong> dos contemplados receberam até R$ 10 mil, e nos municípios de médio porte, com <strong>75,9%</strong>. Já nos municípios de grande porte, a participação dos pagamentos de até R$ 10 mil cai para <strong>49%</strong>. Nesse grupo, a faixa de R$ 10 mil a R$ 50 mil representa, sozinha, <strong>42,7%</strong> dos pagamentos.
 	</p>
 	<div class="chart-wide">
-		<VerticalStackedBarChart
+		<VerticalStackedBarChartCustom
 			data={portePagamentosData}
-			keys={[...PORTE_BAND_KEYS]}
-			labels={PORTE_BAND_LABELS}
+			keys={[...UF_BAND_KEYS]}
+			labels={UF_BAND_LABELS}
 			colors={categorical8}
 			format={formatPctFixed}
-			yLabel="% dos contemplados"
 			normalize={true}
-			showLegend={true}
 			height={420}
 		/>
 	</div>

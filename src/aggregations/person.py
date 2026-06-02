@@ -1745,6 +1745,7 @@ def aggregate_cnpj_natureza_juridica_por_regiao(
 
     return df_resultado
 
+
 def top_cnaes_cnpj(
     df_cubo: pd.DataFrame,
     top_n: int = 20,
@@ -1761,15 +1762,20 @@ def top_cnaes_cnpj(
 
     Regras:
     - filtra apenas tipo_documento == "CNPJ";
-    - se apenas_cnae_cultural=True, filtra flag_cnae_cultural == valor_flag_cnae_cultural;
-    - se apenas_cnae_cultural=False, não filtra por CNAE cultural;
-    - agrega por CNAE principal;
-    - ordena pelo maior valor recebido;
-    - calcula percentuais em relação ao total dos CNAEs considerados na base filtrada.
+    - se apenas_cnae_cultural=True, mostra apenas CNAEs culturais;
+    - se apenas_cnae_cultural=False, mostra CNAEs gerais;
+    - os percentuais são SEMPRE calculados em relação ao total de todos os CNAEs de CNPJs,
+      e não apenas em relação aos CNAEs culturais.
 
     Percentuais retornam em escala decimal:
     0.25 = 25%
     """
+
+    def normalizar_texto(valor):
+        valor = str(valor).upper().strip()
+        valor = unicodedata.normalize("NFKD", valor)
+        valor = valor.encode("ascii", errors="ignore").decode("utf-8")
+        return valor
 
     df = df_cubo.copy()
 
@@ -1786,29 +1792,6 @@ def top_cnaes_cnpj(
 
     # Filtra apenas CNPJ
     df = df[df["tipo_documento_norm"].eq("CNPJ")].copy()
-
-    # Opcional: filtra apenas CNAE cultural
-    if apenas_cnae_cultural:
-        df["flag_cnae_norm"] = (
-            df[coluna_flag_cnae]
-            .fillna("Não informado")
-            .astype(str)
-            .str.upper()
-            .str.strip()
-            .str.normalize("NFKD")
-            .str.encode("ascii", errors="ignore")
-            .str.decode("utf-8")
-        )
-
-        valor_flag_norm = (
-            str(valor_flag_cnae_cultural)
-            .upper()
-            .strip()
-            .encode("ascii", errors="ignore")
-            .decode("utf-8")
-        )
-
-        df = df[df["flag_cnae_norm"].eq(valor_flag_norm)].copy()
 
     df[coluna_valor] = pd.to_numeric(
         df[coluna_valor],
@@ -1827,6 +1810,37 @@ def top_cnaes_cnpj(
         .str.strip()
     )
 
+    # ------------------------------------------------------------
+    # Denominador: TODOS os CNAEs de CNPJs
+    # ------------------------------------------------------------
+
+    total_quantidade_todos_cnaes = df[coluna_quantidade].sum()
+    total_valor_todos_cnaes = df[coluna_valor].sum()
+
+    # ------------------------------------------------------------
+    # Filtro opcional: apenas CNAE cultural
+    # ------------------------------------------------------------
+
+    if apenas_cnae_cultural:
+        df["flag_cnae_norm"] = (
+            df[coluna_flag_cnae]
+            .fillna("Não informado")
+            .astype(str)
+            .str.upper()
+            .str.strip()
+            .str.normalize("NFKD")
+            .str.encode("ascii", errors="ignore")
+            .str.decode("utf-8")
+        )
+
+        valor_flag_norm = normalizar_texto(valor_flag_cnae_cultural)
+
+        df = df[df["flag_cnae_norm"].eq(valor_flag_norm)].copy()
+
+    # ------------------------------------------------------------
+    # Agregação dos CNAEs exibidos
+    # ------------------------------------------------------------
+
     df_agg = (
         df
         .groupby(coluna_cnae, dropna=False)
@@ -1838,18 +1852,16 @@ def top_cnaes_cnpj(
         .rename(columns={coluna_cnae: "cnae_principal"})
     )
 
-    total_quantidade = df_agg["quantidade_contemplados"].sum()
-    total_valor = df_agg["valor_transacao"].sum()
-
+    # Percentuais em relação ao TODO dos CNAEs de CNPJs
     df_agg["perc_quantidade_contemplados"] = np.where(
-        total_quantidade > 0,
-        df_agg["quantidade_contemplados"] / total_quantidade,
+        total_quantidade_todos_cnaes > 0,
+        df_agg["quantidade_contemplados"] / total_quantidade_todos_cnaes,
         np.nan
     )
 
     df_agg["perc_valor_transacao"] = np.where(
-        total_valor > 0,
-        df_agg["valor_transacao"] / total_valor,
+        total_valor_todos_cnaes > 0,
+        df_agg["valor_transacao"] / total_valor_todos_cnaes,
         np.nan
     )
 
@@ -1868,25 +1880,38 @@ def top_cnaes_cnpj(
         "CNAE geral"
     )
 
+    df_resultado["total_quantidade_todos_cnaes"] = total_quantidade_todos_cnaes
+    df_resultado["total_valor_todos_cnaes"] = total_valor_todos_cnaes
+
     df_resultado["quantidade_contemplados"] = (
         df_resultado["quantidade_contemplados"]
         .fillna(0)
         .astype("Int64")
     )
 
-    df_resultado["valor_transacao"] = (
-        df_resultado["valor_transacao"]
+    df_resultado["total_quantidade_todos_cnaes"] = (
+        df_resultado["total_quantidade_todos_cnaes"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    colunas_valor = [
+        "valor_transacao",
+        "total_valor_todos_cnaes"
+    ]
+
+    df_resultado[colunas_valor] = (
+        df_resultado[colunas_valor]
         .astype("Float64")
     )
 
-    df_resultado[[
+    colunas_percentual = [
         "perc_quantidade_contemplados",
         "perc_valor_transacao"
-    ]] = (
-        df_resultado[[
-            "perc_quantidade_contemplados",
-            "perc_valor_transacao"
-        ]]
+    ]
+
+    df_resultado[colunas_percentual] = (
+        df_resultado[colunas_percentual]
         .astype("Float64")
     )
 

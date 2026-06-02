@@ -4425,3 +4425,629 @@ def criar_df_uf_cut_from_aux(
     )
 
     return df_uf
+
+
+def aggregate_estado_by_uf_local_residencia(
+    df_cubo: pd.DataFrame,
+    col_uf: str = "uf",
+    tipo_documento: str | None = None
+) -> pd.DataFrame:
+    """
+    Agrega, por UF, os valores executados pelos ESTADOS segundo a categoria
+    de residência dos contemplados.
+
+    Cada linha = UF
+    Considera apenas tipo_ente == 'ESTADO'
+
+    Para cada categoria:
+    - quantidade_contemplados_<categoria>
+    - valor_transacao_<categoria>
+    - percentual_quantidade_<categoria>
+    - percentual_valor_<categoria>
+
+    Percentuais em escala decimal:
+    0.25 = 25%
+    """
+
+    df = df_cubo.copy()
+
+    if col_uf not in df.columns:
+        raise ValueError(f"A coluna '{col_uf}' não foi encontrada na df_cubo.")
+
+    df["tipo_ente_norm"] = (
+        df["tipo_ente"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    df = df[df["tipo_ente_norm"].eq("ESTADO")].copy()
+
+    if tipo_documento is not None:
+        tipo_documento_norm = str(tipo_documento).upper().strip()
+
+        df["tipo_documento_norm"] = (
+            df["tipo_documento"]
+            .astype(str)
+            .str.upper()
+            .str.strip()
+        )
+
+        df = df[df["tipo_documento_norm"].eq(tipo_documento_norm)].copy()
+
+    categorias = [
+        "Interior",
+        "Regiao Metropolitana",
+        "Capital"
+    ]
+
+    mapa_categorias = {
+        "Interior": "interior",
+        "Regiao Metropolitana": "regiao_metropolitana",
+        "Capital": "capital"
+    }
+
+    df["local_residencia_contemplados"] = pd.Categorical(
+        df["local_residencia_contemplados"],
+        categories=categorias,
+        ordered=True
+    )
+
+    df_base = (
+        df
+        .groupby([col_uf, "local_residencia_contemplados"], observed=False)
+        .agg(
+            quantidade_contemplados=("quantidade", "sum"),
+            valor_transacao=("valor_transacao", "sum")
+        )
+        .reset_index()
+    )
+
+    totais_uf = (
+        df_base
+        .groupby(col_uf, as_index=False)
+        .agg(
+            quantidade_total_uf=("quantidade_contemplados", "sum"),
+            valor_total_uf=("valor_transacao", "sum")
+        )
+    )
+
+    df_base = df_base.merge(
+        totais_uf,
+        on=col_uf,
+        how="left"
+    )
+
+    df_base["percentual_quantidade"] = np.where(
+        df_base["quantidade_total_uf"] > 0,
+        df_base["quantidade_contemplados"] / df_base["quantidade_total_uf"],
+        np.nan
+    )
+
+    df_base["percentual_valor"] = np.where(
+        df_base["valor_total_uf"] > 0,
+        df_base["valor_transacao"] / df_base["valor_total_uf"],
+        np.nan
+    )
+
+    dfs_pivot = []
+
+    for categoria, sufixo in mapa_categorias.items():
+        df_cat = df_base[
+            df_base["local_residencia_contemplados"].eq(categoria)
+        ].copy()
+
+        df_cat = df_cat[
+            [
+                col_uf,
+                "quantidade_contemplados",
+                "valor_transacao",
+                "percentual_quantidade",
+                "percentual_valor"
+            ]
+        ].rename(
+            columns={
+                "quantidade_contemplados": f"quantidade_contemplados_{sufixo}",
+                "valor_transacao": f"valor_transacao_{sufixo}",
+                "percentual_quantidade": f"percentual_quantidade_{sufixo}",
+                "percentual_valor": f"percentual_valor_{sufixo}",
+            }
+        )
+
+        dfs_pivot.append(df_cat)
+
+    df_resultado = totais_uf.copy()
+
+    for df_cat in dfs_pivot:
+        df_resultado = df_resultado.merge(
+            df_cat,
+            on=col_uf,
+            how="left"
+        )
+
+    df_resultado = df_resultado.rename(columns={col_uf: "uf"})
+
+    colunas_qtd = [
+        col for col in df_resultado.columns
+        if col.startswith("quantidade_contemplados_")
+    ]
+
+    colunas_valor = [
+        col for col in df_resultado.columns
+        if col.startswith("valor_transacao_")
+    ]
+
+    colunas_percentuais = [
+        col for col in df_resultado.columns
+        if col.startswith("percentual_")
+    ]
+
+    df_resultado[colunas_qtd] = (
+        df_resultado[colunas_qtd]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado[colunas_valor] = (
+        df_resultado[colunas_valor]
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    df_resultado[colunas_percentuais] = (
+        df_resultado[colunas_percentuais]
+        .astype("Float64")
+    )
+
+    df_resultado["quantidade_total_uf"] = (
+        df_resultado["quantidade_total_uf"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado["valor_total_uf"] = (
+        df_resultado["valor_total_uf"]
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    df_resultado = df_resultado[
+        [
+            "uf",
+            "quantidade_total_uf",
+            "valor_total_uf",
+
+            "quantidade_contemplados_interior",
+            "valor_transacao_interior",
+            "percentual_quantidade_interior",
+            "percentual_valor_interior",
+
+            "quantidade_contemplados_regiao_metropolitana",
+            "valor_transacao_regiao_metropolitana",
+            "percentual_quantidade_regiao_metropolitana",
+            "percentual_valor_regiao_metropolitana",
+
+            "quantidade_contemplados_capital",
+            "valor_transacao_capital",
+            "percentual_quantidade_capital",
+            "percentual_valor_capital",
+        ]
+    ]
+
+    return df_resultado.sort_values("uf").reset_index(drop=True)
+
+
+def aggregate_faixa_valor_ju_wide_by_regiao(
+    df_cubo: pd.DataFrame,
+    by_filter: str = "UF"
+) -> pd.DataFrame:
+    """
+    Agrega, para cada região, quantidade de contemplados e valor total
+    por faixa de valor pago, em formato largo.
+
+    Cada linha representa uma categoria da coluna 'regiao':
+    - Norte
+    - Nordeste
+    - Centro-Oeste
+    - Sudeste
+    - Sul
+
+    Usa a coluna:
+    - faixa_vlr_pago_ju_bbagil
+
+    Para cada faixa, cria colunas de:
+    - quantidade;
+    - percentual da quantidade dentro da região;
+    - valor;
+    - percentual do valor dentro da região.
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        Base principal.
+
+    by_filter : str
+        Recorte territorial usado na agregação.
+
+        Opções:
+        - "ESTADO": considera apenas registros estaduais.
+        - "MUNICIPIO": considera apenas registros municipais.
+        - "UF": considera ESTADO + MUNICIPIO.
+
+    Retorna
+    -------
+    pd.DataFrame
+        Tabela com uma linha por região e faixas de valor como colunas.
+
+    Observação
+    ----------
+    Percentuais retornam em escala decimal:
+    - 0.34 = 34%
+
+    Não há arredondamento dos valores.
+    """
+
+    by_filter = by_filter.upper().strip()
+
+    df = df_cubo.copy()
+
+    df["tipo_ente_norm"] = (
+        df["tipo_ente"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    if by_filter == "ESTADO":
+        df = df[df["tipo_ente_norm"].eq("ESTADO")].copy()
+
+    elif by_filter == "MUNICIPIO":
+        df = df[df["tipo_ente_norm"].eq("MUNICIPIO")].copy()
+
+    elif by_filter == "UF":
+        df = df[df["tipo_ente_norm"].isin(["ESTADO", "MUNICIPIO"])].copy()
+
+    else:
+        raise ValueError("by_filter deve ser 'ESTADO', 'MUNICIPIO' ou 'UF'.")
+
+    ordem_regiao = [
+        "Norte",
+        "Nordeste",
+        "Centro-Oeste",
+        "Sudeste",
+        "Sul"
+    ]
+
+    ordem_faixa_vlr_pago = [
+        "Até 2 mil",
+        "De 2 a 10 mil",
+        "De 10 a 50 mil",
+        "De 50 a 200 mil",
+        "Acima de 200 mil"
+    ]
+
+    nomes_colunas_faixa = {
+        "Até 2 mil": "ate_2_mil",
+        "De 2 a 10 mil": "de_2_a_10_mil",
+        "De 10 a 50 mil": "de_10_a_50_mil",
+        "De 50 a 200 mil": "de_50_a_200_mil",
+        "Acima de 200 mil": "acima_de_200_mil"
+    }
+
+    df["regiao"] = pd.Categorical(
+        df["regiao"],
+        categories=ordem_regiao,
+        ordered=True
+    )
+
+    df["faixa_vlr_pago_ju_bbagil_tratada"] = (
+        df["faixa_vlr_pago_ju_bbagil"]
+        .fillna("Não informado")
+        .astype(str)
+        .str.strip()
+    )
+
+    df_totais_regiao = (
+        df
+        .groupby("regiao", observed=False, as_index=False)
+        .agg(
+            total_contemplados_uf=("quantidade", "sum"),
+            valor_total_uf=("valor_transacao", "sum")
+        )
+    )
+
+    df_faixa_regiao = (
+        df
+        .loc[df["faixa_vlr_pago_ju_bbagil_tratada"].isin(ordem_faixa_vlr_pago)]
+        .groupby(
+            ["regiao", "faixa_vlr_pago_ju_bbagil_tratada"],
+            observed=False,
+            as_index=False
+        )
+        .agg(
+            quantidade_contemplados=("quantidade", "sum"),
+            valor_total=("valor_transacao", "sum")
+        )
+    )
+
+    df_qtd_pivot = (
+        df_faixa_regiao
+        .pivot_table(
+            index="regiao",
+            columns="faixa_vlr_pago_ju_bbagil_tratada",
+            values="quantidade_contemplados",
+            aggfunc="sum",
+            fill_value=0,
+            observed=False
+        )
+        .reindex(columns=ordem_faixa_vlr_pago, fill_value=0)
+        .reset_index()
+    )
+
+    df_valor_pivot = (
+        df_faixa_regiao
+        .pivot_table(
+            index="regiao",
+            columns="faixa_vlr_pago_ju_bbagil_tratada",
+            values="valor_total",
+            aggfunc="sum",
+            fill_value=0,
+            observed=False
+        )
+        .reindex(columns=ordem_faixa_vlr_pago, fill_value=0)
+        .reset_index()
+    )
+
+    df_resultado = df_totais_regiao.copy()
+
+    df_resultado = df_resultado.merge(
+        df_qtd_pivot,
+        on="regiao",
+        how="left"
+    )
+
+    df_resultado = df_resultado.merge(
+        df_valor_pivot,
+        on="regiao",
+        how="left",
+        suffixes=("_qtd", "_valor")
+    )
+
+    for faixa in ordem_faixa_vlr_pago:
+        nome_faixa = nomes_colunas_faixa[faixa]
+
+        coluna_qtd_origem = f"{faixa}_qtd"
+        coluna_valor_origem = f"{faixa}_valor"
+
+        if coluna_qtd_origem not in df_resultado.columns:
+            df_resultado[coluna_qtd_origem] = 0
+
+        if coluna_valor_origem not in df_resultado.columns:
+            df_resultado[coluna_valor_origem] = 0
+
+        df_resultado[f"qtd_{nome_faixa}"] = df_resultado[coluna_qtd_origem]
+
+        df_resultado[f"perc_qtd_{nome_faixa}"] = np.where(
+            df_resultado["total_contemplados_uf"].ne(0),
+            df_resultado[coluna_qtd_origem] / df_resultado["total_contemplados_uf"],
+            np.nan
+        )
+
+        df_resultado[f"valor_{nome_faixa}"] = df_resultado[coluna_valor_origem]
+
+        df_resultado[f"perc_valor_{nome_faixa}"] = np.where(
+            df_resultado["valor_total_uf"].ne(0),
+            df_resultado[coluna_valor_origem] / df_resultado["valor_total_uf"],
+            np.nan
+        )
+
+    colunas_finais = [
+        "regiao",
+        "total_contemplados_uf",
+        "valor_total_uf"
+    ]
+
+    for faixa in ordem_faixa_vlr_pago:
+        nome_faixa = nomes_colunas_faixa[faixa]
+
+        colunas_finais.extend([
+            f"qtd_{nome_faixa}",
+            f"perc_qtd_{nome_faixa}",
+            f"valor_{nome_faixa}",
+            f"perc_valor_{nome_faixa}"
+        ])
+
+    df_resultado = df_resultado[colunas_finais].copy()
+
+    colunas_quantidade = [
+        col for col in df_resultado.columns
+        if col.startswith("qtd_") or col == "total_contemplados_uf"
+    ]
+
+    colunas_valor = [
+        col for col in df_resultado.columns
+        if col.startswith("valor_") or col == "valor_total_uf"
+    ]
+
+    colunas_percentual = [
+        col for col in df_resultado.columns
+        if col.startswith("perc_")
+    ]
+
+    df_resultado[colunas_quantidade] = (
+        df_resultado[colunas_quantidade]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado[colunas_valor] = (
+        df_resultado[colunas_valor]
+        .apply(pd.to_numeric, errors="coerce")
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    df_resultado[colunas_percentual] = (
+        df_resultado[colunas_percentual]
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
+    )
+
+    df_resultado = (
+        df_resultado
+        .sort_values("regiao")
+        .reset_index(drop=True)
+    )
+
+    return df_resultado
+
+
+def resumo_por_regiao(
+    df_aux: pd.DataFrame,
+    by_filter: str = "UF"
+) -> pd.DataFrame:
+    """
+    Retorna um resumo por macrorregião.
+
+    Cada linha = uma categoria da coluna nome_macrorregiao:
+    - Norte
+    - Nordeste
+    - Centro-Oeste
+    - Sudeste
+    - Sul
+
+    by_filter:
+    - "ESTADO": considera apenas tipo_ente_bbagil == "ESTADO"
+    - "MUNICIPIO": considera apenas tipo_ente_bbagil == "MUNICIPIO"
+    - "UF": não aplica filtro de tipo_ente_bbagil
+
+    Percentuais retornam em escala decimal:
+    - 0.25 = 25%
+    """
+
+    def media_aparada_1pct_superior(x):
+        """
+        Calcula a média removendo os 1% maiores valores do grupo.
+        """
+        x = pd.to_numeric(x, errors="coerce").dropna()
+
+        if x.empty:
+            return np.nan
+
+        limite_superior = x.quantile(0.99)
+
+        return x[x <= limite_superior].mean()
+
+    by_filter = by_filter.upper().strip()
+
+    if by_filter not in ["ESTADO", "MUNICIPIO", "UF"]:
+        raise ValueError("by_filter deve ser 'ESTADO', 'MUNICIPIO' ou 'UF'.")
+
+    df = df_aux.copy()
+
+    df["tipo_ente_bbagil_norm"] = (
+        df["tipo_ente_bbagil"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    if by_filter == "ESTADO":
+        df = df[df["tipo_ente_bbagil_norm"].eq("ESTADO")].copy()
+
+    elif by_filter == "MUNICIPIO":
+        df = df[df["tipo_ente_bbagil_norm"].eq("MUNICIPIO")].copy()
+
+    ordem_regioes = [
+        "Norte",
+        "Nordeste",
+        "Centro-Oeste",
+        "Sudeste",
+        "Sul"
+    ]
+
+    df["nome_macrorregiao"] = pd.Categorical(
+        df["nome_macrorregiao"],
+        categories=ordem_regioes,
+        ordered=True
+    )
+
+    df_resumo = (
+        df
+        .groupby("nome_macrorregiao", observed=False)
+        .agg(
+            valor_total_por_regiao=("valor_transacao_total_bbagil", "sum"),
+            valor_medio_por_regiao=("valor_transacao_total_bbagil", "mean"),
+            valor_media_aparada_1pct_por_regiao=(
+                "valor_transacao_total_bbagil",
+                media_aparada_1pct_superior
+            ),
+            valor_mediano_por_regiao=("valor_transacao_total_bbagil", "median"),
+            quantidade_contemplados_por_regiao=("chave", "nunique")
+        )
+        .reset_index()
+    )
+
+    total_valor = df_resumo["valor_total_por_regiao"].sum()
+    total_quantidade = df_resumo["quantidade_contemplados_por_regiao"].sum()
+
+    df_resumo["percentual_valor_por_regiao"] = np.where(
+        total_valor > 0,
+        df_resumo["valor_total_por_regiao"] / total_valor,
+        np.nan
+    )
+
+    df_resumo["percentual_quantidade_contemplados_por_regiao"] = np.where(
+        total_quantidade > 0,
+        df_resumo["quantidade_contemplados_por_regiao"] / total_quantidade,
+        np.nan
+    )
+
+    df_resumo["visao"] = by_filter
+
+    df_resumo["quantidade_contemplados_por_regiao"] = (
+        df_resumo["quantidade_contemplados_por_regiao"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    colunas_valor = [
+        "valor_total_por_regiao",
+        "valor_medio_por_regiao",
+        "valor_media_aparada_1pct_por_regiao",
+        "valor_mediano_por_regiao"
+    ]
+
+    df_resumo[colunas_valor] = (
+        df_resumo[colunas_valor]
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
+    )
+
+    colunas_percentual = [
+        "percentual_valor_por_regiao",
+        "percentual_quantidade_contemplados_por_regiao"
+    ]
+
+    df_resumo[colunas_percentual] = (
+        df_resumo[colunas_percentual]
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
+    )
+
+    df_resumo = (
+        df_resumo
+        .sort_values("nome_macrorregiao")
+        .reset_index(drop=True)
+    )
+
+    return df_resumo

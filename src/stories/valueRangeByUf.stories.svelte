@@ -1,7 +1,8 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { VerticalStackedBarChart, categorical8 } from 'sniic-design-system';
+  import { categorical8 } from 'sniic-design-system';
+  import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
   // @ts-ignore
   import { ufBandPercData, UF_BAND_KEYS, UF_BAND_LABELS } from '$lib/data/section2';
 
@@ -10,7 +11,7 @@
 
   const { Story } = defineMeta({
     title: 'Section 2/valueRangeByUf',
-    component: VerticalStackedBarChart,
+    component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {
       docs: {
@@ -32,16 +33,16 @@ A visualização conecta a narrativa CPF/CNPJ ao território: estados onde o CNP
 
 <Story name="Faixa de valor pago por UF - pct dentro de cada estado">
   {#snippet template()}
-    <VerticalStackedBarChart
-      data={ufBandPercData}
-      keys={[...UF_BAND_KEYS]}
-      labels={UF_BAND_LABELS}
-      colors={categorical8}
-      format={formatPct}
-      yLabel="% dos beneficiários"
-      normalize={true}
-      showLegend={true}
-      height={480}
-    />
+    <div style="padding: 16px;">
+      <HorizontalStackedBarChartCustom
+        data={ufBandPercData}
+        keys={[...UF_BAND_KEYS]}
+        labels={UF_BAND_LABELS}
+        colors={categorical8}
+        format={formatPct}
+        rowHeight={36}
+        marginLeft={40}
+      />
+    </div>
   {/snippet}
 </Story>

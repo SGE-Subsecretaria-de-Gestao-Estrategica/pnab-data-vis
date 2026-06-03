@@ -134,16 +134,14 @@
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-2-uf-faixas">
 	<div class="chart-wide">
-		<VerticalStackedBarChart
+		<HorizontalStackedBarChartCustom
 			data={ufBandPercData}
 			keys={[...UF_BAND_KEYS]}
 			labels={UF_BAND_LABELS}
 			colors={categorical8}
 			format={formatPctFixed}
-			yLabel="% dos contemplados"
-			normalize={true}
-			showLegend={true}
-			height={480}
+			rowHeight={36}
+			marginLeft={40}
 		/>
 	</div>
 </ScrollSection>

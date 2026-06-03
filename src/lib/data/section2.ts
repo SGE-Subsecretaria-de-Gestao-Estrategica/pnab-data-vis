@@ -116,6 +116,14 @@ const recursoPercByBand: Record<string, number> = {
 	'Acima de 200 mil': 25.2,
 };
 
+export const faixaValorPercData = [
+	{ label: 'Até 2 mil',         value: 2.2  },
+	{ label: '2 a 10 mil',        value: 13.1 },
+	{ label: '10 a 50 mil',       value: 31.5 },
+	{ label: '50 a 200 mil',      value: 28.1 },
+	{ label: 'Acima de 200 mil',  value: 25.2 },
+];
+
 export const faixaGroupedData = (() => {
 	const pagMap: Record<string, number> = {};
 	for (const r of rangeRows) {

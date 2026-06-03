@@ -122,6 +122,15 @@
 	);
 
 	const legendStartY = $derived(margin.top + totalContentH + (xLabel ? 40 : 28));
+
+	// Accumulated x offsets for top legend items based on actual label widths
+	const legendTopOffsets = $derived(
+		seriesLabels.reduce<number[]>((acc, label, i) => {
+			const prev = i === 0 ? 0 : acc[i - 1] + seriesLabels[i - 1].length * LEGEND_CHAR_W + 32;
+			acc.push(prev);
+			return acc;
+		}, [])
+	);
 </script>
 
 <div bind:clientWidth={containerWidth} style="width:100%;">
@@ -229,7 +238,7 @@
 				{/each}
 			{:else}
 				{#each seriesLabels as label, si}
-					{@const lx = margin.left + si * 200}
+					{@const lx = margin.left + legendTopOffsets[si]}
 					<rect x={lx} y={6} width={12} height={10} fill={colors[si % colors.length]} rx="2" />
 					<text x={lx + 16} y={13} font-size="11" fill="#444">{label}</text>
 				{/each}

@@ -13,6 +13,7 @@ import csvValorGrupoRaw    from '../../../data/section_5/aggregate_cadunico_by_v
 import csvValorPnabRaw     from '../../../data/section_2/values_range_by_brazil_v2.csv?raw';
 import csvBolsaFamiliaRaw  from '../../../data/section_5/aggregate_bolsa_familia_summary.csv?raw';
 import csvBpcRaw           from '../../../data/section_5/aggregate_bpc_summary.csv?raw';
+import csvRepresentacaoUfRaw from '../../../data/section_5/aggregate_cadunico_representacao_by_uf.csv?raw';
 
 // Quoted-CSV aware parser (handles fields like "De R$ 109,01 até R$ 218")
 function parseCSVLine(line: string): string[] {
@@ -175,3 +176,15 @@ export const valorBolsaFamilia = +bfRow.valor_recebido_bolsa_familia;
 const [bpcRow] = parseCSV(csvBpcRaw);
 export const percBpc  = +bpcRow.perc_contemplados_bpc * 100;
 export const valorBpc = +bpcRow.valor_recebido_bpc;
+
+// ── Representação CadÚnico por UF (contemplados vs população CadÚnico) ─────────
+const representacaoUfRows = parseCSV(csvRepresentacaoUfRaw);
+export const representacaoUfGroupedData = representacaoUfRows
+	.map((r) => ({
+		label: r.uf,
+		values: [
+			+r.perc_qtd_contemplados_cadunico * 100,
+			+r.perc_qtd_cadunico_brasil * 100,
+		],
+	}))
+	.sort((a, b) => b.values[0] - a.values[0]);

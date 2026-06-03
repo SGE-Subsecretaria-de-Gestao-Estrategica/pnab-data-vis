@@ -405,18 +405,7 @@
 <!-- ══════════════════════════════════════════════════════════════════════════
      2.4 — TERRITÓRIOS ESPECIAIS — GRÁFICO POR UF
      ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-2-special-uf">
-	<div class="chart-wide">
-		<HorizontalStackedBarChart
-			data={terrEspeciaisData}
-			keys={[...TERR_KEYS]}
-			labels={TERR_LABELS}
-			colors={categorical3}
-			format={formatBRL}
-			showTotalLabel={true}
-			rowHeight={36}
-		/>
-	</div>
+<ScrollSection id="section-2-special-uf">	
 	<p style="margin-top: 1.5rem;">
 		Do montante total destinado aos territórios especiais, <strong>R$ 91.459.463 (60,7%)</strong> foram destinados pelos governos estaduais. Esse valor representa 6,3% de todo o recurso executado pelos Estados.
 	</p>

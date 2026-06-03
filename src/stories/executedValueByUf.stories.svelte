@@ -11,9 +11,8 @@
 
   const columns = [
     { key: 'uf', label: 'UF', align: 'left', width: 80 },
-    { key: 'valor_executado_estado', label: 'Valor Executado Estado', align: 'right', width: 200 },
-    { key: 'valor_executado_municipio', label: 'Valor Executado Município', align: 'right', width: 200 },
-    { key: 'valor_executado_total_uf', label: 'Valor Executado Total UF', align: 'right', width: 200 },
+    { key: 'valor_executado_estado', label: 'Recurso Executado Estado', align: 'right', width: 200 },
+    { key: 'valor_executado_municipio', label: 'Recurso Executado Município', align: 'right', width: 200 },
     { key: 'perc_valor_executado_estado', label: '% Estado', align: 'right', width: 120 },
     { key: 'perc_valor_executado_municipio', label: '% Município', align: 'right', width: 120 },
     { key: 'valor_executado_perc', label: '% Total', align: 'right', width: 100 },
@@ -23,7 +22,6 @@
     uf: d.uf,
     valor_executado_estado:         brl(d.valor_executado_estado),
     valor_executado_municipio:      brl(d.valor_executado_municipio),
-    valor_executado_total_uf:       brl(d.valor_executado_total_uf),
     perc_valor_executado_estado:    pct(d.perc_valor_executado_estado),
     perc_valor_executado_municipio: pct(d.perc_valor_executado_municipio),
     valor_executado_perc:           pct(d.valor_executado_perc),
@@ -39,7 +37,7 @@
           component: `
 **Tabela completa: valor executado por UF com divisão estado/município**
 
-Referência de dados para todas as 27 unidades federativas. Exibe o valor executado pelo governo estadual, pelo conjunto de municípios e o total por UF — além das proporções percentuais de cada esfera e a participação no total nacional.
+Referência de dados para todas as 27 unidades federativas. Exibe o recurso executado pelo governo estadual, pelo conjunto de municípios — além das proporções percentuais de cada esfera e a participação no total nacional.
 
 Use esta tabela para verificar valores exatos que os gráficos representam visualmente. Os destaques notáveis:
 - **SP**: R$ 555 milhões no total (19,5% do país), com divisão quase equilibrada entre estado (52,2%) e municípios (47,8%).
@@ -55,8 +53,10 @@ Use esta tabela para verificar valores exatos que os gráficos representam visua
 
 <Story name="Valor executado por UF">
   {#snippet template()}
-    <svg width={1020} height={920}>
-      <DataTable {columns} {rows} />
-    </svg>
+    <div style="overflow-x: auto;">
+      <svg width={1020} height={920}>
+        <DataTable {columns} {rows} />
+      </svg>
+    </div>
   {/snippet}
 </Story>

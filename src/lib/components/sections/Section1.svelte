@@ -72,18 +72,26 @@
 		{ cat: '% dos agentes',  favela: _stFav.perc_agentes,    quilombola: _stQui.perc_agentes,    indigena: _stInd.perc_agentes    },
 	];
 
-	// ── Porte mean chart ─────────────────────────────────────────────────────────
-	const pmMaxMedian = Math.max(...porteMeanData.map((d) => d.valor_mediano));
-	const pmBarW      = 290;
-	const pmRowH      = 88;
-	const pmLabelW    = 150;
+	// ── Porte mean stacked chart ─────────────────────────────────────────────────
+	const porteKeyByLabel: Record<string, string> = {
+		'Grande': 'grande', 'Pequeno I': 'pequeno_i', 'Pequeno II': 'pequeno_ii', 'Médio': 'medio',
+	};
+	const porteMeanStackedData = [
+		{
+			label: '% do recurso executado',
+			...Object.fromEntries(porteMeanData.map((d) => [porteKeyByLabel[d.label], d.perc_valor])),
+		},
+		{
+			label: '% dos contemplados',
+			...Object.fromEntries(porteMeanData.map((d) => [porteKeyByLabel[d.label], d.perc_quantidade])),
+		},
+	];
 
 	// ── Tabela UF ────────────────────────────────────────────────────────────────
 	const ufTableColumns = [
 		{ key: 'uf', label: 'UF', align: 'left', width: 80 },
-		{ key: 'valor_executado_estado', label: 'Valor Executado Estado', align: 'right', width: 200 },
-		{ key: 'valor_executado_municipio', label: 'Valor Executado Município', align: 'right', width: 200 },
-		{ key: 'valor_executado_total_uf', label: 'Valor Executado Total UF', align: 'right', width: 200 },
+		{ key: 'valor_executado_estado', label: 'Recurso Executado Estado', align: 'right', width: 200 },
+		{ key: 'valor_executado_municipio', label: 'Recurso Executado Município', align: 'right', width: 200 },
 		{ key: 'perc_valor_executado_estado', label: '% Estado', align: 'right', width: 120 },
 		{ key: 'perc_valor_executado_municipio', label: '% Município', align: 'right', width: 120 },
 		{ key: 'valor_executado_perc', label: '% Total', align: 'right', width: 100 },
@@ -278,51 +286,16 @@
 	<p style="margin-top: 1.5rem;">
 		Os <strong>3.401 municípios de Pequeno Porte I</strong> juntos executaram mais de <strong>R$ 266 milhões</strong>, o que equivale ao valor total executado pelas seguintes UFs: Mato Grosso, Mato Grosso do Sul, Sergipe, Tocantins, Acre, Amapá e Distrito Federal.
 	</p>
-	<svg
-		viewBox="0 0 560 {30 + porteMeanData.length * pmRowH}"
-		style="width: 100%; overflow: visible; display: block; margin-top: 1.5rem; font-family: 'Space Grotesk', system-ui, sans-serif;"
-		role="img"
-		aria-label="Valor mediano, percentual do valor e dos contemplados por porte de município"
-	>
-		<!-- Legend -->
-		<rect x={pmLabelW}       y={2}  width={12} height={12} fill={categorical8[0]} rx={2} />
-		<text x={pmLabelW + 16}  y={12} font-size="12" fill="var(--chart-fg-strong, #334155)" dominant-baseline="middle">Valor mediano</text>
-		<rect x={pmLabelW + 120} y={2}  width={12} height={12} fill={categorical8[2]} rx={2} />
-		<text x={pmLabelW + 136} y={12} font-size="12" fill="var(--chart-fg-strong, #334155)" dominant-baseline="middle">% do valor</text>
-		<rect x={pmLabelW + 220} y={2}  width={12} height={12} fill={categorical8[4]} rx={2} />
-		<text x={pmLabelW + 236} y={12} font-size="12" fill="var(--chart-fg-strong, #334155)" dominant-baseline="middle">% dos contemplados</text>
-
-		{#each porteMeanData as d, i}
-			{@const rowY    = 30 + i * pmRowH}
-			{@const wMedian = (d.valor_mediano / pmMaxMedian) * pmBarW}
-			{@const wValor  = (d.perc_valor    / 100)         * pmBarW}
-			{@const wQtde   = (d.perc_quantidade / 100)       * pmBarW}
-
-			<!-- Category header -->
-			<text x={pmLabelW - 5} y={rowY + 11} text-anchor="end" font-size="14" font-weight="700" fill="var(--chart-fg-strong, #334155)" dominant-baseline="middle">{d.label}</text>
-			<line x1={0} y1={rowY + 18} x2={560} y2={rowY + 18} stroke="var(--chart-grid, #e2e8f0)" stroke-width={1} />
-
-			<!-- Valor mediano bar -->
-			<text x={pmLabelW - 5} y={rowY + 30} text-anchor="end" font-size="12" fill="var(--chart-fg-muted, #64748b)" dominant-baseline="middle">mediana</text>
-			<rect x={pmLabelW} y={rowY + 22} width={wMedian} height={16} fill={categorical8[0]} rx={2} />
-			<text x={pmLabelW + wMedian + 6} y={rowY + 30} font-size="12" font-weight="600" fill="var(--chart-fg-strong, #334155)" dominant-baseline="middle">{formatBRLpc(d.valor_mediano)}</text>
-
-			<!-- % do valor bar -->
-			<text x={pmLabelW - 5} y={rowY + 52} text-anchor="end" font-size="12" fill="var(--chart-fg-muted, #64748b)" dominant-baseline="middle">% valor</text>
-			<rect x={pmLabelW} y={rowY + 44} width={wValor} height={16} fill={categorical8[2]} rx={2} />
-			<text x={pmLabelW + wValor + 6}  y={rowY + 52} font-size="12" font-weight="600" fill="var(--chart-fg-strong, #334155)" dominant-baseline="middle">{d.perc_valor.toFixed(1)}%</text>
-
-			<!-- % dos contemplados bar -->
-			<text x={pmLabelW - 5} y={rowY + 74} text-anchor="end" font-size="12" fill="var(--chart-fg-muted, #64748b)" dominant-baseline="middle">% contempl.</text>
-			<rect x={pmLabelW} y={rowY + 66} width={wQtde}  height={16} fill={categorical8[4]} rx={2} />
-			<text x={pmLabelW + wQtde + 6}   y={rowY + 74}  font-size="12" font-weight="600" fill="var(--chart-fg-strong, #334155)" dominant-baseline="middle">{d.perc_quantidade.toFixed(1)}%</text>
-
-			<!-- Row divider -->
-			{#if i < porteMeanData.length - 1}
-				<line x1={0} y1={rowY + pmRowH - 4} x2={560} y2={rowY + pmRowH - 4} stroke="var(--chart-grid, #e2e8f0)" stroke-width={1} />
-			{/if}
-		{/each}
-	</svg>
+	<div style="padding-left: 100px; margin-top: 1.5rem;">
+		<HorizontalStackedBarChart
+			data={porteMeanStackedData}
+			keys={porteStackedKeys}
+			labels={porteStackedLabels}
+			colors={categorical8}
+			format={formatPercFix}
+			showTotalLabel={true}
+		/>
+	</div>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════

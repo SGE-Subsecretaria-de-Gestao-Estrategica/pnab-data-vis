@@ -5,12 +5,12 @@
     TreemapChart,
     BubbleChart,
     DivergingBarChart,
-    HorizontalStackedBarChart,
     HorizontalBarChart,
     categorical8,
     colorPairs,
     colorScales,
   } from 'sniic-design-system';
+  import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
   import {
     porteTreemapData,
     porteDivergingData,
@@ -40,6 +40,24 @@
   const _pi  = pmByLabel['Pequeno I'] || { municipios: 0, perc_quantidade: 0, perc_valor: 0 };
   const _pii = pmByLabel['Pequeno II']|| { municipios: 0, perc_quantidade: 0, perc_valor: 0 };
   const _m   = pmByLabel['Médio']     || { municipios: 0, perc_quantidade: 0, perc_valor: 0 };
+
+  // ── Stacked — Recurso e Contemplados por Porte ─────────────────────────────
+  const pmPercStackedData = [
+    {
+      cat: '% do recurso executado',
+      grande:     _g.perc_valor,
+      pequeno_i:  _pi.perc_valor,
+      pequeno_ii: _pii.perc_valor,
+      medio:      _m.perc_valor,
+    },
+    {
+      cat: '% dos contemplados',
+      grande:     _g.perc_quantidade,
+      pequeno_i:  _pi.perc_quantidade,
+      pequeno_ii: _pii.perc_quantidade,
+      medio:      _m.perc_quantidade,
+    },
+  ];
   const pmStackedData = [
     {
       cat: 'Municípios (%)',
@@ -149,32 +167,30 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
 
 <Story name="Stacked Bars — Equidade: Valor Investido vs Beneficiários">
   {#snippet template()}
-    <div style="padding-left: 100px;">
-      <HorizontalStackedBarChart
-        data={porteStackedData}
-        keys={porteStackedKeys}
-        labels={porteStackedLabels}
-        colors={categorical8}
-        format={formatPerc}
-        showTotalLabel={true}
-      />
-    </div>
+    <HorizontalStackedBarChartCustom
+      data={porteStackedData}
+      keys={porteStackedKeys}
+      labels={porteStackedLabels}
+      colors={categorical8}
+      format={formatPerc}
+      showTotalLabel={true}
+      marginLeft={180}
+    />
   {/snippet}
 </Story>
 
 <Story name="Bars — Métricas por Porte">
   {#snippet template()}
-    <div style="padding-left: 100px;">
-      <HorizontalStackedBarChart
-        data={pmStackedData}
-        keys={pmKeys}
-        categoryKey="cat"
-        labels={pmLabels}
-        colors={categorical8}
-        format={formatPerc}
-        showTotalLabel={true}
-      />
-    </div>
+    <HorizontalStackedBarChartCustom
+      data={pmStackedData}
+      keys={pmKeys}
+      categoryKey="cat"
+      labels={pmLabels}
+      colors={categorical8}
+      format={formatPerc}
+      showTotalLabel={true}
+      marginLeft={180}
+    />
     <div style="margin-top: 1.5rem;">
       <HorizontalBarChart
         data={pmMedianData}
@@ -184,5 +200,20 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
         margin={{ top: 20, right: 120, bottom: 40, left: 120 }}
       />
     </div>
+  {/snippet}
+</Story>
+
+<Story name="Stacked — Recurso e Contemplados por Porte">
+  {#snippet template()}
+    <HorizontalStackedBarChartCustom
+      data={pmPercStackedData}
+      keys={pmKeys}
+      categoryKey="cat"
+      labels={pmLabels}
+      colors={categorical8}
+      format={formatPerc}
+      showTotalLabel={true}
+      marginLeft={220}
+    />
   {/snippet}
 </Story>

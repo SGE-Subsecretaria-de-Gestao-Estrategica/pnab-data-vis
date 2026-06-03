@@ -18,13 +18,13 @@
   });
 </script>
 
-<Story name="Valor Executado por Estado">
+<Story name="Recurso Executado por Estado">
   {#snippet template()}
     <div style="font-family: 'Space Grotesk', system-ui, sans-serif;">
       <ChoroplethMapLabeled
         {states}
         metric="valor_executado_rs"
-        label="Valor executado"
+        label="Recurso executado (R$)"
         format={formatBRL}
         formatLine2={(row) => formatPercFix(row.valor_executado_perc * 100)}
         showSideLegend={true}

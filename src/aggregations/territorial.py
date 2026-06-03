@@ -663,6 +663,7 @@ def aggregate_capital_interior_summary(
 
     return df_resultado
 
+
 def aggregate_execution_by_porte_with_estado(
     df_cubo: pd.DataFrame
 ) -> pd.DataFrame:
@@ -676,6 +677,7 @@ def aggregate_execution_by_porte_with_estado(
     - quantidade de contemplados por faixa_vlr_pago;
     - quantidade por tipo_documento;
     - valor total por tipo_documento;
+    - percentual do valor entre CPF e CNPJ;
     - valor mínimo, mediana, máximo e média por tipo_documento;
     - quantidade por Sexo;
     - valor por Sexo;
@@ -683,6 +685,8 @@ def aggregate_execution_by_porte_with_estado(
     - percentual de valor por Sexo.
 
     Observação:
+    - perc_valor_CPF + perc_valor_CNPJ = 1 em cada linha, quando houver valor de CPF ou CNPJ;
+    - os percentuais retornam em escala decimal, sem multiplicar por 100;
     - a regra de manter apenas Sexo válido é aplicada somente nas agregações de Sexo;
     - o restante da função usa a base completa conforme os filtros originais.
     """
@@ -1179,7 +1183,35 @@ def aggregate_execution_by_porte_with_estado(
     )
 
     # ------------------------------------------------------------
-    # 18. Calcular percentuais por Sexo
+    # 18. Calcular percentuais de valor por tipo_documento
+    # Denominador: CPF + CNPJ dentro da própria linha
+    # ------------------------------------------------------------
+
+    if "valor_tipo_documento_CPF" not in df_porte.columns:
+        df_porte["valor_tipo_documento_CPF"] = 0
+
+    if "valor_tipo_documento_CNPJ" not in df_porte.columns:
+        df_porte["valor_tipo_documento_CNPJ"] = 0
+
+    df_porte["valor_total_CPF_CNPJ"] = (
+        df_porte["valor_tipo_documento_CPF"].fillna(0)
+        + df_porte["valor_tipo_documento_CNPJ"].fillna(0)
+    )
+
+    df_porte["perc_valor_CPF"] = np.where(
+        df_porte["valor_total_CPF_CNPJ"].ne(0),
+        df_porte["valor_tipo_documento_CPF"] / df_porte["valor_total_CPF_CNPJ"],
+        np.nan
+    )
+
+    df_porte["perc_valor_CNPJ"] = np.where(
+        df_porte["valor_total_CPF_CNPJ"].ne(0),
+        df_porte["valor_tipo_documento_CNPJ"] / df_porte["valor_total_CPF_CNPJ"],
+        np.nan
+    )
+
+    # ------------------------------------------------------------
+    # 19. Calcular percentuais por Sexo
     # Denominador: apenas registros com Sexo válido
     # ------------------------------------------------------------
 
@@ -1212,7 +1244,7 @@ def aggregate_execution_by_porte_with_estado(
         )
 
     # ------------------------------------------------------------
-    # 19. Identificar colunas
+    # 20. Identificar colunas
     # ------------------------------------------------------------
 
     colunas_base = [
@@ -1228,6 +1260,9 @@ def aggregate_execution_by_porte_with_estado(
         "percentual_valor_rural_por_porte",
         "percentual_valor_por_porte",
         "percentual_quantidade_por_porte",
+        "valor_total_CPF_CNPJ",
+        "perc_valor_CPF",
+        "perc_valor_CNPJ",
         "total_qtd_sexo_valido",
         "total_valor_sexo_valido",
     ]
@@ -1300,13 +1335,14 @@ def aggregate_execution_by_porte_with_estado(
     ]
 
     # ------------------------------------------------------------
-    # 20. Converter tipos sem arredondar valores monetários
+    # 21. Converter tipos sem arredondar valores monetários
     # ------------------------------------------------------------
 
     colunas_valor = [
         "valor_total_por_porte",
         "valor_urbano_por_porte",
         "valor_rural_por_porte",
+        "valor_total_CPF_CNPJ",
         "total_valor_sexo_valido",
     ]
 
@@ -1324,7 +1360,6 @@ def aggregate_execution_by_porte_with_estado(
         + colunas_valor_sexo
     )
 
-    # Mantém valores monetários como decimal, sem ceil, sem round e sem converter para inteiro
     df_porte[colunas_valor_todas] = (
         df_porte[colunas_valor_todas]
         .apply(pd.to_numeric, errors="coerce")
@@ -1347,7 +1382,6 @@ def aggregate_execution_by_porte_with_estado(
         + colunas_qtd_sexo
     )
 
-    # Quantidades continuam como inteiros
     df_porte[colunas_quantidade_todas] = (
         df_porte[colunas_quantidade_todas]
         .apply(pd.to_numeric, errors="coerce")
@@ -1355,8 +1389,22 @@ def aggregate_execution_by_porte_with_estado(
         .astype("Int64")
     )
 
+    colunas_percentuais = [
+        col for col in df_porte.columns
+        if (
+            col.startswith("percentual_")
+            or col.startswith("perc_")
+        )
+    ]
+
+    df_porte[colunas_percentuais] = (
+        df_porte[colunas_percentuais]
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
+    )
+
     # ------------------------------------------------------------
-    # 21. Ordenar tabela
+    # 22. Ordenar tabela
     # ------------------------------------------------------------
 
     df_porte = (

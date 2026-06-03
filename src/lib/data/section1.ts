@@ -15,8 +15,9 @@ import csvRegionUfRaw   from '../../../data/section_1/executed_value_by_region_u
 import csvCapitalRaw    from '../../../data/section_1/aggregate_values_by_capital.csv?raw';
 import csvSpecialUfRaw  from '../../../data/section_1/values_by_special_territory_uf.csv?raw';
 import csvPorteMeanRaw  from '../../../data/section_1/population_size_mean.csv?raw';
-import csvLocalResidRaw from '../../../data/section_1/aggregate_by_local_residencia_uf.csv?raw';
-import csvPortePopRaw   from '../../../data/section_1/resumo_por_porte_populacional.csv?raw';
+import csvLocalResidRaw       from '../../../data/section_1/aggregate_by_local_residencia_uf.csv?raw';
+import csvPortePopRaw         from '../../../data/section_1/resumo_por_porte_populacional.csv?raw';
+import csvEstadoLocalResidRaw from '../../../data/section_1/aggregate_estado_by_uf_local_residencia.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -459,6 +460,17 @@ export const capitalInteriorStackedData = [
 		interior:      +_interiorRow.percentual_quantidade * 100,
 	},
 ];
+
+// ── Capital / Metropolitana / Interior por UF — execução estadual ─────────────
+export const capitalInteriorByUfData = parseCSV(csvEstadoLocalResidRaw)
+	.filter((d) => d.uf)
+	.map((d) => ({
+		label:         d.uf,
+		capital:       +d.percentual_quantidade_capital       * 100,
+		metropolitana: +d.percentual_quantidade_regiao_metropolitana * 100,
+		interior:      +d.percentual_quantidade_interior      * 100,
+	}))
+	.sort((a, b) => b.interior - a.interior);
 
 // ── Métricas por porte populacional (resumo_por_porte_populacional.csv) ────────
 export const porteMeanData = parseCSV(csvPortePopRaw)

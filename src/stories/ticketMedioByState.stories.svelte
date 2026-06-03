@@ -34,7 +34,7 @@ Estados do Centro-Oeste e do Sudeste concentraram os maiores valores médios por
       <ExecutedValueByStateMap
         states={mediaValorByState}
         metric="mediana_valor"
-        label="Mediana paga por estado"
+        label="Ticket médio (R$) pago por unidade federativa"
         format={formatBRL}
         showSideLegend={true}
       />

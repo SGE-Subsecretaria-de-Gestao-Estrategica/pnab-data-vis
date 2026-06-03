@@ -186,7 +186,7 @@
 	</div>
 	<HorizontalGroupedBarChart
 		data={regiaoGroupedData}
-		seriesLabels={['% agentes culturais', '% população']}
+		seriesLabels={['% agentes contemplados', '% população']}
 		colors={['#c0504d', '#4472c4']}
 		format={formatPct}
 		margin={{ top: 30, right: 90, bottom: 60, left: 140 }}

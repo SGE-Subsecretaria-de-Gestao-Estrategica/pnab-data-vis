@@ -190,8 +190,10 @@ def aggregate_contemplados_pf_pj_proportion(
     return df_resultado
 
 
+
 def aggregate_contemplados_by_sexo_proportion(
-    df_cubo: pd.DataFrame
+    df_cubo: pd.DataFrame,
+    proporcao_aparada: float = 0.99
 ) -> pd.DataFrame:
     """
     Calcula a proporção da quantidade e do valor de contemplados por Sexo.
@@ -203,6 +205,15 @@ def aggregate_contemplados_by_sexo_proportion(
     Usa:
     - quantidade como contagem de contemplados;
     - valor_transacao como valor executado.
+
+    Também calcula:
+    - valor médio geral;
+    - valor médio por sexo;
+    - valor médio aparado geral;
+    - valor médio aparado por sexo.
+
+    Percentuais retornam em escala decimal:
+    0.55 = 55%.
 
     Retorna uma tabela com uma linha.
     """
@@ -236,6 +247,66 @@ def aggregate_contemplados_by_sexo_proportion(
         & df["sexo_norm"].isin(["FEMININO", "MASCULINO"])
     ].copy()
 
+    df["valor_transacao"] = pd.to_numeric(
+        df["valor_transacao"],
+        errors="coerce"
+    )
+
+    df["quantidade"] = pd.to_numeric(
+        df["quantidade"],
+        errors="coerce"
+    )
+
+    df["valor_medio_linha"] = np.where(
+        df["quantidade"].fillna(0).ne(0),
+        df["valor_transacao"] / df["quantidade"],
+        np.nan
+    )
+
+    def calcular_valor_medio_aparado(
+        df_base: pd.DataFrame,
+        proporcao: float = proporcao_aparada
+    ) -> float:
+        """
+        Calcula média aparada ponderada.
+
+        Remove o 1% superior dos valores médios por linha
+        e calcula:
+
+        soma(valor_transacao aparado) / soma(quantidade aparada)
+        """
+
+        base = df_base.copy()
+
+        base = base[
+            base["valor_medio_linha"].notna()
+            & base["valor_transacao"].notna()
+            & base["quantidade"].notna()
+            & base["quantidade"].gt(0)
+        ].copy()
+
+        if base.empty:
+            return np.nan
+
+        limite = base["valor_medio_linha"].quantile(proporcao)
+
+        base_aparada = base[
+            base["valor_medio_linha"] <= limite
+        ].copy()
+
+        if base_aparada.empty:
+            return np.nan
+
+        quantidade_aparada = base_aparada["quantidade"].sum()
+
+        if quantidade_aparada == 0:
+            return np.nan
+
+        return (
+            base_aparada["valor_transacao"].sum()
+            / quantidade_aparada
+        )
+
     quantidade_contemplados = df["quantidade"].sum()
     valor_contemplados = df["valor_transacao"].sum()
 
@@ -263,12 +334,41 @@ def aggregate_contemplados_by_sexo_proportion(
         .sum()
     )
 
+    valor_medio_contemplados = (
+        valor_contemplados / quantidade_contemplados
+        if quantidade_contemplados > 0 else np.nan
+    )
+
+    valor_medio_contemplados_feminino = (
+        valor_contemplados_feminino / quantidade_contemplados_feminino
+        if quantidade_contemplados_feminino > 0 else np.nan
+    )
+
+    valor_medio_contemplados_masculino = (
+        valor_contemplados_masculino / quantidade_contemplados_masculino
+        if quantidade_contemplados_masculino > 0 else np.nan
+    )
+
+    valor_medio_aparado_contemplados = calcular_valor_medio_aparado(df)
+
+    valor_medio_aparado_contemplados_feminino = calcular_valor_medio_aparado(
+        df[df["sexo_norm"].eq("FEMININO")]
+    )
+
+    valor_medio_aparado_contemplados_masculino = calcular_valor_medio_aparado(
+        df[df["sexo_norm"].eq("MASCULINO")]
+    )
+
     df_resultado = pd.DataFrame({
         "quantidade_contemplados": [quantidade_contemplados],
         "perc_quantidade_contemplados": [1],
 
         "valor_contemplados": [valor_contemplados],
         "perc_valor_contemplados": [1],
+        "valor_medio_contemplados": [valor_medio_contemplados],
+        "valor_medio_aparado_contemplados": [
+            valor_medio_aparado_contemplados
+        ],
 
         "quantidade_contemplados_feminino": [
             quantidade_contemplados_feminino
@@ -284,6 +384,12 @@ def aggregate_contemplados_by_sexo_proportion(
         "perc_valor_contemplados_feminino": [
             valor_contemplados_feminino / valor_contemplados
             if valor_contemplados > 0 else np.nan
+        ],
+        "valor_medio_contemplados_feminino": [
+            valor_medio_contemplados_feminino
+        ],
+        "valor_medio_aparado_contemplados_feminino": [
+            valor_medio_aparado_contemplados_feminino
         ],
 
         "quantidade_contemplados_masculino": [
@@ -301,6 +407,12 @@ def aggregate_contemplados_by_sexo_proportion(
             valor_contemplados_masculino / valor_contemplados
             if valor_contemplados > 0 else np.nan
         ],
+        "valor_medio_contemplados_masculino": [
+            valor_medio_contemplados_masculino
+        ],
+        "valor_medio_aparado_contemplados_masculino": [
+            valor_medio_aparado_contemplados_masculino
+        ],
     })
 
     colunas_quantidade = [
@@ -311,8 +423,16 @@ def aggregate_contemplados_by_sexo_proportion(
 
     colunas_valor = [
         "valor_contemplados",
+        "valor_medio_contemplados",
+        "valor_medio_aparado_contemplados",
+
         "valor_contemplados_feminino",
+        "valor_medio_contemplados_feminino",
+        "valor_medio_aparado_contemplados_feminino",
+
         "valor_contemplados_masculino",
+        "valor_medio_contemplados_masculino",
+        "valor_medio_aparado_contemplados_masculino",
     ]
 
     df_resultado[colunas_quantidade] = (
@@ -322,16 +442,14 @@ def aggregate_contemplados_by_sexo_proportion(
     )
 
     df_resultado[colunas_valor] = (
-        np.ceil(df_resultado[colunas_valor])
-        .fillna(0)
-        .astype("Int64")
+        df_resultado[colunas_valor]
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
     )
 
     return df_resultado
 
 
-import numpy as np
-import pandas as pd
 
 
 def aggregate_valor_quantity_by_age_group_sexo_wide(

@@ -5277,3 +5277,426 @@ def tabela_resumo_estado_municipio(
     ]
 
     return df_resultado
+
+
+def aggregate_execution_by_porte_with_estado_sexo(
+    df_cubo: pd.DataFrame,
+    proporcao_aparada: float = 0.99
+) -> pd.DataFrame:
+    """
+    Agrega valores, quantidades e percentuais por porte populacional dos municípios,
+    acrescentando uma linha agregada para ESTADO.
+
+    A linha de ESTADO usa porte_populacional = -99.
+
+    A função retorna:
+    - número de municípios/entes;
+    - valor total por porte;
+    - quantidade total de contemplados por porte;
+    - percentual de valor por porte em relação ao total geral;
+    - percentual de quantidade por porte em relação ao total geral;
+    - quantidade por Sexo;
+    - valor por Sexo;
+    - percentual de quantidade por Sexo dentro do porte;
+    - percentual de valor por Sexo dentro do porte;
+    - valor médio por Sexo;
+    - valor médio aparado por Sexo.
+
+    Observações:
+    - percentuais são retornados em escala decimal:
+      0.55 = 55%;
+    - a regra de Sexo válido considera apenas Feminino e Masculino;
+    - o valor médio por Sexo é calculado como:
+      valor total do sexo / quantidade total do sexo;
+    - o valor médio aparado usa o valor médio da linha
+      valor_transacao / quantidade e remove o 1% superior dentro de cada
+      combinação de porte e Sexo.
+    """
+
+    df = df_cubo.copy()
+
+    # ------------------------------------------------------------
+    # 1. Normalizar tipo_ente
+    # ------------------------------------------------------------
+
+    df["tipo_ente_norm"] = (
+        df["tipo_ente"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    # ------------------------------------------------------------
+    # 2. Normalizar Sexo
+    # ------------------------------------------------------------
+
+    df["sexo_norm"] = (
+        df["Sexo"]
+        .fillna("Não informado")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    df["sexo_tratado"] = df["sexo_norm"].map({
+        "FEMININO": "Feminino",
+        "MASCULINO": "Masculino"
+    })
+
+    # ------------------------------------------------------------
+    # 3. Criar porte de análise
+    # Municípios mantêm porte_populacional;
+    # Estados recebem porte_populacional = -99
+    # ------------------------------------------------------------
+
+    df = df[df["tipo_ente_norm"].isin(["MUNICIPIO", "ESTADO"])].copy()
+
+    df["porte_analise"] = np.where(
+        df["tipo_ente_norm"].eq("ESTADO"),
+        -99,
+        df["porte_populacional"]
+    )
+
+    # ------------------------------------------------------------
+    # 4. Agregação geral por porte
+    # ------------------------------------------------------------
+
+    df_porte = (
+        df
+        .groupby("porte_analise", dropna=False, as_index=False)
+        .agg(
+            numero_municipios=("ente", "nunique"),
+            valor_total_por_porte=("valor_transacao", "sum"),
+            quantidade_contemplados_por_porte=("quantidade", "sum"),
+        )
+        .rename(columns={"porte_analise": "porte_populacional"})
+    )
+
+    # ------------------------------------------------------------
+    # 5. Base apenas com Sexo válido
+    # ------------------------------------------------------------
+
+    df_sexo = df[
+        df["sexo_tratado"].isin(["Feminino", "Masculino"])
+    ].copy()
+
+    df_sexo["valor_medio_linha"] = np.where(
+        df_sexo["quantidade"].fillna(0).ne(0),
+        df_sexo["valor_transacao"] / df_sexo["quantidade"],
+        np.nan
+    )
+
+    # ------------------------------------------------------------
+    # 6. Função auxiliar: média aparada ponderada
+    # ------------------------------------------------------------
+
+    def media_aparada_ponderada(
+        df_base: pd.DataFrame,
+        col_valor: str = "valor_medio_linha",
+        col_peso: str = "quantidade",
+        q: float = proporcao_aparada
+    ) -> float:
+        base = df_base[[col_valor, col_peso]].copy()
+
+        base[col_valor] = pd.to_numeric(base[col_valor], errors="coerce")
+        base[col_peso] = pd.to_numeric(base[col_peso], errors="coerce")
+
+        base = base.dropna()
+        base = base[base[col_peso] > 0]
+
+        if base.empty:
+            return np.nan
+
+        limite = base[col_valor].quantile(q)
+
+        base_aparada = base[base[col_valor] <= limite]
+
+        if base_aparada.empty:
+            return np.nan
+
+        return np.average(
+            base_aparada[col_valor],
+            weights=base_aparada[col_peso]
+        )
+
+    # ------------------------------------------------------------
+    # 7. Agregação por porte e Sexo
+    # ------------------------------------------------------------
+
+    df_sexo_agg = (
+        df_sexo
+        .groupby(["porte_analise", "sexo_tratado"], dropna=False)
+        .agg(
+            qtd_sexo=("quantidade", "sum"),
+            valor_sexo=("valor_transacao", "sum"),
+            valor_medio_sexo=("valor_medio_linha", "mean"),
+        )
+        .reset_index()
+    )
+
+    df_media_aparada = (
+        df_sexo
+        .groupby(["porte_analise", "sexo_tratado"], dropna=False)
+        .apply(media_aparada_ponderada)
+        .reset_index(name="valor_medio_aparado_sexo")
+    )
+
+    df_sexo_agg = df_sexo_agg.merge(
+        df_media_aparada,
+        on=["porte_analise", "sexo_tratado"],
+        how="left"
+    )
+
+    # Valor médio correto ponderado:
+    # valor total do sexo / quantidade total do sexo
+    df_sexo_agg["valor_medio_sexo"] = np.where(
+        df_sexo_agg["qtd_sexo"].fillna(0).ne(0),
+        df_sexo_agg["valor_sexo"] / df_sexo_agg["qtd_sexo"],
+        np.nan
+    )
+
+    # ------------------------------------------------------------
+    # 8. Totais com Sexo válido por porte
+    # ------------------------------------------------------------
+
+    df_total_sexo = (
+        df_sexo
+        .groupby("porte_analise", dropna=False, as_index=False)
+        .agg(
+            total_qtd_sexo_valido=("quantidade", "sum"),
+            total_valor_sexo_valido=("valor_transacao", "sum")
+        )
+        .rename(columns={"porte_analise": "porte_populacional"})
+    )
+
+    # ------------------------------------------------------------
+    # 9. Função auxiliar para pivotar Sexo
+    # ------------------------------------------------------------
+
+    def pivotar_sexo(
+        df_base: pd.DataFrame,
+        coluna_valor: str,
+        prefixo: str
+    ) -> pd.DataFrame:
+        df_pivot = (
+            df_base
+            .pivot_table(
+                index="porte_analise",
+                columns="sexo_tratado",
+                values=coluna_valor,
+                aggfunc="first",
+                fill_value=0
+            )
+            .reindex(columns=["Feminino", "Masculino"])
+            .reset_index()
+            .rename(columns={"porte_analise": "porte_populacional"})
+        )
+
+        df_pivot = df_pivot.rename(
+            columns={
+                col: f"{prefixo}_{col}"
+                for col in df_pivot.columns
+                if col != "porte_populacional"
+            }
+        )
+
+        return df_pivot
+
+    df_qtd_sexo = pivotar_sexo(
+        df_base=df_sexo_agg,
+        coluna_valor="qtd_sexo",
+        prefixo="qtd_sexo"
+    )
+
+    df_valor_sexo = pivotar_sexo(
+        df_base=df_sexo_agg,
+        coluna_valor="valor_sexo",
+        prefixo="valor_sexo"
+    )
+
+    df_media_sexo = pivotar_sexo(
+        df_base=df_sexo_agg,
+        coluna_valor="valor_medio_sexo",
+        prefixo="valor_medio_sexo"
+    )
+
+    df_media_aparada_sexo = pivotar_sexo(
+        df_base=df_sexo_agg,
+        coluna_valor="valor_medio_aparado_sexo",
+        prefixo="valor_medio_aparado_sexo"
+    )
+
+    # ------------------------------------------------------------
+    # 10. Juntar tudo
+    # ------------------------------------------------------------
+
+    df_porte = (
+        df_porte
+        .merge(df_total_sexo, on="porte_populacional", how="left")
+        .merge(df_qtd_sexo, on="porte_populacional", how="left")
+        .merge(df_valor_sexo, on="porte_populacional", how="left")
+        .merge(df_media_sexo, on="porte_populacional", how="left")
+        .merge(df_media_aparada_sexo, on="porte_populacional", how="left")
+    )
+
+    # ------------------------------------------------------------
+    # 11. Percentuais gerais por porte
+    # ------------------------------------------------------------
+
+    valor_total_geral = df_porte["valor_total_por_porte"].sum()
+    quantidade_total_geral = df_porte["quantidade_contemplados_por_porte"].sum()
+
+    df_porte["percentual_valor_por_porte"] = np.where(
+        valor_total_geral != 0,
+        df_porte["valor_total_por_porte"] / valor_total_geral,
+        np.nan
+    )
+
+    df_porte["percentual_quantidade_por_porte"] = np.where(
+        quantidade_total_geral != 0,
+        df_porte["quantidade_contemplados_por_porte"] / quantidade_total_geral,
+        np.nan
+    )
+
+    # ------------------------------------------------------------
+    # 12. Percentuais por Sexo dentro do porte
+    # ------------------------------------------------------------
+
+    colunas_qtd_sexo = [
+        col for col in df_porte.columns
+        if col.startswith("qtd_sexo_")
+    ]
+
+    colunas_valor_sexo = [
+        col for col in df_porte.columns
+        if col.startswith("valor_sexo_")
+    ]
+
+    for coluna in colunas_qtd_sexo:
+        nome_percentual = coluna.replace(
+            "qtd_sexo_",
+            "percentual_qtd_sexo_"
+        )
+
+        df_porte[nome_percentual] = np.where(
+            df_porte["total_qtd_sexo_valido"].fillna(0).ne(0),
+            df_porte[coluna] / df_porte["total_qtd_sexo_valido"],
+            np.nan
+        )
+
+    for coluna in colunas_valor_sexo:
+        nome_percentual = coluna.replace(
+            "valor_sexo_",
+            "percentual_valor_sexo_"
+        )
+
+        df_porte[nome_percentual] = np.where(
+            df_porte["total_valor_sexo_valido"].fillna(0).ne(0),
+            df_porte[coluna] / df_porte["total_valor_sexo_valido"],
+            np.nan
+        )
+
+    # ------------------------------------------------------------
+    # 13. Ordenar colunas
+    # ------------------------------------------------------------
+
+    colunas_finais = [
+        "porte_populacional",
+        "numero_municipios",
+        "valor_total_por_porte",
+        "quantidade_contemplados_por_porte",
+        "percentual_valor_por_porte",
+        "percentual_quantidade_por_porte",
+        "total_qtd_sexo_valido",
+        "total_valor_sexo_valido",
+
+        "qtd_sexo_Feminino",
+        "qtd_sexo_Masculino",
+        "percentual_qtd_sexo_Feminino",
+        "percentual_qtd_sexo_Masculino",
+
+        "valor_sexo_Feminino",
+        "valor_sexo_Masculino",
+        "percentual_valor_sexo_Feminino",
+        "percentual_valor_sexo_Masculino",
+
+        "valor_medio_sexo_Feminino",
+        "valor_medio_sexo_Masculino",
+        "valor_medio_aparado_sexo_Feminino",
+        "valor_medio_aparado_sexo_Masculino",
+    ]
+
+    for coluna in colunas_finais:
+        if coluna not in df_porte.columns:
+            df_porte[coluna] = np.nan
+
+    df_porte = df_porte[colunas_finais].copy()
+
+    # ------------------------------------------------------------
+    # 14. Converter tipos
+    # ------------------------------------------------------------
+
+    colunas_quantidade = [
+        "numero_municipios",
+        "quantidade_contemplados_por_porte",
+        "total_qtd_sexo_valido",
+        "qtd_sexo_Feminino",
+        "qtd_sexo_Masculino",
+    ]
+
+    df_porte[colunas_quantidade] = (
+        df_porte[colunas_quantidade]
+        .apply(pd.to_numeric, errors="coerce")
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    colunas_valor = [
+        "valor_total_por_porte",
+        "total_valor_sexo_valido",
+        "valor_sexo_Feminino",
+        "valor_sexo_Masculino",
+        "valor_medio_sexo_Feminino",
+        "valor_medio_sexo_Masculino",
+        "valor_medio_aparado_sexo_Feminino",
+        "valor_medio_aparado_sexo_Masculino",
+    ]
+
+    df_porte[colunas_valor] = (
+        df_porte[colunas_valor]
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
+    )
+
+    colunas_percentuais = [
+        "percentual_valor_por_porte",
+        "percentual_quantidade_por_porte",
+        "percentual_qtd_sexo_Feminino",
+        "percentual_qtd_sexo_Masculino",
+        "percentual_valor_sexo_Feminino",
+        "percentual_valor_sexo_Masculino",
+    ]
+
+    df_porte[colunas_percentuais] = (
+        df_porte[colunas_percentuais]
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
+    )
+
+    # ------------------------------------------------------------
+    # 15. Ordenar tabela
+    # ------------------------------------------------------------
+
+    df_porte = (
+        df_porte
+        .sort_values("valor_total_por_porte", ascending=False)
+        .reset_index(drop=True)
+    )
+
+    return df_porte

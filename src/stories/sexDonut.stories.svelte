@@ -1,7 +1,8 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { DonutChart, colorPairs } from 'sniic-design-system';
+  import { colorPairs } from 'sniic-design-system';
+  import DonutChartWithLegend from '$lib/components/DonutChartWithLegend.svelte';
   // @ts-ignore
   import { sexoQuantityDonutData, sexoValueDonutData, totalPF, valorTotalPF } from '$lib/data/section3';
 
@@ -16,7 +17,7 @@
 
   const { Story } = defineMeta({
     title: 'Section 3/sexDonut',
-    component: DonutChart,
+    component: DonutChartWithLegend,
     tags: ['autodocs'],
     parameters: {
       docs: {
@@ -40,10 +41,10 @@ Os dois donuts permitem comparar as distribuições por quantidade de agentes e 
 
 <Story name="Donut — distribuição por quantidade de agentes">
   {#snippet template()}
-    <DonutChart
+    <DonutChartWithLegend
       data={sexoQuantityDonutData}
       colors={sexColors}
-      centerLabel="PF contemplados"
+      centerLabel="Agentes contemplados"
       centerValue={totalPF.toLocaleString('pt-BR')}
       format={formatNum}
       height={360}
@@ -53,7 +54,7 @@ Os dois donuts permitem comparar as distribuições por quantidade de agentes e 
 
 <Story name="Donut — distribuição por valor recebido">
   {#snippet template()}
-    <DonutChart
+    <DonutChartWithLegend
       data={sexoValueDonutData}
       colors={sexColors}
       centerLabel="valor total"

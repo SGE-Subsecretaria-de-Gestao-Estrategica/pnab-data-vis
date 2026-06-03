@@ -348,7 +348,7 @@
 			<DonutChart
 				data={sexoQuantityDonutData}
 				colors={sexColors}
-				centerLabel="PF contemplados"
+				centerLabel="Agentes contemplados"
 				centerValue={totalPF.toLocaleString('pt-BR')}
 				format={formatNum}
 				height={280}

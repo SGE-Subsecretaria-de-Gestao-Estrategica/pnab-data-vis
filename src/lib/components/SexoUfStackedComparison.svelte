@@ -14,7 +14,7 @@
 		barHeight = 14,
 		pairGap = 3,
 		groupGap = 10,
-		margin = { top: 24, right: 20, bottom: 72, left: 130 },
+		margin = { top: 24, right: 20, bottom: 110, left: 130 },
 	}: {
 		data?: UfSexoRow[];
 		colorMasc?: string;
@@ -49,17 +49,24 @@
 	}
 
 	// Legend layout
-	const LEGEND_H = 34;
-	const LEGEND_CHAR_W = 7.5;
-	const LEGEND_PAD_X = 14;
-	const legendItems = [
-		{ label: 'Masculino', color: colorMasc },
-		{ label: 'Feminino', color: colorFem },
-	];
-	const legendWidths = $derived(
-		legendItems.map((i) => i.label.length * LEGEND_CHAR_W + LEGEND_PAD_X * 2)
+	const LEGEND_BLOCK_H = 34;
+	const LEGEND_CHAR_W  = 7.5;
+	const LEGEND_PAD_X   = 16;
+	const LEGEND_ROW_GAP = 2;
+
+	const legendRows = $derived([
+		[
+			{ label: 'Masculino – contemplados',      color: colorMasc, opacity: 1    },
+			{ label: 'Feminino – contempladas',        color: colorFem,  opacity: 1    },
+		],
+		[
+			{ label: 'Masculino – população (IBGE)',  color: colorMasc, opacity: 0.35 },
+			{ label: 'Feminino – população (IBGE)',   color: colorFem,  opacity: 0.35 },
+		],
+	]);
+	const legendRowWidths = $derived(
+		legendRows.map((row) => row.map((item) => item.label.length * LEGEND_CHAR_W + LEGEND_PAD_X * 2))
 	);
-	const legendTotalW = $derived(legendWidths.reduce((s, w) => s + w, 0));
 	const LEGEND_Y = $derived(margin.top + totalContentH + 28);
 </script>
 
@@ -149,19 +156,22 @@
 				{/if}
 			{/each}
 
-			<!-- legend: Masculino / Feminino color blocks -->
-			{#each legendItems as item, i}
-				{@const lx = margin.left + legendWidths.slice(0, i).reduce((s, w) => s + w, 0)}
-				<rect x={lx} y={LEGEND_Y} width={legendWidths[i]} height={LEGEND_H} fill={item.color} shape-rendering="crispEdges" />
-				<text x={lx + LEGEND_PAD_X} y={LEGEND_Y + LEGEND_H / 2} dy="0.35em" font-size="12" font-weight="600" fill={textColor(item.color)}>{item.label}</text>
+			<!-- legend: 4 blocos em 2 linhas -->
+			{#each legendRows as row, ri}
+				{@const rowY = LEGEND_Y + ri * (LEGEND_BLOCK_H + LEGEND_ROW_GAP)}
+				{@const widths = legendRowWidths[ri]}
+				{#each row as item, ci}
+					{@const bx = margin.left + widths.slice(0, ci).reduce((s, w) => s + w, 0)}
+					{@const w = widths[ci]}
+					<rect x={bx} y={rowY} width={w} height={LEGEND_BLOCK_H} fill={item.color} opacity={item.opacity} shape-rendering="crispEdges" />
+					<text x={bx + LEGEND_PAD_X} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" font-size="12" font-weight="600" fill={textColor(item.color, item.opacity)}>{item.label}</text>
+					{#if ci < row.length - 1}
+						<line x1={bx + w} y1={rowY} x2={bx + w} y2={rowY + LEGEND_BLOCK_H} stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" />
+					{/if}
+				{/each}
+				{@const rowTotalW = widths.reduce((s, w) => s + w, 0)}
+				<rect fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" x={margin.left} y={rowY} width={rowTotalW} height={LEGEND_BLOCK_H} />
 			{/each}
-			<rect fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.5" shape-rendering="crispEdges"
-				x={margin.left} y={LEGEND_Y} width={legendTotalW} height={LEGEND_H} />
-
-			<!-- legend: opacity note -->
-			<rect x={margin.left + legendTotalW + 16}      y={LEGEND_Y + (LEGEND_H - 12) / 2} width={12} height={12} fill="#555" opacity="1"    shape-rendering="crispEdges" />
-			<rect x={margin.left + legendTotalW + 16 + 18} y={LEGEND_Y + (LEGEND_H - 12) / 2} width={12} height={12} fill="#555" opacity="0.35" shape-rendering="crispEdges" />
-			<text x={margin.left + legendTotalW + 16 + 36} y={LEGEND_Y + LEGEND_H / 2} dy="0.35em" font-size="11" fill="#666">cor cheia = Aldir Blanc · cor clara = IBGE</text>
 
 		</svg>
 	{/if}

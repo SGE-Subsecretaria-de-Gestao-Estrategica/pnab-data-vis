@@ -319,6 +319,21 @@ export const porteStackedData = [
 	},
 ];
 
+// ── CPF vs CNPJ por porte populacional ────────────────────────────────────────
+const _porteCpfCnpjRaw = parseCSV(csvPorteRaw).filter(
+	(d) => d.porte_populacional in porteNameMap
+);
+export const porteCpfCnpjStackedData = _porteCpfCnpjRaw.map((d) => ({
+	label: porteNameMap[d.porte_populacional],
+	cpf:   +d.perc_valor_CPF  * 100,
+	cnpj:  +d.perc_valor_CNPJ * 100,
+}));
+export const porteCpfCnpjKeys   = ['cpf', 'cnpj'] as const;
+export const porteCpfCnpjLabels: Record<string, string> = {
+	cpf:  'CPF (Pessoa Física)',
+	cnpj: 'CNPJ (Pessoa Jurídica)',
+};
+
 // ── Territórios especiais (special_territory_w_ibge_by_brazil.csv) ────────────
 export const specialData = parseCSV(csvSpecialRaw).map((d) => ({
 	territorio:     d.territorio,

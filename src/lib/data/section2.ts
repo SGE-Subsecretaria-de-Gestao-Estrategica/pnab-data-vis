@@ -429,6 +429,45 @@ export const estadosBoxPlotData = parseCSV(csvQuartisEstadosRaw).map((row) => ({
 	},
 }));
 
+// ── HorizontalStackedBarChart — % contemplados por faixa × região ─────────────
+const UF_TO_REGIAO: Record<string, string> = {
+	AC: 'Norte', AM: 'Norte', AP: 'Norte', PA: 'Norte', RO: 'Norte', RR: 'Norte', TO: 'Norte',
+	AL: 'Nordeste', BA: 'Nordeste', CE: 'Nordeste', MA: 'Nordeste', PB: 'Nordeste',
+	PE: 'Nordeste', PI: 'Nordeste', RN: 'Nordeste', SE: 'Nordeste',
+	DF: 'Centro-Oeste', GO: 'Centro-Oeste', MS: 'Centro-Oeste', MT: 'Centro-Oeste',
+	ES: 'Sudeste', MG: 'Sudeste', RJ: 'Sudeste', SP: 'Sudeste',
+	PR: 'Sul', RS: 'Sul', SC: 'Sul',
+};
+const REGIAO_ORDER = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul'];
+
+export const regiaoContempladosFaixaData = (() => {
+	const totals: Record<string, Record<string, number>> = {};
+	for (const reg of REGIAO_ORDER) {
+		totals[reg] = { ate2k: 0, de2a10k: 0, de10a50k: 0, de50a200k: 0, acima200k: 0 };
+	}
+	for (const row of faixaUfRows) {
+		const reg = UF_TO_REGIAO[row.uf];
+		if (!reg) continue;
+		totals[reg].ate2k     += +row.qtd_ate_2_mil;
+		totals[reg].de2a10k   += +row.qtd_de_2_a_10_mil;
+		totals[reg].de10a50k  += +row.qtd_de_10_a_50_mil;
+		totals[reg].de50a200k += +row.qtd_de_50_a_200_mil;
+		totals[reg].acima200k += +row.qtd_acima_de_200_mil;
+	}
+	return REGIAO_ORDER.map((reg) => {
+		const t = totals[reg];
+		const total = Object.values(t).reduce((s, v) => s + v, 0) || 1;
+		return {
+			label:     reg,
+			ate2k:     (t.ate2k     / total) * 100,
+			de2a10k:   (t.de2a10k   / total) * 100,
+			de10a50k:  (t.de10a50k  / total) * 100,
+			de50a200k: (t.de50a200k / total) * 100,
+			acima200k: (t.acima200k / total) * 100,
+		};
+	});
+})();
+
 // ── ChoroplethMap — ticket médio por estado (resumo_valores_uf_estado.csv) ────
 export const mediaValorByState: Record<string, { media_valor: number; mediana_valor: number; media_aparada_1pct_valor: number }> =
 	Object.fromEntries(

@@ -61,7 +61,42 @@
 	);
 
 	const hasGroupLabels = $derived(legendItems?.some((i) => i.groupLabel) ?? false);
-	const legendH = $derived(34 + 8 + (hasGroupLabels ? 16 : 0)); // blocks + optional group label row
+
+	// Legend block layout: pack items into rows using full containerWidth so cells always fit their text
+	const LEGEND_CHAR_W = 7.5;
+	const LEGEND_PAD_X = 16;
+	const LEGEND_BLOCK_H = 34;
+	const LEGEND_ROW_GAP = 2;
+
+	const legendAllItems = $derived(
+		legendItems ?? seriesLabels.map((l, i) => ({ label: l, color: colors[i % colors.length] }))
+	);
+	const legendNaturalW = $derived(
+		legendAllItems.map((item) =>
+			Math.max(item.label.length, item.secondLabel?.length ?? 0) * LEGEND_CHAR_W + LEGEND_PAD_X * 2
+		)
+	);
+	// Greedy row packing against innerW
+	const legendRows = $derived((() => {
+		if (!legendBottom || innerW === 0) return [] as number[][];
+		const rows: number[][] = [[]];
+		let rowW = 0;
+		legendNaturalW.forEach((w, i) => {
+			if (rows[rows.length - 1].length > 0 && rowW + w > innerW) {
+				rows.push([]);
+				rowW = 0;
+			}
+			rows[rows.length - 1].push(i);
+			rowW += w;
+		});
+		return rows;
+	})());
+
+	const legendH = $derived(
+		legendBottom
+			? legendRows.length * LEGEND_BLOCK_H + Math.max(0, legendRows.length - 1) * LEGEND_ROW_GAP + 8
+			: 34 + 8 + (hasGroupLabels ? 16 : 0)
+	);
 
 	const svgHeight = $derived(
 		margin.top + totalContentH + margin.bottom + (legendBottom ? legendH : 0)
@@ -170,54 +205,28 @@
 
 			<!-- legend -->
 			{#if legendBottom}
-				{@const items = legendItems ?? seriesLabels.map((l, i) => ({ label: l, color: colors[i % colors.length] }))}
-				{@const blockW = innerW / items.length}
-				{@const blockOffsetY = hasGroupLabels ? 16 : 0}
-				<g transform="translate({margin.left},{legendStartY})">
-					{#each items as item, li}
-						<!-- Group label above block -->
-						{#if item.groupLabel}
-							<text
-								x={li * blockW + blockW / 2}
-								y={0}
-								dy="0.8em"
-								text-anchor="middle"
-								font-size="11"
-								font-weight="600"
-								fill="var(--chart-fg, #64748b)"
-							>{item.groupLabel}</text>
-						{/if}
+				{#each legendRows as row, ri}
+					{@const rowY = legendStartY + ri * (LEGEND_BLOCK_H + LEGEND_ROW_GAP)}
+					{@const rowItems = row.map((idx) => ({ item: legendAllItems[idx], w: legendNaturalW[idx] }))}
+					{#each rowItems as { item, w }, col}
+						{@const bx = margin.left + rowItems.slice(0, col).reduce((s, r) => s + r.w, 0)}
 						{#if item.secondLabel && item.secondColor}
-							<!-- Split block -->
-							<rect x={li * blockW} y={blockOffsetY} width={blockW / 2} height={34} fill={item.color} shape-rendering="crispEdges" />
-							<rect x={li * blockW + blockW / 2} y={blockOffsetY} width={blockW / 2} height={34} fill={item.secondColor} shape-rendering="crispEdges" />
-							<text x={li * blockW + blockW / 4} y={blockOffsetY + 17} dy="0.35em" text-anchor="middle" font-size="11" font-weight="600" fill="#fffffe">{item.label}</text>
-							<text x={li * blockW + blockW * 3 / 4} y={blockOffsetY + 17} dy="0.35em" text-anchor="middle" font-size="11" font-weight="600" fill="#fffffe">{item.secondLabel}</text>
-							<line x1={li * blockW + blockW / 2} y1={blockOffsetY} x2={li * blockW + blockW / 2} y2={blockOffsetY + 34} stroke="rgba(255,255,255,0.4)" stroke-width="1" shape-rendering="crispEdges" />
+							<rect x={bx} y={rowY} width={w / 2} height={LEGEND_BLOCK_H} fill={item.color} shape-rendering="crispEdges" />
+							<rect x={bx + w / 2} y={rowY} width={w / 2} height={LEGEND_BLOCK_H} fill={item.secondColor} shape-rendering="crispEdges" />
+							<text x={bx + w / 4} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" text-anchor="middle" font-size="11" font-weight="600" fill="#fffffe">{item.label}</text>
+							<text x={bx + w * 3 / 4} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" text-anchor="middle" font-size="11" font-weight="600" fill="#fffffe">{item.secondLabel}</text>
+							<line x1={bx + w / 2} y1={rowY} x2={bx + w / 2} y2={rowY + LEGEND_BLOCK_H} stroke="rgba(255,255,255,0.4)" stroke-width="1" shape-rendering="crispEdges" />
 						{:else}
-							<!-- Single-color block -->
-							<rect x={li * blockW} y={blockOffsetY} width={blockW} height={34} fill={item.color} shape-rendering="crispEdges" />
-							<text x={li * blockW + 10} y={blockOffsetY + 17} dy="0.35em" font-size="12" font-weight="600" fill="#fffffe">{item.label}</text>
+							<rect x={bx} y={rowY} width={w} height={LEGEND_BLOCK_H} fill={item.color} shape-rendering="crispEdges" />
+							<text x={bx + LEGEND_PAD_X} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" font-size="12" font-weight="600" fill="#fffffe">{item.label}</text>
+						{/if}
+						{#if col < rowItems.length - 1}
+							<line x1={bx + w} y1={rowY} x2={bx + w} y2={rowY + LEGEND_BLOCK_H} stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" />
 						{/if}
 					{/each}
-					{#each items.slice(0, items.length - 1) as _, li}
-						<line
-							x1={(li + 1) * blockW} y1={blockOffsetY}
-							x2={(li + 1) * blockW} y2={blockOffsetY + 34}
-							stroke="var(--chart-fg-strong, #000000)"
-							stroke-width="0.5"
-							shape-rendering="crispEdges"
-						/>
-					{/each}
-					<rect
-						fill="none"
-						stroke="var(--chart-fg-strong, #000000)"
-						stroke-width="0.5"
-						shape-rendering="crispEdges"
-						x={0} y={blockOffsetY}
-						width={blockW * items.length} height={34}
-					/>
-				</g>
+					{@const rowTotalW = rowItems.reduce((s, r) => s + r.w, 0)}
+					<rect fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" x={margin.left} y={rowY} width={rowTotalW} height={LEGEND_BLOCK_H} />
+				{/each}
 			{:else}
 				{#each seriesLabels as label, si}
 					{@const lx = margin.left + si * 200}

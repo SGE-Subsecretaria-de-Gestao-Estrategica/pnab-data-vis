@@ -17,6 +17,7 @@
 		faixaGroupedData,
 		regiaoDistData,
 		regiaoGroupedData,
+		regiaoContempladosFaixaData,
 		ufBandPercData,
 		ufValorBandPercData,
 		UF_BAND_KEYS,
@@ -67,6 +68,38 @@
 			circleRadius={0}
 		/>
 	</svg>
+
+	<table class="resumo-table">
+		<thead>
+			<tr>
+				<th>Indicador</th>
+				<th>Estados</th>
+				<th>Municípios</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>Número de contemplados</td>
+				<td>22.050</td>
+				<td>144.836</td>
+			</tr>
+			<tr>
+				<td>Ticket médio dos pagamentos</td>
+				<td>R$ 52.711</td>
+				<td>R$ 7.839</td>
+			</tr>
+			<tr>
+				<td>Concentração dos contemplados, por faixa de valor</td>
+				<td>De 10 a 50 mil</td>
+				<td>De 2 a 10 mil</td>
+			</tr>
+			<tr>
+				<td>Concentração do recurso executado, por faixa de valor</td>
+				<td>Acima de 200 mil</td>
+				<td>De 10 a 50 mil</td>
+			</tr>
+		</tbody>
+	</table>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -167,6 +200,27 @@
 	<p>
 		A região Nordeste liderou em quantidade de contemplados, com <strong>47,7%</strong> do total de contemplados da Aldir Blanc, quase metade do total. Já o Sudeste apresentou uma proporção de agentes culturais contemplados inferior à proporção da população nacional. Isso indica que a região concentrou mais os recursos em um número menor de agentes.
 	</p>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     2.2.1b — DISTRIBUIÇÃO DE CONTEMPLADOS POR FAIXA DE VALOR NAS REGIÕES
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-regiao-faixas">
+	<h3>Distribuição dos Contemplados, por Faixa de Valor Recebido, nas Regiões</h3>
+	<p>
+		O gráfico a seguir apresenta como os contemplados de cada região se distribuíram pelas faixas de valor recebido. Cada barra totaliza 100%, permitindo comparar o perfil de distribuição entre as regiões.
+	</p>
+	<div class="chart-wide">
+		<HorizontalStackedBarChartCustom
+			data={regiaoContempladosFaixaData}
+			keys={[...UF_BAND_KEYS]}
+			labels={UF_BAND_LABELS}
+			colors={categorical8}
+			format={formatPct}
+			rowHeight={48}
+			marginLeft={120}
+		/>
+	</div>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -477,6 +531,41 @@
 </ScrollSection>
 
 <style>
+	.resumo-table {
+		width: 100%;
+		border-collapse: collapse;
+		margin-top: 1.5rem;
+		font-size: 0.9rem;
+	}
+
+	.resumo-table th,
+	.resumo-table td {
+		padding: 0.6rem 0.75rem;
+		text-align: left;
+		border-bottom: 1px solid #e5e7eb;
+	}
+
+	.resumo-table th {
+		font-weight: 700;
+		color: #6b7280;
+		text-transform: uppercase;
+		font-size: 0.75rem;
+		letter-spacing: 0.04em;
+		border-bottom: 2px solid #d1d5db;
+	}
+
+	.resumo-table td:nth-child(2),
+	.resumo-table td:nth-child(3),
+	.resumo-table th:nth-child(2),
+	.resumo-table th:nth-child(3) {
+		text-align: center;
+		font-weight: 600;
+	}
+
+	.resumo-table tbody tr:last-child td {
+		border-bottom: none;
+	}
+
 	.bignumbers-row {
 		display: flex;
 		gap: 2rem;

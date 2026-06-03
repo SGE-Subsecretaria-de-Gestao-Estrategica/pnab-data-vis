@@ -4103,6 +4103,13 @@ def resumo_territorios_especiais_por_uf(
 def resumo_por_porte_populacional(df_aux: pd.DataFrame) -> pd.DataFrame:
     """
     Retorna um resumo por porte populacional.
+
+    valor_medio_por_porte:
+    - média do valor recebido por contemplado.
+
+    valor_medio_porte_municipios:
+    - valor médio executado por município dentro daquele porte.
+    - cálculo: valor_total_por_porte / numero_municipios.
     """
 
     def media_aparada_1pct_superior(x):
@@ -4119,7 +4126,12 @@ def resumo_por_porte_populacional(df_aux: pd.DataFrame) -> pd.DataFrame:
         return x[x <= limite_superior].mean()
 
     df = df_aux.copy()
-    df = df[df['tipo_ente_bbagil'] == 'MUNICIPIO']
+    df = df[df["tipo_ente_bbagil"] == "MUNICIPIO"].copy()
+
+    df["valor_transacao_total_bbagil"] = pd.to_numeric(
+        df["valor_transacao_total_bbagil"],
+        errors="coerce"
+    )
 
     df_resumo = (
         df
@@ -4136,6 +4148,12 @@ def resumo_por_porte_populacional(df_aux: pd.DataFrame) -> pd.DataFrame:
             quantidade_contemplados_por_porte=("chave", "nunique")
         )
         .reset_index()
+    )
+
+    df_resumo["valor_medio_porte_municipios"] = np.where(
+        df_resumo["numero_municipios"].ne(0),
+        df_resumo["valor_total_por_porte"] / df_resumo["numero_municipios"],
+        np.nan
     )
 
     total_valor = df_resumo["valor_total_por_porte"].sum()

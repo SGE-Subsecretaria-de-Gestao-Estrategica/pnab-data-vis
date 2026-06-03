@@ -2405,3 +2405,179 @@ def aggregate_vinculo_formal_labor_by_uf(
         .sort_values(col_uf)
         .reset_index(drop=True)
     )
+
+
+def make_df_media_aparada_sexo_capitais_cpf(
+    df_cubo: pd.DataFrame,
+    col_tipo_documento: str = "tipo_documento",
+    col_sexo: str = "Sexo",
+    col_flag_capital: str = "flag_capital",
+    col_valor: str = "valor_transacao",
+    col_quantidade: str = "quantidade",
+    proporcao_aparada: float = 0.99
+) -> pd.DataFrame:
+    """
+    Retorna um DataFrame com valor médio e média aparada por Sexo,
+    considerando apenas:
+    - tipo_documento == CPF;
+    - flag_capital == True;
+    - Sexo igual a Masculino ou Feminino.
+
+    A média simples é calculada como:
+    soma(valor_transacao) / soma(quantidade)
+
+    A média aparada remove o 1% superior dos valores médios por linha,
+    dentro de cada Sexo, e depois recalcula:
+    soma(valor_transacao aparado) / soma(quantidade aparada)
+    """
+
+    df = df_cubo.copy()
+
+    # ------------------------------------------------------------
+    # 1. Normalizações
+    # ------------------------------------------------------------
+
+    df["tipo_documento_norm"] = (
+        df[col_tipo_documento]
+        .fillna("Não informado")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    df["sexo_norm"] = (
+        df[col_sexo]
+        .fillna("Não informado")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    df["sexo_tratado"] = df["sexo_norm"].map({
+        "FEMININO": "Feminino",
+        "MASCULINO": "Masculino"
+    })
+
+    df[col_valor] = pd.to_numeric(df[col_valor], errors="coerce")
+    df[col_quantidade] = pd.to_numeric(df[col_quantidade], errors="coerce")
+
+    # ------------------------------------------------------------
+    # 2. Filtros: CPF + capitais + sexo válido
+    # ------------------------------------------------------------
+
+    df = df[
+        df["tipo_documento_norm"].eq("CPF")
+        & df[col_flag_capital].eq(True)
+        & df["sexo_tratado"].isin(["Feminino", "Masculino"])
+    ].copy()
+
+    # ------------------------------------------------------------
+    # 3. Valor médio por linha
+    # ------------------------------------------------------------
+
+    df["valor_medio_linha"] = np.where(
+        df[col_quantidade].fillna(0).ne(0),
+        df[col_valor] / df[col_quantidade],
+        np.nan
+    )
+
+    # ------------------------------------------------------------
+    # 4. Função auxiliar: média aparada ponderada
+    # ------------------------------------------------------------
+
+    def calcular_media_aparada(grupo: pd.DataFrame) -> float:
+        grupo = grupo[
+            grupo["valor_medio_linha"].notna()
+            & grupo[col_valor].notna()
+            & grupo[col_quantidade].notna()
+            & grupo[col_quantidade].gt(0)
+        ].copy()
+
+        if grupo.empty:
+            return np.nan
+
+        limite = grupo["valor_medio_linha"].quantile(proporcao_aparada)
+
+        grupo_aparado = grupo[
+            grupo["valor_medio_linha"] <= limite
+        ].copy()
+
+        if grupo_aparado.empty:
+            return np.nan
+
+        qtd_aparada = grupo_aparado[col_quantidade].sum()
+
+        if qtd_aparada == 0:
+            return np.nan
+
+        return grupo_aparado[col_valor].sum() / qtd_aparada
+
+    # ------------------------------------------------------------
+    # 5. Agregação final por sexo
+    # ------------------------------------------------------------
+
+    df_resultado = (
+        df
+        .groupby("sexo_tratado", as_index=False)
+        .agg(
+            quantidade_contemplados=(col_quantidade, "sum"),
+            valor_contemplados=(col_valor, "sum")
+        )
+        .rename(columns={"sexo_tratado": "Sexo"})
+    )
+
+    df_resultado["valor_medio"] = np.where(
+        df_resultado["quantidade_contemplados"].fillna(0).ne(0),
+        df_resultado["valor_contemplados"] / df_resultado["quantidade_contemplados"],
+        np.nan
+    )
+
+    df_media_aparada = (
+        df
+        .groupby("sexo_tratado")
+        .apply(calcular_media_aparada)
+        .reset_index(name="valor_medio_aparado")
+        .rename(columns={"sexo_tratado": "Sexo"})
+    )
+
+    df_resultado = df_resultado.merge(
+        df_media_aparada,
+        on="Sexo",
+        how="left"
+    )
+
+    # ------------------------------------------------------------
+    # 6. Tipagem
+    # ------------------------------------------------------------
+
+    df_resultado["quantidade_contemplados"] = (
+        df_resultado["quantidade_contemplados"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    colunas_valor = [
+        "valor_contemplados",
+        "valor_medio",
+        "valor_medio_aparado"
+    ]
+
+    df_resultado[colunas_valor] = (
+        df_resultado[colunas_valor]
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
+    )
+
+    df_resultado = (
+        df_resultado
+        .sort_values("Sexo")
+        .reset_index(drop=True)
+    )
+
+    return df_resultado

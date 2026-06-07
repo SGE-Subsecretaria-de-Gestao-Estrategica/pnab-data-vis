@@ -340,6 +340,8 @@
 		colors={[colorScales.teal[2], colorScales.orange[2]]}
 		format={formatPctFixed}
 		margin={{ top: 28, right: 90, bottom: 40, left: 50 }}
+		barPad={2}
+		groupPad={18}
 	/>
 </ScrollSection>
 
@@ -367,7 +369,7 @@
 <ScrollSection id="section-5-531-valor">
 	<HorizontalGroupedBarChart
 		data={valorGroupedData}
-		seriesLabels={['% agentes culturais PNAB/CadÚnico', '% agentes culturais PNAB']}
+		seriesLabels={['% contemplados PNAB/CadÚnico', '% contemplados PNAB']}
 		colors={[colorScales.blue[2], colorScales.red[2]]}
 		format={formatPctFixed}
 		margin={{ top: 28, right: 90, bottom: 40, left: 160 }}

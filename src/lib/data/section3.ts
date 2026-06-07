@@ -9,6 +9,7 @@ import csvCnaesRaw from '../../../data/section_3/top_cnaes_cnpj_cultura.csv?raw'
 import csvNaturezaJuridicaRegiaoRaw from '../../../data/section_3/aggregate_cnpj_natureza_juridica_por_regiao.csv?raw';
 import csvNaturezaJuridicaRaw from '../../../data/section_3/aggregate_cnpj_natureza_juridica.csv?raw';
 import csvSexoUfIbgeRaw from '../../../data/section_3/aggregate_sexo_uf_ibge_pnab.csv?raw';
+import csvValuesByPorteRaw from '../../../data/section_3/values_by_population_size_v2.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -213,6 +214,26 @@ export const sexoUfSeriesLabels = [
 	'% Feminino IBGE',
 	'Feminino contemplados',
 ];
+
+// ── Valor médio por sexo e porte populacional ─────────────────────────────────
+const _PORTE_LABELS: Record<string, string> = {
+	'-99': 'Entes Estatais',
+	'1_pequeno_i': 'Peq. porte I',
+	'2_pequeno_ii': 'Peq. porte II',
+	'3_medio': 'Médio porte',
+	'4_grande': 'Grande porte',
+};
+const _PORTE_ORDER = ['1_pequeno_i', '2_pequeno_ii', '3_medio', '4_grande', '-99'];
+const valuesByPorteRows = parseCSV(csvValuesByPorteRaw);
+
+export const valorMedioSexoPorteData = _PORTE_ORDER.map((porte) => {
+	const row = valuesByPorteRows.find((r) => r.porte_populacional === porte)!;
+	return {
+		label: _PORTE_LABELS[porte],
+		values: [+row.valor_medio_sexo_Feminino, +row.valor_medio_sexo_Masculino],
+	};
+});
+export const valorMedioSexoSeriesLabels = ['Feminino', 'Masculino'];
 
 // Pivoted: regions on x-axis, age groups as bar series — percentage of total
 const _regions = ['centro_oeste', 'nordeste', 'norte', 'sudeste', 'sul'] as const;

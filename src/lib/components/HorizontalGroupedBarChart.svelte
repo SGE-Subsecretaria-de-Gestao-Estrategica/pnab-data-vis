@@ -16,6 +16,7 @@
 		margin = { top: 20, right: 90, bottom: 40, left: 50 },
 		barHeight = 10,
 		barPad = 4,
+		groupPad: groupPadProp = 6,
 		legendBottom = false,
 	}: {
 		data: GroupedBarRow[];
@@ -27,6 +28,7 @@
 		margin?: { top: number; right: number; bottom: number; left: number };
 		barHeight?: number;
 		barPad?: number;
+		groupPad?: number;
 		legendBottom?: boolean;
 	} = $props();
 
@@ -41,7 +43,7 @@
 			: Math.max(0, ...data.filter((d) => !d.isSeparator).map((d) => d.values.length))
 	);
 	const groupHeight = $derived(nSeries * barHeight + Math.max(0, nSeries - 1) * barPad);
-	const groupPad = 6;
+	const groupPad = groupPadProp;
 	const separatorH = 16;
 
 	// Compute row Y positions accounting for separator rows

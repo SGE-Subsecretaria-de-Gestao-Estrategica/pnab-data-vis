@@ -31,9 +31,10 @@
 	const FONT = "'Space Grotesk', system-ui, sans-serif";
 	const LABEL_FS = 10;
 	const LABEL_LH = 13;
-	const LEGEND_ITEM_GAP = 20;
-	const LEGEND_H = 28;
-	const LEGEND_CHAR_W = 6.5;
+	const LEGEND_CHAR_W = 7.5;
+	const LEGEND_PAD_X = 16;
+	const LEGEND_BLOCK_H = 34;
+	const LEGEND_ROW_GAP = 2;
 
 	const nSeries = $derived(
 		seriesLabels.length > 0
@@ -73,8 +74,31 @@
 	const legendItems = $derived(
 		seriesLabels.map((label, i) => ({ label, color: colors[i % colors.length] }))
 	);
-	const legendExtraH = $derived(legendItems.length > 0 ? LEGEND_H : 0);
-	const svgHeight = $derived(margin.top + innerH + labelAreaH + legendExtraH + margin.bottom);
+
+	const legendNaturalW = $derived(
+		legendItems.map((item) => item.label.length * LEGEND_CHAR_W + LEGEND_PAD_X * 2)
+	);
+	// Greedy row packing
+	const legendRows = $derived((() => {
+		if (legendItems.length === 0 || innerW === 0) return [] as number[][];
+		const rows: number[][] = [[]];
+		let rowW = 0;
+		legendNaturalW.forEach((w, i) => {
+			if (rows[rows.length - 1].length > 0 && rowW + w > innerW) {
+				rows.push([]);
+				rowW = 0;
+			}
+			rows[rows.length - 1].push(i);
+			rowW += w;
+		});
+		return rows;
+	})());
+	const legendBlocksH = $derived(
+		legendItems.length > 0
+			? legendRows.length * LEGEND_BLOCK_H + Math.max(0, legendRows.length - 1) * LEGEND_ROW_GAP + 8
+			: 0
+	);
+	const svgHeight = $derived(margin.top + innerH + labelAreaH + legendBlocksH + margin.bottom);
 
 	const yMax = $derived(Math.max(...data.flatMap((d) => d.values), 1));
 	const yDomain = $derived(Math.ceil(yMax / 5) * 5);
@@ -85,35 +109,27 @@
 		data.map((_, i) => margin.left + groupSlotW * i + groupSlotW / 2)
 	);
 
-	const legendItemWidths = $derived(
-		legendItems.map((item) => 12 + 5 + item.label.length * LEGEND_CHAR_W)
-	);
-	const legendTotalW = $derived(
-		legendItemWidths.reduce((s, w) => s + w, 0) +
-			Math.max(0, legendItems.length - 1) * LEGEND_ITEM_GAP
-	);
-	const legendItemX = $derived(
-		legendItemWidths.reduce<number[]>((acc, w, i) => {
-			acc.push(
-				i === 0
-					? (containerWidth - legendTotalW) / 2
-					: acc[i - 1] + legendItemWidths[i - 1] + LEGEND_ITEM_GAP
-			);
-			return acc;
-		}, [])
-	);
-	const legendY = $derived(margin.top + innerH + labelAreaH + 10);
+	const legendStartY = $derived(margin.top + innerH + labelAreaH + 8);
 </script>
 
 <div bind:clientWidth={containerWidth} style="width:100%;">
 	{#if containerWidth > 0}
 		<svg width={containerWidth} height={svgHeight} role="img" font-family={FONT}>
-			<!-- Legend (centered, bottom) -->
+			<!-- Legend (block style, bottom) -->
 			{#if legendItems.length > 0}
-				{#each legendItems as item, li}
-					{@const lx = legendItemX[li]}
-					<rect x={lx} y={legendY} width={12} height={10} fill={item.color} rx="2" />
-					<text x={lx + 17} y={legendY + 9} font-size="11" fill="#444">{item.label}</text>
+				{#each legendRows as row, ri}
+					{@const rowY = legendStartY + ri * (LEGEND_BLOCK_H + LEGEND_ROW_GAP)}
+					{@const rowItems = row.map((idx) => ({ item: legendItems[idx], w: legendNaturalW[idx] }))}
+					{#each rowItems as { item, w }, col}
+						{@const bx = margin.left + rowItems.slice(0, col).reduce((s, r) => s + r.w, 0)}
+						<rect x={bx} y={rowY} width={w} height={LEGEND_BLOCK_H} fill={item.color} shape-rendering="crispEdges" />
+						<text x={bx + LEGEND_PAD_X} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" font-size="12" font-weight="600" fill="#fffffe">{item.label}</text>
+						{#if col < rowItems.length - 1}
+							<line x1={bx + w} y1={rowY} x2={bx + w} y2={rowY + LEGEND_BLOCK_H} stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" />
+						{/if}
+					{/each}
+					{@const rowTotalW = rowItems.reduce((s, r) => s + r.w, 0)}
+					<rect fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" x={margin.left} y={rowY} width={rowTotalW} height={LEGEND_BLOCK_H} />
 				{/each}
 			{/if}
 

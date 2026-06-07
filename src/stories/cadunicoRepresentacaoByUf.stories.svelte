@@ -38,6 +38,8 @@ Estados com barra laranja maior que a teal apresentam sobrerrepresentação; o i
       colors={[colorScales.teal[2], colorScales.orange[2]]}
       format={(v) => `${v.toFixed(1)}%`}
       margin={{ top: 28, right: 90, bottom: 40, left: 50 }}
+      barPad={2}
+      groupPad={18}
     />
   {/snippet}
 </Story>

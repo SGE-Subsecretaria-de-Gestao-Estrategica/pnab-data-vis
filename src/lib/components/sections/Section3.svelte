@@ -38,6 +38,8 @@
 		sexoUfData,
 		sexoUfSeriesLabels,
 		sexoUfComparisonData,
+		valorMedioSexoPorteData,
+		valorMedioSexoSeriesLabels,
 	} from '$lib/data/section3';
 
 	const formatNum = (v: number) => v.toLocaleString('pt-BR');
@@ -431,6 +433,17 @@
 		maiores desigualdades sociais, implementem mecanismos de estímulo à participação feminina, como
 		os previstos no art. 2º da IN MinC nº 10/2023.
 	</p>
+	<HorizontalGroupedBarChart
+		data={valorMedioSexoPorteData}
+		seriesLabels={valorMedioSexoSeriesLabels}
+		colors={sexColors}
+		format={formatBRL}
+		xLabel="Valor médio recebido (R$)"
+		margin={{ top: 20, right: 80, bottom: 44, left: 120 }}
+		barHeight={14}
+		barPad={4}
+		legendBottom={true}
+	/>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════

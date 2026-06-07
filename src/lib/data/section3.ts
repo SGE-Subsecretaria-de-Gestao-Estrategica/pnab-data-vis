@@ -96,14 +96,21 @@ const cnaesRows = parseCSVQuoted(csvCnaesRaw);
 const _fmt1 = (v: number) =>
 	(v * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
-export const top20CnaesTableData = cnaesRows.map((d) => ({
-	posicao:                   +d.ranking_valor,
-	descricao:                 d.cnae_principal,
-	percQuantidade:            +d.perc_quantidade_contemplados * 100,
-	percQuantidadeFormatted:   _fmt1(+d.perc_quantidade_contemplados),
-	percValor:                 +d.perc_valor_transacao * 100,
-	percValorFormatted:        _fmt1(+d.perc_valor_transacao),
+const _cnaesBase = cnaesRows.map((d) => ({
+	descricao:               d.cnae_principal,
+	percQuantidade:          +d.perc_quantidade_contemplados * 100,
+	percQuantidadeFormatted: _fmt1(+d.perc_quantidade_contemplados),
+	percValor:               +d.perc_valor_transacao * 100,
+	percValorFormatted:      _fmt1(+d.perc_valor_transacao),
 }));
+
+export const top20CnaesQtdTableData = [..._cnaesBase]
+	.sort((a, b) => b.percQuantidade - a.percQuantidade)
+	.map((d, i) => ({ posicao: i + 1, ...d }));
+
+export const top20CnaesValTableData = [..._cnaesBase]
+	.sort((a, b) => b.percValor - a.percValor)
+	.map((d, i) => ({ posicao: i + 1, ...d }));
 
 // Pre-computed SVG height (matches CnaeTable layout constants)
 const _C_FS = 13, _C_LH = _C_FS * 1.4, _C_CW = _C_FS * 0.55;
@@ -118,10 +125,14 @@ function _cnaeWrap(text: string): number {
 	}
 	return lines;
 }
-export const cnaesTableHeight = top20CnaesTableData.reduce((h, e) => {
-	const minH = e.posicao <= 3 ? 54 : 42;
-	return h + Math.max(minH, _cnaeWrap(e.descricao) * _C_LH + _C_PAD_Y * 2);
-}, _C_HEADER_H);
+function _cnaeHeight(data: { posicao: number; descricao: string }[]): number {
+	return data.reduce((h, e) => {
+		const minH = e.posicao <= 3 ? 54 : 42;
+		return h + Math.max(minH, _cnaeWrap(e.descricao) * _C_LH + _C_PAD_Y * 2);
+	}, _C_HEADER_H);
+}
+export const cnaesQtdTableHeight = _cnaeHeight(top20CnaesQtdTableData);
+export const cnaesValTableHeight = _cnaeHeight(top20CnaesValTableData);
 
 // ── Top 20 atividades econômicas (CBO/RAIS) ───────────────────────────────────
 function toTitleCase(s: string) {
@@ -158,13 +169,12 @@ const _REGIAO_ORDER = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul'];
 
 export const naturezaJuridicaRegiaoData = _REGIAO_ORDER.map((regiao) => {
 	const rows = naturezaJuridicaRegiaoRows.filter((r) => r.regiao === regiao);
-	return {
-		label: regiao,
-		values: _NJ_ORDER.map((nj) => {
-			const row = rows.find((r) => r.natureza_juridica === nj);
-			return row ? +row.perc_quantidade_contemplados_na_regiao * 100 : 0;
-		}),
-	};
+	const entry: Record<string, string | number> = { label: regiao };
+	for (const nj of _NJ_ORDER) {
+		const row = rows.find((r) => r.natureza_juridica === nj);
+		entry[nj] = row ? +row.perc_quantidade_contemplados_na_regiao * 100 : 0;
+	}
+	return entry;
 });
 export const naturezaJuridicaSeriesLabels = _NJ_ORDER;
 
@@ -223,7 +233,7 @@ const _PORTE_LABELS: Record<string, string> = {
 	'3_medio': 'Médio porte',
 	'4_grande': 'Grande porte',
 };
-const _PORTE_ORDER = ['1_pequeno_i', '2_pequeno_ii', '3_medio', '4_grande', '-99'];
+const _PORTE_ORDER = ['1_pequeno_i', '2_pequeno_ii', '3_medio', '4_grande'];
 const valuesByPorteRows = parseCSV(csvValuesByPorteRaw);
 
 export const valorMedioSexoPorteData = _PORTE_ORDER.map((porte) => {

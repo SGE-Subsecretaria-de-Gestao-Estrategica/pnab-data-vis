@@ -463,7 +463,7 @@ export const valorInteriorTotal       = +_interiorRow.valor_total;              
 
 export const capitalInteriorStackedData = [
 	{
-		label:         '% do valor recebido',
+		label:         '% do recurso executado',
 		capital:       +_capitalRow2.percentual_valor    * 100,
 		metropolitana: +_metroRow.percentual_valor       * 100,
 		interior:      +_interiorRow.percentual_valor    * 100,

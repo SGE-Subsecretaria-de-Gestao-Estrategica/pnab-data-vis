@@ -13,6 +13,8 @@
 	import PyramidChartCustom from '$lib/components/PyramidChartCustom.svelte';
 	import CnaeTable from '$lib/components/CnaeTable.svelte';
 	import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
+	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
+	import VerticalGroupedBarChart from '$lib/components/VerticalGroupedBarChart.svelte';
 	import SexoUfStackedComparison from '$lib/components/SexoUfStackedComparison.svelte';
 	import {
 		totalBeneficiarios,
@@ -30,8 +32,10 @@
 		ageGroupRegionKeys,
 		ageGroupRegionLabels,
 		top20CboData,
-		top20CnaesTableData,
-		cnaesTableHeight,
+		top20CnaesQtdTableData,
+		top20CnaesValTableData,
+		cnaesQtdTableHeight,
+		cnaesValTableHeight,
 		naturezaJuridicaRegiaoData,
 		naturezaJuridicaSeriesLabels,
 		naturezaJuridicaData,
@@ -433,16 +437,15 @@
 		maiores desigualdades sociais, implementem mecanismos de estímulo à participação feminina, como
 		os previstos no art. 2º da IN MinC nº 10/2023.
 	</p>
-	<HorizontalGroupedBarChart
+	<VerticalGroupedBarChart
 		data={valorMedioSexoPorteData}
 		seriesLabels={valorMedioSexoSeriesLabels}
 		colors={sexColors}
 		format={formatBRL}
-		xLabel="Valor médio recebido (R$)"
-		margin={{ top: 20, right: 80, bottom: 44, left: 120 }}
-		barHeight={14}
-		barPad={4}
-		legendBottom={true}
+		barWidth={36}
+		barPad={14}
+		innerH={300}
+		margin={{ top: 20, right: 20, bottom: 10, left: 72 }}
 	/>
 </ScrollSection>
 
@@ -574,14 +577,12 @@
 		title="% - Distribuição de Agentes Culturais Pessoas Jurídicas Contemplados na Aldir Blanc por Natureza Jurídica"
 		margin={{ top: 20, right: 80, bottom: 40, left: 230 }}
 	/>
-	<HorizontalGroupedBarChart
+	<HorizontalStackedBarChartCustom
 		data={naturezaJuridicaRegiaoData}
-		seriesLabels={naturezaJuridicaSeriesLabels}
+		keys={naturezaJuridicaSeriesLabels}
 		colors={categorical8.slice(0, 6)}
-		margin={{ top: 20, right: 80, bottom: 40, left: 110 }}
-		barHeight={12}
-		barPad={3}
-		legendBottom={true}
+		format={(v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'}
+		marginLeft={120}
 	/>
 </ScrollSection>
 
@@ -669,14 +670,14 @@
 	<h3>Top 20 CNAEs principais das pessoas jurídicas contempladas</h3>
 	<p>Por quantidade de CNPJs contemplados:</p>
 	<div style="overflow-x: auto;">
-		<svg width={700} height={cnaesTableHeight}>
-			<CnaeTable data={top20CnaesTableData} metric="quantidade" width={700} />
+		<svg width={700} height={cnaesQtdTableHeight}>
+			<CnaeTable data={top20CnaesQtdTableData} metric="quantidade" width={700} />
 		</svg>
 	</div>
 	<p>Por valor total repassado:</p>
 	<div style="overflow-x: auto;">
-		<svg width={700} height={cnaesTableHeight}>
-			<CnaeTable data={top20CnaesTableData} metric="valor" width={700} />
+		<svg width={700} height={cnaesValTableHeight}>
+			<CnaeTable data={top20CnaesValTableData} metric="valor" width={700} />
 		</svg>
 	</div>
 </ScrollSection>

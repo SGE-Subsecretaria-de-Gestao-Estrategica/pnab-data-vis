@@ -3,7 +3,7 @@
   import { defineMeta } from '@storybook/addon-svelte-csf';
   // @ts-ignore
   import { colorPairs } from 'sniic-design-system';
-  import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
+  import VerticalGroupedBarChart from '$lib/components/VerticalGroupedBarChart.svelte';
   // @ts-ignore
   import { valorMedioSexoPorteData, valorMedioSexoSeriesLabels } from '$lib/data/section3';
 
@@ -20,7 +20,7 @@
 
   const { Story } = defineMeta({
     title: 'Section 3/valorMedioSexoByPorte',
-    component: HorizontalGroupedBarChart,
+    component: VerticalGroupedBarChart,
     tags: ['autodocs'],
     parameters: {
       docs: {
@@ -38,18 +38,17 @@ Nos **Entes Estatais** os valores médios são os mais elevados, refletindo o pe
   });
 </script>
 
-<Story name="Barras agrupadas — Valor médio por sexo e porte municipal">
+<Story name="Barras verticais agrupadas — Valor médio por sexo e porte municipal">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <VerticalGroupedBarChart
       data={valorMedioSexoPorteData}
       seriesLabels={valorMedioSexoSeriesLabels}
       colors={sexColors}
       format={formatBRL}
-      xLabel="Valor médio recebido (R$)"
-      margin={{ top: 20, right: 80, bottom: 44, left: 120 }}
-      barHeight={14}
-      barPad={4}
-      legendBottom={true}
+      barWidth={36}
+      barPad={14}
+      innerH={300}
+      margin={{ top: 20, right: 20, bottom: 10, left: 72 }}
     />
   {/snippet}
 </Story>

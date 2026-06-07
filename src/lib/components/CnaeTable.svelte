@@ -126,7 +126,7 @@
 		{@const cy      = ry + rh / 2}
 		{@const bh      = row.isPod ? BAR_H_POD : BAR_H_DEF}
 		{@const barW    = (row.percVal / maxVal) * BAR_TW}
-		{@const barFill = row.medal ? (isQtd ? row.medal.qtdFill : row.medal.valFill) : defBarClr}
+		{@const barFill = row.medal ? row.medal.qtdFill : defBarClr}
 
 		<!-- Row background -->
 		{#if row.medal}

@@ -31,7 +31,7 @@
   const porteLegend = porteRaw.map((d, i) => ({ label: d.porte, color: categorical8[i] }));
 
   // ── Bars — Métricas por Porte (stacked) ────────────────────────────────────
-  const pmKeys    = ['grande', 'pequeno_i', 'pequeno_ii', 'medio'];
+  const pmKeys    = ['pequeno_i', 'pequeno_ii', 'medio', 'grande'];
   const pmLabels  = { grande: 'Grande', pequeno_i: 'Pequeno I', pequeno_ii: 'Pequeno II', medio: 'Médio' };
   const pmByLabel = Object.fromEntries(porteMeanData.map((d) => [d.label, d]));
   const pmTotalMun   = porteMeanData.reduce((s, d) => s + d.municipios, 0);

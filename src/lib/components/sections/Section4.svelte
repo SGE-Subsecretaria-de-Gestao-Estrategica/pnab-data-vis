@@ -364,6 +364,7 @@
 		margin={{ top: 20, right: 80, bottom: 40, left: 120 }}
 		barHeight={12}
 		barPad={4}
+		legendBottom={true}
 	/>
 	<p>
 		Ao analisar a interseccionalidade entre raça e gênero, os dados revelam desigualdades

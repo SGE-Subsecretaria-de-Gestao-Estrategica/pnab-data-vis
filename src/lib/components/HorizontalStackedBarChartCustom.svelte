@@ -81,11 +81,15 @@
 	);
 
 	// Legend: per-label width based on text length estimate (~7px/char + 24px padding)
-	const CHAR_W  = 7;
-	const BOX_PAD = 24;
-	const legendBoxWs = $derived(
-		keys.map((key) => Math.max(60, (labels[key] ?? key).length * CHAR_W + BOX_PAD))
-	);
+	// Scaled down proportionally if total exceeds innerWidth
+	const CHAR_W  = 6;
+	const BOX_PAD = 16;
+	const legendBoxWs = $derived.by(() => {
+		const natural = keys.map((key) => Math.max(60, (labels[key] ?? key).length * CHAR_W + BOX_PAD));
+		const total = natural.reduce((s, w) => s + w, 0);
+		if (innerWidth <= 0 || total <= innerWidth) return natural;
+		return natural.map((w) => (w * innerWidth) / total);
+	});
 	const legendBoxX = $derived((ki: number) =>
 		legendBoxWs.slice(0, ki).reduce((s, w) => s + w, 0)
 	);
@@ -193,10 +197,10 @@
 							shape-rendering="crispEdges"
 						/>
 						<text
-							x={legendBoxX(ki) + 12}
+							x={legendBoxX(ki) + 8}
 							y={17}
 							dy="0.35em"
-							font-size="12"
+							font-size="10"
 							font-weight="600"
 							fill={labelColor(colors[ki] ?? '#999')}
 						>{labels[key] ?? key}</text>

@@ -43,6 +43,7 @@ Em todos os grupos raciais, **homens superam mulheres** tanto em quantidade de b
       margin={{ top: 20, right: 80, bottom: 40, left: 120 }}
       barHeight={12}
       barPad={4}
+      legendBottom={true}
     />
   {/snippet}
 </Story>

@@ -1,12 +1,22 @@
 <script lang="ts">
 	import ScrollSection from '$lib/components/ScrollSection.svelte';
-	import { MarimekkoChart, categorical8 } from 'sniic-design-system';
+	import { MarimekkoChart, HorizontalStackedBarChart, categorical8, colorScales } from 'sniic-design-system';
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
+	import { hierarchy, treemap as d3treemap } from 'd3-hierarchy';
 	import {
 		expensesChartData,
 		expensesKeys,
 		expensesLabels,
 		expensesLegendItems,
 		expensesGrandTotal,
+		fomentoDomainsRows,
+		pncvOuOutrosData,
+		pncvOuOutrosKeys,
+		pncvOuOutrosLabels,
+		tipoExecRegiaoData,
+		tipoExecRegiaoKeys,
+		tipoExecRegiaoLabels,
 	} from '$lib/data/section6';
 
 	const formatBRL = (v: number) =>
@@ -16,6 +26,40 @@
 			notation: 'compact',
 			maximumFractionDigits: 1,
 		}).format(v);
+
+	const formatPct = (v: number) =>
+		v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+
+	const pncvOuOutrosColors = [colorScales.teal[2], colorScales.blue[2]] as string[];
+	const tipoExecColors = [colorScales.blue[2], colorScales.teal[2], colorScales.orange[2]] as string[];
+
+	const TREEMAP_H = 480;
+	const TREEMAP_LEG_SEP = 28;
+	const TREEMAP_LEG_ROW_H = 44;
+	const TREEMAP_SVG_H = TREEMAP_H + TREEMAP_LEG_SEP + fomentoDomainsRows.length * TREEMAP_LEG_ROW_H + 8;
+
+	const domainColorMap = new Map(
+		fomentoDomainsRows.map((r, i) => [r.name, categorical8[i % categorical8.length] as string]),
+	);
+
+	const treemapW = $derived((containerWidth - 32) || 728);
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	type TLeaf = { x0: number; y0: number; x1: number; y1: number; data: typeof fomentoDomainsRows[0] };
+
+	const treemapLeaves = $derived.by((): TLeaf[] => {
+		if (!treemapW) return [];
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const root = (hierarchy as any)({ children: fomentoDomainsRows })
+			.sum((d: { value?: number }) => d.value ?? 0)
+			.sort((a: { value?: number }, b: { value?: number }) => (b.value ?? 0) - (a.value ?? 0));
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		(d3treemap as any)()
+			.size([treemapW, TREEMAP_H])
+			.padding(2)
+			.paddingOuter(4)(root);
+		return root.leaves();
+	});
 
 	const CHART_HEIGHT = 520;
 	const MARGIN = { top: 16, right: 16, bottom: 16, left: 16 };
@@ -137,10 +181,130 @@
 		</tbody>
 	</table>
 	</div>
+
+	<h3>PNCV vs. Outros — Participação por faixa de repasse</h3>
+	<p class="chart-caption">Participação percentual do valor estimado entre PNCV e demais despesas, por faixa de repasse municipal.</p>
+
+	<div style="padding-left: 220px;">
+		<HorizontalStackedBarChart
+			data={pncvOuOutrosData}
+			keys={[...pncvOuOutrosKeys]}
+			labels={pncvOuOutrosLabels}
+			colors={pncvOuOutrosColors}
+			format={formatPct}
+			showTotalLabel={false}
+		/>
+	</div>
+
+	<h3>Tipo de Execução por Região — Fomento Cultural</h3>
+	<p class="chart-caption">Participação percentual do valor estimado por tipo de execução (Ação Cultural, Bolsa e Premiação) em cada região.</p>
+
+	<div style="padding-left: 220px;">
+		<HorizontalStackedBarChart
+			data={tipoExecRegiaoData}
+			keys={[...tipoExecRegiaoKeys]}
+			labels={tipoExecRegiaoLabels}
+			colors={tipoExecColors}
+			format={formatPct}
+			showTotalLabel={false}
+		/>
+	</div>
+
+	<h3>Distribuição por Domínio — Fomento Cultural</h3>
+	<p class="chart-caption">Valor estimado investido por domínio cultural no âmbito do Fomento Cultural.</p>
+
+	<svg class="treemap-svg" width={treemapW} height={TREEMAP_SVG_H} font-family="'Space Grotesk', system-ui, sans-serif" font-size="12">
+		<defs>
+			{#each treemapLeaves as leaf, i}
+				{@const cw = leaf.x1 - leaf.x0}
+				{@const ch = leaf.y1 - leaf.y0}
+				<clipPath id="tm-clip-{i}">
+					<rect x={leaf.x0 + 3} y={leaf.y0 + 3} width={Math.max(0, cw - 6)} height={Math.max(0, ch - 6)} />
+				</clipPath>
+			{/each}
+		</defs>
+
+		<!-- treemap cells -->
+		{#each treemapLeaves as leaf, i}
+			{@const w = leaf.x1 - leaf.x0}
+			{@const h = leaf.y1 - leaf.y0}
+			{@const cx = leaf.x0 + w / 2}
+			{@const cy = leaf.y0 + h / 2}
+			{@const color = domainColorMap.get(leaf.data.name) ?? (categorical8[0] as string)}
+			{@const showBoth = w >= 90 && h >= 48}
+			{@const showPct = w >= 45 && h >= 20}
+			<rect x={leaf.x0} y={leaf.y0} width={w} height={h} fill={color} shape-rendering="crispEdges" />
+			{#if showPct}
+				<text
+					x={cx}
+					y={showBoth ? cy - 7 : cy}
+					text-anchor="middle"
+					dominant-baseline="middle"
+					fill={contrastColor(color)}
+					font-size="12"
+					font-weight="700"
+					pointer-events="none"
+					clip-path="url(#tm-clip-{i})"
+				>{leaf.data.pct.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</text>
+				{#if showBoth}
+					<text
+						x={cx}
+						y={cy + 10}
+						text-anchor="middle"
+						dominant-baseline="middle"
+						fill={contrastColor(color)}
+						font-size="9"
+						pointer-events="none"
+						clip-path="url(#tm-clip-{i})"
+					>{leaf.data.name}</text>
+				{/if}
+			{/if}
+		{/each}
+
+		<!-- legend separator -->
+		<line x1={0} y1={TREEMAP_H + 12} x2={treemapW} y2={TREEMAP_H + 12} stroke="var(--chart-fg-muted, #e0e0e0)" />
+
+		<!-- legend column headers -->
+		<text x={treemapW - 150} y={TREEMAP_H + 24} text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="10">Valor estimado (IC95%)</text>
+		<text x={treemapW - 4}   y={TREEMAP_H + 24} text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="10">% do total</text>
+
+		<!-- legend rows -->
+		{#each fomentoDomainsRows as row, i}
+			{@const ry = TREEMAP_H + TREEMAP_LEG_SEP + 16 + i * TREEMAP_LEG_ROW_H}
+			{@const color = categorical8[i % categorical8.length] as string}
+			{#if i > 0}
+				<line x1={0} y1={ry - 6} x2={treemapW} y2={ry - 6} stroke="var(--chart-fg-muted, #e0e0e0)" />
+			{/if}
+			<rect x={0} y={ry + 1} width={10} height={10} rx="2" fill={color} />
+			<text x={18} y={ry + 6} dy="0.35em" fill="var(--chart-fg, #1a1a1a)">{row.name}</text>
+			<text x={treemapW - 150} y={ry}      dy="0.85em" text-anchor="end" fill="var(--chart-fg-strong, #111)" font-weight="600">{formatBRL(row.value)}</text>
+			<text x={treemapW - 150} y={ry + 16} dy="0.85em" text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="10">IC95%: {formatBRL(row.p025)} – {formatBRL(row.p975)}</text>
+			<text x={treemapW - 4}   y={ry + 6}  dy="0.35em" text-anchor="end" fill={color} font-size="13" font-weight="700">{row.pct.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</text>
+		{/each}
+	</svg>
 </ScrollSection>
 
 
 <style>
+	h3 {
+		font-family: 'Space Grotesk', system-ui, sans-serif;
+		font-size: 1rem;
+		font-weight: 600;
+		margin: 2rem 0 0.25rem;
+	}
+
+	.chart-caption {
+		font-family: 'Space Grotesk', system-ui, sans-serif;
+		font-size: 0.8rem;
+		color: var(--chart-fg-muted, #666);
+		margin: 0 0 1rem;
+	}
+
+	.treemap-svg {
+		display: block;
+		margin: 0 16px;
+	}
+
 	.chart-wrapper {
 		position: relative;
 		width: 100%;

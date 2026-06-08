@@ -28,6 +28,7 @@
 		percPequenoPorteCadunico,
 		porteTreemapData5,
 		cadunicoUfGroupedData,
+		representacaoUfGroupedData,
 		valorGroupedData,
 		percBolsaFamilia,
 		valorBolsaFamilia,
@@ -320,6 +321,22 @@
 	<HorizontalGroupedBarChart
 		data={cadunicoUfGroupedData}
 		seriesLabels={['% contemplados da UF no CadÚnico', '% agentes culturais PNAB (Brasil)']}
+		colors={[colorScales.teal[2], colorScales.orange[2]]}
+		format={formatPctFixed}
+		margin={{ top: 28, right: 90, bottom: 40, left: 50 }}
+	/>
+	<p>
+		O gráfico a seguir compara diretamente o peso de cada UF no total de contemplados na Aldir
+		Blanc com cadastro no CadÚnico com o peso de cada UF na população total inscrita no CadÚnico.
+		Quando a barra teal supera a laranja, há <strong>sobrerrepresentação</strong> dos vulneráveis
+		locais na política; quando fica abaixo, há <strong>sub-representação</strong>.
+	</p>
+	<HorizontalGroupedBarChart
+		data={representacaoUfGroupedData}
+		seriesLabels={[
+			'% contemplados PNAB/CadÚnico (UF)',
+			'% pessoas CadÚnico (UF)',
+		]}
 		colors={[colorScales.teal[2], colorScales.orange[2]]}
 		format={formatPctFixed}
 		margin={{ top: 28, right: 90, bottom: 40, left: 50 }}

@@ -27,6 +27,14 @@
 
 	const FONT_FAMILY = "'Space Grotesk', system-ui, sans-serif";
 
+	function labelColor(hex: string): string {
+		const r = parseInt(hex.slice(1, 3), 16) / 255;
+		const g = parseInt(hex.slice(3, 5), 16) / 255;
+		const b = parseInt(hex.slice(5, 7), 16) / 255;
+		const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+		return luminance > 0.65 ? '#1a1a1a' : '#fffffe';
+	}
+
 	// Matches the library's internal margin calculation
 	const margin = $derived({ top: 16, right: 28, bottom: 68, left: marginLeft });
 	const innerWidth  = $derived(Math.max(0, containerWidth - margin.left - margin.right));
@@ -72,9 +80,17 @@
 		})
 	);
 
-	// Legend: equal-width boxes matching the library output
-	const legendBoxW  = $derived(keys.length > 0 ? (innerWidth * 0.45) / keys.length : 0);
-	const legendY     = $derived(innerHeight + 22);
+	// Legend: per-label width based on text length estimate (~7px/char + 24px padding)
+	const CHAR_W  = 7;
+	const BOX_PAD = 24;
+	const legendBoxWs = $derived(
+		keys.map((key) => Math.max(60, (labels[key] ?? key).length * CHAR_W + BOX_PAD))
+	);
+	const legendBoxX = $derived((ki: number) =>
+		legendBoxWs.slice(0, ki).reduce((s, w) => s + w, 0)
+	);
+	const legendTotalW = $derived(legendBoxWs.reduce((s, w) => s + w, 0));
+	const legendY      = $derived(innerHeight + 22);
 	const totalHeight = $derived(margin.top + innerHeight + margin.bottom);
 </script>
 
@@ -120,7 +136,7 @@
 									dy="0.35em"
 									font-size="12.48"
 									font-weight="700"
-									fill="#fffffe"
+									fill={labelColor(seg.color)}
 									text-anchor="start"
 									pointer-events="none"
 								>{format(seg.value)}</text>
@@ -169,26 +185,26 @@
 				<g transform="translate(0,{legendY})">
 					{#each keys as key, ki}
 						<rect
-							x={ki * legendBoxW}
+							x={legendBoxX(ki)}
 							y={0}
-							width={legendBoxW}
+							width={legendBoxWs[ki]}
 							height={34}
 							fill={colors[ki] ?? '#999'}
 							shape-rendering="crispEdges"
 						/>
 						<text
-							x={ki * legendBoxW + 12}
+							x={legendBoxX(ki) + 12}
 							y={17}
 							dy="0.35em"
 							font-size="12"
 							font-weight="600"
-							fill="#fffffe"
+							fill={labelColor(colors[ki] ?? '#999')}
 						>{labels[key] ?? key}</text>
 					{/each}
 					{#each keys.slice(0, keys.length - 1) as _, ki}
 						<line
-							x1={(ki + 1) * legendBoxW} y1={0}
-							x2={(ki + 1) * legendBoxW} y2={34}
+							x1={legendBoxX(ki + 1)} y1={0}
+							x2={legendBoxX(ki + 1)} y2={34}
 							stroke="var(--chart-fg-strong, #000000)"
 							stroke-width="0.5"
 							shape-rendering="crispEdges"
@@ -199,7 +215,7 @@
 						stroke="var(--chart-fg-strong, #000000)"
 						shape-rendering="crispEdges"
 						x={0} y={0}
-						width={legendBoxW * keys.length}
+						width={legendTotalW}
 						height={34}
 						stroke-width="0.5"
 					/>

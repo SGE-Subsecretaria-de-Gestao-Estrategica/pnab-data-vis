@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ScrollSection from '$lib/components/ScrollSection.svelte';
+	import ExecutedValueByStateMap from '$lib/components/ExecutedValueByStateMap.svelte';
 	import {
 		BigNumber,
 		HorizontalBarChart,
@@ -9,22 +10,27 @@
 		colorScales,
 		categorical8,
 	} from 'sniic-design-system';
+	import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
+	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
+	import VerticalStackedBarChartCustom from '$lib/components/VerticalStackedBarChartCustom.svelte';
 	import {
-		faixaDistData,
-		faixaValorPercData,
+		faixaGroupedData,
 		regiaoDistData,
+		regiaoGroupedData,
+		regiaoContempladosFaixaData,
 		ufBandPercData,
+		ufValorBandPercData,
 		UF_BAND_KEYS,
 		UF_BAND_LABELS,
 		stateBandPercData,
 		portePagamentosData,
-		PORTE_BAND_KEYS,
-		PORTE_BAND_LABELS,
+		porteValorPercData,
 		specialTerritoryBarData,
 		terrEspeciaisData,
 		TERR_KEYS,
 		TERR_LABELS,
 		estadosBoxPlotData,
+		mediaValorByState,
 	} from '$lib/data/section2';
 	import { HorizontalStackedBarChart, categorical3 } from 'sniic-design-system';
 
@@ -62,6 +68,38 @@
 			circleRadius={0}
 		/>
 	</svg>
+
+	<table class="resumo-table">
+		<thead>
+			<tr>
+				<th>Indicador</th>
+				<th>Estados</th>
+				<th>Municípios</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td>Número de contemplados</td>
+				<td>22.050</td>
+				<td>144.836</td>
+			</tr>
+			<tr>
+				<td>Ticket médio dos pagamentos</td>
+				<td>R$ 52.711</td>
+				<td>R$ 7.839</td>
+			</tr>
+			<tr>
+				<td>Concentração dos contemplados, por faixa de valor</td>
+				<td>De 10 a 50 mil</td>
+				<td>De 2 a 10 mil</td>
+			</tr>
+			<tr>
+				<td>Concentração do recurso executado, por faixa de valor</td>
+				<td>Acima de 200 mil</td>
+				<td>De 10 a 50 mil</td>
+			</tr>
+		</tbody>
+	</table>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -79,19 +117,15 @@
 	<p>
 		Embora a maioria dos contemplados estejam concentrados nas faixas de valores até 10 mil reais, os recursos repassados para este grupo representam somente <strong>15,2%</strong> dos recursos totais executados pela Aldir Blanc. A maior parte do recurso (<strong>31,5%</strong>) foi destinado para contemplados que receberam entre R$ 10 mil e R$ 50 mil.
 	</p>
-	<HorizontalBarChart
-		data={faixaDistData}
-		color={colorScales.blue[2]}
+	<HorizontalGroupedBarChart
+		data={faixaGroupedData}
+		seriesLabels={['Número de Contemplados', 'Recurso Executado']}
+		colors={['#c0504d', '#4472c4']}
 		format={formatPct}
-		xLabel="% dos contemplados"
-		margin={{ top: 20, right: 80, bottom: 40, left: 200 }}
-	/>
-	<HorizontalBarChart
-		data={faixaValorPercData}
-		color={colorScales.blue[2]}
-		format={formatPct}
-		xLabel="% do valor total executado"
-		margin={{ top: 20, right: 80, bottom: 40, left: 200 }}
+		margin={{ top: 30, right: 90, bottom: 60, left: 160 }}
+		barHeight={18}
+		barPad={5}
+		legendBottom={true}
 	/>
 </ScrollSection>
 
@@ -115,6 +149,27 @@
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
+     2.1.1 — DISTRIBUIÇÃO DE RECURSOS POR UF E FAIXA (STACKED HORIZONTAL)
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-uf-recursos">
+	<h3>Distribuição dos Recursos Executados nas Unidades Federativas, por Faixa de Valor</h3>
+	<p>
+		O gráfico a seguir apresenta como os recursos executados em cada unidade federativa se distribuíram pelas faixas de valor. Unidades com tonalidade intensa nas faixas mais altas concentraram proporcionalmente mais recursos em pagamentos de maior valor.
+	</p>
+	<div class="chart-wide">
+		<HorizontalStackedBarChartCustom
+			data={ufValorBandPercData}
+			keys={[...UF_BAND_KEYS]}
+			labels={UF_BAND_LABELS}
+			colors={categorical8}
+			format={formatPct}
+			rowHeight={28}
+			marginLeft={40}
+		/>
+	</div>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
      2.2 — DISTRIBUIÇÃO NOS ESTADOS (REGIÕES)
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-2-22">
@@ -129,12 +184,15 @@
 		<p><strong>45.655 (27,4%)</strong> contemplados no Sudeste</p>
 		<p><strong>17.946 (10,8%)</strong> contemplados no Sul</p>
 	</div>
-	<HorizontalBarChart
-		data={regiaoDistData}
-		color={colorScales.blue[2]}
+	<HorizontalGroupedBarChart
+		data={regiaoGroupedData}
+		seriesLabels={['% agentes culturais', '% população']}
+		colors={['#c0504d', '#4472c4']}
 		format={formatPct}
-		xLabel="% dos agentes culturais"
-		margin={{ top: 20, right: 80, bottom: 40, left: 140 }}
+		margin={{ top: 30, right: 90, bottom: 60, left: 140 }}
+		barHeight={18}
+		barPad={5}
+		legendBottom={true}
 	/>
 	<p>
 		As regiões Norte, Centro-Oeste e Sul apresentaram uma proporção de agentes culturais contemplados com recursos da Aldir Blanc muito semelhante à participação de sua população em relação à população nacional.
@@ -142,6 +200,27 @@
 	<p>
 		A região Nordeste liderou em quantidade de contemplados, com <strong>47,7%</strong> do total de contemplados da Aldir Blanc, quase metade do total. Já o Sudeste apresentou uma proporção de agentes culturais contemplados inferior à proporção da população nacional. Isso indica que a região concentrou mais os recursos em um número menor de agentes.
 	</p>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     2.2.1b — DISTRIBUIÇÃO DE CONTEMPLADOS POR FAIXA DE VALOR NAS REGIÕES
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-regiao-faixas">
+	<h3>Distribuição dos Contemplados, por Faixa de Valor Recebido, nas Regiões</h3>
+	<p>
+		O gráfico a seguir apresenta como os contemplados de cada região se distribuíram pelas faixas de valor recebido. Cada barra totaliza 100%, permitindo comparar o perfil de distribuição entre as regiões.
+	</p>
+	<div class="chart-wide">
+		<HorizontalStackedBarChartCustom
+			data={regiaoContempladosFaixaData}
+			keys={[...UF_BAND_KEYS]}
+			labels={UF_BAND_LABELS}
+			colors={categorical8}
+			format={formatPct}
+			rowHeight={48}
+			marginLeft={120}
+		/>
+	</div>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -209,6 +288,23 @@
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
+     2.2.3 — MAPA TICKET MÉDIO POR ESTADO
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-2-mapa-ticket-medio">
+	<h3>2.2.3. Ticket médio por estado</h3>
+	<p>
+		O mapa abaixo apresenta o valor médio por pagamento em cada estado. Estados com tonalidade mais intensa concentraram valores médios mais elevados por contemplado.
+	</p>
+	<ExecutedValueByStateMap
+		states={mediaValorByState}
+		metric="media_aparada_1pct_valor"
+		label="Média aparada (1%) paga por estado"
+		format={formatBRL}
+		showSideLegend={true}
+	/>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
      2.3 — MUNICÍPIOS — GRANDES NÚMEROS
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-2-23">
@@ -239,15 +335,13 @@
 		Nos municípios de pequeno porte I, <strong>91,3%</strong> dos contemplados receberam até R$ 10 mil. Dentro desse grupo, <strong>50,1%</strong> receberam pagamentos de até R$ 2 mil. Essa concentração nas faixas de menor valor também se mantém elevada nos municípios de pequeno porte II, onde <strong>87,7%</strong> dos contemplados receberam até R$ 10 mil, e nos municípios de médio porte, com <strong>75,9%</strong>. Já nos municípios de grande porte, a participação dos pagamentos de até R$ 10 mil cai para <strong>49%</strong>. Nesse grupo, a faixa de R$ 10 mil a R$ 50 mil representa, sozinha, <strong>42,7%</strong> dos pagamentos.
 	</p>
 	<div class="chart-wide">
-		<VerticalStackedBarChart
+		<VerticalStackedBarChartCustom
 			data={portePagamentosData}
-			keys={[...PORTE_BAND_KEYS]}
-			labels={PORTE_BAND_LABELS}
+			keys={[...UF_BAND_KEYS]}
+			labels={UF_BAND_LABELS}
 			colors={categorical8}
 			format={formatPctFixed}
-			yLabel="% dos contemplados"
 			normalize={true}
-			showLegend={true}
 			height={420}
 		/>
 	</div>
@@ -257,6 +351,20 @@
 	<p>
 		Quando observados todos os municípios da base em conjunto, <strong>70,3%</strong> dos recursos executados se concentraram em pagamentos de até R$ 50 mil.
 	</p>
+	<p>
+		O gráfico abaixo apresenta como o <strong>valor pago</strong> se distribuiu pelas faixas de valor em cada porte de município.
+	</p>
+	<div class="chart-wide">
+		<VerticalStackedBarChartCustom
+			data={porteValorPercData}
+			keys={[...UF_BAND_KEYS]}
+			labels={UF_BAND_LABELS}
+			colors={categorical8}
+			format={formatPctFixed}
+			normalize={true}
+			height={420}
+		/>
+	</div>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -297,18 +405,7 @@
 <!-- ══════════════════════════════════════════════════════════════════════════
      2.4 — TERRITÓRIOS ESPECIAIS — GRÁFICO POR UF
      ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-2-special-uf">
-	<div class="chart-wide">
-		<HorizontalStackedBarChart
-			data={terrEspeciaisData}
-			keys={[...TERR_KEYS]}
-			labels={TERR_LABELS}
-			colors={categorical3}
-			format={formatBRL}
-			showTotalLabel={true}
-			rowHeight={36}
-		/>
-	</div>
+<ScrollSection id="section-2-special-uf">	
 	<p style="margin-top: 1.5rem;">
 		Do montante total destinado aos territórios especiais, <strong>R$ 91.459.463 (60,7%)</strong> foram destinados pelos governos estaduais. Esse valor representa 6,3% de todo o recurso executado pelos Estados.
 	</p>
@@ -423,6 +520,41 @@
 </ScrollSection>
 
 <style>
+	.resumo-table {
+		width: 100%;
+		border-collapse: collapse;
+		margin-top: 1.5rem;
+		font-size: 0.9rem;
+	}
+
+	.resumo-table th,
+	.resumo-table td {
+		padding: 0.6rem 0.75rem;
+		text-align: left;
+		border-bottom: 1px solid #e5e7eb;
+	}
+
+	.resumo-table th {
+		font-weight: 700;
+		color: #6b7280;
+		text-transform: uppercase;
+		font-size: 0.75rem;
+		letter-spacing: 0.04em;
+		border-bottom: 2px solid #d1d5db;
+	}
+
+	.resumo-table td:nth-child(2),
+	.resumo-table td:nth-child(3),
+	.resumo-table th:nth-child(2),
+	.resumo-table th:nth-child(3) {
+		text-align: center;
+		font-weight: 600;
+	}
+
+	.resumo-table tbody tr:last-child td {
+		border-bottom: none;
+	}
+
 	.bignumbers-row {
 		display: flex;
 		gap: 2rem;

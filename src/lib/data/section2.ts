@@ -1,7 +1,7 @@
 // All Section 2 data, parsed from CSVs at build time.
 // Narrativa: CPF (pessoas físicas) vs CNPJ (entidades) — quem recebe o quê.
 
-import { stateRows } from '$lib/data/section1';
+import { stateRows, siglaToName } from '$lib/data/section1';
 
 import csvStateRaw         from '../../../data/section_2/aggregate_execution_by_person_type_state.csv?raw';
 import csvUfRaw            from '../../../data/section_2/aggregate_execution_by_person_type_uf.csv?raw';
@@ -13,9 +13,11 @@ import csvFaixaUfRaw       from '../../../data/section_2/aggregate_faixa_valor_j
 import csvFaixaStateRaw    from '../../../data/section_2/aggregate_faixa_valor_ju_wide_by_state.csv?raw';
 import csvAuxQuartisBrasilRaw from '../../../data/section_2/aux_quartis_estados_brasil.csv?raw';
 import csvQuartisEstadosRaw from '../../../data/section_2/quartis_estados.csv?raw';
+import csvResumoValoresUfEstadoRaw from '../../../data/section_2/resumo_valores_uf_estado.csv?raw';
 import csvTerrUfRaw      from '../../../data/section_2/territorios_especiais_por_uf.csv?raw';
 import csvTerrEstadoRaw  from '../../../data/section_2/territorios_especiais_por_estado.csv?raw';
 import csvTerrMunRaw     from '../../../data/section_2/territorios_especiais_por_municipio.csv?raw';
+import csvFaixaValorPorteRaw from '../../../data/section_2/faixa_valor_porte_populacional.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -105,17 +107,45 @@ export const faixaDistData = rangeRows
 		value: +r['% de contemplados'] * 100,
 	}));
 
-// ── 3b. HorizontalBarChart — % do valor total por faixa ───────────────────────
+// ── 3b. HorizontalGroupedBarChart — contemplados e recursos por faixa (5 tiers)
+const recursoPercByBand: Record<string, number> = {
+	'Até 2 mil':         2.2,
+	'2 a 10 mil':       13.1,
+	'10 a 50 mil':      31.5,
+	'50 a 200 mil':     28.1,
+	'Acima de 200 mil': 25.2,
+};
+
 export const faixaValorPercData = [
-	{ label: 'Até R$2 mil',              value: 2  },
-	{ label: 'R$2 a R$10 mil',           value: 13 },
-	{ label: 'R$10 a R$50 mil',          value: 32 },
-	{ label: 'R$50 a R$200 mil',         value: 28 },
-	{ label: 'R$200 a R$500 mil',        value: 13 },
-	{ label: 'R$500 mil a R$1 milhão',   value: 4  },
-	{ label: 'R$1 milhão a R$10 milhões',value: 7  },
-	{ label: 'Acima de R$10 milhões',    value: 1  },
+	{ label: 'Até 2 mil',         value: 2.2  },
+	{ label: '2 a 10 mil',        value: 13.1 },
+	{ label: '10 a 50 mil',       value: 31.5 },
+	{ label: '50 a 200 mil',      value: 28.1 },
+	{ label: 'Acima de 200 mil',  value: 25.2 },
 ];
+
+export const faixaGroupedData = (() => {
+	const pagMap: Record<string, number> = {};
+	for (const r of rangeRows) {
+		const faixa = r.faixa_vlr_pago;
+		if (!faixa) continue;
+		const v = +r['% de contemplados'] * 100;
+		const key =
+			faixa === '200 a 500 mil' ||
+			faixa === '500 mil a 1 milhão' ||
+			faixa === '1 milhão a 10 milhões' ||
+			faixa === 'Acima de 10 milhões'
+				? 'Acima de 200 mil'
+				: faixa;
+		pagMap[key] = (pagMap[key] ?? 0) + v;
+	}
+	return ['Até 2 mil', '2 a 10 mil', '10 a 50 mil', '50 a 200 mil', 'Acima de 200 mil'].map(
+		(label) => ({
+			label,
+			values: [pagMap[label] ?? 0, recursoPercByBand[label]],
+		})
+	);
+})();
 
 // ── 3c. HorizontalBarChart — agentes culturais por região ─────────────────────
 export const regiaoDistData = [
@@ -124,6 +154,15 @@ export const regiaoDistData = [
 	{ label: 'Sul',          value: 10.8, count: 17946 },
 	{ label: 'Norte',        value: 8.7,  count: 14504 },
 	{ label: 'Centro-Oeste', value: 5.4,  count: 9018  },
+];
+
+// ── 3d. HorizontalGroupedBarChart — agentes culturais vs população por região ──
+export const regiaoGroupedData = [
+	{ label: 'Nordeste',     values: [47.6, 26.9] },
+	{ label: 'Sudeste',      values: [27.4, 41.7] },
+	{ label: 'Sul',          values: [10.8, 14.6] },
+	{ label: 'Norte',        values: [8.7,  8.8]  },
+	{ label: 'Centro-Oeste', values: [5.6,  8.0]  },
 ];
 
 // ── 4. HorizontalStackedBarChart — faixas por tipo CPF vs CNPJ ───────────────
@@ -255,29 +294,36 @@ const porteRowsS2 = parseCSV(csvPorteRaw)
 	.filter((d) => d.porte_populacional in PORTE_NAME_MAP)
 	.sort((a, b) => PORTE_SORT[a.porte_populacional] - PORTE_SORT[b.porte_populacional]);
 
-export const PORTE_BAND_KEYS = [
-	'ate2k', 'de2a10k', 'de10a50k', 'de50a200k', 'de200a500k', 'de500ka1m', 'de1ma10m', 'acima10m',
-] as const;
-export const PORTE_BAND_LABELS: Record<string, string> = {
-	ate2k: 'Até R$2k', de2a10k: 'R$2–10k', de10a50k: 'R$10–50k', de50a200k: 'R$50–200k',
-	de200a500k: 'R$200–500k', de500ka1m: 'R$500k–1M', de1ma10m: 'R$1–10M', acima10m: '>R$10M',
-};
-
 export const portePagamentosData = porteRowsS2.map((d) => {
 	const bands = PORTE_CSV_BANDS.map((k) => +(d[k] ?? 0));
 	const total = bands.reduce((s, v) => s + v, 0) || 1;
 	return {
-		label:      PORTE_NAME_MAP[d.porte_populacional],
-		ate2k:      (bands[0] / total) * 100,
-		de2a10k:    (bands[1] / total) * 100,
-		de10a50k:   (bands[2] / total) * 100,
-		de50a200k:  (bands[3] / total) * 100,
-		de200a500k: (bands[4] / total) * 100,
-		de500ka1m:  (bands[5] / total) * 100,
-		de1ma10m:   (bands[6] / total) * 100,
-		acima10m:   (bands[7] / total) * 100,
+		label:     PORTE_NAME_MAP[d.porte_populacional],
+		ate2k:     (bands[0] / total) * 100,
+		de2a10k:   (bands[1] / total) * 100,
+		de10a50k:  (bands[2] / total) * 100,
+		de50a200k: (bands[3] / total) * 100,
+		acima200k: ((bands[4] + bands[5] + bands[6] + bands[7]) / total) * 100,
 	};
 });
+
+export const porteValorPercData = parseCSV(csvFaixaValorPorteRaw)
+	.filter((d) => {
+		const p = d.porte_populacional?.trim();
+		return p && p !== '-99' && p in PORTE_NAME_MAP;
+	})
+	.sort((a, b) => PORTE_SORT[a.porte_populacional.trim()] - PORTE_SORT[b.porte_populacional.trim()])
+	.map((d) => {
+		const p = d.porte_populacional.trim();
+		return {
+			label:     PORTE_NAME_MAP[p],
+			ate2k:     +d.perc_valor_transacao_ate_2_mil        * 100,
+			de2a10k:   +d.perc_valor_transacao_de_2_a_10_mil    * 100,
+			de10a50k:  +d.perc_valor_transacao_de_10_a_50_mil   * 100,
+			de50a200k: +d.perc_valor_transacao_de_50_a_200_mil  * 100,
+			acima200k: +d.perc_valor_transacao_acima_de_200_mil * 100,
+		};
+	});
 
 // ── Row 40: Valor total por território especial (HorizontalBarChart) ──────────
 const SPECIAL_EXCLUDE = new Set(['Não especial', 'Não informado']);
@@ -300,6 +346,23 @@ export const ufBandPercData = faixaUfRows
 			de10a50k:  +row.perc_qtd_de_10_a_50_mil  * 100,
 			de50a200k: +row.perc_qtd_de_50_a_200_mil * 100,
 			acima200k: +row.perc_qtd_acima_de_200_mil * 100,
+		};
+	})
+	.sort((a, b) => b._highValue - a._highValue)
+	.map(({ _highValue: _, ...rest }) => rest);
+
+// ── HorizontalStackedBarChart — % recursos executados por faixa de valor × UF ──
+export const ufValorBandPercData = faixaUfRows
+	.map((row) => {
+		const highValPct = +row.perc_valor_de_50_a_200_mil + +row.perc_valor_acima_de_200_mil;
+		return {
+			label:     row.uf,
+			_highValue: highValPct,
+			ate2k:     +row.perc_valor_ate_2_mil       * 100,
+			de2a10k:   +row.perc_valor_de_2_a_10_mil   * 100,
+			de10a50k:  +row.perc_valor_de_10_a_50_mil  * 100,
+			de50a200k: +row.perc_valor_de_50_a_200_mil * 100,
+			acima200k: +row.perc_valor_acima_de_200_mil * 100,
 		};
 	})
 	.sort((a, b) => b._highValue - a._highValue)
@@ -373,3 +436,54 @@ export const estadosBoxPlotData = parseCSV(csvQuartisEstadosRaw).map((row) => ({
 		max:    +row.p99,
 	},
 }));
+
+// ── HorizontalStackedBarChart — % contemplados por faixa × região ─────────────
+const UF_TO_REGIAO: Record<string, string> = {
+	AC: 'Norte', AM: 'Norte', AP: 'Norte', PA: 'Norte', RO: 'Norte', RR: 'Norte', TO: 'Norte',
+	AL: 'Nordeste', BA: 'Nordeste', CE: 'Nordeste', MA: 'Nordeste', PB: 'Nordeste',
+	PE: 'Nordeste', PI: 'Nordeste', RN: 'Nordeste', SE: 'Nordeste',
+	DF: 'Centro-Oeste', GO: 'Centro-Oeste', MS: 'Centro-Oeste', MT: 'Centro-Oeste',
+	ES: 'Sudeste', MG: 'Sudeste', RJ: 'Sudeste', SP: 'Sudeste',
+	PR: 'Sul', RS: 'Sul', SC: 'Sul',
+};
+const REGIAO_ORDER = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul'];
+
+export const regiaoContempladosFaixaData = (() => {
+	const totals: Record<string, Record<string, number>> = {};
+	for (const reg of REGIAO_ORDER) {
+		totals[reg] = { ate2k: 0, de2a10k: 0, de10a50k: 0, de50a200k: 0, acima200k: 0 };
+	}
+	for (const row of faixaUfRows) {
+		const reg = UF_TO_REGIAO[row.uf];
+		if (!reg) continue;
+		totals[reg].ate2k     += +row.qtd_ate_2_mil;
+		totals[reg].de2a10k   += +row.qtd_de_2_a_10_mil;
+		totals[reg].de10a50k  += +row.qtd_de_10_a_50_mil;
+		totals[reg].de50a200k += +row.qtd_de_50_a_200_mil;
+		totals[reg].acima200k += +row.qtd_acima_de_200_mil;
+	}
+	return REGIAO_ORDER.map((reg) => {
+		const t = totals[reg];
+		const total = Object.values(t).reduce((s, v) => s + v, 0) || 1;
+		return {
+			label:     reg,
+			ate2k:     (t.ate2k     / total) * 100,
+			de2a10k:   (t.de2a10k   / total) * 100,
+			de10a50k:  (t.de10a50k  / total) * 100,
+			de50a200k: (t.de50a200k / total) * 100,
+			acima200k: (t.acima200k / total) * 100,
+		};
+	});
+})();
+
+// ── ChoroplethMap — ticket médio por estado (resumo_valores_uf_estado.csv) ────
+export const mediaValorByState: Record<string, { media_valor: number; mediana_valor: number; media_aparada_1pct_valor: number }> =
+	Object.fromEntries(
+		parseCSV(csvResumoValoresUfEstadoRaw)
+			.filter((r) => r.visao === 'ESTADO')
+			.flatMap((r) => {
+				const name = siglaToName[r.uf];
+				if (!name) return [];
+				return [[name, { media_valor: +r.media_valor, mediana_valor: +r.mediana_valor, media_aparada_1pct_valor: +r.media_aparada_1pct_valor }]];
+			})
+	);

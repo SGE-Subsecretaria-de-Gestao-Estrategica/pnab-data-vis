@@ -1,6 +1,9 @@
 <script lang="ts">
 	import ScrollSection from '$lib/components/ScrollSection.svelte';
 	import BodySilhouette from '$lib/components/BodySilhouette.svelte';
+	import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
+	import CboRaisTable from '$lib/components/CboRaisTable.svelte';
+	import VerticalGroupedBarChart from '$lib/components/VerticalGroupedBarChart.svelte';
 	import {
 		BigNumber,
 		HorizontalBarChart,
@@ -23,16 +26,25 @@
 		ageGroupStackedData,
 		ageGroupKeys,
 		ageGroupLabels,
-		escolaridadeBarData,
+		escolaridadeProporcionalData,
 		escolaridadeValorMedioData,
 		regionStackedData,
 		regionSilhouetteData,
 		sexoDivergingData,
+		sexoVinculoFormalGroupedData,
 		racaCorBarData,
+		racaCorGroupedData,
 		racaCorTreemapData,
 		racaCorSexoHeatmapData,
+		racaCorSexoGroupedData,
 		ufRankingData,
 		ufByRegionGroups,
+		ufIbgeByRegionData,
+		ufIbgeRegionLegend,
+		regionIbgeComparisonData,
+		regionIbgeComparisonLegend,
+		cboRaisTop20,
+		cboRaisTableHeight,
 	} from '$lib/data/section4';
 	import { top20CboData } from '$lib/data/section3';
 
@@ -176,6 +188,48 @@
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
+     4.1 — FORMALIZAÇÃO PNAB vs. POPULAÇÃO GERAL POR UF
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-4-41-ibge">
+	<p class="frase-destaque">
+		Em quase todos os estados, os contemplados pela PNAB têm proporção de vínculo formal maior do que a população geral
+	</p>
+	<p>
+		O Nordeste concentra <strong>48,6%</strong> dos contemplados com vínculo formal na PNAB, mais
+		que o dobro de sua participação no mercado formal brasileiro (<strong>18,6%</strong> dos
+		vínculos RAIS 2024). O Sudeste, ao contrário, responde por apenas <strong>26,5%</strong> dos
+		contemplados formais na PNAB, contra <strong>48,3%</strong> dos vínculos RAIS nacionais.
+	</p>
+	<HorizontalGroupedBarChart
+		data={regionIbgeComparisonData}
+		seriesLabels={[]}
+		legendItems={regionIbgeComparisonLegend}
+		format={(v) => `${v.toFixed(1)}%`}
+		xLabel="% do total nacional"
+		margin={{ top: 16, right: 60, bottom: 56, left: 120 }}
+		barHeight={18}
+		barPad={5}
+		legendBottom={true}
+	/>
+	<p>
+		O gráfico a seguir detalha, para cada UF, a participação no mercado formal de trabalho nacional
+		(RAIS 2024) e a participação no total de contemplados pela PNAB com vínculo formal. Estados
+		ordenados pela maior diferença entre os dois indicadores.
+	</p>
+	<HorizontalGroupedBarChart
+		data={ufIbgeByRegionData}
+		seriesLabels={[]}
+		legendItems={ufIbgeRegionLegend}
+		format={(v) => `${v.toFixed(1)}%`}
+		xLabel="% do total nacional"
+		margin={{ top: 16, right: 60, bottom: 150, left: 44 }}
+		barHeight={7}
+		barPad={2}
+		legendBottom={true}
+	/>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
      4.2 — PERFIL: SEXO
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-4-42-sexo">
@@ -202,6 +256,15 @@
 			colors={colorPairs.blueOrange}
 		/>
 	</div>
+	<VerticalGroupedBarChart
+		data={sexoVinculoFormalGroupedData}
+		seriesLabels={['Feminino', 'Masculino']}
+		colors={['#cb4034', '#a44c7f']}
+		format={(v) => `${v.toFixed(1)}%`}
+		barWidth={40}
+		barPad={8}
+		innerH={280}
+	/>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -242,11 +305,12 @@
 		A maioria dos trabalhadores formais que receberam recursos da Aldir Blanc é negra: pessoas
 		pretas e pardas somam <strong>62,4%</strong> do total de contemplados
 	</p>
-	<HorizontalBarChart
-		data={racaCorBarData}
-		color={categorical8[0]}
+	<HorizontalGroupedBarChart
+		data={racaCorGroupedData}
+		seriesLabels={['PNAB', 'Brasil (RAIS 2024)']}
+		colors={[categorical8[0], '#cb4034']}
 		format={formatPctN}
-		xLabel="% dos contemplados com vínculo formal"
+		xLabel="% do total de trabalhadores formais"
 		margin={{ top: 20, right: 80, bottom: 40, left: 120 }}
 	/>
 	<p>
@@ -291,17 +355,15 @@
 		Dentre os trabalhadores formais, os homens negros foram os mais contemplados pela Aldir Blanc
 		com <strong>37,8%</strong>
 	</p>
-	<HeatMap
-		data={racaCorSexoHeatmapData}
-		height={320}
-		colorRange={colorScales.blue}
-		xLabel="Sexo"
-		yLabel="Raça/cor"
-		format={(v: number) => formatN(v)}
-		showValues={true}
-		showLegend={true}
-		cellRadius={3}
-		cellGap={4}
+	<HorizontalGroupedBarChart
+		data={racaCorSexoGroupedData}
+		seriesLabels={['Feminino – Quantidade', 'Feminino – Valor pago', 'Masculino – Quantidade', 'Masculino – Valor pago']}
+		colors={['#a44c7f', '#d5a6c8', '#ea662f', '#f7bf95']}
+		format={formatPctN}
+		xLabel="% do total de beneficiários com vínculo formal"
+		margin={{ top: 20, right: 80, bottom: 40, left: 120 }}
+		barHeight={12}
+		barPad={4}
 	/>
 	<p>
 		Ao analisar a interseccionalidade entre raça e gênero, os dados revelam desigualdades
@@ -334,10 +396,10 @@
 		Aldir Blanc
 	</p>
 	<HorizontalBarChart
-		data={escolaridadeBarData}
+		data={escolaridadeProporcionalData}
 		color={colorScales.blue[2]}
-		format={formatN}
-		xLabel="Beneficiários com vínculo formal"
+		format={formatPct}
+		xLabel="% dos trabalhadores formais"
 		margin={{ top: 20, right: 60, bottom: 40, left: 260 }}
 	/>
 	<p>
@@ -443,6 +505,11 @@
 		xLabel="Quantidade de vínculos formais"
 		margin={{ top: 20, right: 60, bottom: 40, left: 320 }}
 	/>
+	<div style="overflow-x: auto; margin-top: 2rem;">
+		<svg width={700} height={cboRaisTableHeight}>
+			<CboRaisTable data={cboRaisTop20} width={700} />
+		</svg>
+	</div>
 	<p>
 		A análise revela ainda a forte presença de funções administrativas variadas. A ocupação de
 		assistente administrativo lidera com <strong>8,2%</strong> dos vínculos, seguida por auxiliar

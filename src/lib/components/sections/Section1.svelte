@@ -24,6 +24,7 @@
 		zoneData, zoneQtdData,
 		porteTreemapData,
 		porteStackedKeys, porteStackedLabels, porteStackedData,
+		porteMeanData,
 		percPopulacaoEspecial,
 		specialStackedData,
 		specialTerritoriesMetrics,
@@ -57,12 +58,40 @@
 		`R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 	const formatPercFix = (v: number) => `${v.toFixed(1)}%`;
 
+	// ── Special territories stacked chart ───────────────────────────────────────
+	const stByName: Record<string, typeof specialTerritoriesMetrics[0]> = {};
+	specialTerritoriesMetrics.forEach((d) => { stByName[d.territorio] = d; });
+	const _stFav  = stByName['Favela e Comunidade Urbana'] ?? { perc_populacao: 0, perc_recurso: 0, perc_agentes: 0 };
+	const _stQui  = stByName['Agrupamento quilombola']     ?? { perc_populacao: 0, perc_recurso: 0, perc_agentes: 0 };
+	const _stInd  = stByName['Agrupamento indígena']       ?? { perc_populacao: 0, perc_recurso: 0, perc_agentes: 0 };
+	const stStackedKeys   = ['favela', 'quilombola', 'indigena'] as const;
+	const stStackedLabels = { favela: 'Favela / Com. Urbana', quilombola: 'Quilombola', indigena: 'Indígena' };
+	const stStackedData = [
+		{ cat: '% da população', favela: _stFav.perc_populacao,  quilombola: _stQui.perc_populacao,  indigena: _stInd.perc_populacao  },
+		{ cat: '% dos recursos', favela: _stFav.perc_recurso,    quilombola: _stQui.perc_recurso,    indigena: _stInd.perc_recurso    },
+		{ cat: '% dos agentes',  favela: _stFav.perc_agentes,    quilombola: _stQui.perc_agentes,    indigena: _stInd.perc_agentes    },
+	];
+
+	// ── Porte mean stacked chart ─────────────────────────────────────────────────
+	const porteKeyByLabel: Record<string, string> = {
+		'Grande': 'grande', 'Pequeno I': 'pequeno_i', 'Pequeno II': 'pequeno_ii', 'Médio': 'medio',
+	};
+	const porteMeanStackedData = [
+		{
+			label: '% do recurso executado',
+			...Object.fromEntries(porteMeanData.map((d) => [porteKeyByLabel[d.label], d.perc_valor])),
+		},
+		{
+			label: '% dos contemplados',
+			...Object.fromEntries(porteMeanData.map((d) => [porteKeyByLabel[d.label], d.perc_quantidade])),
+		},
+	];
+
 	// ── Tabela UF ────────────────────────────────────────────────────────────────
 	const ufTableColumns = [
 		{ key: 'uf', label: 'UF', align: 'left', width: 80 },
-		{ key: 'valor_executado_estado', label: 'Valor Executado Estado', align: 'right', width: 200 },
-		{ key: 'valor_executado_municipio', label: 'Valor Executado Município', align: 'right', width: 200 },
-		{ key: 'valor_executado_total_uf', label: 'Valor Executado Total UF', align: 'right', width: 200 },
+		{ key: 'valor_executado_estado', label: 'Recurso Executado Estado', align: 'right', width: 200 },
+		{ key: 'valor_executado_municipio', label: 'Recurso Executado Município', align: 'right', width: 200 },
 		{ key: 'perc_valor_executado_estado', label: '% Estado', align: 'right', width: 120 },
 		{ key: 'perc_valor_executado_municipio', label: '% Município', align: 'right', width: 120 },
 		{ key: 'valor_executado_perc', label: '% Total', align: 'right', width: 100 },
@@ -159,8 +188,10 @@
 		<ExecutedValueByStateMap
 			{states}
 			metric="valor_executado_rs"
+			label="Valor executado"
 			format={formatBRL}
 			formatLine2={(row) => formatPercFix(row.valor_executado_perc * 100)}
+			showSideLegend={true}
 		/>
 	</div>
 	<p style="margin-top: 2rem;">
@@ -255,6 +286,16 @@
 	<p style="margin-top: 1.5rem;">
 		Os <strong>3.401 municípios de Pequeno Porte I</strong> juntos executaram mais de <strong>R$ 266 milhões</strong>, o que equivale ao valor total executado pelas seguintes UFs: Mato Grosso, Mato Grosso do Sul, Sergipe, Tocantins, Acre, Amapá e Distrito Federal.
 	</p>
+	<div style="padding-left: 100px; margin-top: 1.5rem;">
+		<HorizontalStackedBarChart
+			data={porteMeanStackedData}
+			keys={porteStackedKeys}
+			labels={porteStackedLabels}
+			colors={categorical8}
+			format={formatPercFix}
+			showTotalLabel={true}
+		/>
+	</div>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -451,46 +492,17 @@
 		</div>
 	</div>
 
-	<svg
-		viewBox="0 0 560 310"
-		style="width: 100%; overflow: visible; display: block; margin-top: 1.5rem;"
-		role="img"
-		aria-label="Comparação de quatro métricas por território especial"
-	>
-		<!-- Legend -->
-		<rect x={0}   y={2}  width={12} height={12} fill={categorical8[0]} rx={2} />
-		<text x={16}  y={12} class="st-legend">% da população no território</text>
-		<rect x={190} y={2}  width={12} height={12} fill={categorical8[2]} rx={2} />
-		<text x={206} y={12} class="st-legend">% dos recursos executados</text>
-		<rect x={370} y={2}  width={12} height={12} fill={categorical8[4]} rx={2} />
-		<text x={386} y={12} class="st-legend">% dos agentes contemplados</text>
-
-		{#each specialTerritoriesMetrics as d, ti}
-			{@const blockY = 30 + ti * 92}
-			{@const w0 = d.perc_populacao / 10 * 290}
-			{@const w1 = d.perc_recurso   / 10 * 290}
-			{@const w2 = d.perc_agentes   / 10 * 290}
-
-			<text x={0}   y={blockY + 10} class="st-territory">{d.shortLabel}</text>
-			<text x={560} y={blockY + 10} text-anchor="end" class="st-valor">{formatBRL(d.valor)}</text>
-			<line x1={0} y1={blockY + 16} x2={560} y2={blockY + 16} class="st-separator" />
-
-			<text x={154} y={blockY + 34} text-anchor="end" class="st-label">% da população</text>
-			<rect x={160} y={blockY + 22} width={290} height={14} fill="#f1f5f9" rx={2} />
-			<rect x={160} y={blockY + 22} width={w0}  height={14} fill={categorical8[0]} rx={2} />
-			<text x={160 + w0 + 5} y={blockY + 33} class="st-value">{d.perc_populacao.toFixed(2)}%</text>
-
-			<text x={154} y={blockY + 56} text-anchor="end" class="st-label">% dos recursos</text>
-			<rect x={160} y={blockY + 44} width={290} height={14} fill="#f1f5f9" rx={2} />
-			<rect x={160} y={blockY + 44} width={w1}  height={14} fill={categorical8[2]} rx={2} />
-			<text x={160 + w1 + 5} y={blockY + 55} class="st-value">{d.perc_recurso.toFixed(2)}%</text>
-
-			<text x={154} y={blockY + 78} text-anchor="end" class="st-label">% dos agentes</text>
-			<rect x={160} y={blockY + 66} width={290} height={14} fill="#f1f5f9" rx={2} />
-			<rect x={160} y={blockY + 66} width={w2}  height={14} fill={categorical8[4]} rx={2} />
-			<text x={160 + w2 + 5} y={blockY + 77} class="st-value">{d.perc_agentes.toFixed(2)}%</text>
-		{/each}
-	</svg>
+	<div style="padding-left: 100px; margin-top: 1.5rem;">
+		<HorizontalStackedBarChart
+			data={stStackedData}
+			keys={stStackedKeys}
+			categoryKey="cat"
+			labels={stStackedLabels}
+			colors={categorical8}
+			format={(v: number) => `${v.toFixed(1)}%`}
+			showTotalLabel={true}
+		/>
+	</div>
 
 	<div style="padding-left: 100px; margin-top: 2rem;">
 		<HorizontalStackedBarChart
@@ -559,42 +571,4 @@
 		margin-bottom: 1.5rem;
 	}
 
-	:global(.st-legend) {
-		font-size: 10px;
-		fill: var(--color-text, #334155);
-		dominant-baseline: middle;
-	}
-
-	:global(.st-territory) {
-		font-size: 12px;
-		font-weight: 700;
-		fill: var(--color-text, #334155);
-		dominant-baseline: middle;
-	}
-
-	:global(.st-valor) {
-		font-size: 11px;
-		fill: var(--color-text, #334155);
-		opacity: 0.55;
-		dominant-baseline: middle;
-	}
-
-	:global(.st-separator) {
-		stroke: var(--color-border, #e2e8f0);
-		stroke-width: 1;
-	}
-
-	:global(.st-label) {
-		font-size: 11px;
-		fill: var(--color-text, #334155);
-		opacity: 0.7;
-		dominant-baseline: middle;
-	}
-
-	:global(.st-value) {
-		font-size: 11px;
-		font-weight: 600;
-		fill: var(--color-text, #334155);
-		dominant-baseline: middle;
-	}
 </style>

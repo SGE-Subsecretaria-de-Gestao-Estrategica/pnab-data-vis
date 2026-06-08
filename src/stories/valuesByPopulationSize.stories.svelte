@@ -5,10 +5,12 @@
     TreemapChart,
     BubbleChart,
     DivergingBarChart,
-    HorizontalStackedBarChart,
+    HorizontalBarChart,
     categorical8,
     colorPairs,
+    colorScales,
   } from 'sniic-design-system';
+  import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
   import {
     porteTreemapData,
     porteDivergingData,
@@ -26,13 +28,59 @@
   const formatBRLpc = (v) =>
     `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  const pmMaxTotal = Math.max(...porteMeanData.map((d) => d.total));
-  const pmMaxAvg   = Math.max(...porteMeanData.map((d) => d.value));
-  const pmBarW     = 290;
-  const pmRowH     = 82;
-  const pmLabelW   = 150;
-
   const porteLegend = porteRaw.map((d, i) => ({ label: d.porte, color: categorical8[i] }));
+
+  // ── Bars — Métricas por Porte (stacked) ────────────────────────────────────
+  const pmKeys    = ['grande', 'pequeno_i', 'pequeno_ii', 'medio'];
+  const pmLabels  = { grande: 'Grande', pequeno_i: 'Pequeno I', pequeno_ii: 'Pequeno II', medio: 'Médio' };
+  const pmByLabel = Object.fromEntries(porteMeanData.map((d) => [d.label, d]));
+  const pmTotalMun   = porteMeanData.reduce((s, d) => s + d.municipios, 0);
+  const pmMedianData = porteMeanData.map((d) => ({ label: d.label, value: d.valor_mediano }));
+  const _g   = pmByLabel['Grande']    || { municipios: 0, perc_quantidade: 0, perc_valor: 0 };
+  const _pi  = pmByLabel['Pequeno I'] || { municipios: 0, perc_quantidade: 0, perc_valor: 0 };
+  const _pii = pmByLabel['Pequeno II']|| { municipios: 0, perc_quantidade: 0, perc_valor: 0 };
+  const _m   = pmByLabel['Médio']     || { municipios: 0, perc_quantidade: 0, perc_valor: 0 };
+
+  // ── Stacked — Recurso e Contemplados por Porte ─────────────────────────────
+  const pmPercStackedData = [
+    {
+      cat: '% do recurso executado',
+      grande:     _g.perc_valor,
+      pequeno_i:  _pi.perc_valor,
+      pequeno_ii: _pii.perc_valor,
+      medio:      _m.perc_valor,
+    },
+    {
+      cat: '% dos contemplados',
+      grande:     _g.perc_quantidade,
+      pequeno_i:  _pi.perc_quantidade,
+      pequeno_ii: _pii.perc_quantidade,
+      medio:      _m.perc_quantidade,
+    },
+  ];
+  const pmStackedData = [
+    {
+      cat: 'Municípios (%)',
+      grande:     _g.municipios   / pmTotalMun * 100,
+      pequeno_i:  _pi.municipios  / pmTotalMun * 100,
+      pequeno_ii: _pii.municipios / pmTotalMun * 100,
+      medio:      _m.municipios   / pmTotalMun * 100,
+    },
+    {
+      cat: 'Beneficiários (%)',
+      grande:     _g.perc_quantidade,
+      pequeno_i:  _pi.perc_quantidade,
+      pequeno_ii: _pii.perc_quantidade,
+      medio:      _m.perc_quantidade,
+    },
+    {
+      cat: 'Valor investido (%)',
+      grande:     _g.perc_valor,
+      pequeno_i:  _pi.perc_valor,
+      pequeno_ii: _pii.perc_valor,
+      medio:      _m.perc_valor,
+    },
+  ];
 
   // @ts-ignore
   const formatBRL = (v) =>
@@ -119,57 +167,53 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
 
 <Story name="Stacked Bars — Equidade: Valor Investido vs Beneficiários">
   {#snippet template()}
-    <div style="padding-left: 100px;">
-      <HorizontalStackedBarChart
-        data={porteStackedData}
-        keys={porteStackedKeys}
-        labels={porteStackedLabels}
-        colors={categorical8}
-        format={formatPerc}
-        showTotalLabel={true}
+    <HorizontalStackedBarChartCustom
+      data={porteStackedData}
+      keys={porteStackedKeys}
+      labels={porteStackedLabels}
+      colors={categorical8}
+      format={formatPerc}
+      showTotalLabel={true}
+      marginLeft={180}
+    />
+  {/snippet}
+</Story>
+
+<Story name="Bars — Métricas por Porte">
+  {#snippet template()}
+    <HorizontalStackedBarChartCustom
+      data={pmStackedData}
+      keys={pmKeys}
+      categoryKey="cat"
+      labels={pmLabels}
+      colors={categorical8}
+      format={formatPerc}
+      showTotalLabel={true}
+      marginLeft={180}
+    />
+    <div style="margin-top: 1.5rem;">
+      <HorizontalBarChart
+        data={pmMedianData}
+        color={colorScales.blue[2]}
+        format={formatBRLpc}
+        xLabel="Valor mediano por município (R$)"
+        margin={{ top: 20, right: 120, bottom: 40, left: 120 }}
       />
     </div>
   {/snippet}
 </Story>
 
-<Story name="Dual Bars — Valor Total e Médio por Porte">
+<Story name="Stacked — Recurso e Contemplados por Porte">
   {#snippet template()}
-    <svg
-      viewBox="0 0 560 {30 + porteMeanData.length * pmRowH}"
-      style="width: 100%; max-width: 560px; overflow: visible; display: block; font-family: system-ui, sans-serif;"
-      role="img"
-      aria-label="Valor total e médio por porte de município"
-    >
-      <!-- Legend -->
-      <rect x={pmLabelW}       y={2}  width={12} height={12} fill={categorical8[0]} rx={2} />
-      <text x={pmLabelW + 16}  y={12} font-size="10" fill="#334155" dominant-baseline="middle">Valor total executado</text>
-      <rect x={pmLabelW + 170} y={2}  width={12} height={12} fill={categorical8[2]} rx={2} />
-      <text x={pmLabelW + 186} y={12} font-size="10" fill="#334155" dominant-baseline="middle">Valor médio por município</text>
-
-      {#each porteMeanData as d, i}
-        {@const rowY   = 30 + i * pmRowH}
-        {@const wTotal = (d.total / pmMaxTotal) * pmBarW}
-        {@const wAvg   = (d.value / pmMaxAvg)   * pmBarW}
-
-        <!-- Category label + municipality count -->
-        <text x={0} y={rowY + 14} font-size="13" font-weight="700" fill="#334155" dominant-baseline="middle">{d.label}</text>
-        <text x={0} y={rowY + 30} font-size="11" fill="#334155" opacity="0.55" dominant-baseline="middle">{d.qtd.toLocaleString('pt-BR')} municípios</text>
-
-        <!-- Total value bar -->
-        <rect x={pmLabelW} y={rowY}      width={pmBarW} height={16} fill="#f1f5f9" rx={2} />
-        <rect x={pmLabelW} y={rowY}      width={wTotal} height={16} fill={categorical8[0]} rx={2} />
-        <text x={pmLabelW + wTotal + 6}  y={rowY + 12}  font-size="11" font-weight="600" fill="#334155" dominant-baseline="middle">{formatBRLM(d.total)}</text>
-
-        <!-- Avg value bar -->
-        <rect x={pmLabelW} y={rowY + 24} width={pmBarW} height={16} fill="#f1f5f9" rx={2} />
-        <rect x={pmLabelW} y={rowY + 24} width={wAvg}   height={16} fill={categorical8[2]} rx={2} />
-        <text x={pmLabelW + wAvg + 6}    y={rowY + 36}  font-size="11" font-weight="600" fill="#334155" dominant-baseline="middle">{formatBRLpc(d.value)}</text>
-
-        <!-- Row divider -->
-        {#if i < porteMeanData.length - 1}
-          <line x1={0} y1={rowY + pmRowH - 8} x2={560} y2={rowY + pmRowH - 8} stroke="#e2e8f0" stroke-width={1} />
-        {/if}
-      {/each}
-    </svg>
+    <HorizontalStackedBarChartCustom
+      data={pmPercStackedData}
+      keys={pmKeys}
+      categoryKey="cat"
+      labels={pmLabels}
+      colors={categorical8}
+      format={formatPerc}
+      showTotalLabel={true}
+      marginLeft={220}
+    />
   {/snippet}
 </Story>

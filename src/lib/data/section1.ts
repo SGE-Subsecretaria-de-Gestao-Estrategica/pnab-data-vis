@@ -16,6 +16,7 @@ import csvCapitalRaw    from '../../../data/section_1/aggregate_values_by_capita
 import csvSpecialUfRaw  from '../../../data/section_1/values_by_special_territory_uf.csv?raw';
 import csvPorteMeanRaw  from '../../../data/section_1/population_size_mean.csv?raw';
 import csvLocalResidRaw from '../../../data/section_1/aggregate_by_local_residencia_uf.csv?raw';
+import csvPortePopRaw   from '../../../data/section_1/resumo_por_porte_populacional.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -459,13 +460,17 @@ export const capitalInteriorStackedData = [
 	},
 ];
 
-// ── Valor médio por município por porte (population_size_mean.csv) ─────────────
-export const porteMeanData = parseCSV(csvPorteMeanRaw)
-	.filter((d) => d['Tipo de município'])
+// ── Métricas por porte populacional (resumo_por_porte_populacional.csv) ────────
+export const porteMeanData = parseCSV(csvPortePopRaw)
+	.filter((d) => d.porte_populacional)
 	.map((d) => ({
-		label: porteNameMap[d['Tipo de município']] ?? d['Tipo de município'],
-		value: +d['Valor médio por município'],
-		total: +d['Valor total por Porte'],
-		qtd:   +d['Quantidade de municípios por Porte'],
+		label:           porteNameMap[d.porte_populacional] ?? d.porte_populacional,
+		municipios:      +d.numero_municipios,
+		valor_total:     +d.valor_total_por_porte,
+		valor_medio:     +d.valor_medio_por_porte,
+		valor_mediano:   +d.valor_mediano_por_porte,
+		quantidade:      +d.quantidade_contemplados_por_porte,
+		perc_valor:      +d.percentual_valor_por_porte * 100,
+		perc_quantidade: +d.percentual_quantidade_contemplados_por_porte * 100,
 	}))
-	.sort((a, b) => b.value - a.value);
+	.sort((a, b) => b.valor_mediano - a.valor_mediano);

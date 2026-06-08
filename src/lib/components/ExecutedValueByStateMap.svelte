@@ -29,6 +29,8 @@
     format?: (v: number) => string;
     /** Optional second line — receives the full state data row. */
     formatLine2?: (row: any) => string;
+    /** Replace inline labels with a sorted side legend table. */
+    showSideLegend?: boolean;
   }
 
   let {
@@ -37,10 +39,12 @@
     label = '',
     format = (v: number) => v.toLocaleString('pt-BR'),
     formatLine2 = undefined,
+    showSideLegend = false,
   }: Props = $props();
 
   let geojson = $state<any>(null);
   let containerEl: HTMLDivElement | undefined = $state();
+  let mapContainerEl: HTMLDivElement | undefined = $state();
   let width = $state(600);
 
   const LABEL_W = 135;
@@ -48,10 +52,11 @@
   // Estimated label block width for overlap checks (sigla + value text)
 
   $effect(() => {
-    if (!containerEl) return;
-    width = containerEl.clientWidth;
+    const el = showSideLegend ? mapContainerEl : containerEl;
+    if (!el) return;
+    width = el.clientWidth;
     const ro = new ResizeObserver(([e]) => { width = e.contentRect.width; });
-    ro.observe(containerEl);
+    ro.observe(el);
     return () => ro.disconnect();
   });
 
@@ -60,7 +65,8 @@
   });
 
   const TOP_PAD = 45;
-  const mapW = $derived(Math.max(0, width - LABEL_W * 2));
+  const effectiveLabelW = $derived(showSideLegend ? 0 : LABEL_W);
+  const mapW = $derived(Math.max(0, width - effectiveLabelW * 2));
   const mapH = $derived(Math.round(mapW * 0.72));
   const svgH = $derived(mapH + 20 + TOP_PAD);
 
@@ -227,96 +233,212 @@
   });
 </script>
 
-<div bind:this={containerEl} style="width: 100%">
-  {#if geojson && pathFn && mapW > 0}
-    <svg width={width} height={svgH}>
-      <g transform={`translate(${LABEL_W}, ${TOP_PAD})`}>
+{#if showSideLegend}
+  <div bind:this={containerEl} class="side-legend-container">
+    <div bind:this={mapContainerEl} class="map-col">
+      {#if geojson && pathFn && mapW > 0}
+        <svg width={mapW} height={svgH}>
+          <g transform={`translate(0, ${TOP_PAD})`}>
+            {#each geojson.features as f (f.properties.name)}
+              {@const d = pathFn(f)}
+              {#if d}
+                <path
+                  d={d}
+                  fill={colorScale(valueMap.get(f.properties.name) ?? 0) ?? '#e5e7eb'}
+                  stroke="white"
+                  stroke-width="0.5"
+                />
+              {/if}
+            {/each}
+          </g>
+        </svg>
+      {/if}
+    </div>
+    <div class="legend-col">
+    <div class="legend-grid">
+      {#if label}
+        <div class="legend-title">{label}</div>
+      {/if}
+      <div class="legend-table">
+        {#each [...stateEntries].sort((a, b) => b.val - a.val) as item (item.sigla)}
+          <div class="legend-cell">
+            <span class="legend-swatch" style="background: {item.fill};"></span>
+            <span class="legend-sigla">{item.sigla}</span>
+            <span class="legend-value">
+              {format(item.val)}
+              {#if formatLine2}
+                <span class="legend-value-line2">{formatLine2(item.row)}</span>
+              {/if}
+            </span>
+          </div>
+        {/each}
+      </div>
+    </div>
+    </div>
+  </div>
+{:else}
+  <div bind:this={containerEl} style="width: 100%">
+    {#if geojson && pathFn && mapW > 0}
+      <svg width={width} height={svgH}>
+        <g transform={`translate(${LABEL_W}, ${TOP_PAD})`}>
 
-        <!-- State fills -->
-        {#each geojson.features as f (f.properties.name)}
-          {@const d = pathFn(f)}
-          {#if d}
-            <path
-              d={d}
-              fill={colorScale(valueMap.get(f.properties.name) ?? 0) ?? '#e5e7eb'}
-              stroke="white"
-              stroke-width="0.5"
+          <!-- State fills -->
+          {#each geojson.features as f (f.properties.name)}
+            {@const d = pathFn(f)}
+            {#if d}
+              <path
+                d={d}
+                fill={colorScale(valueMap.get(f.properties.name) ?? 0) ?? '#e5e7eb'}
+                stroke="white"
+                stroke-width="0.5"
+              />
+            {/if}
+          {/each}
+
+          <!-- Internal labels: sigla / R$ / % stacked at centroid -->
+          {#each internalLabels as item (item.name)}
+            {@const textFill = getContrastColor(item.fill)}
+            <text
+              x={item.cx}
+              y={item.cy}
+              text-anchor="middle"
+              font-size={FONT_SIZE}
+              font-family={FONT_FAMILY}
+              fill={textFill}
+              pointer-events="none"
+            >
+              <tspan x={item.cx} dy={-(labelBlockH / 2)} font-weight="700" font-size="12">{item.sigla}</tspan>
+              <tspan x={item.cx} dy={LINE_SPACING}>{format(item.val)}</tspan>
+              {#if formatLine2}
+                <tspan x={item.cx} dy={LINE_SPACING}>{formatLine2(item.row)}</tspan>
+              {/if}
+            </text>
+          {/each}
+
+          <!-- External labels — left side -->
+          {#each leftExternal as item (item.name)}
+            <line
+              x1={item.cx} y1={item.cy}
+              x2={item.labelX} y2={item.labelY}
+              stroke="#9ca3af"
+              stroke-width="0.7"
             />
-          {/if}
-        {/each}
+            <circle cx={item.cx} cy={item.cy} r={2} fill="#9ca3af" />
+            <text
+              x={item.labelX - 4}
+              y={item.labelY}
+              text-anchor="end"
+              font-size={FONT_SIZE}
+              font-family={FONT_FAMILY}
+              fill="#374151"
+            >
+              <tspan x={item.labelX - 4} dy={-(labelBlockH / 2)} font-weight="700" font-size="12">{item.sigla}</tspan>
+              <tspan x={item.labelX - 4} dy={LINE_SPACING}>{format(item.val)}</tspan>
+              {#if formatLine2}
+                <tspan x={item.labelX - 4} dy={LINE_SPACING}>{formatLine2(item.row)}</tspan>
+              {/if}
+            </text>
+          {/each}
 
-        <!-- Internal labels: sigla / R$ / % stacked at centroid -->
-        {#each internalLabels as item (item.name)}
-          {@const textFill = getContrastColor(item.fill)}
-          <text
-            x={item.cx}
-            y={item.cy}
-            text-anchor="middle"
-            font-size={FONT_SIZE}
-            font-family={FONT_FAMILY}
-            fill={textFill}
-            pointer-events="none"
-          >
-            <tspan x={item.cx} dy={-(labelBlockH / 2)} font-weight="700" font-size="12">{item.sigla}</tspan>
-            <tspan x={item.cx} dy={LINE_SPACING}>{format(item.val)}</tspan>
-            {#if formatLine2}
-              <tspan x={item.cx} dy={LINE_SPACING}>{formatLine2(item.row)}</tspan>
-            {/if}
-          </text>
-        {/each}
+          <!-- External labels — right side -->
+          {#each rightExternal as item (item.name)}
+            <line
+              x1={item.cx} y1={item.cy}
+              x2={item.labelX} y2={item.labelY}
+              stroke="#9ca3af"
+              stroke-width="0.7"
+            />
+            <circle cx={item.cx} cy={item.cy} r={2} fill="#9ca3af" />
+            <text
+              x={item.labelX + 4}
+              y={item.labelY}
+              text-anchor="start"
+              font-size={FONT_SIZE}
+              font-family={FONT_FAMILY}
+              fill="#374151"
+            >
+              <tspan x={item.labelX + 4} dy={-(labelBlockH / 2)} font-weight="700" font-size="12">{item.sigla}</tspan>
+              <tspan x={item.labelX + 4} dy={LINE_SPACING}>{format(item.val)}</tspan>
+              {#if formatLine2}
+                <tspan x={item.labelX + 4} dy={LINE_SPACING}>{formatLine2(item.row)}</tspan>
+              {/if}
+            </text>
+          {/each}
 
-        <!-- External labels — left side -->
-        {#each leftExternal as item (item.name)}
-          <line
-            x1={item.cx} y1={item.cy}
-            x2={item.labelX} y2={item.labelY}
-            stroke="#9ca3af"
-            stroke-width="0.7"
-          />
-          <circle cx={item.cx} cy={item.cy} r={2} fill="#9ca3af" />
-          <text
-            x={item.labelX - 4}
-            y={item.labelY}
-            text-anchor="end"
-            font-size={FONT_SIZE}
-            font-family={FONT_FAMILY}
-            fill="#374151"
-          >
-            <tspan x={item.labelX - 4} dy={-(labelBlockH / 2)} font-weight="700" font-size="12">{item.sigla}</tspan>
-            <tspan x={item.labelX - 4} dy={LINE_SPACING}>{format(item.val)}</tspan>
-            {#if formatLine2}
-              <tspan x={item.labelX - 4} dy={LINE_SPACING}>{formatLine2(item.row)}</tspan>
-            {/if}
-          </text>
-        {/each}
+        </g>
+      </svg>
+    {/if}
+  </div>
+{/if}
 
-        <!-- External labels — right side -->
-        <!-- Straight diagonal line from centroid to label, positioned right next to each state's coast -->
-        {#each rightExternal as item (item.name)}
-          <line
-            x1={item.cx} y1={item.cy}
-            x2={item.labelX} y2={item.labelY}
-            stroke="#9ca3af"
-            stroke-width="0.7"
-          />
-          <circle cx={item.cx} cy={item.cy} r={2} fill="#9ca3af" />
-          <text
-            x={item.labelX + 4}
-            y={item.labelY}
-            text-anchor="start"
-            font-size={FONT_SIZE}
-            font-family={FONT_FAMILY}
-            fill="#374151"
-          >
-            <tspan x={item.labelX + 4} dy={-(labelBlockH / 2)} font-weight="700" font-size="12">{item.sigla}</tspan>
-            <tspan x={item.labelX + 4} dy={LINE_SPACING}>{format(item.val)}</tspan>
-            {#if formatLine2}
-              <tspan x={item.labelX + 4} dy={LINE_SPACING}>{formatLine2(item.row)}</tspan>
-            {/if}
-          </text>
-        {/each}
+<style>
+  .side-legend-container {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 63% 1fr;
+    gap: 1.5rem;
+    align-items: center;
+  }
 
-      </g>
-    </svg>
-  {/if}
-</div>
+  .map-col {
+    min-width: 0;
+  }
+
+  .legend-col {
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .legend-grid {
+    width: 100%;
+  }
+
+  .legend-title {
+    font-size: 14px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 12px;
+  }
+
+  .legend-table {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px 12px;
+    margin-bottom: 1rem;
+  }
+
+  .legend-cell {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+  }
+
+  .legend-swatch {
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+  }
+
+  .legend-sigla {
+    font-weight: 700;
+    width: 24px;
+  }
+
+  .legend-value {
+    flex: 1;
+    color: #374151;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+  }
+
+  .legend-value-line2 {
+    color: #9ca3af;
+    font-size: 10px;
+  }
+</style>

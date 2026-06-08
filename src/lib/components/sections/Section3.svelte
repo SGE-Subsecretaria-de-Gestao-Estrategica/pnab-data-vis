@@ -11,6 +11,9 @@
 		categorical8,
 	} from 'sniic-design-system';
 	import PyramidChartCustom from '$lib/components/PyramidChartCustom.svelte';
+	import CnaeTable from '$lib/components/CnaeTable.svelte';
+	import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
+	import SexoUfStackedComparison from '$lib/components/SexoUfStackedComparison.svelte';
 	import {
 		totalBeneficiarios,
 		totalPF,
@@ -27,6 +30,14 @@
 		ageGroupRegionKeys,
 		ageGroupRegionLabels,
 		top20CboData,
+		top20CnaesTableData,
+		cnaesTableHeight,
+		naturezaJuridicaRegiaoData,
+		naturezaJuridicaSeriesLabels,
+		naturezaJuridicaData,
+		sexoUfData,
+		sexoUfSeriesLabels,
+		sexoUfComparisonData,
 	} from '$lib/data/section3';
 
 	const formatNum = (v: number) => v.toLocaleString('pt-BR');
@@ -42,6 +53,7 @@
 
 	const pfPjColors = [colorScales.teal[2], colorScales.orange[2]];
 	const sexColors = [colorPairs.bluePurple[1], colorPairs.bluePurple[0]];
+	const sexoUfColors = [colorScales.blue[1], colorScales.blue[2], colorScales.purple[1], colorScales.purple[2]];
 	const pictogramData = [
 		{ label: 'Masculino', value: 8, color: colorScales.lime[2] },
 		{ label: 'Feminino', value: 7, color: colorScales.orange[2] },
@@ -354,6 +366,34 @@
 			/>
 		</div>
 	</div>
+	<HorizontalGroupedBarChart
+		data={sexoUfData}
+		seriesLabels={sexoUfSeriesLabels}
+		colors={sexoUfColors}
+		format={(v) => v.toFixed(1) + '%'}
+		xLabel="% do total de contemplados / população"
+		margin={{ top: 20, right: 70, bottom: 44, left: 40 }}
+		barHeight={10}
+		barPad={3}
+		legendBottom={true}
+	/>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     3.2.1 — SEXO: BARRAS EMPILHADAS ALDIR BLANC vs IBGE
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-3-321-stacked">
+	<p>
+		Para facilitar a comparação entre a distribuição por sexo dos contemplados e a composição
+		populacional de cada UF, o gráfico abaixo apresenta duas barras empilhadas por estado: a
+		barra superior (cor cheia) representa os agentes culturais da Aldir Blanc; a barra inferior
+		(cor clara) representa a população segundo o Censo 2022 do IBGE.
+	</p>
+	<SexoUfStackedComparison
+		data={sexoUfComparisonData}
+		colorMasc={colorScales.blue[2]}
+		colorFem={colorScales.purple[2]}
+	/>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -513,6 +553,23 @@
 		(<strong>6,7%</strong>). A presença das entidades sem fins lucrativos praticamente se equipara
 		no Nordeste (<strong>10,8%</strong>) e no Sudeste (<strong>10,6%</strong>).
 	</p>
+	<HorizontalBarChart
+		data={naturezaJuridicaData}
+		color={categorical8[4]}
+		format={(v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'}
+		xLabel="% de CNPJs contemplados"
+		title="% - Distribuição de Agentes Culturais Pessoas Jurídicas Contemplados na Aldir Blanc por Natureza Jurídica"
+		margin={{ top: 20, right: 80, bottom: 40, left: 230 }}
+	/>
+	<HorizontalGroupedBarChart
+		data={naturezaJuridicaRegiaoData}
+		seriesLabels={naturezaJuridicaSeriesLabels}
+		colors={categorical8.slice(0, 6)}
+		margin={{ top: 20, right: 80, bottom: 40, left: 110 }}
+		barHeight={12}
+		barPad={3}
+		legendBottom={true}
+	/>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -589,6 +646,25 @@
 				organizações cuja atuação não é estritamente cultural, mas que se articulam com o setor.
 			</p>
 		</div>
+	</div>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     3.3.2 — TOP 20 CNAEs CULTURAIS
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-3-332-cnae-top20">
+	<h3>Top 20 CNAEs principais das pessoas jurídicas contempladas</h3>
+	<p>Por quantidade de CNPJs contemplados:</p>
+	<div style="overflow-x: auto;">
+		<svg width={700} height={cnaesTableHeight}>
+			<CnaeTable data={top20CnaesTableData} metric="quantidade" width={700} />
+		</svg>
+	</div>
+	<p>Por valor total repassado:</p>
+	<div style="overflow-x: auto;">
+		<svg width={700} height={cnaesTableHeight}>
+			<CnaeTable data={top20CnaesTableData} metric="valor" width={700} />
+		</svg>
 	</div>
 </ScrollSection>
 

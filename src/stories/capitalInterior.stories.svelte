@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { BigNumber, HorizontalStackedBarChart, colorScales } from 'sniic-design-system';
+  import { BigNumber, HorizontalStackedBarChart, colorScales, categorical8 } from 'sniic-design-system';
   import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
   // @ts-ignore
   import {
@@ -67,6 +67,21 @@ A zona rural recebeu **${formatBRL(valorRuralTotal)}** no total.
         keys={['capital', 'interior']}
         labels={{ capital: 'Capital', interior: 'Interior' }}
         colors={[colorScales.orange[2], colorScales.blue[2]]}
+        format={formatPct}
+        showTotalLabel={false}
+      />
+    </div>
+  {/snippet}
+</Story>
+
+<Story name="Stacked — capital, metropolitana e interior (categorical8)">
+  {#snippet template()}
+    <div style="padding-left: 60px;">
+      <HorizontalStackedBarChart
+        data={capitalInteriorStackedData}
+        keys={['capital', 'metropolitana', 'interior']}
+        labels={{ capital: 'Capital', metropolitana: 'Região Metropolitana', interior: 'Interior' }}
+        colors={[categorical8[1], categorical8[3], categorical8[0]]}
         format={formatPct}
         showTotalLabel={false}
       />

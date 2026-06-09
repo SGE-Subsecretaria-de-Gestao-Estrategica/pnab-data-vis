@@ -5,15 +5,8 @@
   // @ts-ignore
   import { racaCorSexoGroupedData } from '$lib/data/section4';
 
-  const seriesLabels = [
-    'Feminino – Quantidade',
-    'Feminino – Valor pago',
-    'Masculino – Quantidade',
-    'Masculino – Valor pago',
-  ];
-
-  // Two purple shades for Feminino, two orange shades for Masculino
-  const colors = ['#a44c7f', '#d5a6c8', '#ea662f', '#f7bf95'];
+  const seriesLabels = ['Feminino', 'Masculino'];
+  const colors = ['#a44c7f', '#ea662f'];
 
   const { Story } = defineMeta({
     title: 'Section 4/racaCorSexoGrouped',

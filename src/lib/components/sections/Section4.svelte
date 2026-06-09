@@ -4,6 +4,7 @@
 	import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
 	import CboRaisTable from '$lib/components/CboRaisTable.svelte';
 	import VerticalGroupedBarChart from '$lib/components/VerticalGroupedBarChart.svelte';
+	import HorizontalBarChartCustom from '$lib/components/HorizontalBarChartCustom.svelte';
 	import {
 		BigNumber,
 		HorizontalBarChart,
@@ -49,12 +50,7 @@
 	import { top20CboData } from '$lib/data/section3';
 
 	const formatBRL = (v: number) =>
-		new Intl.NumberFormat('pt-BR', {
-			style: 'currency',
-			currency: 'BRL',
-			notation: 'compact',
-			maximumFractionDigits: 1,
-		}).format(v);
+		`R$${new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 }).format(v)}`;
 	const formatN    = (v: number) => v.toLocaleString('pt-BR');
 	const formatPct  = (v: number) => `${v.toFixed(1)}%`;
 	const formatPctN = (v: number) =>
@@ -92,8 +88,7 @@
 	</div>
 	<div class="bignumbers-row" style="margin-top: 2rem;">
 		<div class="bignumber-cell">
-			<BigNumber value={percComVinculo.toFixed(1)} suffix="%" fontSize={80} />
-			<p class="bignumber-caption">das pessoas físicas que acessaram recursos da Política Nacional Aldir Blanc possuem registro de vínculo formal de trabalho</p>
+			<BigNumber value={percComVinculo.toFixed(1)} suffix="%" fontSize={80} label="com vínculo formal de trabalho" />
 		</div>
 	</div>
 	<p>
@@ -307,7 +302,7 @@
 	</p>
 	<HorizontalGroupedBarChart
 		data={racaCorGroupedData}
-		seriesLabels={['PNAB', 'Brasil (RAIS 2024)']}
+		seriesLabels={['PNAB', 'Total Trabalhadores Formais']}
 		colors={[categorical8[0], '#cb4034']}
 		format={formatPctN}
 		xLabel="% do total de trabalhadores formais"
@@ -357,8 +352,8 @@
 	</p>
 	<HorizontalGroupedBarChart
 		data={racaCorSexoGroupedData}
-		seriesLabels={['Feminino – Quantidade', 'Feminino – Valor pago', 'Masculino – Quantidade', 'Masculino – Valor pago']}
-		colors={['#a44c7f', '#d5a6c8', '#ea662f', '#f7bf95']}
+		seriesLabels={['Feminino', 'Masculino']}
+		colors={['#a44c7f', '#ea662f']}
 		format={formatPctN}
 		xLabel="% do total de beneficiários com vínculo formal"
 		margin={{ top: 20, right: 80, bottom: 40, left: 120 }}
@@ -396,7 +391,7 @@
 		Ensino médio e superior completos predominam entre os trabalhadores formais contemplados pela
 		Aldir Blanc
 	</p>
-	<HorizontalBarChart
+	<HorizontalBarChartCustom
 		data={escolaridadeProporcionalData}
 		color={colorScales.blue[2]}
 		format={formatPct}
@@ -429,7 +424,7 @@
 	<p class="frase-destaque">
 		Escolaridade mais alta está associada a valores médios maiores
 	</p>
-	<HorizontalBarChart
+	<HorizontalBarChartCustom
 		data={escolaridadeValorMedioData}
 		color={colorScales.teal[2]}
 		format={formatBRL}
@@ -456,12 +451,10 @@
 	</p>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="R$10,8mi" fontSize={64} />
-			<p class="bignumber-caption">destinados a pessoas com deficiência no Ciclo 1 — equivalente a 1,7% do investimento total</p>
+			<BigNumber value="R$10,8mi" fontSize={64} label="para PcD" subtitle="1,7% do total" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="R$18.805" fontSize={64} />
-			<p class="bignumber-caption">repasse médio recebido por pessoas com deficiência</p>
+			<BigNumber value="R$18.805" fontSize={64} label="repasse médio — PcD" />
 		</div>
 	</div>
 	<p>
@@ -546,18 +539,8 @@
 		flex: 1 1 240px;
 		min-width: 0;
 		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
+		justify-content: center;
 		margin-top: 1.5rem;
-	}
-
-	.bignumber-caption {
-		font-size: 0.95rem;
-		color: var(--color-text);
-		text-align: center;
-		opacity: 0.75;
-		max-width: 22ch;
 	}
 
 	.frase-destaque {

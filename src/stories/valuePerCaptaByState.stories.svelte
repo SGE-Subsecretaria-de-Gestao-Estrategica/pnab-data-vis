@@ -53,6 +53,7 @@ São Paulo, que lidera em valor total, cai para uma posição intermediária qua
       categoryKey="uf"
       labels={{ valor_percapita_uf: 'Valor per capita (R$)' }}
       {format}
+      showTotalLabel={false}
     />
   {/snippet}
 </Story>
@@ -67,6 +68,7 @@ São Paulo, que lidera em valor total, cai para uma posição intermediária qua
       {format}
       {icons}
       iconSize={24}
+      showTotalLabel={false}
     />
   {/snippet}
 </Story>

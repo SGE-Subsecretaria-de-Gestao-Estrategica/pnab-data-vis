@@ -2,6 +2,7 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import { HorizontalBarChart, VerticalBarChart, colorScales } from 'sniic-design-system';
+  import HorizontalBarChartCustom from '$lib/components/HorizontalBarChartCustom.svelte';
   import VerticalGroupedBarChart from '$lib/components/VerticalGroupedBarChart.svelte';
   import VerticalBarChartCustom from '$lib/components/VerticalBarChartCustom.svelte';
   // @ts-ignore
@@ -10,7 +11,7 @@
   // @ts-ignore
   const formatN = (v) => v.toLocaleString('pt-BR');
   // @ts-ignore
-  const formatBRL = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+  const formatBRL = (v) => `R$${new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 }).format(v)}`;
   // @ts-ignore
   const formatPct = (v) => `${v.toFixed(1)}%`;
 
@@ -48,7 +49,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
 
 <Story name="Barras — Beneficiários com vínculo formal por escolaridade">
   {#snippet template()}
-    <HorizontalBarChart
+    <HorizontalBarChartCustom
       data={escolaridadeProporcionalData}
       color={colorScales.blue[2]}
       format={formatPct}
@@ -60,12 +61,12 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
 
 <Story name="Barras horizontais — Valor médio por escolaridade">
   {#snippet template()}
-    <HorizontalBarChart
+    <HorizontalBarChartCustom
       data={escolaridadeValorMedioData}
       color={colorScales.orange[2]}
       format={formatBRL}
       xLabel="Valor médio pago (R$)"
-      margin={{ top: 20, right: 180, bottom: 40, left: 260 }}
+      margin={{ top: 20, right: 60, bottom: 40, left: 260 }}
     />
   {/snippet}
 </Story>
@@ -87,7 +88,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
   {#snippet template()}
     <VerticalGroupedBarChart
       data={escolaridadeGroupedData}
-      seriesLabels={['PNAB', 'Brasil (RAIS 2024)']}
+      seriesLabels={['PNAB', 'Total Trabalhadores Formais']}
       colors={[colorScales.blue[2], colorScales.orange[2]]}
       format={(v) => `${v.toFixed(1)}%`}
       barWidth={36}

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import ScrollSection from '$lib/components/ScrollSection.svelte';
-	import { MarimekkoChart, HorizontalStackedBarChart, categorical8, colorScales } from 'sniic-design-system';
+	import { HorizontalStackedBarChart, categorical8, colorScales } from 'sniic-design-system';
+	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
 	import { hierarchy, treemap as d3treemap } from 'd3-hierarchy';
 	import {
 		expensesChartData,
 		expensesKeys,
-		expensesLabels,
 		expensesLegendItems,
 		expensesGrandTotal,
 		fomentoDomainsRows,
@@ -17,6 +17,11 @@
 		tipoExecRegiaoData,
 		tipoExecRegiaoKeys,
 		tipoExecRegiaoLabels,
+		pncvNatJuridicaData,
+		pncvNatJuridicaKeys,
+		pncvNatJuridicaLabels,
+		operacionalizacaoSubData,
+		modalidadeObrasData,
 	} from '$lib/data/section6';
 
 	const formatBRL = (v: number) =>
@@ -32,6 +37,7 @@
 
 	const pncvOuOutrosColors = [colorScales.teal[2], colorScales.blue[2]] as string[];
 	const tipoExecColors = [colorScales.blue[2], colorScales.teal[2], colorScales.orange[2]] as string[];
+	const natJuridicaColors = [colorScales.blue[2], colorScales.orange[2]] as string[];
 
 	const TREEMAP_H = 480;
 	const TREEMAP_LEG_SEP = 28;
@@ -67,6 +73,15 @@
 	const INNER_H = CHART_HEIGHT - MARGIN.top - MARGIN.bottom; // 520 - 16 - 16 = 488
 	const MIN_LABEL_HEIGHT = 28;
 
+	const LEG_SEP = 20;
+	const LEG_HEADER_H = 24;
+	const LEG_ROW_H = 44;
+	const legY = CHART_HEIGHT + LEG_SEP;
+	const totalSvgH = legY + LEG_HEADER_H + expensesLegendItems.length * LEG_ROW_H + 8;
+
+	// Fallback width so the SVG is always non-empty (needed for SVG export before ResizeObserver fires)
+	const CHART_W = $derived(containerWidth || 760);
+
 	let wrapperEl: HTMLDivElement | undefined = $state();
 	let containerWidth = $state(0);
 
@@ -85,14 +100,13 @@
 		return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55 ? '#1a1a1a' : '#ffffff';
 	}
 
-	const overlayItems = $derived.by(() => {
-		if (!containerWidth) return [];
-		const innerW = containerWidth - MARGIN.left - MARGIN.right;
-		const totalWidth = expensesChartData.reduce((s, d) => s + (d.total as number), 0); // sum of column totals = grand total
+	const allSegments = $derived.by(() => {
+		const innerW = CHART_W - MARGIN.left - MARGIN.right;
+		const totalWidth = expensesChartData.reduce((s, d) => s + (d.total as number), 0);
 		const gapTotal = Math.max(0, expensesChartData.length - 1) * COLUMN_GAP;
 		const availableW = innerW - gapTotal;
 
-		const items: Array<{ label: string; pct: string; x: number; y: number; w: number; h: number; color: string; showLabel: boolean }> = [];
+		const items: Array<{ key: string; label: string; pct: string; x: number; y: number; w: number; h: number; color: string; showPct: boolean; showLabel: boolean }> = [];
 		let cumX = 0;
 
 		for (const datum of expensesChartData) {
@@ -103,28 +117,27 @@
 			for (let i = 0; i < expensesKeys.length; i++) {
 				const key = expensesKeys[i];
 				const value = Number(datum[key]) || 0;
-				if (value === 0) { continue; }
+				if (value === 0) continue;
 				const h = (value / segTotal) * INNER_H;
 
-				if (h >= MIN_LABEL_HEIGHT) {
-					const legendItem = expensesLegendItems.find((l) => l.key === key);
-					const realValue = legendItem?.valor ?? value;
-					const pct = (realValue / expensesGrandTotal * 100).toLocaleString('pt-BR', {
-						minimumFractionDigits: 1,
-						maximumFractionDigits: 1,
-					});
-					const showLabel = h >= 60 && colW >= 150;
-					items.push({
-						label: legendItem?.label ?? key,
-						pct,
-						x: MARGIN.left + cumX,
-						y: MARGIN.top + cumY,
-						w: colW,
-						h,
-						color: categorical8[i] as string,
-						showLabel,
-					});
-				}
+				const legendItem = expensesLegendItems.find((l) => l.key === key);
+				const realValue = legendItem?.valor ?? value;
+				const pct = (realValue / expensesGrandTotal * 100).toLocaleString('pt-BR', {
+					minimumFractionDigits: 1,
+					maximumFractionDigits: 1,
+				});
+				items.push({
+					key,
+					label: legendItem?.label ?? key,
+					pct,
+					x: MARGIN.left + cumX,
+					y: MARGIN.top + cumY,
+					w: colW,
+					h,
+					color: categorical8[i] as string,
+					showPct: h >= MIN_LABEL_HEIGHT,
+					showLabel: h >= 60 && colW >= 150,
+				});
 				cumY += h;
 			}
 			cumX += colW + COLUMN_GAP;
@@ -137,60 +150,136 @@
 	<h2>6. Como os recursos foram distribuídos por tipo de despesa?</h2>
 
 	<div class="chart-wrapper" bind:this={wrapperEl}>
-		<!-- clip the built-in SVG legend bar that overflows below the chart -->
-		<div style="overflow:hidden;height:{CHART_HEIGHT}px">
-			<MarimekkoChart
-				data={expensesChartData}
-				keys={expensesKeys}
-				labels={expensesLabels}
-				height={CHART_HEIGHT}
-				format={formatBRL}
-				margin={MARGIN}
-				pctFormat={() => ''}
-			/>
-		</div>
+		<svg
+			class="expenses-svg"
+			width={CHART_W}
+			height={totalSvgH}
+			font-family="'Space Grotesk', system-ui, sans-serif"
+			font-size="12"
+		>
+			<!-- chart segment rects + labels -->
+			{#each allSegments as seg}
+				<rect x={seg.x} y={seg.y} width={seg.w} height={seg.h} fill={seg.color} shape-rendering="crispEdges" />
+				{#if seg.showPct}
+					<text
+						x={seg.x + seg.w / 2}
+						y={seg.y + seg.h / 2 + (seg.showLabel ? -8 : 0)}
+						text-anchor="middle"
+						dominant-baseline="middle"
+						fill={contrastColor(seg.color)}
+						font-size="14"
+						font-weight="700"
+						pointer-events="none"
+					>{seg.pct}%</text>
+				{/if}
+				{#if seg.showLabel}
+					<text
+						x={seg.x + seg.w / 2}
+						y={seg.y + seg.h / 2 + 10}
+						text-anchor="middle"
+						dominant-baseline="middle"
+						fill={contrastColor(seg.color)}
+						font-size="10"
+						pointer-events="none"
+					>{seg.label}</text>
+				{/if}
+			{/each}
 
-		<!-- category name overlay -->
-		{#each overlayItems as item}
-			<div
-				class="seg-label"
-				style="left:{item.x}px;top:{item.y}px;width:{item.w}px;height:{item.h}px"
-			>
-				<span class="seg-label-text" style="color:{contrastColor(item.color)}">
-				<strong>{item.pct}%</strong>
-				{#if item.showLabel}<br>{item.label}{/if}
-			</span>
-			</div>
-		{/each}
+			<!-- legend separator -->
+			<line x1={0} y1={legY} x2={CHART_W} y2={legY} stroke="var(--chart-fg-muted, #e0e0e0)" />
 
-		<table class="ref-table">
-		<tbody>
-			{#each expensesLegendItems as item}
+			<!-- legend column headers -->
+			<text x={CHART_W - 150} y={legY + LEG_HEADER_H - 8} text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="10">Valor estimado (IC95%)</text>
+			<text x={CHART_W - 4}   y={legY + LEG_HEADER_H - 8} text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="10">% do total</text>
+
+			<!-- legend rows -->
+			{#each expensesLegendItems as item, i}
 				{@const colorIdx = expensesKeys.indexOf(item.key)}
+				{@const color = categorical8[colorIdx] as string}
+				{@const ry = legY + LEG_HEADER_H + 16 + i * LEG_ROW_H}
+				{@const itemPct = (item.valor / expensesGrandTotal * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+				{#if i > 0}
+					<line x1={0} y1={ry - 6} x2={CHART_W} y2={ry - 6} stroke="var(--chart-fg-muted, #e0e0e0)" />
+				{/if}
+				<rect x={MARGIN.left} y={ry + 1} width={10} height={10} rx="2" fill={color} />
+				<text x={MARGIN.left + 18} y={ry + 6} dy="0.35em" fill="var(--chart-fg, #1a1a1a)">{item.label}</text>
+				<text x={CHART_W - 150} y={ry}      dy="0.85em" text-anchor="end" fill="var(--chart-fg-strong, #111)" font-weight="600">{item.value}</text>
+				<text x={CHART_W - 150} y={ry + 16} dy="0.85em" text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="10">{item.ci}</text>
+				<text x={CHART_W - 4}   y={ry + 6}  dy="0.35em" text-anchor="end" fill={color} font-size="13" font-weight="700">{itemPct}%</text>
+			{/each}
+		</svg>
+	</div>
+
+	<h3>Operacionalização da Política — Subcategorias</h3>
+	<p class="chart-caption">Valor estimado por subcategoria de despesa de Operacionalização da Política, com intervalo de confiança de 95%.</p>
+
+	<table class="data-table">
+		<thead>
+			<tr>
+				<th class="dt-label-col">Subcategoria</th>
+				<th class="dt-num-col">Valor estimado</th>
+				<th class="dt-num-col">IC 95%</th>
+				<th class="dt-num-col">% do total</th>
+			</tr>
+		</thead>
+		<tbody>
+			{#each operacionalizacaoSubData as row}
 				<tr>
-					<td class="swatch-cell">
-						<span class="swatch" style="background:{categorical8[colorIdx]}"></span>
-					</td>
-					<td class="label-cell">{item.label}</td>
-					<td class="value-cell">
-						{item.value}
-						<span class="ci">({item.ci})</span>
-					</td>
+					<td class="dt-label-cell">{row.label}</td>
+					<td class="dt-num-cell">{formatBRL(row.valor)}</td>
+					<td class="dt-num-cell dt-ci">{formatBRL(row.p025)} – {formatBRL(row.p975)}</td>
+					<td class="dt-num-cell dt-pct" style="color:{colorScales.teal[2]}">{row.pct.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</td>
 				</tr>
 			{/each}
 		</tbody>
 	</table>
-	</div>
+
+	<h3>Obras, Reformas e Aquisição de Bens Culturais — Por Modalidade</h3>
+	<p class="chart-caption">Valor estimado por modalidade de Obras, Reformas e Aquisição de Bens Culturais, com intervalo de confiança de 95%.</p>
+
+	<table class="data-table">
+		<thead>
+			<tr>
+				<th class="dt-label-col">Modalidade</th>
+				<th class="dt-num-col">Valor Estimado</th>
+				<th class="dt-num-col">% Estimado</th>
+				<th class="dt-num-col">Intervalo de Confiança</th>
+			</tr>
+		</thead>
+		<tbody>
+			{#each modalidadeObrasData as row}
+				<tr>
+					<td class="dt-label-cell">{row.label}</td>
+					<td class="dt-num-cell">{formatBRL(row.valor)}</td>
+					<td class="dt-num-cell dt-pct" style="color:{colorScales.teal[2]}">{row.pct.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</td>
+					<td class="dt-num-cell dt-ci">IC95% {formatBRL(row.p025)} – {formatBRL(row.p975)}</td>
+				</tr>
+			{/each}
+		</tbody>
+	</table>
 
 	<h3>PNCV vs. Outros — Participação por faixa de repasse</h3>
 	<p class="chart-caption">Participação percentual do valor estimado entre PNCV e demais despesas, por faixa de repasse municipal.</p>
 
+	<HorizontalStackedBarChartCustom
+		data={pncvOuOutrosData}
+		keys={[...pncvOuOutrosKeys]}
+		labels={pncvOuOutrosLabels}
+		colors={pncvOuOutrosColors}
+		format={formatPct}
+		showTotalLabel={false}
+		marginLeft={220}
+	/>
+
+	<h3>Distribuição por Modalidade e Natureza Jurídica — PNCV</h3>
+	<p class="chart-caption">Participação percentual entre CNPJ e CPF dentro de cada modalidade da Política Nacional de Cultura Viva.</p>
+
 	<div style="padding-left: 220px;">
 		<HorizontalStackedBarChart
-			data={pncvOuOutrosData}
-			keys={[...pncvOuOutrosKeys]}
-			labels={pncvOuOutrosLabels}
-			colors={pncvOuOutrosColors}
+			data={pncvNatJuridicaData}
+			keys={[...pncvNatJuridicaKeys]}
+			labels={pncvNatJuridicaLabels}
+			colors={natJuridicaColors}
 			format={formatPct}
 			showTotalLabel={false}
 		/>
@@ -310,72 +399,54 @@
 		width: 100%;
 	}
 
-	.seg-label {
-		position: absolute;
-		pointer-events: none;
-		overflow: hidden;
-	}
-
-	.seg-label-text {
-		position: absolute;
-		top: 50%;
-		transform: translateY(-50%);
-		left: 0;
-		right: 0;
-		text-align: center;
-		font-family: 'Space Grotesk', system-ui, sans-serif;
-		font-size: 0.72rem;
-		font-weight: 400;
-		line-height: 1.4;
-		padding: 0 8px;
-	}
-
-	.seg-label-text strong {
+	.expenses-svg {
 		display: block;
-		font-size: 0.9rem;
-		font-weight: 700;
 	}
 
-	.ref-table {
-		width: calc(100% - 32px);
+.data-table {
+		width: 100%;
 		border-collapse: collapse;
-		margin: 0.75rem 16px 0;
+		margin: 0 0 1.5rem;
 		font-family: 'Space Grotesk', system-ui, sans-serif;
 		font-size: 0.8rem;
 	}
 
-	.ref-table tr + tr td {
-		border-top: 1px solid var(--chart-fg-muted, #e0e0e0);
+	.data-table thead tr {
+		border-bottom: 2px solid var(--chart-fg-muted, #cbd5e1);
 	}
 
-	.swatch-cell {
-		width: 20px;
-		padding: 0.35rem 0.5rem 0.35rem 0;
-		vertical-align: middle;
-	}
-
-	.swatch {
-		display: inline-block;
-		width: 12px;
-		height: 12px;
-		border-radius: 2px;
-	}
-
-	.label-cell {
-		padding: 0.35rem 1rem 0.35rem 0;
-	}
-
-	.value-cell {
-		padding: 0.35rem 0;
+	.data-table th {
+		padding: 0.4rem 0.75rem 0.4rem 0;
+		text-align: left;
 		font-weight: 600;
-		text-align: right;
-	}
-
-	.ci {
-		display: block;
-		font-weight: 400;
-		font-size: 0.7rem;
+		font-size: 0.75rem;
 		color: var(--chart-fg-muted, #666);
 		white-space: nowrap;
 	}
+
+	.data-table th.dt-num-col {
+		text-align: right;
+	}
+
+	.data-table tbody tr + tr td {
+		border-top: 1px solid var(--chart-fg-muted, #e2e8f0);
+	}
+
+	.dt-label-cell {
+		padding: 0.45rem 0.75rem 0.45rem 0;
+	}
+
+	.dt-num-cell {
+		padding: 0.45rem 0 0.45rem 1rem;
+		text-align: right;
+		white-space: nowrap;
+		font-weight: 600;
+	}
+
+	.dt-ci {
+		font-weight: 400;
+		color: var(--chart-fg-muted, #666);
+		font-size: 0.75rem;
+	}
+
 </style>

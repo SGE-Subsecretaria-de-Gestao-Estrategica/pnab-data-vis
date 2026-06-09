@@ -27,11 +27,6 @@
 
 <Story name="BigNumber — % com vínculo formal de trabalho">
   {#snippet template()}
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.75rem; max-width: 320px; font-family: 'Space Grotesk', system-ui, sans-serif;">
-      <BigNumber value={percComVinculo.toFixed(1)} suffix="%" fontSize={96} />
-      <p style="margin: 0; font-size: 1rem; line-height: 1.5; text-align: center; opacity: 0.75;">
-        das pessoas físicas que acessaram recursos da Política Nacional Aldir Blanc possuem registro de vínculo formal de trabalho
-      </p>
-    </div>
+    <BigNumber value={percComVinculo.toFixed(1)} suffix="%" fontSize={96} label="com vínculo formal de trabalho" />
   {/snippet}
 </Story>

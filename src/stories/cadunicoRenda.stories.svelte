@@ -1,7 +1,8 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { DonutChart, colorScales, categorical8 } from 'sniic-design-system';
+  import { colorScales, categorical8 } from 'sniic-design-system';
+  import DonutChartWithLegend from '$lib/components/DonutChartWithLegend.svelte';
   // @ts-ignore
   import { rendaDonutData, situacaoRendaDonutData } from '$lib/data/section5';
 
@@ -13,7 +14,7 @@
 
   const { Story } = defineMeta({
     title: 'Section 5/cadunicoRenda',
-    component: DonutChart,
+    component: DonutChartWithLegend,
     tags: ['autodocs'],
     parameters: {
       docs: {
@@ -35,7 +36,7 @@ Dois donuts mostram as distribuições: por faixa de renda per capita (5 categor
 
 <Story name="DonutChart — faixa de renda per capita">
   {#snippet template()}
-    <DonutChart
+    <DonutChartWithLegend
       data={rendaDonutData}
       colors={categorical8}
       centerLabel="pessoas"
@@ -48,7 +49,7 @@ Dois donuts mostram as distribuições: por faixa de renda per capita (5 categor
 
 <Story name="DonutChart — situação de renda">
   {#snippet template()}
-    <DonutChart
+    <DonutChartWithLegend
       data={situacaoRendaDonutData}
       colors={[colorScales.red[2], colorScales.orange[2], colorScales.blue[2]]}
       centerLabel="pessoas"

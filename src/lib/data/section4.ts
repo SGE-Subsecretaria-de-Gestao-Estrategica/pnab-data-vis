@@ -123,7 +123,7 @@ export const escolaridadeProporcionalData = [...escRows]
 	}))
 	.sort((a, b) => a.value - b.value);
 
-// Grouped comparison: PNAB vs. Brasil (RAIS 2024) by education level
+// Grouped comparison: PNAB vs. Total Trabalhadores Formais by education level
 const _raisEscRef: Record<string, number> = {
 	'Sem instrução e fundamental incompleto':  7.0626,
 	'Fundamental completo e médio incompleto': 11.3631,
@@ -193,7 +193,7 @@ const _totalComVinculoSexo = sexoRows.reduce((s, r) => s + +r.numero_contemplado
 export const sexoVinculoFormalGroupedData = [
 	{
 		label: 'PNAB',
-		fullLabel: 'Pessoas com vínculo formal de trabalho contempladas no PNAB',
+		fullLabel: 'Agentes Culturais Contemplados com Vínculo Formal de Trabalho',
 		values: sexoRows.map((r) => (+r.numero_contemplados_com_vinculo_trabalho_formal / _totalComVinculoSexo) * 100),
 	},
 	{
@@ -271,8 +271,7 @@ export const racaCorSexoHeatmapData = racaDisplayOrder.flatMap((race) => {
 
 // ── Por raça/cor × sexo (Vertical Grouped Bar) ──────────────────────────────────
 const _racaSexoOrder = ['Amarela', 'Branca', 'Indígena', 'Parda', 'Preta/negra'];
-const _racaSexoTotalQty   = racaCorSexoRows.reduce((s, r) => s + +r.numero_contemplados_total, 0);
-const _racaSexoTotalValor = racaCorSexoRows.reduce((s, r) => s + +r.valor_pago_total, 0);
+const _racaSexoTotalQty = racaCorSexoRows.reduce((s, r) => s + +r.numero_contemplados_total, 0);
 
 export const racaCorSexoGroupedData = _racaSexoOrder.map((race) => {
 	const r = racaCorSexoRows.find((d) => shortRaceLabel(d.raca_cor_desc_description) === race)!;
@@ -280,10 +279,8 @@ export const racaCorSexoGroupedData = _racaSexoOrder.map((race) => {
 		label:     race,
 		fullLabel: r.raca_cor_desc_description,
 		values: [
-			(+r.numero_contemplados_feminino / _racaSexoTotalQty)   * 100,
-			(+r.valor_pago_feminino          / _racaSexoTotalValor) * 100,
-			(+r.numero_contemplados_masculino / _racaSexoTotalQty)  * 100,
-			(+r.valor_pago_masculino          / _racaSexoTotalValor) * 100,
+			(+r.numero_contemplados_feminino  / _racaSexoTotalQty) * 100,
+			(+r.numero_contemplados_masculino / _racaSexoTotalQty) * 100,
 		],
 	};
 });

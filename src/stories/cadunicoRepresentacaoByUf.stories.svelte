@@ -40,6 +40,7 @@ Estados com barra laranja maior que a teal apresentam sobrerrepresentação; o i
       margin={{ top: 28, right: 90, bottom: 40, left: 50 }}
       barPad={2}
       groupPad={18}
+      legendBottom={true}
     />
   {/snippet}
 </Story>

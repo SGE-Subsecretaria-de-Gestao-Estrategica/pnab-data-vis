@@ -35,9 +35,9 @@
 		return luminance > 0.65 ? '#1a1a1a' : '#fffffe';
 	}
 
-	// Matches the library's internal margin calculation
-	const margin = $derived({ top: 16, right: 28, bottom: 68, left: marginLeft });
-	const innerWidth  = $derived(Math.max(0, containerWidth - margin.left - margin.right));
+	// Fixed margins (bottom is computed dynamically based on legend height)
+	const MT = 16, MR = 28;
+	const innerWidth  = $derived(Math.max(0, containerWidth - marginLeft - MR));
 
 	// d3 scaleBand equivalent: padding(0.28) sets paddingInner = paddingOuter = 0.28
 	const PAD = 0.28;
@@ -80,22 +80,38 @@
 		})
 	);
 
-	// Legend: per-label width based on text length estimate (~7px/char + 24px padding)
-	// Scaled down proportionally if total exceeds innerWidth
-	const CHAR_W  = 6;
-	const BOX_PAD = 16;
-	const legendBoxWs = $derived.by(() => {
-		const natural = keys.map((key) => Math.max(60, (labels[key] ?? key).length * CHAR_W + BOX_PAD));
-		const total = natural.reduce((s, w) => s + w, 0);
-		if (innerWidth <= 0 || total <= innerWidth) return natural;
-		return natural.map((w) => (w * innerWidth) / total);
-	});
-	const legendBoxX = $derived((ki: number) =>
-		legendBoxWs.slice(0, ki).reduce((s, w) => s + w, 0)
+	// Legend: each box sized to fit its text (min 60px), wraps to multiple rows if needed
+	const CHAR_W       = 6;
+	const BOX_PAD      = 16;
+	const LEGEND_ROW_H = 34;
+	const LEGEND_GAP   = 2;
+
+	const legendBoxWs = $derived(
+		keys.map((key) => Math.max(60, (labels[key] ?? key).length * CHAR_W + BOX_PAD))
 	);
-	const legendTotalW = $derived(legendBoxWs.reduce((s, w) => s + w, 0));
-	const legendY      = $derived(innerHeight + 22);
-	const totalHeight = $derived(margin.top + innerHeight + margin.bottom);
+
+	type LegendItem = { key: string; ki: number; w: number; x: number };
+	const legendRows = $derived.by(() => {
+		const result: LegendItem[][] = [];
+		let cur: LegendItem[] = [];
+		let rowW = 0;
+		for (let ki = 0; ki < keys.length; ki++) {
+			const w = legendBoxWs[ki];
+			if (innerWidth > 0 && rowW + w > innerWidth && cur.length > 0) {
+				result.push(cur);
+				cur = [];
+				rowW = 0;
+			}
+			cur.push({ key: keys[ki], ki, w, x: rowW });
+			rowW += w;
+		}
+		if (cur.length > 0) result.push(cur);
+		return result;
+	});
+
+	const legendY         = $derived(innerHeight + 22);
+	const legendTotalH    = $derived(legendRows.length * LEGEND_ROW_H + Math.max(0, legendRows.length - 1) * LEGEND_GAP);
+	const totalHeight     = $derived(MT + innerHeight + 22 + legendTotalH + 16);
 </script>
 
 <div bind:clientWidth={containerWidth} style="width: 100%;">
@@ -108,7 +124,7 @@
 			font-family={FONT_FAMILY}
 			style="overflow: visible;"
 		>
-			<g transform="translate({margin.left},{margin.top})">
+			<g transform="translate({marginLeft},{MT})">
 
 				<!-- Vertical grid lines -->
 				{#each ticks as tick}
@@ -185,45 +201,49 @@
 					{/each}
 				</g>
 
-				<!-- Legend -->
-				<g transform="translate(0,{legendY})">
-					{#each keys as key, ki}
+				<!-- Legend (multi-row) -->
+				{#each legendRows as row, ri}
+					{@const rowY = legendY + ri * (LEGEND_ROW_H + LEGEND_GAP)}
+					{@const rowTotalW = row.reduce((s, item) => s + item.w, 0)}
+					<g transform="translate(0,{rowY})">
+						{#each row as item}
+							<rect
+								x={item.x}
+								y={0}
+								width={item.w}
+								height={LEGEND_ROW_H}
+								fill={colors[item.ki] ?? '#999'}
+								shape-rendering="crispEdges"
+							/>
+							<text
+								x={item.x + 8}
+								y={LEGEND_ROW_H / 2}
+								dy="0.35em"
+								font-size="10"
+								font-weight="600"
+								fill={labelColor(colors[item.ki] ?? '#999')}
+							>{labels[item.key] ?? item.key}</text>
+						{/each}
+						{#each row.slice(0, row.length - 1) as item}
+							<line
+								x1={item.x + item.w} y1={0}
+								x2={item.x + item.w} y2={LEGEND_ROW_H}
+								stroke="var(--chart-fg-strong, #000000)"
+								stroke-width="0.5"
+								shape-rendering="crispEdges"
+							/>
+						{/each}
 						<rect
-							x={legendBoxX(ki)}
-							y={0}
-							width={legendBoxWs[ki]}
-							height={34}
-							fill={colors[ki] ?? '#999'}
-							shape-rendering="crispEdges"
-						/>
-						<text
-							x={legendBoxX(ki) + 8}
-							y={17}
-							dy="0.35em"
-							font-size="10"
-							font-weight="600"
-							fill={labelColor(colors[ki] ?? '#999')}
-						>{labels[key] ?? key}</text>
-					{/each}
-					{#each keys.slice(0, keys.length - 1) as _, ki}
-						<line
-							x1={legendBoxX(ki + 1)} y1={0}
-							x2={legendBoxX(ki + 1)} y2={34}
+							fill="none"
 							stroke="var(--chart-fg-strong, #000000)"
-							stroke-width="0.5"
 							shape-rendering="crispEdges"
+							x={0} y={0}
+							width={rowTotalW}
+							height={LEGEND_ROW_H}
+							stroke-width="0.5"
 						/>
-					{/each}
-					<rect
-						fill="none"
-						stroke="var(--chart-fg-strong, #000000)"
-						shape-rendering="crispEdges"
-						x={0} y={0}
-						width={legendTotalW}
-						height={34}
-						stroke-width="0.5"
-					/>
-				</g>
+					</g>
+				{/each}
 
 			</g>
 		</svg>

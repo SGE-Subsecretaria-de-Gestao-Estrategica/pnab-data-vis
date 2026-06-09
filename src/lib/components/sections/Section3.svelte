@@ -97,19 +97,13 @@
 <ScrollSection id="section-3-totals">
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="134.606" fontSize={64} />
-			<p class="bignumber-perc">(80,7%)</p>
-			<p class="bignumber-caption">são pessoas físicas</p>
+			<BigNumber value="134.606" fontSize={64} width={280} label="(80,7%)" subtitle="pessoas físicas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="32.280" fontSize={64} />
-			<p class="bignumber-perc">(19,3%)</p>
-			<p class="bignumber-caption">são pessoas jurídicas</p>
+			<BigNumber value="32.280" fontSize={64} width={280} label="(19,3%)" subtitle="pessoas jurídicas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="9.076" fontSize={64} />
-			<p class="bignumber-perc">(5,4% do total)</p>
-			<p class="bignumber-caption">são MEIs dentre as pessoas jurídicas</p>
+			<BigNumber value="9.076" fontSize={64} width={280} label="(5,4% do total)" subtitle="são MEIs" />
 		</div>
 	</div>
 	<p style="margin-top: 2rem;">
@@ -117,18 +111,13 @@
 	</p>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorTotalPF)} fontSize={56} />
-			<p class="bignumber-perc">(44,1%)</p>
-			<p class="bignumber-caption">recebidos por pessoas físicas</p>
+			<BigNumber value={formatBRL(valorTotalPF)} fontSize={56} width={280} label="(44,1%)" subtitle="pessoas físicas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorTotalPJ)} fontSize={56} />
-			<p class="bignumber-perc">(55,9%)</p>
-			<p class="bignumber-caption">recebidos por pessoas jurídicas</p>
+			<BigNumber value={formatBRL(valorTotalPJ)} fontSize={56} width={280} label="(55,9%)" subtitle="pessoas jurídicas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorTotalMEI)} fontSize={56} />
-			<p class="bignumber-caption">recebidos pelos MEIs</p>
+			<BigNumber value={formatBRL(valorTotalMEI)} fontSize={56} width={280} label="recebidos pelos MEIs" />
 		</div>
 	</div>
 	<p>
@@ -222,14 +211,10 @@
 	</p>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="14.996" fontSize={64} />
-			<p class="bignumber-perc">(68%)</p>
-			<p class="bignumber-caption">pessoas físicas</p>
+			<BigNumber value="14.996" fontSize={64} label="(68%)" subtitle="pessoas físicas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="7.054" fontSize={64} />
-			<p class="bignumber-perc">(32%)</p>
-			<p class="bignumber-caption">pessoas jurídicas</p>
+			<BigNumber value="7.054" fontSize={64} label="(32%)" subtitle="pessoas jurídicas" />
 		</div>
 	</div>
 	<p>
@@ -257,14 +242,10 @@
 	</p>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="119.610" fontSize={64} />
-			<p class="bignumber-perc">(82,6%)</p>
-			<p class="bignumber-caption">pessoas físicas</p>
+			<BigNumber value="119.610" fontSize={64} label="(82,6%)" subtitle="pessoas físicas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="25.226" fontSize={64} />
-			<p class="bignumber-perc">(17,4%)</p>
-			<p class="bignumber-caption">pessoas jurídicas</p>
+			<BigNumber value="25.226" fontSize={64} label="(17,4%)" subtitle="pessoas jurídicas" />
 		</div>
 	</div>
 	<p>
@@ -295,12 +276,10 @@
 	<h3>3.2.1. Sexo</h3>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value={formatPct(sexoPropMasculino)} fontSize={72} />
-			<p class="bignumber-caption">dos agentes culturais contemplados são do sexo masculino</p>
+			<BigNumber value={formatPct(sexoPropMasculino)} fontSize={72} label="sexo masculino" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value={formatPct(sexoPropFeminino)} fontSize={72} />
-			<p class="bignumber-caption">dos agentes culturais contemplados são do sexo feminino</p>
+			<BigNumber value={formatPct(sexoPropFeminino)} fontSize={72} label="sexo feminino" />
 		</div>
 	</div>
 	<p class="pictogram-caption">Cada ícone representa 1 em cada 15 agentes culturais contemplados</p>
@@ -408,12 +387,10 @@
 <ScrollSection id="section-3-321-valores">
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="R$9,2 mil" fontSize={64} />
-			<p class="bignumber-caption">valor médio recebido por agentes culturais do sexo feminino</p>
+			<BigNumber value="R$9,2 mil" fontSize={64} label="valor médio — feminino" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="2%" fontSize={64} />
-			<p class="bignumber-caption">de diferença em relação à média dos homens (R$9,4 mil)</p>
+			<BigNumber value="2%" fontSize={64} label="diferença vs. homens (R$9,4 mil)" />
 		</div>
 	</div>
 	<p>
@@ -694,26 +671,8 @@
 		flex: 1 1 200px;
 		min-width: 0;
 		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
+		justify-content: center;
 		margin-top: 1.5rem;
-	}
-
-	.bignumber-perc {
-		font-size: 1.4rem;
-		font-weight: 600;
-		text-align: center;
-		opacity: 0.65;
-		margin: -0.25rem 0 0;
-	}
-
-	.bignumber-caption {
-		font-size: 0.95rem;
-		color: var(--color-text);
-		text-align: center;
-		opacity: 0.75;
-		max-width: 20ch;
 	}
 
 	.frase-destaque {

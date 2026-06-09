@@ -6,7 +6,7 @@
 
   // @ts-ignore
   const formatBRL = (v) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', maximumFractionDigits: 1 }).format(v);
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
 
   const { Story } = defineMeta({
     title: 'Section 2/ticketMedioByState',

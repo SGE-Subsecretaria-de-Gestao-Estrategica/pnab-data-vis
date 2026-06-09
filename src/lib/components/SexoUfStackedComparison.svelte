@@ -60,8 +60,8 @@
 			{ label: 'Feminino – contempladas',        color: colorFem,  opacity: 1    },
 		],
 		[
-			{ label: 'Masculino – população (IBGE)',  color: colorMasc, opacity: 0.35 },
-			{ label: 'Feminino – população (IBGE)',   color: colorFem,  opacity: 0.35 },
+			{ label: 'Masculino – População',  color: colorMasc, opacity: 0.35 },
+			{ label: 'Feminino – População',   color: colorFem,  opacity: 0.35 },
 		],
 	]);
 	const legendRowWidths = $derived(
@@ -113,7 +113,7 @@
 					text-anchor="end"
 					font-size="9"
 					fill="#555"
-				>Aldir Blanc</text>
+				>PNAB</text>
 				<text
 					x={margin.left - 6}
 					y={ibgeY + barHeight / 2}
@@ -121,7 +121,7 @@
 					text-anchor="end"
 					font-size="9"
 					fill="#999"
-				>IBGE</text>
+				>População</text>
 
 				<!-- Aldir Blanc bar (full opacity) -->
 				{@const aMascW = scaleX(row.aldirMasc)}

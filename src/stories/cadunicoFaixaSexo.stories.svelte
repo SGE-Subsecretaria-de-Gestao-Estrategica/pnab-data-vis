@@ -1,13 +1,14 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart, colorPairs } from 'sniic-design-system';
+  import { colorPairs } from 'sniic-design-system';
+  import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
   // @ts-ignore
   import { faixaEtariaSexoData, FAIXA_SEXO_KEYS, FAIXA_SEXO_LABELS } from '$lib/data/section5';
 
   const { Story } = defineMeta({
     title: 'Section 5/cadunicoFaixaSexo',
-    component: HorizontalStackedBarChart,
+    component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {
       docs: {
@@ -27,26 +28,28 @@ Nas faixas de **25 a 64 anos** as mulheres são maioria entre os contemplados in
 
 <Story name="HorizontalStackedBarChart — faixa etaria por sexo (bluePurple)">
   {#snippet template()}
-    <HorizontalStackedBarChart
+    <HorizontalStackedBarChartCustom
       data={faixaEtariaSexoData}
       keys={[...FAIXA_SEXO_KEYS]}
       labels={FAIXA_SEXO_LABELS}
       colors={[colorPairs.bluePurple[1], colorPairs.bluePurple[0]]}
       format={(v) => `${v.toFixed(1)}%`}
       showTotalLabel={false}
+      marginLeft={110}
     />
   {/snippet}
 </Story>
 
 <Story name="HorizontalStackedBarChart — faixa etaria por sexo (blueOrange)">
   {#snippet template()}
-    <HorizontalStackedBarChart
+    <HorizontalStackedBarChartCustom
       data={faixaEtariaSexoData}
       keys={[...FAIXA_SEXO_KEYS]}
       labels={FAIXA_SEXO_LABELS}
       colors={[colorPairs.blueOrange[1], colorPairs.blueOrange[0]]}
       format={(v) => `${v.toFixed(1)}%`}
       showTotalLabel={false}
+      marginLeft={110}
     />
   {/snippet}
 </Story>

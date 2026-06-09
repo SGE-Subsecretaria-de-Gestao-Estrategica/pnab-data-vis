@@ -320,9 +320,10 @@ export const porteStackedData = [
 ];
 
 // ── CPF vs CNPJ por porte populacional ────────────────────────────────────────
-const _porteCpfCnpjRaw = parseCSV(csvPorteRaw).filter(
-	(d) => d.porte_populacional in porteNameMap
-);
+const _porteOrder = ['1_pequeno_i', '2_pequeno_ii', '3_medio', '4_grande'];
+const _porteCpfCnpjRaw = parseCSV(csvPorteRaw)
+	.filter((d) => d.porte_populacional in porteNameMap)
+	.sort((a, b) => _porteOrder.indexOf(a.porte_populacional) - _porteOrder.indexOf(b.porte_populacional));
 export const porteCpfCnpjStackedData = _porteCpfCnpjRaw.map((d) => ({
 	label: porteNameMap[d.porte_populacional],
 	cpf:   +d.perc_valor_CPF  * 100,

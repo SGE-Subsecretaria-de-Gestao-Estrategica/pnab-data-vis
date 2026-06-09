@@ -14,7 +14,7 @@
 		barWidth = 20,
 		barPad = 4,
 		innerH = 280,
-		margin = { top: 20, right: 20, bottom: 10, left: 20 },
+		margin = { top: 20, right: 20, bottom: 10, left: 44 },
 		yTicks = 5,
 	}: {
 		data: VerticalGroupedBarRow[];

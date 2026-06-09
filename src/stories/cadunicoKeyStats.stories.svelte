@@ -51,92 +51,48 @@ Estatísticas-chave sobre os agentes culturais pessoas físicas contemplados no 
 
 <Story name="BigNumber — % pessoas fisicas no CadUnico">
   {#snippet template()}
-    <div class="bignumber-cell">
-      <BigNumber value={formatPct(percContempladosCadunico)} fontSize={96} />
-      <p class="bignumber-caption">das pessoas físicas contempladas no Ciclo 1 da Aldir Blanc estão cadastradas no Cadastro Único</p>
-    </div>
+    <BigNumber value={formatPct(percContempladosCadunico)} fontSize={96} label="cadastrados no CadÚnico" />
   {/snippet}
 </Story>
 
 <Story name="BigNumber — quantidade de agentes culturais no CadUnico">
   {#snippet template()}
-    <div class="bignumber-cell">
-      <BigNumber value={formatNum(qtdContempladosCadunico)} fontSize={96} />
-      <p class="bignumber-caption">dos agentes culturais contemplados representam esse grupo</p>
-    </div>
+    <BigNumber value={formatNum(qtdContempladosCadunico)} fontSize={96} label="contemplados no CadÚnico" />
   {/snippet}
 </Story>
 
 <Story name="BigNumber — valor total transferido ao grupo CadUnico">
   {#snippet template()}
-    <div class="bignumber-cell">
-      <BigNumber value={formatBRL(valorRecebidoCadunico)} fontSize={72} />
-      <p class="bignumber-caption">foram transferidos diretamente a esses agentes culturais contemplados</p>
-    </div>
+    <BigNumber value={formatBRL(valorRecebidoCadunico)} fontSize={72} label="transferidos ao grupo CadÚnico" />
   {/snippet}
 </Story>
 
 <Story name="BigNumber — % recursos destinados a pessoas fisicas CadUnico">
   {#snippet template()}
-    <div class="bignumber-cell">
-      <BigNumber value={formatPct(percValorCadunico)} fontSize={96} />
-      <p class="bignumber-caption">dos recursos da Aldir Blanc destinados a pessoas físicas foram para esse grupo</p>
-    </div>
+    <BigNumber value={formatPct(percValorCadunico)} fontSize={96} label="dos recursos para esse grupo" />
   {/snippet}
 </Story>
 
 <Story name="BigNumber — % mulheres no CadUnico">
   {#snippet template()}
-    <div class="bignumber-cell">
-      <BigNumber value={formatPct(percFemCadunico)} fontSize={96} />
-      <p class="bignumber-caption">dos contemplados são mulheres</p>
-    </div>
+    <BigNumber value={formatPct(percFemCadunico)} fontSize={96} label="são mulheres (CadÚnico)" />
   {/snippet}
 </Story>
 
 <Story name="BigNumber — % entre 25 e 54 anos no CadUnico">
   {#snippet template()}
-    <div class="bignumber-cell">
-      <BigNumber value={formatPct(perc2554Cadunico)} fontSize={96} />
-      <p class="bignumber-caption">estão entre 25 e 54 anos</p>
-    </div>
+    <BigNumber value={formatPct(perc2554Cadunico)} fontSize={96} label="entre 25 e 54 anos" />
   {/snippet}
 </Story>
 
 <Story name="BigNumber — % renda familiar per capita ate 1 salario minimo">
   {#snippet template()}
-    <div class="bignumber-cell">
-      <BigNumber value="87,9%" fontSize={96} />
-      <p class="bignumber-caption">têm renda familiar per capita de até 1 salário mínimo</p>
-    </div>
+    <BigNumber value="87,9%" fontSize={96} label="renda familiar até 1 salário mínimo" />
   {/snippet}
 </Story>
 
 <Story name="BigNumber — % em situacao de pobreza ate R$218">
   {#snippet template()}
-    <div class="bignumber-cell">
-      <BigNumber value="43,6%" fontSize={96} />
-      <p class="bignumber-caption">desse grupo estão em situação de pobreza, com renda familiar per capita de até R$218</p>
-    </div>
+    <BigNumber value="43,6%" fontSize={96} label="em situação de pobreza" subtitle="renda per capita até R$218" />
   {/snippet}
 </Story>
-
-<style>
-  .bignumber-cell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    max-width: 360px;
-  }
-
-  .bignumber-caption {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 1rem;
-    text-align: center;
-    opacity: 0.75;
-    max-width: 28ch;
-    line-height: 1.5;
-    margin: 0;
-  }
-</style>

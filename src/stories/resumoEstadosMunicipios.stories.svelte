@@ -1,15 +1,30 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
+  import { DataTable } from 'sniic-design-system';
+
+  const columns = [
+    { key: 'indicador', label: 'Indicador', align: 'left', width: 340 },
+    { key: 'estados', label: 'Estados', align: 'center', width: 160 },
+    { key: 'municipios', label: 'Municípios', align: 'center', width: 160 },
+  ];
+
+  const rows = [
+    { indicador: 'Número de contemplados',                          estados: '22.050',          municipios: '144.836'       },
+    { indicador: 'Ticket médio dos pagamentos',                     estados: 'R$ 52.711',        municipios: 'R$ 7.839'      },
+    { indicador: 'Concentração dos contemplados, por faixa de valor', estados: 'De 10 a 50 mil', municipios: 'De 2 a 10 mil' },
+    { indicador: 'Concentração do recurso executado, por faixa de valor', estados: 'Acima de 200 mil', municipios: 'De 10 a 50 mil' },
+  ];
 
   const { Story } = defineMeta({
     title: 'Section 2/resumoEstadosMunicipios',
+    component: DataTable,
     tags: ['autodocs'],
     parameters: {
       docs: {
         description: {
           component: `
-**Tabela-resumo comparativa: Estados × Municípios**
+**Tabela-resumo comparativa: Estados vs Municípios**
 
 Síntese dos principais indicadores de execução financeira comparando os dois níveis de esfera pública:
 
@@ -27,43 +42,10 @@ Síntese dos principais indicadores de execução financeira comparando os dois 
 
 <Story name="Tabela resumo — Estados vs Municípios">
   {#snippet template()}
-    <div style="max-width: 680px; padding: 16px;">
-      <table style="
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.9rem;
-        font-family: 'Space Grotesk', sans-serif;
-      ">
-        <thead>
-          <tr>
-            <th style="padding: 0.6rem 0.75rem; text-align: left; font-weight: 700; color: #6b7280; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; border-bottom: 2px solid #d1d5db;">Indicador</th>
-            <th style="padding: 0.6rem 0.75rem; text-align: center; font-weight: 700; color: #6b7280; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; border-bottom: 2px solid #d1d5db;">Estados</th>
-            <th style="padding: 0.6rem 0.75rem; text-align: center; font-weight: 700; color: #6b7280; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; border-bottom: 2px solid #d1d5db;">Municípios</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb;">Número de contemplados</td>
-            <td style="padding: 0.6rem 0.75rem; text-align: center; font-weight: 500; border-bottom: 1px solid #e5e7eb;">22.050</td>
-            <td style="padding: 0.6rem 0.75rem; text-align: center; font-weight: 500; border-bottom: 1px solid #e5e7eb;">144.836</td>
-          </tr>
-          <tr>
-            <td style="padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb;">Ticket médio dos pagamentos</td>
-            <td style="padding: 0.6rem 0.75rem; text-align: center; font-weight: 500; border-bottom: 1px solid #e5e7eb;">R$ 52.711</td>
-            <td style="padding: 0.6rem 0.75rem; text-align: center; font-weight: 500; border-bottom: 1px solid #e5e7eb;">R$ 7.839</td>
-          </tr>
-          <tr>
-            <td style="padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid #e5e7eb;">Concentração dos contemplados, por faixa de valor</td>
-            <td style="padding: 0.6rem 0.75rem; text-align: center; font-weight: 500; border-bottom: 1px solid #e5e7eb;">De 10 a 50 mil</td>
-            <td style="padding: 0.6rem 0.75rem; text-align: center; font-weight: 500; border-bottom: 1px solid #e5e7eb;">De 2 a 10 mil</td>
-          </tr>
-          <tr>
-            <td style="padding: 0.6rem 0.75rem; text-align: left;">Concentração do recurso executado, por faixa de valor</td>
-            <td style="padding: 0.6rem 0.75rem; text-align: center; font-weight: 500;">Acima de 200 mil</td>
-            <td style="padding: 0.6rem 0.75rem; text-align: center; font-weight: 500;">De 10 a 50 mil</td>
-          </tr>
-        </tbody>
-      </table>
+    <div style="overflow-x: auto;">
+      <svg width={700} height={220}>
+        <DataTable {columns} {rows} />
+      </svg>
     </div>
   {/snippet}
 </Story>

@@ -89,6 +89,7 @@ A zona rural recebeu **${formatBRL(valorRuralTotal)}** no total.
   {/snippet}
 </Story>
 
+
 <Story name="Stacked — capital, metropolitana e interior (valor e quantidade)">
   {#snippet template()}
     <HorizontalStackedBarChartCustom

@@ -1395,3 +1395,352 @@ def aggregate_cadunico_representacao_by_uf(
             "razao_representacao_pnab_cadunico",
         ]
     ]
+
+import numpy as np
+import pandas as pd
+
+
+def aggregate_pf_cadunico_by_faixa_valor_ju(
+    df_cubo: pd.DataFrame,
+    by_filter: str = "UF",
+    coluna_tipo_ente: str = "tipo_ente",
+    coluna_tipo_documento: str = "tipo_documento",
+    coluna_faixa: str = "faixa_vlr_pago_ju_bbagil",
+    coluna_quantidade: str = "quantidade",
+    coluna_valor: str = "valor_transacao",
+    coluna_cadunico: str = "pessoaCad_cadunico"
+) -> pd.DataFrame:
+    """
+    Agrega Pessoas Físicas por faixa de valor pago.
+
+    Linhas:
+    - categorias da coluna faixa_vlr_pago_ju_bbagil.
+
+    Filtros:
+    - considera apenas tipo_documento == CPF;
+    - opcionalmente filtra por tipo_ente:
+        - "ESTADO": apenas tipo_ente == ESTADO;
+        - "MUNICIPIO": apenas tipo_ente == MUNICIPIO;
+        - "UF": considera ESTADO + MUNICIPIO.
+
+    Para cada faixa, calcula:
+    - quantidade geral de contemplados PF;
+    - percentual da quantidade geral no total de PF;
+    - valor geral;
+    - percentual do valor geral no total de PF;
+    - quantidade de contemplados PF no CadÚnico;
+    - percentual da quantidade CadÚnico no total de PF no CadÚnico;
+    - percentual da quantidade CadÚnico no total geral de PF;
+    - valor de contemplados PF no CadÚnico;
+    - percentual do valor CadÚnico no total de PF no CadÚnico;
+    - percentual do valor CadÚnico no total geral de PF.
+
+    Percentuais retornam em escala decimal:
+    - 0.25 = 25%
+
+    Não há arredondamento dos valores.
+    """
+
+    by_filter = by_filter.upper().strip()
+
+    # ------------------------------------------------------------
+    # 1. Copiar base
+    # ------------------------------------------------------------
+
+    df = df_cubo.copy()
+
+    # ------------------------------------------------------------
+    # 2. Normalizar tipo_ente
+    # ------------------------------------------------------------
+
+    df["tipo_ente_norm"] = (
+        df[coluna_tipo_ente]
+        .fillna("Não informado")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    # ------------------------------------------------------------
+    # 3. Aplicar filtro territorial
+    # ------------------------------------------------------------
+
+    if by_filter == "ESTADO":
+        df = df[df["tipo_ente_norm"].eq("ESTADO")].copy()
+
+    elif by_filter == "MUNICIPIO":
+        df = df[df["tipo_ente_norm"].eq("MUNICIPIO")].copy()
+
+    elif by_filter == "UF":
+        df = df[df["tipo_ente_norm"].isin(["ESTADO", "MUNICIPIO"])].copy()
+
+    else:
+        raise ValueError("by_filter deve ser 'ESTADO', 'MUNICIPIO' ou 'UF'.")
+
+    # ------------------------------------------------------------
+    # 4. Filtrar apenas Pessoa Física
+    # ------------------------------------------------------------
+
+    df["tipo_documento_norm"] = (
+        df[coluna_tipo_documento]
+        .fillna("Não informado")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+    )
+
+    df = df[df["tipo_documento_norm"].eq("CPF")].copy()
+
+    # ------------------------------------------------------------
+    # 5. Definir ordem das faixas
+    # ------------------------------------------------------------
+
+    ordem_faixa_vlr_pago = [
+        "Até 2 mil",
+        "De 2 a 10 mil",
+        "De 10 a 50 mil",
+        "De 50 a 200 mil",
+        "Acima de 200 mil"
+    ]
+
+    df["faixa_vlr_pago_ju_bbagil_tratada"] = (
+        df[coluna_faixa]
+        .fillna("Não informado")
+        .astype(str)
+        .str.strip()
+    )
+
+    df = df[
+        df["faixa_vlr_pago_ju_bbagil_tratada"].isin(ordem_faixa_vlr_pago)
+    ].copy()
+
+    # ------------------------------------------------------------
+    # 6. Garantir tipos numéricos
+    # ------------------------------------------------------------
+
+    df[coluna_quantidade] = pd.to_numeric(
+        df[coluna_quantidade],
+        errors="coerce"
+    ).fillna(0)
+
+    df[coluna_valor] = pd.to_numeric(
+        df[coluna_valor],
+        errors="coerce"
+    ).fillna(0)
+
+    # ------------------------------------------------------------
+    # 7. Criar flag CadÚnico
+    # ------------------------------------------------------------
+
+    df["flag_cadunico"] = df[coluna_cadunico].eq(1.0)
+
+    # ------------------------------------------------------------
+    # 8. Calcular totais gerais
+    # ------------------------------------------------------------
+
+    total_qtd_geral = df[coluna_quantidade].sum()
+    total_valor_geral = df[coluna_valor].sum()
+
+    total_qtd_cadunico = df.loc[
+        df["flag_cadunico"],
+        coluna_quantidade
+    ].sum()
+
+    total_valor_cadunico = df.loc[
+        df["flag_cadunico"],
+        coluna_valor
+    ].sum()
+
+    # ------------------------------------------------------------
+    # 9. Agregar geral por faixa
+    # ------------------------------------------------------------
+
+    df_geral = (
+        df
+        .groupby("faixa_vlr_pago_ju_bbagil_tratada", as_index=False)
+        .agg(
+            qtd_contemplados_geral=(coluna_quantidade, "sum"),
+            valor_total_geral=(coluna_valor, "sum")
+        )
+    )
+
+    # ------------------------------------------------------------
+    # 10. Agregar CadÚnico por faixa
+    # ------------------------------------------------------------
+
+    df_cadunico = (
+        df
+        .loc[df["flag_cadunico"]]
+        .groupby("faixa_vlr_pago_ju_bbagil_tratada", as_index=False)
+        .agg(
+            qtd_contemplados_cadunico=(coluna_quantidade, "sum"),
+            valor_total_cadunico=(coluna_valor, "sum")
+        )
+    )
+
+    # ------------------------------------------------------------
+    # 11. Montar base final
+    # ------------------------------------------------------------
+
+    df_resultado = pd.DataFrame({
+        "faixa_vlr_pago_ju_bbagil": ordem_faixa_vlr_pago
+    })
+
+    df_resultado = df_resultado.merge(
+        df_geral,
+        left_on="faixa_vlr_pago_ju_bbagil",
+        right_on="faixa_vlr_pago_ju_bbagil_tratada",
+        how="left"
+    )
+
+    df_resultado = df_resultado.merge(
+        df_cadunico,
+        left_on="faixa_vlr_pago_ju_bbagil",
+        right_on="faixa_vlr_pago_ju_bbagil_tratada",
+        how="left",
+        suffixes=("", "_cad")
+    )
+
+    df_resultado = df_resultado.drop(
+        columns=[
+            col for col in [
+                "faixa_vlr_pago_ju_bbagil_tratada",
+                "faixa_vlr_pago_ju_bbagil_tratada_cad"
+            ]
+            if col in df_resultado.columns
+        ]
+    )
+
+    # ------------------------------------------------------------
+    # 12. Preencher ausentes
+    # ------------------------------------------------------------
+
+    colunas_quantidade = [
+        "qtd_contemplados_geral",
+        "qtd_contemplados_cadunico"
+    ]
+
+    colunas_valor = [
+        "valor_total_geral",
+        "valor_total_cadunico"
+    ]
+
+    df_resultado[colunas_quantidade] = (
+        df_resultado[colunas_quantidade]
+        .fillna(0)
+    )
+
+    df_resultado[colunas_valor] = (
+        df_resultado[colunas_valor]
+        .fillna(0)
+    )
+
+    # ------------------------------------------------------------
+    # 13. Calcular percentuais
+    # ------------------------------------------------------------
+
+    df_resultado["perc_qtd_geral_no_total_pf"] = np.where(
+        total_qtd_geral != 0,
+        df_resultado["qtd_contemplados_geral"] / total_qtd_geral,
+        np.nan
+    )
+
+    df_resultado["perc_valor_geral_no_total_pf"] = np.where(
+        total_valor_geral != 0,
+        df_resultado["valor_total_geral"] / total_valor_geral,
+        np.nan
+    )
+
+    df_resultado["perc_qtd_cadunico_no_total_cadunico"] = np.where(
+        total_qtd_cadunico != 0,
+        df_resultado["qtd_contemplados_cadunico"] / total_qtd_cadunico,
+        np.nan
+    )
+
+    df_resultado["perc_valor_cadunico_no_total_cadunico"] = np.where(
+        total_valor_cadunico != 0,
+        df_resultado["valor_total_cadunico"] / total_valor_cadunico,
+        np.nan
+    )
+
+    df_resultado["perc_qtd_cadunico_no_total_pf"] = np.where(
+        total_qtd_geral != 0,
+        df_resultado["qtd_contemplados_cadunico"] / total_qtd_geral,
+        np.nan
+    )
+
+    df_resultado["perc_valor_cadunico_no_total_pf"] = np.where(
+        total_valor_geral != 0,
+        df_resultado["valor_total_cadunico"] / total_valor_geral,
+        np.nan
+    )
+
+    # ------------------------------------------------------------
+    # 14. Adicionar totais de referência
+    # ------------------------------------------------------------
+
+    df_resultado["total_contemplados_pf"] = total_qtd_geral
+    df_resultado["valor_total_pf"] = total_valor_geral
+
+    df_resultado["total_contemplados_pf_cadunico"] = total_qtd_cadunico
+    df_resultado["valor_total_pf_cadunico"] = total_valor_cadunico
+
+    # ------------------------------------------------------------
+    # 15. Ordenar colunas finais
+    # ------------------------------------------------------------
+
+    colunas_finais = [
+        "faixa_vlr_pago_ju_bbagil",
+
+        "qtd_contemplados_geral",
+        "perc_qtd_geral_no_total_pf",
+        "valor_total_geral",
+        "perc_valor_geral_no_total_pf",
+
+        "qtd_contemplados_cadunico",
+        "perc_qtd_cadunico_no_total_cadunico",
+        "perc_qtd_cadunico_no_total_pf",
+        "valor_total_cadunico",
+        "perc_valor_cadunico_no_total_cadunico",
+        "perc_valor_cadunico_no_total_pf",
+
+        "total_contemplados_pf",
+        "valor_total_pf",
+        "total_contemplados_pf_cadunico",
+        "valor_total_pf_cadunico"
+    ]
+
+    df_resultado = df_resultado[colunas_finais].copy()
+
+    # ------------------------------------------------------------
+    # 16. Ajustar tipos
+    # ------------------------------------------------------------
+
+    colunas_int = [
+        "qtd_contemplados_geral",
+        "qtd_contemplados_cadunico",
+        "total_contemplados_pf",
+        "total_contemplados_pf_cadunico"
+    ]
+
+    colunas_float = [
+        col for col in df_resultado.columns
+        if col not in ["faixa_vlr_pago_ju_bbagil"] + colunas_int
+    ]
+
+    df_resultado[colunas_int] = (
+        df_resultado[colunas_int]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado[colunas_float] = (
+        df_resultado[colunas_float]
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
+    )
+
+    return df_resultado

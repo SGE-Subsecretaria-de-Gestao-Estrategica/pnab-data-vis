@@ -2365,7 +2365,6 @@ def aggregate_vinculo_formal_labor_by_uf(
         .reset_index(drop=True)
     )
 
-
 def aggregate_vinculo_formal_labor_by_uf(
     df_cubo: pd.DataFrame,
     df_rais_uf: pd.DataFrame,

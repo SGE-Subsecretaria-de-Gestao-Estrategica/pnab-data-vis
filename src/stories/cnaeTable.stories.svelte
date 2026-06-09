@@ -2,7 +2,7 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import CnaeTable from '$lib/components/CnaeTable.svelte';
-  import { top20CnaesTableData, cnaesTableHeight } from '$lib/data/section3';
+  import { top20CnaesQtdTableData, top20CnaesValTableData, cnaesQtdTableHeight, cnaesValTableHeight } from '$lib/data/section3';
 
   const { Story } = defineMeta({
     title: 'Section 3/cnaeTable',
@@ -29,16 +29,16 @@ Ranking das 20 atividades econômicas (CNAE principal) entre os CNPJs contemplad
 
 <Story name="Top 20 CNAEs — Beneficiarios">
   {#snippet template()}
-    <svg width={700} height={cnaesTableHeight}>
-      <CnaeTable data={top20CnaesTableData} metric="quantidade" width={700} />
+    <svg width={700} height={cnaesQtdTableHeight}>
+      <CnaeTable data={top20CnaesQtdTableData} metric="quantidade" width={700} />
     </svg>
   {/snippet}
 </Story>
 
 <Story name="Top 20 CNAEs — Valor Repassado">
   {#snippet template()}
-    <svg width={700} height={cnaesTableHeight}>
-      <CnaeTable data={top20CnaesTableData} metric="valor" width={700} />
+    <svg width={700} height={cnaesValTableHeight}>
+      <CnaeTable data={top20CnaesValTableData} metric="valor" width={700} />
     </svg>
   {/snippet}
 </Story>

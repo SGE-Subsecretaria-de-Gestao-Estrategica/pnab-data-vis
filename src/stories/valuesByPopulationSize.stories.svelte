@@ -11,6 +11,8 @@
     colorScales,
   } from 'sniic-design-system';
   import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
+  // @ts-ignore
+  import { hierarchy, treemap as d3treemap } from 'd3-hierarchy';
   import {
     porteTreemapData,
     porteDivergingData,
@@ -28,10 +30,72 @@
   const formatBRLpc = (v) =>
     `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  const porteLegend = porteRaw.map((d, i) => ({ label: d.porte, color: categorical8[i] }));
+  // ── Fixed porte color palette ──────────────────────────────────────────────
+  const PORTE_NAME_COLORS = {
+    'Grande':     categorical8[0], // azul
+    'Médio':      categorical8[3], // amarelo
+    'Pequeno I':  categorical8[1], // laranja
+    'Pequeno II': categorical8[2], // verde
+  };
+  // @ts-ignore
+  const PORTE_KEY_COLORS = {
+    grande:     categorical8[0],
+    medio:      categorical8[3],
+    pequeno_i:  categorical8[1],
+    pequeno_ii: categorical8[2],
+  };
+
+  // ── Treemap SVG (pre-computed at fixed width for export) ───────────────────
+  const TM_W_PORTE = 728;
+  const TM_H_PORTE = 420;
+
+  // @ts-ignore
+  function contrastColor(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55 ? '#1a1a1a' : '#ffffff';
+  }
+
+  const porteRoot = hierarchy({ children: porteTreemapData.children })
+    .sum((/** @type {{value?: number}} */ d) => d.value ?? 0)
+    .sort((/** @type {{value?: number}} */ a, /** @type {{value?: number}} */ b) => (b.value ?? 0) - (a.value ?? 0));
+  d3treemap().size([TM_W_PORTE, TM_H_PORTE]).padding(2).paddingOuter(4)(porteRoot);
+  // @ts-ignore
+  const porteLeaves = porteRoot.leaves();
+  // Color map keyed by name from fixed palette
+  // @ts-ignore
+  const porteColorMap = new Map(porteLeaves.map((l) => [l.data.name, PORTE_NAME_COLORS[l.data.name] ?? categorical8[0]]));
+  // @ts-ignore
+  const porteRawByName = new Map(porteRaw.map((d) => [d.porte, d]));
+  // @ts-ignore
+  const porteLegendSorted = porteLeaves.map((l) => {
+    const raw = porteRawByName.get(l.data.name);
+    return {
+      label: l.data.name,
+      color: PORTE_NAME_COLORS[l.data.name] ?? categorical8[0],
+      value: raw?.valor_total ?? 0,
+      perc:  raw?.perc_valor  ?? 0,
+    };
+  });
+
+  const PORTE_LEG_SEP    = 28;
+  const PORTE_LEG_ROW_H  = 28;
+  const LEG_INDENT       = 4; // matches paddingOuter(4) of the treemap
+  const LEG_VAL_X        = TM_W_PORTE - 130;
+  const LEG_PCT_X        = TM_W_PORTE - 4;
+  const TM_TOTAL_H_PORTE = TM_H_PORTE + PORTE_LEG_SEP + porteLegendSorted.length * PORTE_LEG_ROW_H + 8;
+
+  // Colors in key/data order for each chart type
+  // @ts-ignore
+  const porteStackedColors = porteStackedKeys.map((k) => PORTE_KEY_COLORS[k]);
+  // @ts-ignore
+  const porteBubbleColors  = porteRaw.map((d) => PORTE_NAME_COLORS[d.porte]);
 
   // ── Bars — Métricas por Porte (stacked) ────────────────────────────────────
-  const pmKeys    = ['grande', 'pequeno_i', 'pequeno_ii', 'medio'];
+  const pmKeys    = ['pequeno_i', 'pequeno_ii', 'medio', 'grande'];
+  // @ts-ignore
+  const pmColors  = pmKeys.map((k) => PORTE_KEY_COLORS[k]);
   const pmLabels  = { grande: 'Grande', pequeno_i: 'Pequeno I', pequeno_ii: 'Pequeno II', medio: 'Médio' };
   const pmByLabel = Object.fromEntries(porteMeanData.map((d) => [d.label, d]));
   const pmTotalMun   = porteMeanData.reduce((s, d) => s + d.municipios, 0);
@@ -115,22 +179,49 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
 
 <Story name="Treemap — Distribuição de Valores por Porte">
   {#snippet template()}
-    <div style="display:flex; flex-direction:column; gap:12px;">
-      <TreemapChart
-        data={porteTreemapData}
-        height={420}
-        format={formatBRL}
-        colors={categorical8}
-      />
-      <div style="display:flex; flex-wrap:wrap; gap:16px; padding:0 8px;">
-        {#each porteLegend as item}
-          <span style="display:flex; align-items:center; gap:6px; font-size:13px; font-family:system-ui, sans-serif;">
-            <span style="display:inline-block; width:12px; height:12px; border-radius:2px; background:{item.color};"></span>
-            {item.label}
-          </span>
-        {/each}
-      </div>
-    </div>
+    <svg width={TM_W_PORTE} height={TM_TOTAL_H_PORTE} font-family="'Space Grotesk', system-ui, sans-serif" font-size="12" style="display:block">
+      {#each porteLeaves as leaf}
+        {@const w        = leaf.x1 - leaf.x0}
+        {@const h        = leaf.y1 - leaf.y0}
+        {@const cx       = leaf.x0 + w / 2}
+        {@const cy       = leaf.y0 + h / 2}
+        {@const color    = porteColorMap.get(leaf.data.name) ?? categorical8[0]}
+        {@const showBoth = w >= 80 && h >= 40}
+        {@const showVal  = w >= 40 && h >= 20}
+        <rect x={leaf.x0} y={leaf.y0} width={w} height={h} fill={color} shape-rendering="crispEdges" />
+        {#if showVal}
+          <text x={cx} y={showBoth ? cy - 7 : cy}
+                text-anchor="middle" dominant-baseline="middle"
+                fill={contrastColor(color)} font-size="12" font-weight="700" pointer-events="none"
+          >{formatBRL(leaf.data.value)}</text>
+        {/if}
+        {#if showBoth}
+          <text x={cx} y={cy + 10}
+                text-anchor="middle" dominant-baseline="middle"
+                fill={contrastColor(color)} font-size="9" pointer-events="none"
+          >{leaf.data.name}</text>
+        {/if}
+      {/each}
+
+      <!-- legend separator -->
+      <line x1={LEG_INDENT} y1={TM_H_PORTE + 12} x2={TM_W_PORTE} y2={TM_H_PORTE + 12} stroke="var(--chart-grid, #e0e0e0)" />
+
+      <!-- legend column headers -->
+      <text x={LEG_VAL_X} y={TM_H_PORTE + 22} text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="10">Valor total</text>
+      <text x={LEG_PCT_X} y={TM_H_PORTE + 22} text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="10">% do total</text>
+
+      <!-- legend rows -->
+      {#each porteLegendSorted as item, i}
+        {@const ry = TM_H_PORTE + PORTE_LEG_SEP + 16 + i * PORTE_LEG_ROW_H}
+        {#if i > 0}
+          <line x1={LEG_INDENT} y1={ry - 6} x2={TM_W_PORTE} y2={ry - 6} stroke="var(--chart-grid, #e0e0e0)" />
+        {/if}
+        <rect x={LEG_INDENT} y={ry + 1} width={10} height={10} rx="2" fill={item.color} />
+        <text x={LEG_INDENT + 14} y={ry + 6} dy="0.35em" fill="var(--chart-fg, #1a1a1a)" font-size="12">{item.label}</text>
+        <text x={LEG_VAL_X} y={ry + 6} dy="0.35em" text-anchor="end" fill="var(--chart-fg-strong, #111)" font-weight="600" font-size="12">{formatBRL(item.value)}</text>
+        <text x={LEG_PCT_X} y={ry + 6} dy="0.35em" text-anchor="end" fill={item.color} font-size="13" font-weight="700">{item.perc.toFixed(1)}%</text>
+      {/each}
+    </svg>
   {/snippet}
 </Story>
 
@@ -160,7 +251,7 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
       sizeLabel="Beneficiários"
       yFormat={(v) => `${(v / 1e6).toFixed(0)}M`}
       xFormat={(v) => v.toLocaleString('pt-BR')}
-      colors={categorical8}
+      colors={porteBubbleColors}
     />
   {/snippet}
 </Story>
@@ -171,7 +262,7 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
       data={porteStackedData}
       keys={porteStackedKeys}
       labels={porteStackedLabels}
-      colors={categorical8}
+      colors={porteStackedColors}
       format={formatPerc}
       showTotalLabel={true}
       marginLeft={180}
@@ -186,7 +277,7 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
       keys={pmKeys}
       categoryKey="cat"
       labels={pmLabels}
-      colors={categorical8}
+      colors={pmColors}
       format={formatPerc}
       showTotalLabel={true}
       marginLeft={180}
@@ -210,7 +301,7 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
       keys={pmKeys}
       categoryKey="cat"
       labels={pmLabels}
-      colors={categorical8}
+      colors={pmColors}
       format={formatPerc}
       showTotalLabel={true}
       marginLeft={220}

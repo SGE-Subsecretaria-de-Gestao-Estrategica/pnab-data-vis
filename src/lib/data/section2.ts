@@ -14,6 +14,7 @@ import csvFaixaStateRaw    from '../../../data/section_2/aggregate_faixa_valor_j
 import csvAuxQuartisBrasilRaw from '../../../data/section_2/aux_quartis_estados_brasil.csv?raw';
 import csvQuartisEstadosRaw from '../../../data/section_2/quartis_estados.csv?raw';
 import csvResumoValoresUfEstadoRaw from '../../../data/section_2/resumo_valores_uf_estado.csv?raw';
+import csvResumoValoresUfRaw       from '../../../data/section_2/resumo_valores_uf.csv?raw';
 import csvTerrUfRaw      from '../../../data/section_2/territorios_especiais_por_uf.csv?raw';
 import csvTerrEstadoRaw  from '../../../data/section_2/territorios_especiais_por_estado.csv?raw';
 import csvTerrMunRaw     from '../../../data/section_2/territorios_especiais_por_municipio.csv?raw';
@@ -476,11 +477,10 @@ export const regiaoContempladosFaixaData = (() => {
 	});
 })();
 
-// ── ChoroplethMap — ticket médio por estado (resumo_valores_uf_estado.csv) ────
+// ── ChoroplethMap — ticket médio por estado (resumo_valores_uf.csv) ────
 export const mediaValorByState: Record<string, { media_valor: number; mediana_valor: number; media_aparada_1pct_valor: number }> =
 	Object.fromEntries(
-		parseCSV(csvResumoValoresUfEstadoRaw)
-			.filter((r) => r.visao === 'ESTADO')
+		parseCSV(csvResumoValoresUfRaw)
 			.flatMap((r) => {
 				const name = siglaToName[r.uf];
 				if (!name) return [];

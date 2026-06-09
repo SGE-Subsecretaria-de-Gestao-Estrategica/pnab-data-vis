@@ -13,6 +13,8 @@
 	import PyramidChartCustom from '$lib/components/PyramidChartCustom.svelte';
 	import CnaeTable from '$lib/components/CnaeTable.svelte';
 	import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
+	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
+	import VerticalGroupedBarChart from '$lib/components/VerticalGroupedBarChart.svelte';
 	import SexoUfStackedComparison from '$lib/components/SexoUfStackedComparison.svelte';
 	import {
 		totalBeneficiarios,
@@ -30,14 +32,18 @@
 		ageGroupRegionKeys,
 		ageGroupRegionLabels,
 		top20CboData,
-		top20CnaesTableData,
-		cnaesTableHeight,
+		top20CnaesQtdTableData,
+		top20CnaesValTableData,
+		cnaesQtdTableHeight,
+		cnaesValTableHeight,
 		naturezaJuridicaRegiaoData,
 		naturezaJuridicaSeriesLabels,
 		naturezaJuridicaData,
 		sexoUfData,
 		sexoUfSeriesLabels,
 		sexoUfComparisonData,
+		valorMedioSexoPorteData,
+		valorMedioSexoSeriesLabels,
 	} from '$lib/data/section3';
 
 	const formatNum = (v: number) => v.toLocaleString('pt-BR');
@@ -91,19 +97,13 @@
 <ScrollSection id="section-3-totals">
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="134.606" fontSize={64} />
-			<p class="bignumber-perc">(80,7%)</p>
-			<p class="bignumber-caption">são pessoas físicas</p>
+			<BigNumber value="134.606" fontSize={64} width={280} label="(80,7%)" subtitle="pessoas físicas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="32.280" fontSize={64} />
-			<p class="bignumber-perc">(19,3%)</p>
-			<p class="bignumber-caption">são pessoas jurídicas</p>
+			<BigNumber value="32.280" fontSize={64} width={280} label="(19,3%)" subtitle="pessoas jurídicas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="9.076" fontSize={64} />
-			<p class="bignumber-perc">(5,4% do total)</p>
-			<p class="bignumber-caption">são MEIs dentre as pessoas jurídicas</p>
+			<BigNumber value="9.076" fontSize={64} width={280} label="(5,4% do total)" subtitle="são MEIs" />
 		</div>
 	</div>
 	<p style="margin-top: 2rem;">
@@ -111,18 +111,13 @@
 	</p>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorTotalPF)} fontSize={56} />
-			<p class="bignumber-perc">(44,1%)</p>
-			<p class="bignumber-caption">recebidos por pessoas físicas</p>
+			<BigNumber value={formatBRL(valorTotalPF)} fontSize={56} width={280} label="(44,1%)" subtitle="pessoas físicas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorTotalPJ)} fontSize={56} />
-			<p class="bignumber-perc">(55,9%)</p>
-			<p class="bignumber-caption">recebidos por pessoas jurídicas</p>
+			<BigNumber value={formatBRL(valorTotalPJ)} fontSize={56} width={280} label="(55,9%)" subtitle="pessoas jurídicas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorTotalMEI)} fontSize={56} />
-			<p class="bignumber-caption">recebidos pelos MEIs</p>
+			<BigNumber value={formatBRL(valorTotalMEI)} fontSize={56} width={280} label="recebidos pelos MEIs" />
 		</div>
 	</div>
 	<p>
@@ -216,14 +211,10 @@
 	</p>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="14.996" fontSize={64} />
-			<p class="bignumber-perc">(68%)</p>
-			<p class="bignumber-caption">pessoas físicas</p>
+			<BigNumber value="14.996" fontSize={64} label="(68%)" subtitle="pessoas físicas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="7.054" fontSize={64} />
-			<p class="bignumber-perc">(32%)</p>
-			<p class="bignumber-caption">pessoas jurídicas</p>
+			<BigNumber value="7.054" fontSize={64} label="(32%)" subtitle="pessoas jurídicas" />
 		</div>
 	</div>
 	<p>
@@ -251,14 +242,10 @@
 	</p>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="119.610" fontSize={64} />
-			<p class="bignumber-perc">(82,6%)</p>
-			<p class="bignumber-caption">pessoas físicas</p>
+			<BigNumber value="119.610" fontSize={64} label="(82,6%)" subtitle="pessoas físicas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="25.226" fontSize={64} />
-			<p class="bignumber-perc">(17,4%)</p>
-			<p class="bignumber-caption">pessoas jurídicas</p>
+			<BigNumber value="25.226" fontSize={64} label="(17,4%)" subtitle="pessoas jurídicas" />
 		</div>
 	</div>
 	<p>
@@ -289,12 +276,10 @@
 	<h3>3.2.1. Sexo</h3>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value={formatPct(sexoPropMasculino)} fontSize={72} />
-			<p class="bignumber-caption">dos agentes culturais contemplados são do sexo masculino</p>
+			<BigNumber value={formatPct(sexoPropMasculino)} fontSize={72} label="sexo masculino" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value={formatPct(sexoPropFeminino)} fontSize={72} />
-			<p class="bignumber-caption">dos agentes culturais contemplados são do sexo feminino</p>
+			<BigNumber value={formatPct(sexoPropFeminino)} fontSize={72} label="sexo feminino" />
 		</div>
 	</div>
 	<p class="pictogram-caption">Cada ícone representa 1 em cada 15 agentes culturais contemplados</p>
@@ -348,7 +333,7 @@
 			<DonutChart
 				data={sexoQuantityDonutData}
 				colors={sexColors}
-				centerLabel="PF contemplados"
+				centerLabel="Agentes contemplados"
 				centerValue={totalPF.toLocaleString('pt-BR')}
 				format={formatNum}
 				height={280}
@@ -402,12 +387,10 @@
 <ScrollSection id="section-3-321-valores">
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="R$9,2 mil" fontSize={64} />
-			<p class="bignumber-caption">valor médio recebido por agentes culturais do sexo feminino</p>
+			<BigNumber value="R$9,2 mil" fontSize={64} label="valor médio — feminino" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="2%" fontSize={64} />
-			<p class="bignumber-caption">de diferença em relação à média dos homens (R$9,4 mil)</p>
+			<BigNumber value="2%" fontSize={64} label="diferença vs. homens (R$9,4 mil)" />
 		</div>
 	</div>
 	<p>
@@ -431,6 +414,16 @@
 		maiores desigualdades sociais, implementem mecanismos de estímulo à participação feminina, como
 		os previstos no art. 2º da IN MinC nº 10/2023.
 	</p>
+	<VerticalGroupedBarChart
+		data={valorMedioSexoPorteData}
+		seriesLabels={valorMedioSexoSeriesLabels}
+		colors={sexColors}
+		format={formatBRL}
+		barWidth={36}
+		barPad={14}
+		innerH={300}
+		margin={{ top: 20, right: 20, bottom: 10, left: 72 }}
+	/>
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
@@ -561,14 +554,12 @@
 		title="% - Distribuição de Agentes Culturais Pessoas Jurídicas Contemplados na Aldir Blanc por Natureza Jurídica"
 		margin={{ top: 20, right: 80, bottom: 40, left: 230 }}
 	/>
-	<HorizontalGroupedBarChart
+	<HorizontalStackedBarChartCustom
 		data={naturezaJuridicaRegiaoData}
-		seriesLabels={naturezaJuridicaSeriesLabels}
+		keys={naturezaJuridicaSeriesLabels}
 		colors={categorical8.slice(0, 6)}
-		margin={{ top: 20, right: 80, bottom: 40, left: 110 }}
-		barHeight={12}
-		barPad={3}
-		legendBottom={true}
+		format={(v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'}
+		marginLeft={120}
 	/>
 </ScrollSection>
 
@@ -656,14 +647,14 @@
 	<h3>Top 20 CNAEs principais das pessoas jurídicas contempladas</h3>
 	<p>Por quantidade de CNPJs contemplados:</p>
 	<div style="overflow-x: auto;">
-		<svg width={700} height={cnaesTableHeight}>
-			<CnaeTable data={top20CnaesTableData} metric="quantidade" width={700} />
+		<svg width={700} height={cnaesQtdTableHeight}>
+			<CnaeTable data={top20CnaesQtdTableData} metric="quantidade" width={700} />
 		</svg>
 	</div>
 	<p>Por valor total repassado:</p>
 	<div style="overflow-x: auto;">
-		<svg width={700} height={cnaesTableHeight}>
-			<CnaeTable data={top20CnaesTableData} metric="valor" width={700} />
+		<svg width={700} height={cnaesValTableHeight}>
+			<CnaeTable data={top20CnaesValTableData} metric="valor" width={700} />
 		</svg>
 	</div>
 </ScrollSection>
@@ -680,26 +671,8 @@
 		flex: 1 1 200px;
 		min-width: 0;
 		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
+		justify-content: center;
 		margin-top: 1.5rem;
-	}
-
-	.bignumber-perc {
-		font-size: 1.4rem;
-		font-weight: 600;
-		text-align: center;
-		opacity: 0.65;
-		margin: -0.25rem 0 0;
-	}
-
-	.bignumber-caption {
-		font-size: 0.95rem;
-		color: var(--color-text);
-		text-align: center;
-		opacity: 0.75;
-		max-width: 20ch;
 	}
 
 	.frase-destaque {

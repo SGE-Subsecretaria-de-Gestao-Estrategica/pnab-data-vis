@@ -16,6 +16,7 @@
 		margin = { top: 20, right: 90, bottom: 40, left: 50 },
 		barHeight = 10,
 		barPad = 4,
+		groupPad: groupPadProp = 6,
 		legendBottom = false,
 	}: {
 		data: GroupedBarRow[];
@@ -27,6 +28,7 @@
 		margin?: { top: number; right: number; bottom: number; left: number };
 		barHeight?: number;
 		barPad?: number;
+		groupPad?: number;
 		legendBottom?: boolean;
 	} = $props();
 
@@ -41,7 +43,7 @@
 			: Math.max(0, ...data.filter((d) => !d.isSeparator).map((d) => d.values.length))
 	);
 	const groupHeight = $derived(nSeries * barHeight + Math.max(0, nSeries - 1) * barPad);
-	const groupPad = 6;
+	const groupPad = groupPadProp;
 	const separatorH = 16;
 
 	// Compute row Y positions accounting for separator rows
@@ -71,10 +73,34 @@
 	const legendAllItems = $derived(
 		legendItems ?? seriesLabels.map((l, i) => ({ label: l, color: colors[i % colors.length] }))
 	);
+
+	// DOM-measured text widths; fall back to char estimate before first measurement
+	let legendTextEls = $state<(SVGTextElement | null)[]>([]);
+	let legendText2Els = $state<(SVGTextElement | null)[]>([]);
+	let measuredLegendW = $state<number[]>([]);
+
+	$effect(() => {
+		if (!legendBottom || legendTextEls.length === 0) return;
+		const ws = legendAllItems.map((item, i) => {
+			const el = legendTextEls[i];
+			if (!el) return 0;
+			const w1 = Math.ceil(el.getComputedTextLength());
+			if (item.secondLabel) {
+				const el2 = legendText2Els[i];
+				const w2 = el2 ? Math.ceil(el2.getComputedTextLength()) : 0;
+				return Math.max(w1, w2) * 2 + LEGEND_PAD_X * 2;
+			}
+			return w1 + LEGEND_PAD_X * 2;
+		});
+		if (ws.some((w) => w > 0)) measuredLegendW = ws;
+	});
+
 	const legendNaturalW = $derived(
-		legendAllItems.map((item) =>
-			Math.max(item.label.length, item.secondLabel?.length ?? 0) * LEGEND_CHAR_W + LEGEND_PAD_X * 2
-		)
+		legendAllItems.map((item, i) => {
+			const m = measuredLegendW[i];
+			if (m && m > 0) return m;
+			return Math.max(item.label.length, item.secondLabel?.length ?? 0) * LEGEND_CHAR_W + LEGEND_PAD_X * 2;
+		})
 	);
 	// Greedy row packing against innerW
 	const legendRows = $derived((() => {
@@ -212,13 +238,27 @@
 				{/if}
 			{/each}
 
+			<!-- hidden text measurement group for legend widths -->
+			{#if legendBottom}
+				<g visibility="hidden" aria-hidden="true" pointer-events="none">
+					{#each legendAllItems as item, i}
+						<text bind:this={legendTextEls[i]} font-size="12" font-weight="600">{item.label}</text>
+						{#if item.secondLabel}
+							<text bind:this={legendText2Els[i]} font-size="12" font-weight="600">{item.secondLabel}</text>
+						{/if}
+					{/each}
+				</g>
+			{/if}
+
 			<!-- legend -->
 			{#if legendBottom}
 				{#each legendRows as row, ri}
 					{@const rowY = legendStartY + ri * (LEGEND_BLOCK_H + LEGEND_ROW_GAP)}
 					{@const rowItems = row.map((idx) => ({ item: legendAllItems[idx], w: legendNaturalW[idx] }))}
+					{@const rowTotalW = rowItems.reduce((s, r) => s + r.w, 0)}
+					{@const rowOffsetX = margin.left + (innerW - rowTotalW) / 2}
 					{#each rowItems as { item, w }, col}
-						{@const bx = margin.left + rowItems.slice(0, col).reduce((s, r) => s + r.w, 0)}
+						{@const bx = rowOffsetX + rowItems.slice(0, col).reduce((s, r) => s + r.w, 0)}
 						{#if item.secondLabel && item.secondColor}
 							<rect x={bx} y={rowY} width={w / 2} height={LEGEND_BLOCK_H} fill={item.color} shape-rendering="crispEdges" />
 							<rect x={bx + w / 2} y={rowY} width={w / 2} height={LEGEND_BLOCK_H} fill={item.secondColor} shape-rendering="crispEdges" />
@@ -233,8 +273,7 @@
 							<line x1={bx + w} y1={rowY} x2={bx + w} y2={rowY + LEGEND_BLOCK_H} stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" />
 						{/if}
 					{/each}
-					{@const rowTotalW = rowItems.reduce((s, r) => s + r.w, 0)}
-					<rect fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" x={margin.left} y={rowY} width={rowTotalW} height={LEGEND_BLOCK_H} />
+					<rect fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" x={rowOffsetX} y={rowY} width={rowTotalW} height={LEGEND_BLOCK_H} />
 				{/each}
 			{:else}
 				{#each seriesLabels as label, si}

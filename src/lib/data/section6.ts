@@ -2,9 +2,13 @@
 
 import csvGrafico1Raw from '../../../data/section_6/capitulo_6_grafico_1.csv?raw';
 import csvGrafico2Raw from '../../../data/section_6/capitulo_6_grafico_2.csv?raw';
+import csvGrafico3Raw from '../../../data/section_6/capitulo_6_grafico_3.csv?raw';
 import csvGrafico4Raw from '../../../data/section_6/capitulo_6_grafico_4.csv?raw';
+import csvGrafico5Raw from '../../../data/section_6/capitulo_6_grafico_5.csv?raw';
+import csvPncvOuOutrosRaw from '../../../data/section_6/capitulo_6_grafico_pncv_ou_outros__2026-06-03_17-52.csv?raw';
+import csvTipoExecRegiaoRaw from '../../../data/section_6/capitulo_6_grafico_tipo_exec_regiao__2026-06-03_18-36.csv?raw';
 
-import type { MekkoDatum } from 'sniic-design-system';
+import type { MekkoDatum, TreemapNode } from 'sniic-design-system';
 
 // ── Parser ──────────────────────────────────────────────────────────────────────
 function parseCSV(text: string): Record<string, string>[] {
@@ -43,7 +47,7 @@ const CATEGORY_KEY: Record<string, string> = {
 	'Outros':                                                    'outros_cat',
 };
 
-const MAIN_CATEGORIES = new Set(['fomento', 'cultura_viva', 'obras']);
+const MAIN_CATEGORIES = new Set(['fomento', 'cultura_viva', 'subsidio']);
 
 const formatMi = (v: number) =>
 	new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 }).format(v);
@@ -72,17 +76,17 @@ const otherVisualTotal = Math.max(otherTotal, mainTotal * (RIGHT_VISUAL_FRACTION
 const CULTURA_MIN_LEFT_FRACTION = 0.20;
 const culturaRow    = mainRows.find((r) => r.key === 'cultura_viva')!;
 const fomentoRow    = mainRows.find((r) => r.key === 'fomento')!;
-const obrasRow      = mainRows.find((r) => r.key === 'obras')!;
+const subsidioRow   = mainRows.find((r) => r.key === 'subsidio')!;
 
-// Boost Obras visual height to at least 13% of the left column.
-const OBRAS_MIN_LEFT_FRACTION = 0.13;
-const nonObrasSum   = culturaRow.valor + fomentoRow.valor;
-const obrasVisual   = Math.max(
-	obrasRow.valor,
-	nonObrasSum * (OBRAS_MIN_LEFT_FRACTION / (1 - OBRAS_MIN_LEFT_FRACTION)),
+// Boost Subsídio visual height to at least 13% of the left column.
+const SUBSIDIO_MIN_LEFT_FRACTION = 0.13;
+const nonSubsidioSum  = culturaRow.valor + fomentoRow.valor;
+const subsidioVisual  = Math.max(
+	subsidioRow.valor,
+	nonSubsidioSum * (SUBSIDIO_MIN_LEFT_FRACTION / (1 - SUBSIDIO_MIN_LEFT_FRACTION)),
 );
 
-const nonCulturaSum = fomentoRow.valor + obrasVisual;
+const nonCulturaSum = fomentoRow.valor + subsidioVisual;
 const culturaVivaVisual = Math.max(
 	culturaRow.valor,
 	nonCulturaSum * (CULTURA_MIN_LEFT_FRACTION / (1 - CULTURA_MIN_LEFT_FRACTION)),
@@ -97,11 +101,11 @@ export const expensesGrandTotal = g1Data.reduce((s, r) => s + r.valor, 0);
 
 export const expensesChartData: MekkoDatum[] = [
 	{
-		label: `Fomento Cultural, Política Nacional de Cultura Viva e Obras, Reformas e Aquisição de Bens Culturais — 88,4%`,
+		label: `Fomento Cultural, Política Nacional de Cultura Viva e Subsídio e manutenção de espaços e organizações culturais — 88,4%`,
 		total: mainTotal,
 		...Object.fromEntries(mainRows.map((r) =>
 			r.key === 'cultura_viva' ? [r.key, culturaVivaVisual] :
-			r.key === 'obras'        ? [r.key, obrasVisual]        : [r.key, r.valor]
+			r.key === 'subsidio'     ? [r.key, subsidioVisual]    : [r.key, r.valor]
 		)),
 	},
 	{
@@ -114,8 +118,8 @@ export const expensesChartData: MekkoDatum[] = [
 export const expensesKeys = [
 	'fomento',
 	'cultura_viva',
-	'obras',
 	'subsidio',
+	'obras',
 	'operacionalizacao',
 	'vazio',
 	'outros_cat',
@@ -155,6 +159,22 @@ export const fomentoSubData = fomentoSubRaw.map((r) => ({
 	pct: (r.valor / fomentoSubTotal) * 100,
 }));
 
+// ── Grafico 3 — Domínios de Fomento Cultural (Treemap) ────────────────────────
+const g3Rows = parseCSV(csvGrafico3Raw).map((r) => ({
+	name:  r['Categorização Domínios'],
+	value: +r.valor_estimado,
+	p025:  +r.p025,
+	p975:  +r.p975,
+	pct:   +r.valor_estimado_pct,
+}));
+
+export const fomentoDomainsTreemap: TreemapNode = {
+	name: 'Fomento Cultural',
+	children: g3Rows.map((r) => ({ name: r.name, value: r.value })),
+};
+
+export const fomentoDomainsRows = g3Rows;
+
 // ── Grafico 4 — Subcategorias de PNCV ─────────────────────────────────────────
 const pncvSubRaw = parseCSV(csvGrafico4Raw).map((r) => ({
 	label: r['Categorização Nivel 0'],
@@ -168,3 +188,149 @@ export const pncvSubData = pncvSubRaw.map((r) => ({
 	...r,
 	pct: (r.valor / pncvSubTotal) * 100,
 }));
+
+// ── Grafico PNCV ou Outros — % do valor por faixa de repasse ──────────────────
+const pncvOuOutrosRaw = parseCSV(csvPncvOuOutrosRaw);
+
+// Group by regra_pncv, pivot pncv_ou_outros into keys
+const REGRA_ORDER = [
+	'Brasil',
+	'Município recebeu mais de 360 mil reais',
+	'Município recebeu até 360 mil reais',
+];
+
+const REGRA_REMAP: Record<string, string> = {
+	'Cidade recebeu mais de 360 mil reais': 'Município recebeu mais de 360 mil reais',
+	'Cidade recebeu até 360 mil reais':     'Município recebeu até 360 mil reais',
+};
+
+const _pncvOuOutrosMap = new Map<string, { outros_pct: number; pncv_pct: number; outros_val: number; pncv_val: number }>();
+for (const r of pncvOuOutrosRaw) {
+	const regra = REGRA_REMAP[r.regra_pncv] ?? r.regra_pncv;
+	if (!_pncvOuOutrosMap.has(regra)) {
+		_pncvOuOutrosMap.set(regra, { outros_pct: 0, pncv_pct: 0, outros_val: 0, pncv_val: 0 });
+	}
+	const entry = _pncvOuOutrosMap.get(regra)!;
+	if (r.pncv_ou_outros === 'PNCV') {
+		entry.pncv_pct = +r.valor_estimado_pct;
+		entry.pncv_val = +r.valor_estimado;
+	} else {
+		entry.outros_pct = +r.valor_estimado_pct;
+		entry.outros_val = +r.valor_estimado;
+	}
+}
+
+export const pncvOuOutrosData = REGRA_ORDER.filter((r) => _pncvOuOutrosMap.has(r)).map((regra) => ({
+	label: regra,
+	..._pncvOuOutrosMap.get(regra)!,
+}));
+
+export const pncvOuOutrosKeys = ['pncv_pct', 'outros_pct'] as const;
+export const pncvOuOutrosLabels: Record<string, string> = {
+	pncv_pct:   'PNCV',
+	outros_pct: 'Outros',
+};
+
+// ── Grafico tipo_exec_regiao — % por tipo de execução × região ────────────────
+const tipoExecRegiaoRaw = parseCSV(csvTipoExecRegiaoRaw);
+
+const TIPO_KEY: Record<string, string> = {
+	'Ação Cultural - Fomento Cultural': 'acao_pct',
+	'Bolsa - Fomento Cultural':         'bolsa_pct',
+	'Premiação - Fomento Cultural':     'premiacao_pct',
+};
+
+const REGIAO_ORDER_EXEC = [
+	'Todo o Brasil',
+	'Sul',
+	'Sudeste',
+	'Nordeste',
+	'Norte',
+	'Centro-Oeste',
+];
+
+const _tipoExecMap = new Map<string, Record<string, number>>();
+for (const r of tipoExecRegiaoRaw) {
+	const regiao = r.regiao;
+	if (!_tipoExecMap.has(regiao)) _tipoExecMap.set(regiao, {});
+	const key = TIPO_KEY[r['Categorização Nivel 0']];
+	if (key) _tipoExecMap.get(regiao)![key] = +r.valor_estimado_pct;
+}
+
+export const tipoExecRegiaoData = REGIAO_ORDER_EXEC
+	.filter((r) => _tipoExecMap.has(r))
+	.map((regiao) => {
+		const d = { label: regiao, ..._tipoExecMap.get(regiao)! };
+		// Epsilon ensures "Todo o Brasil" sorts first (chart sorts by total desc).
+		// Value is too small to affect display (1 decimal precision).
+		if (regiao === 'Todo o Brasil') d.acao_pct += 0.001;
+		return d;
+	});
+
+export const tipoExecRegiaoKeys = ['acao_pct', 'bolsa_pct', 'premiacao_pct'] as const;
+export const tipoExecRegiaoLabels: Record<string, string> = {
+	acao_pct:      'Ação Cultural',
+	bolsa_pct:     'Bolsa',
+	premiacao_pct: 'Premiação',
+};
+
+// ── Grafico 5 — PNCV por Modalidade × Natureza Jurídica ───────────────────────
+const g5Rows = parseCSV(csvGrafico5Raw).map((r) => ({
+	modalidade: r['Categorização Nivel 0'],
+	tipo_doc:   r.tipo_documento,
+	valor:      +r.valor_estimado,
+	p025:       +r.p025,
+	p975:       +r.p975,
+}));
+
+const _pncvModalMap = new Map<string, { cnpj: number; cpf: number }>();
+for (const r of g5Rows) {
+	if (!_pncvModalMap.has(r.modalidade)) {
+		_pncvModalMap.set(r.modalidade, { cnpj: 0, cpf: 0 });
+	}
+	const entry = _pncvModalMap.get(r.modalidade)!;
+	if (r.tipo_doc === 'CNPJ') entry.cnpj = r.valor;
+	else if (r.tipo_doc === 'CPF') entry.cpf = r.valor;
+}
+
+const MODALIDADE_ORDER = ['Ação Cultural - PNCV', 'Prêmio - PNCV'];
+
+export const pncvNatJuridicaData = MODALIDADE_ORDER
+	.filter((m) => _pncvModalMap.has(m))
+	.map((modalidade) => {
+		const { cnpj, cpf } = _pncvModalMap.get(modalidade)!;
+		const total = cnpj + cpf;
+		return {
+			label:    modalidade.replace(' - PNCV', ''),
+			cnpj_pct: total > 0 ? (cnpj / total) * 100 : 0,
+			cpf_pct:  total > 0 ? (cpf / total) * 100 : 0,
+		};
+	});
+
+export const pncvNatJuridicaKeys = ['cnpj_pct', 'cpf_pct'] as const;
+export const pncvNatJuridicaLabels: Record<string, string> = {
+	cnpj_pct: 'CNPJ',
+	cpf_pct:  'CPF',
+};
+
+// ── Tabela — Modalidade de Obras, Reformas e Aquisição de Bens Culturais ─────
+export const modalidadeObrasData = [
+	{ label: 'Consultoria',                           valor: 14089896.00, p025: 12689237.22, p975: 15731644.51, pct: 35.5 },
+	{ label: 'Pareceristas',                          valor: 13673416.57, p025: 11147936.43, p975: 17240908.35, pct: 34.5 },
+	{ label: 'Apoio Adm',                             valor:  6440659.26, p025:  5151209.64, p975:  7870559.32, pct: 16.2 },
+	{ label: 'Outros',                                valor:  3018799.11, p025:  2030031.50, p975:  4098874.10, pct:  7.6 },
+	{ label: 'Serviços Digitais',                     valor:  1589217.64, p025:   722661.85, p975:  2901198.19, pct:  4.0 },
+	{ label: 'Fortalecimento de Sistemas de Cultura', valor:   454435.37, p025:   228588.33, p975:   716566.30, pct:  1.1 },
+	{ label: 'Comissão',                              valor:   404230.58, p025:   227817.01, p975:   625183.97, pct:  1.0 },
+];
+
+// ── Tabela — Subcategorias de Operacionalização da Política ───────────────────
+export const operacionalizacaoSubData = [
+	{ label: 'Consultoria',                            valor: 14089896.00, p025: 12689237.22, p975: 15731644.51, pct: 35.5 },
+	{ label: 'Pareceristas',                           valor: 13673416.57, p025: 11147936.43, p975: 17240908.35, pct: 34.5 },
+	{ label: 'Apoio Adm',                              valor:  6440659.26, p025:  5151209.64, p975:  7870559.32, pct: 16.2 },
+	{ label: 'Outros',                                 valor:  3018799.11, p025:  2030031.50, p975:  4098874.10, pct:  7.6 },
+	{ label: 'Serviços Digitais',                      valor:  1589217.64, p025:   722661.85, p975:  2901198.19, pct:  4.0 },
+	{ label: 'Fortalecimento de Sistemas de Cultura',  valor:   454435.37, p025:   228588.33, p975:   716566.30, pct:  1.1 },
+	{ label: 'Comissão',                               valor:   404230.58, p025:   227817.01, p975:   625183.97, pct:  1.0 },
+];

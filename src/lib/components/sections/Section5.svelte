@@ -2,13 +2,13 @@
 	import ScrollSection from '$lib/components/ScrollSection.svelte';
 	import {
 		BigNumber,
-		DonutChart,
-		HorizontalStackedBarChart,
 		TreemapChart,
 		colorPairs,
 		colorScales,
 		categorical8,
 	} from 'sniic-design-system';
+	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
+	import DonutChartWithLegend from '$lib/components/DonutChartWithLegend.svelte';
 	import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
 	import {
 		percContempladosCadunico,
@@ -75,28 +75,23 @@
 <ScrollSection id="section-5-bignumbers">
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value={formatPct(percContempladosCadunico)} fontSize={72} />
-			<p class="bignumber-caption">das pessoas contempladas no Ciclo 1 da Aldir Blanc estão cadastradas no Cadastro Único</p>
+			<BigNumber value={formatPct(percContempladosCadunico)} fontSize={72} label="cadastrados no CadÚnico" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value={formatNum(qtdContempladosCadunico)} fontSize={72} />
-			<p class="bignumber-caption">contemplados representam esse grupo</p>
+			<BigNumber value={formatNum(qtdContempladosCadunico)} fontSize={72} label="contemplados no CadÚnico" />
 		</div>
 	</div>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value={formatNum(qtdDocumentosUnicos)} fontSize={72} />
-			<p class="bignumber-caption">pessoas (documentos únicos) no cruzamento</p>
+			<BigNumber value={formatNum(qtdDocumentosUnicos)} fontSize={72} label="documentos únicos" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorRecebidoCadunico)} fontSize={72} />
-			<p class="bignumber-caption">foram transferidos diretamente a esses agentes culturais contemplados</p>
+			<BigNumber value={formatBRL(valorRecebidoCadunico)} fontSize={72} label="transferidos ao grupo CadÚnico" />
 		</div>
 	</div>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value={formatPct(percValorCadunico)} fontSize={72} />
-			<p class="bignumber-caption">dos recursos totais da Aldir Blanc foram destinados a essas pessoas físicas</p>
+			<BigNumber value={formatPct(percValorCadunico)} fontSize={72} label="dos recursos para esse grupo" />
 		</div>
 	</div>
 	<p>
@@ -149,21 +144,20 @@
 	<h3>5.1.1. Sexo e faixa etária</h3>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value={formatPct(percFemCadunico)} fontSize={72} />
-			<p class="bignumber-caption">dos contemplados CadÚnico são mulheres</p>
+			<BigNumber value={formatPct(percFemCadunico)} fontSize={72} label="são mulheres (CadÚnico)" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value={formatPct(perc2554Cadunico)} fontSize={72} />
-			<p class="bignumber-caption">estão entre 25 e 54 anos</p>
+			<BigNumber value={formatPct(perc2554Cadunico)} fontSize={72} label="entre 25 e 54 anos" />
 		</div>
 	</div>
-	<HorizontalStackedBarChart
+	<HorizontalStackedBarChartCustom
 		data={faixaEtariaSexoData}
 		keys={[...FAIXA_SEXO_KEYS]}
 		labels={FAIXA_SEXO_LABELS}
 		colors={[colorPairs.bluePurple[1], colorPairs.bluePurple[0]]}
 		format={formatPctFixed}
 		showTotalLabel={false}
+		marginLeft={110}
 	/>
 	<p>
 		As mulheres representam a maioria dos contemplados da Aldir Blanc cadastrados no Cadastro Único
@@ -183,18 +177,16 @@
 	<h3>5.1.2. Renda familiar e vulnerabilidade socioeconômica</h3>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="63,2%" fontSize={72} />
-			<p class="bignumber-caption">tem renda familiar de até 1 salário mínimo</p>
+			<BigNumber value="63,2%" fontSize={72} label="renda familiar até 1 salário mínimo" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="43,6%" fontSize={72} />
-			<p class="bignumber-caption">estão em situação de pobreza, com renda familiar per capita de até R$218</p>
+			<BigNumber value="43,6%" fontSize={72} label="em situação de pobreza" subtitle="renda per capita até R$218" />
 		</div>
 	</div>
 	<div class="donut-row">
 		<div class="donut-col">
 			<p class="donut-label">Por faixa de renda per capita</p>
-			<DonutChart
+			<DonutChartWithLegend
 				data={rendaDonutData}
 				colors={categorical8}
 				centerLabel="pessoas"
@@ -205,7 +197,7 @@
 		</div>
 		<div class="donut-col">
 			<p class="donut-label">Por situação de renda</p>
-			<DonutChart
+			<DonutChartWithLegend
 				data={situacaoRendaDonutData}
 				colors={[colorScales.red[2], colorScales.orange[2], colorScales.blue[2]]}
 				centerLabel="pessoas"
@@ -237,12 +229,10 @@
 	<h2>5.2. Onde estão localizados os agentes culturais cadastrados no Cadastro Único e contemplados na Aldir Blanc?</h2>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value={formatPct(percUrbanoCadunico)} fontSize={72} />
-			<p class="bignumber-caption">vivem em áreas urbanas</p>
+			<BigNumber value={formatPct(percUrbanoCadunico)} fontSize={72} label="vivem em áreas urbanas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value={formatPct(percPequenoPorteCadunico)} fontSize={72} />
-			<p class="bignumber-caption">residem em municípios de pequeno porte — percentual maior do que os demais agentes culturais contemplados</p>
+			<BigNumber value={formatPct(percPequenoPorteCadunico)} fontSize={72} label="em municípios de pequeno porte" />
 		</div>
 	</div>
 </ScrollSection>
@@ -340,6 +330,9 @@
 		colors={[colorScales.teal[2], colorScales.orange[2]]}
 		format={formatPctFixed}
 		margin={{ top: 28, right: 90, bottom: 40, left: 50 }}
+		barPad={2}
+		groupPad={18}
+		legendBottom={true}
 	/>
 </ScrollSection>
 
@@ -351,12 +344,10 @@
 	<h3>5.3.1. Valores dos repasses</h3>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="86,8%" fontSize={72} />
-			<p class="bignumber-caption">dos contemplados receberam até R$10 mil</p>
+			<BigNumber value="86,8%" fontSize={72} label="receberam até R$10 mil" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="R$6.262" fontSize={72} />
-			<p class="bignumber-caption">foi o valor médio dos repasses para esse público</p>
+			<BigNumber value="R$6.262" fontSize={72} label="valor médio dos repasses" />
 		</div>
 	</div>
 </ScrollSection>
@@ -367,7 +358,7 @@
 <ScrollSection id="section-5-531-valor">
 	<HorizontalGroupedBarChart
 		data={valorGroupedData}
-		seriesLabels={['% agentes culturais PNAB/CadÚnico', '% agentes culturais PNAB']}
+		seriesLabels={['% contemplados PNAB/CadÚnico', '% contemplados PNAB']}
 		colors={[colorScales.blue[2], colorScales.red[2]]}
 		format={formatPctFixed}
 		margin={{ top: 28, right: 90, bottom: 40, left: 160 }}
@@ -402,12 +393,10 @@
 	<h3>5.3.2. Benefícios e programas assistenciais associados</h3>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value={formatPct(percBolsaFamilia)} fontSize={72} />
-			<p class="bignumber-caption">dos agentes culturais são beneficiários do Bolsa Família</p>
+			<BigNumber value={formatPct(percBolsaFamilia)} fontSize={72} label="beneficiários do Bolsa Família" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorBolsaFamilia)} fontSize={72} />
-			<p class="bignumber-caption">foram repassados para esse público</p>
+			<BigNumber value={formatBRL(valorBolsaFamilia)} fontSize={72} label="para beneficiários Bolsa Família" />
 		</div>
 	</div>
 	<p>
@@ -420,12 +409,10 @@
 	</p>
 	<div class="bignumbers-row" style="margin-top: 2rem;">
 		<div class="bignumber-cell">
-			<BigNumber value={formatPct(percBpc)} fontSize={64} />
-			<p class="bignumber-caption">dos agentes culturais são beneficiários do BPC</p>
+			<BigNumber value={formatPct(percBpc)} fontSize={64} label="beneficiários do BPC" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorBpc)} fontSize={64} />
-			<p class="bignumber-caption">foram repassados para beneficiários do BPC</p>
+			<BigNumber value={formatBRL(valorBpc)} fontSize={64} label="para beneficiários do BPC" />
 		</div>
 	</div>
 	<p>
@@ -447,18 +434,8 @@
 		flex: 1 1 240px;
 		min-width: 0;
 		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
+		justify-content: center;
 		margin-top: 1.5rem;
-	}
-
-	.bignumber-caption {
-		font-size: 0.95rem;
-		color: var(--color-text);
-		text-align: center;
-		opacity: 0.75;
-		max-width: 22ch;
 	}
 
 	.frase-destaque {

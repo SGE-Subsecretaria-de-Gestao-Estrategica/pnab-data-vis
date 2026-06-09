@@ -1,0 +1,186 @@
+<script lang="ts">
+	import { pie, arc } from 'd3-shape';
+
+	let {
+		data = [] as { label: string; value: number }[],
+		colors = [] as string[],
+		centerLabel = '',
+		centerValue = '',
+		height = 360,
+		format = (v: number) => v.toLocaleString(),
+		radiusFraction = 0.42,
+		innerRadiusFraction = 0.6,
+	}: {
+		data?: { label: string; value: number }[];
+		colors?: string[];
+		centerLabel?: string;
+		centerValue?: string;
+		height?: number;
+		format?: (v: number) => string;
+		radiusFraction?: number;
+		innerRadiusFraction?: number;
+	} = $props();
+
+	const FONT_FAMILY = "'Space Grotesk', system-ui, sans-serif";
+	const LEGEND_H    = 34;
+	const LEGEND_GAP  = 12;
+	const CHAR_W      = 7;
+	const BOX_PAD     = 24;
+
+	let containerWidth = $state(0);
+
+	function labelColor(hex: string): string {
+		const r = parseInt(hex.slice(1, 3), 16) / 255;
+		const g = parseInt(hex.slice(3, 5), 16) / 255;
+		const b = parseInt(hex.slice(5, 7), 16) / 255;
+		const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+		return luminance > 0.65 ? '#1a1a1a' : '#fffffe';
+	}
+
+	// Legend sizing (content-width, not stretched)
+	const legendBoxWs = $derived(
+		data.map((d) => Math.max(80, d.label.length * CHAR_W + BOX_PAD))
+	);
+	const legendTotalW = $derived(legendBoxWs.reduce((s, w) => s + w, 0));
+	const legendBoxX   = $derived((i: number) => legendBoxWs.slice(0, i).reduce((s, w) => s + w, 0));
+
+	// Chart geometry — shrink available area to leave room for outside labels (~15%)
+	const chartHeight = $derived(height - LEGEND_H - LEGEND_GAP);
+	const outerRadius = $derived(Math.min(containerWidth * 0.7, chartHeight * 0.7) * radiusFraction);
+	const innerRadius = $derived(outerRadius * innerRadiusFraction);
+	const cx          = $derived(containerWidth / 2);
+	const cy          = $derived(chartHeight / 2);
+
+	// Pie arcs
+	const pieFn = pie<{ label: string; value: number }>()
+		.value((d) => d.value)
+		.sort(null)
+		.padAngle(0.015);
+
+	const arcFn = $derived(
+		arc<ReturnType<typeof pieFn>[number]>()
+			.innerRadius(innerRadius)
+			.outerRadius(outerRadius)
+			.cornerRadius(2)
+	);
+
+	// Arc used only for centroid — placed just outside the slice
+	const labelArcFn = $derived(
+		arc<ReturnType<typeof pieFn>[number]>()
+			.innerRadius(outerRadius * 1.15)
+			.outerRadius(outerRadius * 1.15)
+	);
+
+	const arcs   = $derived(pieFn(data));
+	const total  = $derived(data.reduce((s, d) => s + d.value, 0));
+
+	const legendX = $derived(cx - legendTotalW / 2);
+	const legendY = $derived(chartHeight + LEGEND_GAP);
+	const totalSvgH = $derived(height);
+</script>
+
+<div bind:clientWidth={containerWidth} style="width:100%;">
+	{#if containerWidth > 0}
+		<svg
+			width={containerWidth}
+			height={totalSvgH}
+			role="img"
+			aria-label="Donut chart"
+			font-family={FONT_FAMILY}
+		>
+			<!-- Arcs -->
+			<g transform="translate({cx},{cy})">
+				{#each arcs as d, i}
+					{@const [lx, ly] = labelArcFn.centroid(d)}
+					{@const perc = total > 0 ? (d.data.value / total) * 100 : 0}
+					{@const anchor = lx >= 0 ? 'start' : 'end'}
+					<path
+						d={arcFn(d) ?? ''}
+						fill={colors[i] ?? '#ccc'}
+					/>
+					<!-- Arc label: percentage + absolute -->
+					<text
+						x={lx}
+						y={ly}
+						text-anchor={anchor}
+						font-size="13"
+						font-weight="700"
+						fill="var(--chart-fg-strong, #1e293b)"
+					>{perc.toFixed(1)}%</text>
+					<text
+						x={lx}
+						y={ly}
+						dy="1.3em"
+						text-anchor={anchor}
+						font-size="11"
+						fill="var(--chart-fg, #64748b)"
+					>{format(d.data.value)}</text>
+				{/each}
+
+				<!-- Center label -->
+				{#if centerValue}
+					<text
+						text-anchor="middle"
+						dy="-0.3em"
+						font-size="18"
+						font-weight="700"
+						fill="var(--chart-fg-strong, #1e293b)"
+					>{centerValue}</text>
+				{/if}
+				{#if centerLabel}
+					<text
+						text-anchor="middle"
+						dy="1.1em"
+						font-size="9"
+						fill="var(--chart-fg, #64748b)"
+					>{centerLabel}</text>
+				{/if}
+			</g>
+
+			<!-- Legend (SVG, centered, content-width) -->
+			<g transform="translate({legendX},{legendY})">
+				{#each data as item, i}
+					<rect
+						x={legendBoxX(i)}
+						y={0}
+						width={legendBoxWs[i]}
+						height={LEGEND_H}
+						fill={colors[i] ?? '#999'}
+						shape-rendering="crispEdges"
+					/>
+					<text
+						x={legendBoxX(i) + legendBoxWs[i] / 2}
+						y={LEGEND_H / 2}
+						dy="0.35em"
+						text-anchor="middle"
+						font-size="12"
+						font-weight="600"
+						fill={labelColor(colors[i] ?? '#999')}
+					>{item.label}</text>
+				{/each}
+
+				<!-- Dividers between items -->
+				{#each data.slice(0, data.length - 1) as _, i}
+					<line
+						x1={legendBoxX(i + 1)} y1={0}
+						x2={legendBoxX(i + 1)} y2={LEGEND_H}
+						stroke="var(--chart-fg-strong, #000000)"
+						stroke-width="0.5"
+						shape-rendering="crispEdges"
+					/>
+				{/each}
+
+				<!-- Border -->
+				<rect
+					x={0} y={0}
+					width={legendTotalW}
+					height={LEGEND_H}
+					fill="none"
+					stroke="var(--chart-fg-strong, #000000)"
+					stroke-width="0.5"
+					shape-rendering="crispEdges"
+				/>
+			</g>
+		</svg>
+	{/if}
+</div>

@@ -42,6 +42,15 @@
 			maximumFractionDigits: 1,
 		}).format(v);
 
+	const formatBRL2 = (v: number) =>
+		new Intl.NumberFormat('pt-BR', {
+			style: 'currency',
+			currency: 'BRL',
+			notation: 'compact',
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2,
+		}).format(v);
+
 	const formatPct  = (v: number) =>
 		v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 	const formatPctFixed = (v: number) => `${v.toFixed(1)}%`;
@@ -134,16 +143,14 @@
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-2-uf-faixas">
 	<div class="chart-wide">
-		<VerticalStackedBarChart
+		<HorizontalStackedBarChartCustom
 			data={ufBandPercData}
 			keys={[...UF_BAND_KEYS]}
 			labels={UF_BAND_LABELS}
 			colors={categorical8}
 			format={formatPctFixed}
-			yLabel="% dos contemplados"
-			normalize={true}
-			showLegend={true}
-			height={480}
+			rowHeight={36}
+			marginLeft={40}
 		/>
 	</div>
 </ScrollSection>
@@ -186,7 +193,7 @@
 	</div>
 	<HorizontalGroupedBarChart
 		data={regiaoGroupedData}
-		seriesLabels={['% agentes culturais', '% população']}
+		seriesLabels={['% agentes contemplados', '% população']}
 		colors={['#c0504d', '#4472c4']}
 		format={formatPct}
 		margin={{ top: 30, right: 90, bottom: 60, left: 140 }}
@@ -299,7 +306,7 @@
 		states={mediaValorByState}
 		metric="media_aparada_1pct_valor"
 		label="Média aparada (1%) paga por estado"
-		format={formatBRL}
+		format={formatBRL2}
 		showSideLegend={true}
 	/>
 </ScrollSection>
@@ -311,14 +318,10 @@
 	<h2>2.3. Como os pagamentos e recursos foram distribuídos nos municípios?</h2>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="144.836" fontSize={72} />
-			<p class="bignumber-perc">(86,8%)</p>
-			<p class="bignumber-caption">dos contemplados totais da Aldir Blanc receberam recursos através dos municípios</p>
+			<BigNumber value="144.836" fontSize={72} label="(86,8%)" subtitle="via municípios" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="R$1,4bi" fontSize={72} />
-			<p class="bignumber-perc">(49%)</p>
-			<p class="bignumber-caption">foi o valor executado pelos municípios</p>
+			<BigNumber value="R$1,4bi" fontSize={72} label="(49%)" subtitle="executado pelos municípios" />
 		</div>
 	</div>
 </ScrollSection>
@@ -387,14 +390,10 @@
 	<h2>2.4. Como os pagamentos e recursos foram distribuídos nos territórios especiais?</h2>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="5.290" fontSize={72} />
-			<p class="bignumber-perc">(3,2% do total)</p>
-			<p class="bignumber-caption">pagamentos direcionados para contemplados em agrupamentos indígenas, quilombolas e favelas e comunidades urbanas</p>
+			<BigNumber value="5.290" fontSize={72} label="(3,2% do total)" subtitle="em territórios especiais" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="R$150,6mi" fontSize={72} />
-			<p class="bignumber-perc">(5,3% do total)</p>
-			<p class="bignumber-caption">foi o valor total repassado para estes contemplados</p>
+			<BigNumber value="R$150,6mi" fontSize={72} label="(5,3% do total)" subtitle="para territórios especiais" />
 		</div>
 	</div>
 	<p style="margin-top: 2rem;">
@@ -430,12 +429,10 @@
 	<h3>Tendências dos pagamentos e recursos destinados aos agrupamentos indígenas</h3>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="R$5,1mi" fontSize={64} />
-			<p class="bignumber-caption">foi o valor total destinado aos agrupamentos indígenas</p>
+			<BigNumber value="R$5,1mi" fontSize={64} label="para agrupamentos indígenas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="254" fontSize={64} />
-			<p class="bignumber-caption">foi o total de contemplados destes territórios que receberam recursos</p>
+			<BigNumber value="254" fontSize={64} label="contemplados indígenas" />
 		</div>
 	</div>
 	<p style="margin-top: 1.5rem;">
@@ -462,12 +459,10 @@
 	<h3>Tendências dos pagamentos e recursos destinados aos agrupamentos quilombolas</h3>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="R$7,4mi" fontSize={64} />
-			<p class="bignumber-caption">foi o recurso total destinado aos agrupamentos quilombolas</p>
+			<BigNumber value="R$7,4mi" fontSize={64} label="para agrupamentos quilombolas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="481" fontSize={64} />
-			<p class="bignumber-caption">foi o total de pagamentos feitos para contemplados destes territórios</p>
+			<BigNumber value="481" fontSize={64} label="pagamentos quilombolas" />
 		</div>
 	</div>
 	<p style="margin-top: 1.5rem;">
@@ -491,12 +486,10 @@
 	<h3>Tendências dos pagamentos e recursos destinados às favelas e comunidades urbanas</h3>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value="R$138mi" fontSize={64} />
-			<p class="bignumber-caption">foi o valor total destinado às favelas e comunidades urbanas</p>
+			<BigNumber value="R$138mi" fontSize={64} label="para favelas e com. urbanas" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value="4.555" fontSize={64} />
-			<p class="bignumber-caption">foi o total de pagamentos feitos para contemplados destes territórios</p>
+			<BigNumber value="4.555" fontSize={64} label="pagamentos para favelas" />
 		</div>
 	</div>
 	<p style="margin-top: 1.5rem;">
@@ -566,26 +559,8 @@
 		flex: 1 1 240px;
 		min-width: 0;
 		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
+		justify-content: center;
 		margin-top: 1.5rem;
-	}
-
-	.bignumber-perc {
-		font-size: 1.4rem;
-		font-weight: 600;
-		text-align: center;
-		opacity: 0.65;
-		margin: -0.25rem 0 0;
-	}
-
-	.bignumber-caption {
-		font-size: 0.95rem;
-		color: var(--color-text);
-		text-align: center;
-		opacity: 0.75;
-		max-width: 22ch;
 	}
 
 	.regioes-list {

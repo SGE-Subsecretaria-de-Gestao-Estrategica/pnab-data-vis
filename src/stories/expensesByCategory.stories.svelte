@@ -1,21 +1,31 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { MarimekkoChart, categorical8 } from 'sniic-design-system';
+  import { categorical8 } from 'sniic-design-system';
   // @ts-ignore
   import {
     expensesChartData,
     expensesKeys,
-    expensesLabels,
     expensesLegendItems,
     expensesGrandTotal,
   } from '$lib/data/section6';
 
+  const CHART_W      = 900;
   const CHART_HEIGHT = 520;
-  const MARGIN = { top: 16, right: 16, bottom: 16, left: 16 };
-  const COLUMN_GAP = 2;
-  const INNER_H = CHART_HEIGHT - MARGIN.top - MARGIN.bottom; // 520 - 16 - 16 = 488
-  const MIN_LABEL_HEIGHT = 28;
+  const MARGIN       = { top: 16, right: 16, bottom: 16, left: 16 };
+  const COLUMN_GAP   = 2;
+  const INNER_H      = CHART_HEIGHT - MARGIN.top - MARGIN.bottom; // 488
+  const MIN_LABEL_H  = 28;
+
+  const LEG_SEP      = 20;
+  const LEG_HEADER_H = 24;
+  const LEG_ROW_H    = 44;
+  const legY         = CHART_HEIGHT + LEG_SEP;
+  const TOTAL_H      = legY + LEG_HEADER_H + expensesLegendItems.length * LEG_ROW_H + 8;
+  const LEG_VAL_X    = CHART_W - 150;
+  const LEG_PCT_X    = CHART_W - 4;
+
+  const FONT = "'Space Grotesk', system-ui, sans-serif";
 
   // @ts-ignore
   const formatBRL = (v) =>
@@ -34,9 +44,46 @@
     return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55 ? '#1a1a1a' : '#ffffff';
   }
 
+  // Pre-compute all segment positions (fixed 900px width, no reactive state needed)
+  const innerW     = CHART_W - MARGIN.left - MARGIN.right;
+  const totalWidth = expensesChartData.reduce((s, /** @type {any} */ d) => s + d.total, 0);
+  const availableW = innerW - Math.max(0, expensesChartData.length - 1) * COLUMN_GAP;
+
+  /** @type {Array<{key:string;label:string;pct:string;x:number;y:number;w:number;h:number;color:string;showPct:boolean;showLabel:boolean}>} */
+  const segments = [];
+  let cumX = 0;
+  for (const datum of expensesChartData) {
+    const colW    = (datum.total / totalWidth) * availableW;
+    const segTotal = expensesKeys.reduce((s, k) => s + (Number(/** @type {any} */ (datum)[k]) || 0), 0);
+    let cumY = 0;
+    for (let i = 0; i < expensesKeys.length; i++) {
+      const key   = expensesKeys[i];
+      const value = Number(/** @type {any} */ (datum)[key]) || 0;
+      if (value === 0) continue;
+      const h          = (value / segTotal) * INNER_H;
+      const legendItem = expensesLegendItems.find((l) => l.key === key);
+      const realValue  = legendItem?.valor ?? value;
+      const pct        = (realValue / expensesGrandTotal * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+      segments.push({
+        key,
+        label:     legendItem?.label ?? key,
+        pct,
+        x:         MARGIN.left + cumX,
+        y:         MARGIN.top + cumY,
+        w:         colW,
+        h,
+        color:     categorical8[i],
+        showPct:   h >= MIN_LABEL_H,
+        showLabel: h >= 60 && colW >= 150,
+      });
+      cumY += h;
+    }
+    cumX += colW + COLUMN_GAP;
+  }
+
   const { Story } = defineMeta({
     title: 'Section 6/expensesByCategory',
-    component: MarimekkoChart,
+    component: {},
     tags: ['autodocs'],
     parameters: {
       docs: {
@@ -56,70 +103,59 @@ Os demais investimentos somam aproximadamente **R$ 154,6M**, distribuídos entre
 
 <Story name="Despesas por Categoria — Marimekko">
   {#snippet template()}
-    {@const containerWidth = 900}
-    {@const innerW = containerWidth - MARGIN.left - MARGIN.right}
-    {@const totalWidth = expensesChartData.reduce((s, d) => s + d.total, 0)}
-    {@const gapTotal = Math.max(0, expensesChartData.length - 1) * COLUMN_GAP}
-    {@const availableW = innerW - gapTotal}
-    <div style="max-width:{containerWidth}px;position:relative">
-      <div style="overflow:hidden;height:{CHART_HEIGHT}px;width:100%">
-        <MarimekkoChart
-          data={expensesChartData}
-          keys={expensesKeys}
-          labels={expensesLabels}
-          height={CHART_HEIGHT}
-          format={formatBRL}
-          margin={MARGIN}
-          pctFormat={() => ''}
-        />
-      </div>
+    <svg width={CHART_W} height={TOTAL_H} font-family={FONT} font-size="12" style="display:block">
 
-      <!-- category name overlay (fixed 900px width for storybook) -->
-      {#each expensesChartData as datum, colIdx}
-        {@const colW = datum.total / totalWidth * availableW}
-        {@const colX = expensesChartData.slice(0, colIdx).reduce((s, d) => s + d.total / totalWidth * availableW + COLUMN_GAP, 0)}
-        {@const segTotal = expensesKeys.reduce((s, k) => s + (Number(datum[k]) || 0), 0)}
-        {#each expensesKeys as key, keyIdx}
-          {@const value = Number(datum[key]) || 0}
-          {#if value > 0}
-            {@const h = (value / segTotal) * INNER_H}
-            {@const segY = expensesKeys.slice(0, keyIdx).reduce((s, k) => s + (Number(datum[k]) || 0) / segTotal * INNER_H, 0)}
-            {#if h >= MIN_LABEL_HEIGHT}
-              {@const legendItem = expensesLegendItems.find((l) => l.key === key)}
-              {@const color = categorical8[keyIdx]}
-              {@const realValue = legendItem?.valor ?? value}
-              {@const pct = (realValue / expensesGrandTotal * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
-              {@const showLabel = h >= 60 && colW >= 150}
-              <div style="position:absolute;left:{MARGIN.left + colX}px;top:{MARGIN.top + segY}px;width:{colW}px;height:{h}px;pointer-events:none;overflow:hidden">
-                <span style="position:absolute;top:50%;transform:translateY(-50%);left:0;right:0;text-align:center;font-family:'Space Grotesk',system-ui,sans-serif;font-size:0.72rem;font-weight:400;line-height:1.4;padding:0 8px;color:{contrastColor(color)}">
-                  <strong style="display:block;font-size:0.9rem;font-weight:700">{pct}%</strong>
-                  {#if showLabel}{legendItem?.label ?? key}{/if}
-                </span>
-              </div>
-            {/if}
-          {/if}
-        {/each}
+      <!-- chart segment rects + labels -->
+      {#each segments as seg}
+        <rect x={seg.x} y={seg.y} width={seg.w} height={seg.h} fill={seg.color} shape-rendering="crispEdges" />
+        {#if seg.showPct}
+          <text
+            x={seg.x + seg.w / 2}
+            y={seg.y + seg.h / 2 + (seg.showLabel ? -8 : 0)}
+            text-anchor="middle"
+            dominant-baseline="middle"
+            fill={contrastColor(seg.color)}
+            font-size="14"
+            font-weight="700"
+            pointer-events="none"
+          >{seg.pct}%</text>
+        {/if}
+        {#if seg.showLabel}
+          <text
+            x={seg.x + seg.w / 2}
+            y={seg.y + seg.h / 2 + 10}
+            text-anchor="middle"
+            dominant-baseline="middle"
+            fill={contrastColor(seg.color)}
+            font-size="10"
+            pointer-events="none"
+          >{seg.label}</text>
+        {/if}
       {/each}
-    </div>
 
-    <div style="padding:0 16px;box-sizing:border-box">
-      <table style="width:100%;border-collapse:collapse;margin-top:0.75rem;font-family:'Space Grotesk',system-ui,sans-serif;font-size:0.8rem">
-        <tbody>
-          {#each expensesLegendItems as item}
-            {@const colorIdx = expensesKeys.indexOf(item.key)}
-            <tr style="border-top:1px solid #e0e0e0">
-              <td style="width:20px;padding:0.35rem 0.5rem 0.35rem 0;vertical-align:middle">
-                <span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:{categorical8[colorIdx]}"></span>
-              </td>
-              <td style="padding:0.35rem 1rem 0.35rem 0">{item.label}</td>
-              <td style="padding:0.35rem 0;font-weight:600;text-align:right">
-                {item.value}
-                <span style="display:block;font-weight:400;font-size:0.7rem;color:#666;white-space:nowrap">({item.ci})</span>
-              </td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-    </div>
+      <!-- legend separator -->
+      <line x1={0} y1={legY} x2={CHART_W} y2={legY} stroke="#e0e0e0" />
+
+      <!-- legend column headers -->
+      <text x={LEG_VAL_X} y={legY + LEG_HEADER_H - 8} text-anchor="end" fill="#666" font-size="10">Valor estimado (IC95%)</text>
+      <text x={LEG_PCT_X} y={legY + LEG_HEADER_H - 8} text-anchor="end" fill="#666" font-size="10">% do total</text>
+
+      <!-- legend rows -->
+      {#each expensesLegendItems as item, i}
+        {@const colorIdx = expensesKeys.indexOf(item.key)}
+        {@const color    = categorical8[colorIdx]}
+        {@const ry       = legY + LEG_HEADER_H + 16 + i * LEG_ROW_H}
+        {@const itemPct  = (item.valor / expensesGrandTotal * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+        {#if i > 0}
+          <line x1={0} y1={ry - 6} x2={CHART_W} y2={ry - 6} stroke="#e0e0e0" />
+        {/if}
+        <rect x={MARGIN.left} y={ry + 1} width={10} height={10} rx="2" fill={color} />
+        <text x={MARGIN.left + 18} y={ry + 6}  dy="0.35em" fill="#1a1a1a">{item.label}</text>
+        <text x={LEG_VAL_X} y={ry}      dy="0.85em" text-anchor="end" fill="#111" font-weight="600">{item.value}</text>
+        <text x={LEG_VAL_X} y={ry + 16} dy="0.85em" text-anchor="end" fill="#666" font-size="10">{item.ci}</text>
+        <text x={LEG_PCT_X} y={ry + 6}  dy="0.35em" text-anchor="end" fill={color} font-size="13" font-weight="700">{itemPct}%</text>
+      {/each}
+
+    </svg>
   {/snippet}
 </Story>

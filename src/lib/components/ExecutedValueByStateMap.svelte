@@ -44,7 +44,6 @@
 
   let geojson = $state<any>(null);
   let containerEl: HTMLDivElement | undefined = $state();
-  let mapContainerEl: HTMLDivElement | undefined = $state();
   let width = $state(600);
 
   const LABEL_W = 135;
@@ -52,11 +51,10 @@
   // Estimated label block width for overlap checks (sigla + value text)
 
   $effect(() => {
-    const el = showSideLegend ? mapContainerEl : containerEl;
-    if (!el) return;
-    width = el.clientWidth;
+    if (!containerEl) return;
+    width = containerEl.clientWidth;
     const ro = new ResizeObserver(([e]) => { width = e.contentRect.width; });
-    ro.observe(el);
+    ro.observe(containerEl);
     return () => ro.disconnect();
   });
 
@@ -64,11 +62,17 @@
     loadBrazilGeoJSON().then((g: any) => { geojson = g; });
   });
 
-  const TOP_PAD = 45;
+  const TOP_PAD  = 45;
+  const MAP_FRAC = 0.63; // map column fraction when showSideLegend=true
+  const LEG_COLS = 3;
+  const LEG_GAP  = 20;
   const effectiveLabelW = $derived(showSideLegend ? 0 : LABEL_W);
-  const mapW = $derived(Math.max(0, width - effectiveLabelW * 2));
-  const mapH = $derived(Math.round(mapW * 0.72));
-  const svgH = $derived(mapH + 20 + TOP_PAD);
+  const mapW    = $derived(showSideLegend
+    ? Math.max(0, Math.round(width * MAP_FRAC))
+    : Math.max(0, width - effectiveLabelW * 2));
+  const mapH    = $derived(Math.round(mapW * 0.72));
+  const svgH    = $derived(mapH + 20 + TOP_PAD);
+  const legColW = $derived(Math.floor((width - mapW - LEG_GAP) / LEG_COLS));
 
   const valueMap = $derived(
     new Map(Object.entries(states).map(([name, d]) => [name, (d[metric] ?? 0) as number]))
@@ -234,47 +238,45 @@
 </script>
 
 {#if showSideLegend}
-  <div bind:this={containerEl} class="side-legend-container">
-    <div bind:this={mapContainerEl} class="map-col">
-      {#if geojson && pathFn && mapW > 0}
-        <svg width={mapW} height={svgH}>
-          <g transform={`translate(0, ${TOP_PAD})`}>
-            {#each geojson.features as f (f.properties.name)}
-              {@const d = pathFn(f)}
-              {#if d}
-                <path
-                  d={d}
-                  fill={colorScale(valueMap.get(f.properties.name) ?? 0) ?? '#e5e7eb'}
-                  stroke="white"
-                  stroke-width="0.5"
-                />
-              {/if}
-            {/each}
-          </g>
-        </svg>
-      {/if}
-    </div>
-    <div class="legend-col">
-    <div class="legend-grid">
-      {#if label}
-        <div class="legend-title">{label}</div>
-      {/if}
-      <div class="legend-table">
-        {#each [...stateEntries].sort((a, b) => b.val - a.val) as item (item.sigla)}
-          <div class="legend-cell">
-            <span class="legend-swatch" style="background: {item.fill};"></span>
-            <span class="legend-sigla">{item.sigla}</span>
-            <span class="legend-value">
-              {format(item.val)}
-              {#if formatLine2}
-                <span class="legend-value-line2">{formatLine2(item.row)}</span>
-              {/if}
-            </span>
-          </div>
+  <div bind:this={containerEl} style="width:100%">
+    {#if geojson && pathFn && mapW > 0}
+      {@const sortedStates = [...stateEntries].sort((a, b) => b.val - a.val)}
+      {@const legRowH     = formatLine2 ? 28 : 18}
+      {@const legRowCount = Math.ceil(sortedStates.length / LEG_COLS)}
+      {@const legContentH = legRowCount * legRowH}
+      {@const legTotalH   = legContentH + (label ? 24 : 0)}
+      {@const legStartY   = Math.max(TOP_PAD, TOP_PAD + Math.round(mapH / 2 - legTotalH / 2))}
+      {@const svgTotalH   = Math.max(svgH, legStartY + legTotalH + 8)}
+      <svg width={width} height={svgTotalH} font-family={FONT_FAMILY} font-size={FONT_SIZE}>
+        <g transform={`translate(0, ${TOP_PAD})`}>
+          {#each geojson.features as f (f.properties.name)}
+            {@const d = pathFn(f)}
+            {#if d}
+              <path d={d}
+                fill={colorScale(valueMap.get(f.properties.name) ?? 0) ?? '#e5e7eb'}
+                stroke="white" stroke-width="0.5" />
+            {/if}
+          {/each}
+        </g>
+        {#if label}
+          <text x={mapW + LEG_GAP} y={legStartY - 8} fill="#6b7280" font-size="11" font-family={FONT_FAMILY}>{label.toUpperCase()}</text>
+        {/if}
+        {#each sortedStates as item, i}
+          {@const col = i % LEG_COLS}
+          {@const row = Math.floor(i / LEG_COLS)}
+          {@const lx  = mapW + LEG_GAP + col * legColW}
+          {@const ly  = legStartY + (label ? 22 : 0) + row * legRowH}
+          <rect x={lx} y={ly} width={10} height={10} rx="2" fill={item.fill} />
+          <text x={lx + 14} y={ly + 5} dy="0.35em" fill="#374151" font-size="11" font-family={FONT_FAMILY}>
+            <tspan font-weight="700">{item.sigla}</tspan>
+            <tspan dx="4">{format(item.val)}</tspan>
+          </text>
+          {#if formatLine2}
+            <text x={lx + 14} y={ly + 18} fill="#9ca3af" font-size="10" font-family={FONT_FAMILY}>{formatLine2(item.row)}</text>
+          {/if}
         {/each}
-      </div>
-    </div>
-    </div>
+      </svg>
+    {/if}
   </div>
 {:else}
   <div bind:this={containerEl} style="width: 100%">

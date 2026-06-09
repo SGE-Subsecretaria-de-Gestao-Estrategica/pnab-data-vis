@@ -145,28 +145,23 @@
 	</p>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorExecTotal)} fontSize={80} />
-			<p class="bignumber-caption">Total</p>
+			<BigNumber value={formatBRL(valorExecTotal)} fontSize={80} label="Total" />
 		</div>
 	</div>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorExecEstados)} fontSize={80} />
-			<p class="bignumber-caption">Estados e Distrito Federal</p>
+			<BigNumber value={formatBRL(valorExecEstados)} fontSize={80} label="Estados e Distrito Federal" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorExecMunicipios)} fontSize={80} />
-			<p class="bignumber-caption">Municípios e Distrito Federal</p>
+			<BigNumber value={formatBRL(valorExecMunicipios)} fontSize={80} label="Municípios e Distrito Federal" />
 		</div>
 	</div>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value={percExecEstados.toFixed(1)} suffix="%" fontSize={80} />
-			<p class="bignumber-caption">dos repasses a estados e DF foram executados</p>
+			<BigNumber value={percExecEstados.toFixed(1)} suffix="%" fontSize={80} label="executado pelos estados e DF" />
 		</div>
 		<div class="bignumber-cell">
-			<BigNumber value={percExecMunicipios.toFixed(1)} suffix="%" fontSize={80} />
-			<p class="bignumber-caption">dos repasses a municípios foram executados</p>
+			<BigNumber value={percExecMunicipios.toFixed(1)} suffix="%" fontSize={80} label="executado pelos municípios" />
 		</div>
 	</div>
 	<p style="margin-top: 1.5rem;">
@@ -241,6 +236,7 @@
 		format={formatBRLpc}
 		icons={stateFlags}
 		iconSize={20}
+		showTotalLabel={false}
 	/>
 	<p style="margin-top: 1.5rem;">
 		Analisamos o valor per capita da Política Nacional Aldir Blanc para entender a proporcionalidade do montante da Política que foi executado em relação ao tamanho da população em cada UF. O cálculo foi feito a partir da divisão entre o total executado pela UF (valor executado por estados e municípios) e sua população.
@@ -327,8 +323,7 @@
 	</p>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value={percInteriorContemplados.toFixed(0)} suffix="%" fontSize={72} />
-			<p class="bignumber-caption">dos contemplados na PNAB residem em cidades do interior</p>
+			<BigNumber value={percInteriorContemplados.toFixed(0)} suffix="%" fontSize={72} label="contemplados no interior" />
 		</div>
 	</div>
 	<p style="margin-top: 1.5rem;">
@@ -336,8 +331,7 @@
 	</p>
 	<div class="bignumbers-row">
 		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorInteriorTotal)} fontSize={72} />
-			<p class="bignumber-caption">foi o montante total destinado para os agentes culturais do interior</p>
+			<BigNumber value={formatBRL(valorInteriorTotal)} fontSize={72} label="destinado ao interior" />
 		</div>
 	</div>
 	<p style="margin-top: 1.5rem;">
@@ -368,17 +362,17 @@
 			<BigNumber
 				value={qtdeRuralTotal.toLocaleString('pt-BR')}
 				fontSize={72}
+				label={`(${percRuralQtde.toFixed(1).replace('.', ',')}%)`}
+				subtitle="contemplados em zona rural"
 			/>
-			<p class="bignumber-perc">({percRuralQtde.toFixed(1).replace('.', ',')}%)</p>
-			<p class="bignumber-caption">foram os contemplados em zona rural</p>
 		</div>
 		<div class="bignumber-cell">
 			<BigNumber
 				value={`R$${(valorRuralTotal / 1e6).toFixed(0)}M`}
 				fontSize={72}
+				label={`(${percRuralValor.toFixed(1).replace('.', ',')}%)`}
+				subtitle="destinado à zona rural"
 			/>
-			<p class="bignumber-perc">({percRuralValor.toFixed(1).replace('.', ',')}%)</p>
-			<p class="bignumber-caption">foi o recurso destinado</p>
 		</div>
 	</div>
 	<p>
@@ -470,15 +464,15 @@
 			<BigNumber
 				value={specialTerritoryCount.toLocaleString('pt-BR')}
 				fontSize={72}
+				label="em Favelas, Quilombos e Territ. Indígenas"
 			/>
-			<p class="bignumber-caption">agentes culturais contemplados em Favelas, Quilombos e Territórios Indígenas</p>
 		</div>
 		<div class="bignumber-cell">
 			<BigNumber
 				value={formatBRL(specialTerritoryValue)}
 				fontSize={72}
+				label="em territórios especiais"
 			/>
-			<p class="bignumber-caption">destinados a agentes em territórios especiais</p>
 		</div>
 	</div>
 	<div class="bignumbers-row">
@@ -487,8 +481,8 @@
 				value={percPopulacaoEspecial}
 				suffix="%"
 				fontSize={72}
+				label="da pop. vive em territ. especiais"
 			/>
-			<p class="bignumber-caption">da população brasileira vive em Favelas, Quilombos e Territórios Indígenas</p>
 		</div>
 	</div>
 
@@ -529,26 +523,8 @@
 		flex: 1 1 240px;
 		min-width: 0;
 		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
+		justify-content: center;
 		margin-top: 1.5rem;
-	}
-
-	.bignumber-perc {
-		font-size: 1.4rem;
-		font-weight: 600;
-		text-align: center;
-		opacity: 0.65;
-		margin: -0.25rem 0 0;
-	}
-
-	.bignumber-caption {
-		font-size: 0.95rem;
-		color: var(--color-text);
-		text-align: center;
-		opacity: 0.75;
-		max-width: 20ch;
 	}
 
 	.frase-destaque {

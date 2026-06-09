@@ -123,6 +123,42 @@ export const escolaridadeProporcionalData = [...escRows]
 	}))
 	.sort((a, b) => a.value - b.value);
 
+// Grouped comparison: PNAB vs. Total Trabalhadores Formais by education level
+const _raisEscRef: Record<string, number> = {
+	'Sem instrução e fundamental incompleto':  7.0626,
+	'Fundamental completo e médio incompleto': 11.3631,
+	'Médio completo e superior incompleto':    53.3906,
+	'Superior completo':                       27.0379,
+	'Mestrado ou doutorado completo':           1.1457,
+};
+
+const _escOrder = [
+	'Mestrado ou doutorado completo',
+	'Sem instrução e fundamental incompleto',
+	'Fundamental completo e médio incompleto',
+	'Superior completo',
+	'Médio completo e superior incompleto',
+];
+
+const _escLabelAbrev: Record<string, string> = {
+	'Sem instrução e fundamental incompleto':  'Sem instrução',
+	'Fundamental completo e médio incompleto': 'Fund./méd. incompl.',
+	'Médio completo e superior incompleto':    'Médio/sup. incompl.',
+	'Superior completo':                       'Superior compl.',
+	'Mestrado ou doutorado completo':          'Mestrado/dout.',
+};
+
+export const escolaridadeGroupedData = _escOrder.map((esc) => {
+	const row = escRows.find((r) => r.escolaridade_agregado_rais === esc)!;
+	return {
+		label: _escLabelAbrev[esc] ?? esc,
+		values: [
+			+row.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
+			_raisEscRef[esc],
+		],
+	};
+});
+
 // ── Por região ──────────────────────────────────────────────────────────────────
 const regionRows4 = parseCSV(csvRegionRaw);
 
@@ -157,7 +193,7 @@ const _totalComVinculoSexo = sexoRows.reduce((s, r) => s + +r.numero_contemplado
 export const sexoVinculoFormalGroupedData = [
 	{
 		label: 'PNAB',
-		fullLabel: 'Pessoas com vínculo formal de trabalho contempladas no PNAB',
+		fullLabel: 'Agentes Culturais Contemplados com Vínculo Formal de Trabalho',
 		values: sexoRows.map((r) => (+r.numero_contemplados_com_vinculo_trabalho_formal / _totalComVinculoSexo) * 100),
 	},
 	{
@@ -235,8 +271,7 @@ export const racaCorSexoHeatmapData = racaDisplayOrder.flatMap((race) => {
 
 // ── Por raça/cor × sexo (Vertical Grouped Bar) ──────────────────────────────────
 const _racaSexoOrder = ['Amarela', 'Branca', 'Indígena', 'Parda', 'Preta/negra'];
-const _racaSexoTotalQty   = racaCorSexoRows.reduce((s, r) => s + +r.numero_contemplados_total, 0);
-const _racaSexoTotalValor = racaCorSexoRows.reduce((s, r) => s + +r.valor_pago_total, 0);
+const _racaSexoTotalQty = racaCorSexoRows.reduce((s, r) => s + +r.numero_contemplados_total, 0);
 
 export const racaCorSexoGroupedData = _racaSexoOrder.map((race) => {
 	const r = racaCorSexoRows.find((d) => shortRaceLabel(d.raca_cor_desc_description) === race)!;
@@ -244,10 +279,8 @@ export const racaCorSexoGroupedData = _racaSexoOrder.map((race) => {
 		label:     race,
 		fullLabel: r.raca_cor_desc_description,
 		values: [
-			(+r.numero_contemplados_feminino / _racaSexoTotalQty)   * 100,
-			(+r.valor_pago_feminino          / _racaSexoTotalValor) * 100,
-			(+r.numero_contemplados_masculino / _racaSexoTotalQty)  * 100,
-			(+r.valor_pago_masculino          / _racaSexoTotalValor) * 100,
+			(+r.numero_contemplados_feminino  / _racaSexoTotalQty) * 100,
+			(+r.numero_contemplados_masculino / _racaSexoTotalQty) * 100,
 		],
 	};
 });
@@ -334,19 +367,13 @@ export const regionIbgeComparisonData = ['Nordeste', 'Sudeste', 'Norte', 'Sul', 
 );
 
 export const regionIbgeComparisonLegend = [
-	{ label: '% RAIS', color: '#f7bf95', secondLabel: '% PNAB', secondColor: '#ea662f', groupLabel: 'Nordeste'      },
-	{ label: '% RAIS', color: '#9fbbe0', secondLabel: '% PNAB', secondColor: '#4271b5', groupLabel: 'Sudeste'       },
-	{ label: '% RAIS', color: '#95c0b7', secondLabel: '% PNAB', secondColor: '#317a68', groupLabel: 'Norte'         },
-	{ label: '% RAIS', color: '#f9e6a1', secondLabel: '% PNAB', secondColor: '#f6c341', groupLabel: 'Sul'           },
-	{ label: '% RAIS', color: '#d5a6c8', secondLabel: '% PNAB', secondColor: '#a44c7f', groupLabel: 'Centro-Oeste'  },
+	{ label: '% RAIS', color: '#c0c0c0' },
+	{ label: '% PNAB', color: '#444444' },
 ];
 
 export const ufIbgeRegionLegend = [
-	{ label: '% RAIS', color: '#f7bf95', secondLabel: '% PNAB', secondColor: '#ea662f', groupLabel: 'Nordeste'      },
-	{ label: '% RAIS', color: '#9fbbe0', secondLabel: '% PNAB', secondColor: '#4271b5', groupLabel: 'Sudeste'       },
-	{ label: '% RAIS', color: '#95c0b7', secondLabel: '% PNAB', secondColor: '#317a68', groupLabel: 'Norte'         },
-	{ label: '% RAIS', color: '#f9e6a1', secondLabel: '% PNAB', secondColor: '#f6c341', groupLabel: 'Sul'           },
-	{ label: '% RAIS', color: '#d5a6c8', secondLabel: '% PNAB', secondColor: '#a44c7f', groupLabel: 'Centro-Oeste'  },
+	{ label: '% RAIS', color: '#c0c0c0' },
+	{ label: '% PNAB', color: '#444444' },
 ];
 
 // ── Por UF × Região (correlação) ────────────────────────────────────────────────

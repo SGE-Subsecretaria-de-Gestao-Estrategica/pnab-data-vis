@@ -15,8 +15,9 @@ import csvRegionUfRaw   from '../../../data/section_1/executed_value_by_region_u
 import csvCapitalRaw    from '../../../data/section_1/aggregate_values_by_capital.csv?raw';
 import csvSpecialUfRaw  from '../../../data/section_1/values_by_special_territory_uf.csv?raw';
 import csvPorteMeanRaw  from '../../../data/section_1/population_size_mean.csv?raw';
-import csvLocalResidRaw from '../../../data/section_1/aggregate_by_local_residencia_uf.csv?raw';
-import csvPortePopRaw   from '../../../data/section_1/resumo_por_porte_populacional.csv?raw';
+import csvLocalResidRaw       from '../../../data/section_1/aggregate_by_local_residencia_uf.csv?raw';
+import csvPortePopRaw         from '../../../data/section_1/resumo_por_porte_populacional.csv?raw';
+import csvEstadoLocalResidRaw from '../../../data/section_1/aggregate_estado_by_uf_local_residencia.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -318,6 +319,22 @@ export const porteStackedData = [
 	},
 ];
 
+// ── CPF vs CNPJ por porte populacional ────────────────────────────────────────
+const _porteOrder = ['1_pequeno_i', '2_pequeno_ii', '3_medio', '4_grande'];
+const _porteCpfCnpjRaw = parseCSV(csvPorteRaw)
+	.filter((d) => d.porte_populacional in porteNameMap)
+	.sort((a, b) => _porteOrder.indexOf(a.porte_populacional) - _porteOrder.indexOf(b.porte_populacional));
+export const porteCpfCnpjStackedData = _porteCpfCnpjRaw.map((d) => ({
+	label: porteNameMap[d.porte_populacional],
+	cpf:   +d.perc_valor_CPF  * 100,
+	cnpj:  +d.perc_valor_CNPJ * 100,
+}));
+export const porteCpfCnpjKeys   = ['cpf', 'cnpj'] as const;
+export const porteCpfCnpjLabels: Record<string, string> = {
+	cpf:  'CPF (Pessoa Física)',
+	cnpj: 'CNPJ (Pessoa Jurídica)',
+};
+
 // ── Territórios especiais (special_territory_w_ibge_by_brazil.csv) ────────────
 export const specialData = parseCSV(csvSpecialRaw).map((d) => ({
 	territorio:     d.territorio,
@@ -447,7 +464,7 @@ export const valorInteriorTotal       = +_interiorRow.valor_total;              
 
 export const capitalInteriorStackedData = [
 	{
-		label:         '% do valor recebido',
+		label:         '% do recurso executado',
 		capital:       +_capitalRow2.percentual_valor    * 100,
 		metropolitana: +_metroRow.percentual_valor       * 100,
 		interior:      +_interiorRow.percentual_valor    * 100,
@@ -459,6 +476,17 @@ export const capitalInteriorStackedData = [
 		interior:      +_interiorRow.percentual_quantidade * 100,
 	},
 ];
+
+// ── Capital / Metropolitana / Interior por UF — execução estadual ─────────────
+export const capitalInteriorByUfData = parseCSV(csvEstadoLocalResidRaw)
+	.filter((d) => d.uf)
+	.map((d) => ({
+		label:         d.uf,
+		capital:       +d.percentual_quantidade_capital       * 100,
+		metropolitana: +d.percentual_quantidade_regiao_metropolitana * 100,
+		interior:      +d.percentual_quantidade_interior      * 100,
+	}))
+	.sort((a, b) => b.interior - a.interior);
 
 // ── Métricas por porte populacional (resumo_por_porte_populacional.csv) ────────
 export const porteMeanData = parseCSV(csvPortePopRaw)

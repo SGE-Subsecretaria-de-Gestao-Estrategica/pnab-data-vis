@@ -46,7 +46,7 @@ Compara, para cada UF, o percentual de trabalhadores formais na população gera
       seriesLabels={[]}
       legendItems={regionIbgeComparisonLegend}
       format={(v) => `${v.toFixed(1)}%`}
-      xLabel="% do total nacional"
+      xLabel="% Agentes Culturais Contemplados com Vínculo Formal de Trabalho"
       margin={{ top: 16, right: 60, bottom: 56, left: 120 }}
       barHeight={18}
       barPad={5}

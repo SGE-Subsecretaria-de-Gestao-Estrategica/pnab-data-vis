@@ -17,3 +17,5 @@ storybook-static/
 debug-storybook.log
 *.pyc
 /data/input_data/non-public
+
+/svgs

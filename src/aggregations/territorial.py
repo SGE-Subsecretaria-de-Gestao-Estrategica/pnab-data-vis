@@ -4147,17 +4147,26 @@ def resumo_territorios_especiais_por_uf(
 
     return df_final
 
-
 def resumo_por_porte_populacional(df_aux: pd.DataFrame) -> pd.DataFrame:
     """
     Retorna um resumo por porte populacional.
 
-    valor_medio_por_porte:
-    - média do valor recebido por contemplado.
+    Considera apenas municípios:
+    - tipo_ente_bbagil == "MUNICIPIO"
 
-    valor_medio_porte_municipios:
-    - valor médio executado por município dentro daquele porte.
-    - cálculo: valor_total_por_porte / numero_municipios.
+    Cada linha de df_aux representa um contemplado.
+
+    Métricas retornadas:
+    - número de municípios por porte;
+    - valor total executado por porte;
+    - valor médio por contemplado;
+    - média aparada removendo os 1% maiores valores;
+    - mediana;
+    - quantidade de contemplados;
+    - valor médio executado por município;
+    - percentual do valor por porte;
+    - percentual da quantidade de contemplados por porte;
+    - estatísticas para boxplot: mínimo, Q1, Q2, Q3 e máximo.
     """
 
     def media_aparada_1pct_superior(x):
@@ -4174,6 +4183,7 @@ def resumo_por_porte_populacional(df_aux: pd.DataFrame) -> pd.DataFrame:
         return x[x <= limite_superior].mean()
 
     df = df_aux.copy()
+
     df = df[df["tipo_ente_bbagil"] == "MUNICIPIO"].copy()
 
     df["valor_transacao_total_bbagil"] = pd.to_numeric(
@@ -4186,14 +4196,57 @@ def resumo_por_porte_populacional(df_aux: pd.DataFrame) -> pd.DataFrame:
         .groupby("porte_populacional", dropna=False)
         .agg(
             numero_municipios=("ente_bbagil", "nunique"),
-            valor_total_por_porte=("valor_transacao_total_bbagil", "sum"),
-            valor_medio_por_porte=("valor_transacao_total_bbagil", "mean"),
+
+            valor_total_por_porte=(
+                "valor_transacao_total_bbagil",
+                "sum"
+            ),
+
+            valor_medio_por_porte=(
+                "valor_transacao_total_bbagil",
+                "mean"
+            ),
+
             media_aparada_1pct_por_porte=(
                 "valor_transacao_total_bbagil",
                 media_aparada_1pct_superior
             ),
-            valor_mediano_por_porte=("valor_transacao_total_bbagil", "median"),
-            quantidade_contemplados_por_porte=("chave", "nunique")
+
+            valor_mediano_por_porte=(
+                "valor_transacao_total_bbagil",
+                "median"
+            ),
+
+            quantidade_contemplados_por_porte=(
+                "chave",
+                "nunique"
+            ),
+
+            # Estatísticas para boxplot
+            valor_minimo_por_porte=(
+                "valor_transacao_total_bbagil",
+                "min"
+            ),
+
+            q1_valor_por_porte=(
+                "valor_transacao_total_bbagil",
+                lambda x: x.quantile(0.25)
+            ),
+
+            q2_valor_por_porte=(
+                "valor_transacao_total_bbagil",
+                lambda x: x.quantile(0.50)
+            ),
+
+            q3_valor_por_porte=(
+                "valor_transacao_total_bbagil",
+                lambda x: x.quantile(0.75)
+            ),
+
+            valor_maximo_por_porte=(
+                "valor_transacao_total_bbagil",
+                "max"
+            )
         )
         .reset_index()
     )
@@ -4207,12 +4260,16 @@ def resumo_por_porte_populacional(df_aux: pd.DataFrame) -> pd.DataFrame:
     total_valor = df_resumo["valor_total_por_porte"].sum()
     total_quantidade = df_resumo["quantidade_contemplados_por_porte"].sum()
 
-    df_resumo["percentual_valor_por_porte"] = (
-        df_resumo["valor_total_por_porte"] / total_valor
+    df_resumo["percentual_valor_por_porte"] = np.where(
+        total_valor != 0,
+        df_resumo["valor_total_por_porte"] / total_valor,
+        np.nan
     )
 
-    df_resumo["percentual_quantidade_contemplados_por_porte"] = (
-        df_resumo["quantidade_contemplados_por_porte"] / total_quantidade
+    df_resumo["percentual_quantidade_contemplados_por_porte"] = np.where(
+        total_quantidade != 0,
+        df_resumo["quantidade_contemplados_por_porte"] / total_quantidade,
+        np.nan
     )
 
     ordem_portes = [

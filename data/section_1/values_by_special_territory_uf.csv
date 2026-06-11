@@ -1,4 +1,4 @@
 ,cod_tipo_nome,valor_transacao,perc_valor_transacao,quantidade_contemplados,perc_quantidade_contemplados,qtd_tipo_documento_CNPJ,qtd_tipo_documento_CPF,valor_tipo_documento_CNPJ,valor_tipo_documento_CPF,min_valor_tipo_documento_CNPJ,min_valor_tipo_documento_CPF,mediana_valor_tipo_documento_CNPJ,mediana_valor_tipo_documento_CPF,max_valor_tipo_documento_CNPJ,max_valor_tipo_documento_CPF,media_valor_tipo_documento_CNPJ,media_valor_tipo_documento_CPF
-1,Favela e Comunidade Urbana,138146185,0.0485,4555,0.0273,864,3691,76558971,61587214,431,400,36000,10000,22109765,400000,109214,16874
-3,Agrupamento quilombola,7369210,0.0026,481,0.0029,72,409,3509108,3860103,1034,500,29307,3200,329600,150000,52375,9532
+1,Favela e Comunidade Urbana,140406774,0.0488,4600,0.0274,894,3706,78581958,61824816,431,400,30547,10000,22109765,400000,91057,16846
+3,Agrupamento quilombola,7373210,0.0026,482,0.0029,72,410,3509108,3864103,1034,500,29654,3225,280000,150000,51605,9518
 4,Agrupamento indígena,5078944,0.0018,254,0.0015,22,232,1391182,3687762,4000,500,25883,5500,250000,294095,63236,16175

@@ -11,6 +11,7 @@ import csvRacaCorSexoRaw from '../../../data/section_4/aggregate_raca_cor_vincul
 import csvUfRaw          from '../../../data/section_4/aggregate_vinculo_formal_labor_by_uf.csv?raw';
 import csvUfIbgeRaw      from '../../../data/section_4/aggregate_vinculo_formal_labor_by_uf_ibge.csv?raw';
 import csvCboRaisRaw     from '../../../data/section_4/aggregate_cbo_rais.csv?raw';
+import csvRaisEscRaw     from '../../../data/section_4/resumo_escolaridade_com_vinculo_rais.csv?raw';
 
 // Handles quoted fields with embedded commas (standard CSV)
 function parseCSV(text: string): Record<string, string>[] {
@@ -133,27 +134,29 @@ const _raisEscRef: Record<string, number> = {
 };
 
 const _escOrder = [
-	'Mestrado ou doutorado completo',
 	'Sem instrução e fundamental incompleto',
 	'Fundamental completo e médio incompleto',
-	'Superior completo',
 	'Médio completo e superior incompleto',
+	'Superior completo',
+	'Mestrado ou doutorado completo',
 ];
 
-const _escLabelAbrev: Record<string, string> = {
-	'Sem instrução e fundamental incompleto':  'Sem instrução',
-	'Fundamental completo e médio incompleto': 'Fund./méd. incompl.',
-	'Médio completo e superior incompleto':    'Médio/sup. incompl.',
-	'Superior completo':                       'Superior compl.',
-	'Mestrado ou doutorado completo':          'Mestrado/dout.',
+const _escLabelFull: Record<string, string> = {
+	'Sem instrução e fundamental incompleto':  'Sem instrução e fundamental incompleto',
+	'Fundamental completo e médio incompleto': 'Fundamental completo e médio incompleto',
+	'Médio completo e superior incompleto':    'Médio completo e superior incompleto',
+	'Superior completo':                       'Superior completo',
+	'Mestrado ou doutorado completo':          'Mestrado ou doutorado completo',
 };
 
+const _raisEscRows = parseCSV(csvRaisEscRaw);
+
 export const escolaridadeGroupedData = _escOrder.map((esc) => {
-	const row = escRows.find((r) => r.escolaridade_agregado_rais === esc)!;
+	const row = _raisEscRows.find((r) => r.escolaridade_agregado_rais === esc)!;
 	return {
-		label: _escLabelAbrev[esc] ?? esc,
+		label: _escLabelFull[esc] ?? esc,
 		values: [
-			+row.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
+			+row.perc_qtd_contemplados_com_vinculo,
 			_raisEscRef[esc],
 		],
 	};
@@ -420,7 +423,10 @@ export const cboRaisTop20 = [...cboRaisRows]
 	.slice(0, 20)
 	.map((r) => ({
 		posicao:       +r[''] + 1,
-		descricao:     r.cbo_descricao_rais.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()),
+		descricao:     r.cbo_descricao_rais.toLowerCase()
+			.split(' ')
+			.map((w, i) => (i > 0 && (w === 'de' || w === 'do')) ? w : w.charAt(0).toUpperCase() + w.slice(1))
+			.join(' '),
 		percValor:     +r.percentual_valor * 100,
 		percFormatted: `${(+r.percentual_valor * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`,
 	}));

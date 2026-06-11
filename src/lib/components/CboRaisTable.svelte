@@ -98,7 +98,7 @@
 	<text x={DESC_X} y={HEADER_H - 12}
 		font-size={FS_HDR} fill={HDR_CLR} font-weight="700" letter-spacing="0.8">OCUPAÇÃO</text>
 	<text x={BAR_X} y={HEADER_H - 12}
-		font-size={FS_HDR} fill={HDR_CLR} font-weight="700" letter-spacing="0.8">% DO VALOR TRANSFERIDO</text>
+		font-size={FS_HDR} fill={HDR_CLR} font-weight="700" letter-spacing="0.8">% RECURSOS EXECUTADOS</text>
 	<line x1={0} y1={HEADER_H} x2={width} y2={HEADER_H}
 		stroke={HDR_CLR} stroke-width={1.5} opacity={0.35} />
 

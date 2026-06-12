@@ -6,7 +6,7 @@
   import VerticalGroupedBarChart from '$lib/components/VerticalGroupedBarChart.svelte';
   import VerticalBarChartCustom from '$lib/components/VerticalBarChartCustom.svelte';
   // @ts-ignore
-  import { escolaridadeBarData, escolaridadeValorMedioData, escolaridadeProporcionalData, escolaridadeGroupedData } from '$lib/data/section4';
+  import { escolaridadeBarData, escolaridadeValorMedioData, escolaridadeProporcionalData/*, escolaridadeGroupedData*/ } from '$lib/data/section4'; // escolaridadeGroupedData: resumo_escolaridade_com_vinculo_rais.csv faltante
 
   // @ts-ignore
   const formatN = (v) => v.toLocaleString('pt-BR');
@@ -84,6 +84,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
   {/snippet}
 </Story>
 
+<!-- DISABLED: resumo_escolaridade_com_vinculo_rais.csv faltante
 <Story name="Barras verticais agrupadas — PNAB vs. Brasil por escolaridade">
   {#snippet template()}
     <VerticalGroupedBarChart
@@ -98,3 +99,4 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
     />
   {/snippet}
 </Story>
+-->

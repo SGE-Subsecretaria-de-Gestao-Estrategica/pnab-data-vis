@@ -3,7 +3,7 @@
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
   // @ts-ignore
-  import { ufIbgeByRegionData, ufIbgeRegionLegend, regionIbgeComparisonData, regionIbgeComparisonLegend } from '$lib/data/section4';
+  // import { ufIbgeByRegionData, ufIbgeRegionLegend, regionIbgeComparisonData, regionIbgeComparisonLegend } from '$lib/data/section4'; // CSV faltante: aggregate_vinculo_formal_labor_by_uf_ibge.csv
 
   const { Story } = defineMeta({
     title: 'Section 4/vinculoFormalPnabVsPopulacao',
@@ -23,6 +23,7 @@ Compara, para cada UF, o percentual de trabalhadores formais na população gera
   });
 </script>
 
+<!-- DISABLED: aggregate_vinculo_formal_labor_by_uf_ibge.csv faltante
 <Story name="PNAB vs. população geral — vínculo formal por UF e região">
   {#snippet template()}
     <HorizontalGroupedBarChart
@@ -54,3 +55,4 @@ Compara, para cada UF, o percentual de trabalhadores formais na população gera
     />
   {/snippet}
 </Story>
+-->

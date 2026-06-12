@@ -3,7 +3,7 @@
 import csvAgeGroupSexoRaw from '../../../data/section_3/aggregate_valor_quantity_by_age_group_sexo_wide.csv?raw';
 import csvAgeGroupRegionRaw from '../../../data/section_3/aggregate_value_quantity_by_age_group_region_wide.csv?raw';
 import csvSexoPropRaw from '../../../data/section_3/aggregate_contemplados_by_sexo_proportion.csv?raw';
-import csvPfPjRaw from '../../../data/section_3/aggregate_contemplados_pf_pj_proportion.csv?raw';
+// import csvPfPjRaw from '../../../data/section_3/aggregate_contemplados_pf_pj_proportion.csv?raw'; // CSV faltante
 import csvCboRaw  from '../../../data/section_4/aggregate_cbo_rais.csv?raw';
 import csvCnaesRaw from '../../../data/section_3/top_cnaes_cnpj_cultura.csv?raw';
 import csvNaturezaJuridicaRegiaoRaw from '../../../data/section_3/aggregate_cnpj_natureza_juridica_por_regiao.csv?raw';
@@ -22,13 +22,13 @@ function parseCSV(text: string): Record<string, string>[] {
 		});
 }
 
-// ── PF vs PJ ─────────────────────────────────────────────────────────────────
-const [pfPjRow] = parseCSV(csvPfPjRaw);
-export const totalBeneficiarios = +pfPjRow.quantidade_contemplados;
-export const pfPjDonutData = [
-	{ label: 'Pessoa Física (PF)', value: +pfPjRow.quantidade_contemplados_pf },
-	{ label: 'Pessoa Jurídica (PJ)', value: +pfPjRow.quantidade_contemplados_pj },
-];
+// // ── PF vs PJ (aggregate_contemplados_pf_pj_proportion.csv faltante) ──────────
+// const [pfPjRow] = parseCSV(csvPfPjRaw);
+// export const totalBeneficiarios = +pfPjRow.quantidade_contemplados;
+// export const pfPjDonutData = [
+// 	{ label: 'Pessoa Física (PF)', value: +pfPjRow.quantidade_contemplados_pf },
+// 	{ label: 'Pessoa Jurídica (PJ)', value: +pfPjRow.quantidade_contemplados_pj },
+// ];
 export const valorTotalPJ = 1_591_311_693;
 export const valorTotalMEI = 238_855_896;
 

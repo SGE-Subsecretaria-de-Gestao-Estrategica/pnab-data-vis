@@ -86,6 +86,7 @@ def main():
             out_dir = SVGS_DIR / section_dir
             out_path = out_dir / filename
 
+
             try:
                 page.goto(
                     f"http://localhost:{PORT}/iframe.html?id={sid}",

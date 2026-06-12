@@ -21,7 +21,7 @@
     porteStackedLabels,
     porteStackedData,
     porteRaw,
-    porteMeanData,
+    // porteMeanData,  // CSV faltante: resumo_por_porte_populacional.csv (em section_1/)
   } from '$lib/data/section1';
 
   // @ts-ignore
@@ -92,59 +92,27 @@
   // @ts-ignore
   const porteBubbleColors  = porteRaw.map((d) => PORTE_NAME_COLORS[d.porte]);
 
-  // ── Bars — Métricas por Porte (stacked) ────────────────────────────────────
-  const pmKeys    = ['pequeno_i', 'pequeno_ii', 'medio', 'grande'];
-  // @ts-ignore
-  const pmColors  = pmKeys.map((k) => PORTE_KEY_COLORS[k]);
-  const pmLabels  = { grande: 'Grande', pequeno_i: 'Pequeno I', pequeno_ii: 'Pequeno II', medio: 'Médio' };
-  const pmByLabel = Object.fromEntries(porteMeanData.map((d) => [d.label, d]));
-  const pmTotalMun   = porteMeanData.reduce((s, d) => s + d.municipios, 0);
-  const pmMedianData = porteMeanData.map((d) => ({ label: d.label, value: d.valor_mediano }));
-  const _g   = pmByLabel['Grande']    || { municipios: 0, perc_quantidade: 0, perc_valor: 0 };
-  const _pi  = pmByLabel['Pequeno I'] || { municipios: 0, perc_quantidade: 0, perc_valor: 0 };
-  const _pii = pmByLabel['Pequeno II']|| { municipios: 0, perc_quantidade: 0, perc_valor: 0 };
-  const _m   = pmByLabel['Médio']     || { municipios: 0, perc_quantidade: 0, perc_valor: 0 };
-
-  // ── Stacked — Recurso e Contemplados por Porte ─────────────────────────────
-  const pmPercStackedData = [
-    {
-      cat: '% do recurso executado',
-      grande:     _g.perc_valor,
-      pequeno_i:  _pi.perc_valor,
-      pequeno_ii: _pii.perc_valor,
-      medio:      _m.perc_valor,
-    },
-    {
-      cat: '% dos contemplados',
-      grande:     _g.perc_quantidade,
-      pequeno_i:  _pi.perc_quantidade,
-      pequeno_ii: _pii.perc_quantidade,
-      medio:      _m.perc_quantidade,
-    },
-  ];
-  const pmStackedData = [
-    {
-      cat: 'Municípios (%)',
-      grande:     _g.municipios   / pmTotalMun * 100,
-      pequeno_i:  _pi.municipios  / pmTotalMun * 100,
-      pequeno_ii: _pii.municipios / pmTotalMun * 100,
-      medio:      _m.municipios   / pmTotalMun * 100,
-    },
-    {
-      cat: 'Beneficiários (%)',
-      grande:     _g.perc_quantidade,
-      pequeno_i:  _pi.perc_quantidade,
-      pequeno_ii: _pii.perc_quantidade,
-      medio:      _m.perc_quantidade,
-    },
-    {
-      cat: 'Valor investido (%)',
-      grande:     _g.perc_valor,
-      pequeno_i:  _pi.perc_valor,
-      pequeno_ii: _pii.perc_valor,
-      medio:      _m.perc_valor,
-    },
-  ];
+  // // ── Bars — Métricas por Porte (resumo_por_porte_populacional.csv faltante em section_1/) ──
+  // const pmKeys    = ['pequeno_i', 'pequeno_ii', 'medio', 'grande'];
+  // const pmColors  = pmKeys.map((k) => PORTE_KEY_COLORS[k]);
+  // const pmLabels  = { grande: 'Grande', pequeno_i: 'Pequeno I', pequeno_ii: 'Pequeno II', medio: 'Médio' };
+  // const pmByLabel = Object.fromEntries(porteMeanData.map((d) => [d.label, d]));
+  // const pmTotalMun   = porteMeanData.reduce((s, d) => s + d.municipios, 0);
+  // const pmMedianData = porteMeanData.map((d) => ({ label: d.label, value: d.valor_mediano }));
+  // const _g   = pmByLabel['Grande']    || { municipios: 0, perc_quantidade: 0, perc_valor: 0 };
+  // const _pi  = pmByLabel['Pequeno I'] || { municipios: 0, perc_quantidade: 0, perc_valor: 0 };
+  // const _pii = pmByLabel['Pequeno II']|| { municipios: 0, perc_quantidade: 0, perc_valor: 0 };
+  // const _m   = pmByLabel['Médio']     || { municipios: 0, perc_quantidade: 0, perc_valor: 0 };
+  //
+  // const pmPercStackedData = [
+  //   { cat: '% do recurso executado', grande: _g.perc_valor, pequeno_i: _pi.perc_valor, pequeno_ii: _pii.perc_valor, medio: _m.perc_valor },
+  //   { cat: '% dos contemplados',     grande: _g.perc_quantidade, pequeno_i: _pi.perc_quantidade, pequeno_ii: _pii.perc_quantidade, medio: _m.perc_quantidade },
+  // ];
+  // const pmStackedData = [
+  //   { cat: 'Municípios (%)',    grande: _g.municipios / pmTotalMun * 100, pequeno_i: _pi.municipios / pmTotalMun * 100, pequeno_ii: _pii.municipios / pmTotalMun * 100, medio: _m.municipios / pmTotalMun * 100 },
+  //   { cat: 'Beneficiários (%)', grande: _g.perc_quantidade, pequeno_i: _pi.perc_quantidade, pequeno_ii: _pii.perc_quantidade, medio: _m.perc_quantidade },
+  //   { cat: 'Valor investido (%)', grande: _g.perc_valor, pequeno_i: _pi.perc_valor, pequeno_ii: _pii.perc_valor, medio: _m.perc_valor },
+  // ];
 
   // @ts-ignore
   const formatBRL = (v) =>
@@ -270,6 +238,7 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
   {/snippet}
 </Story>
 
+<!-- DISABLED: resumo_por_porte_populacional.csv faltante em section_1/
 <Story name="Bars — Métricas por Porte">
   {#snippet template()}
     <HorizontalStackedBarChartCustom
@@ -308,3 +277,4 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
     />
   {/snippet}
 </Story>
+-->

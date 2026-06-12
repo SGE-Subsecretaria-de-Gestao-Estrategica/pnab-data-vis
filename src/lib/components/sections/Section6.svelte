@@ -47,6 +47,8 @@
 	const domainColorMap = new Map(
 		fomentoDomainsRows.map((r, i) => [r.name, categorical8[i % categorical8.length] as string]),
 	);
+	
+	let containerWidth = $state(0);
 
 	const treemapW = $derived((containerWidth - 32) || 728);
 
@@ -83,7 +85,6 @@
 	const CHART_W = $derived(containerWidth || 760);
 
 	let wrapperEl: HTMLDivElement | undefined = $state();
-	let containerWidth = $state(0);
 
 	$effect(() => {
 		if (!wrapperEl) return;

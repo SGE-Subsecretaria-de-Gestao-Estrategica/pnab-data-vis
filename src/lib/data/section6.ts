@@ -5,8 +5,8 @@ import csvGrafico2Raw from '../../../data/section_6/capitulo_6_grafico_2.csv?raw
 import csvGrafico3Raw from '../../../data/section_6/capitulo_6_grafico_3.csv?raw';
 import csvGrafico4Raw from '../../../data/section_6/capitulo_6_grafico_4.csv?raw';
 import csvGrafico5Raw from '../../../data/section_6/capitulo_6_grafico_5.csv?raw';
-import csvPncvOuOutrosRaw from '../../../data/section_6/capitulo_6_grafico_pncv_ou_outros__2026-06-03_17-52.csv?raw';
-import csvTipoExecRegiaoRaw from '../../../data/section_6/capitulo_6_grafico_tipo_exec_regiao__2026-06-03_18-36.csv?raw';
+import csvPncvOuOutrosRaw from '../../../data/section_6/capitulo_6_grafico_pncv_ou_outros.csv?raw';
+import csvTipoExecRegiaoRaw from '../../../data/section_6/capitulo_6_grafico_tipo_exec_regiao.csv?raw';
 
 import type { MekkoDatum, TreemapNode } from 'sniic-design-system';
 

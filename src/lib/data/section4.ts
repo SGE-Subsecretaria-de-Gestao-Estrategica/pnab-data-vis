@@ -9,9 +9,9 @@ import csvSexoRaw        from '../../../data/section_4/aggregate_vinculo_formal_
 import csvRacaCorRaw     from '../../../data/section_4/aggregate_vinculo_formal_labor_by_raca_cor.csv?raw';
 import csvRacaCorSexoRaw from '../../../data/section_4/aggregate_raca_cor_vinculo_formal_labor_by_sexo.csv?raw';
 import csvUfRaw          from '../../../data/section_4/aggregate_vinculo_formal_labor_by_uf.csv?raw';
-import csvUfIbgeRaw      from '../../../data/section_4/aggregate_vinculo_formal_labor_by_uf_ibge.csv?raw';
+// import csvUfIbgeRaw      from '../../../data/section_4/aggregate_vinculo_formal_labor_by_uf_ibge.csv?raw'; // CSV faltante
 import csvCboRaisRaw     from '../../../data/section_4/aggregate_cbo_rais.csv?raw';
-import csvRaisEscRaw     from '../../../data/section_4/resumo_escolaridade_com_vinculo_rais.csv?raw';
+// import csvRaisEscRaw     from '../../../data/section_4/resumo_escolaridade_com_vinculo_rais.csv?raw';     // CSV faltante
 
 // Handles quoted fields with embedded commas (standard CSV)
 function parseCSV(text: string): Record<string, string>[] {
@@ -149,18 +149,18 @@ const _escLabelFull: Record<string, string> = {
 	'Mestrado ou doutorado completo':          'Mestrado ou doutorado completo',
 };
 
-const _raisEscRows = parseCSV(csvRaisEscRaw);
-
-export const escolaridadeGroupedData = _escOrder.map((esc) => {
-	const row = _raisEscRows.find((r) => r.escolaridade_agregado_rais === esc)!;
-	return {
-		label: _escLabelFull[esc] ?? esc,
-		values: [
-			+row.perc_qtd_contemplados_com_vinculo,
-			_raisEscRef[esc],
-		],
-	};
-});
+// const _raisEscRows = parseCSV(csvRaisEscRaw); // resumo_escolaridade_com_vinculo_rais.csv faltante
+//
+// export const escolaridadeGroupedData = _escOrder.map((esc) => {
+// 	const row = _raisEscRows.find((r) => r.escolaridade_agregado_rais === esc)!;
+// 	return {
+// 		label: _escLabelFull[esc] ?? esc,
+// 		values: [
+// 			+row.perc_qtd_contemplados_com_vinculo,
+// 			_raisEscRef[esc],
+// 		],
+// 	};
+// });
 
 // ── Por região ──────────────────────────────────────────────────────────────────
 const regionRows4 = parseCSV(csvRegionRaw);
@@ -303,81 +303,75 @@ export const ufRankingData = [...ufRows4]
 		value: +r.percentual_contemplados_com_vinculo_trabalho_formal * 100,
 	}));
 
-// ── Por UF × IBGE (comparação formalização PNAB vs. população geral) ─────────────
-const ufIbgeRows = parseCSV(csvUfIbgeRaw);
+// // ── Por UF × IBGE (aggregate_vinculo_formal_labor_by_uf_ibge.csv faltante) ───────
+// const ufIbgeRows = parseCSV(csvUfIbgeRaw);
 
-// Shared color pairs for IBGE comparison charts (UF and region).
-// light = % pop. geral, main = % PNAB. Sul uses yellow scale.
-const _ibgeRegionColors: Record<string, [string, string]> = {
-	Nordeste:       ['#f7bf95', '#ea662f'], // orange[1] / orange[2]
-	Sudeste:        ['#9fbbe0', '#4271b5'], // blue[1]   / blue[2]
-	Norte:          ['#95c0b7', '#317a68'], // teal[1]   / teal[2]
-	Sul:            ['#f9e6a1', '#f6c341'], // yellow[1] / yellow[2]
-	'Centro-Oeste': ['#d5a6c8', '#a44c7f'], // purple[1] / purple[2]
-};
-const _ibgeRegionForUF: Record<string, string> = {
-	AC: 'Norte',  AM: 'Norte',  AP: 'Norte',  PA: 'Norte',  RO: 'Norte',  RR: 'Norte',  TO: 'Norte',
-	AL: 'Nordeste', BA: 'Nordeste', CE: 'Nordeste', MA: 'Nordeste', PB: 'Nordeste',
-	PE: 'Nordeste', PI: 'Nordeste', RN: 'Nordeste', SE: 'Nordeste',
-	DF: 'Centro-Oeste', GO: 'Centro-Oeste', MS: 'Centro-Oeste', MT: 'Centro-Oeste',
-	ES: 'Sudeste', MG: 'Sudeste', RJ: 'Sudeste', SP: 'Sudeste',
-	PR: 'Sul', RS: 'Sul', SC: 'Sul',
-};
-
-// Total formal labor in Brazil (sum across all UFs) — used to compute each UF's share
-const _totalBrazilFormalLabor = ufIbgeRows.reduce((s, r) => s + +r.total_vinculos_a_rais_2024, 0);
-
-// Bar 1 (light): % of UF's formal labor out of Brazil's total formal labor (RAIS 2024)
-// Bar 2 (dark):  % of UF's PNAB formal participants out of all PNAB formal participants
-export const ufIbgeByRegionData = ['Nordeste', 'Sudeste', 'Norte', 'Sul', 'Centro-Oeste'].flatMap(
-	(regiao) => {
-		const [lightColor, darkColor] = _ibgeRegionColors[regiao];
-		const stateRows = [...ufIbgeRows]
-			.filter((r) => _ibgeRegionForUF[r.uf] === regiao)
-			.sort((a, b) =>
-				(+b.percentual_numero_contemplados_com_vinculo_no_total_geral - +b.total_vinculos_a_rais_2024 / _totalBrazilFormalLabor) -
-				(+a.percentual_numero_contemplados_com_vinculo_no_total_geral - +a.total_vinculos_a_rais_2024 / _totalBrazilFormalLabor)
-			)
-			.map((r) => ({
-				label: r.uf,
-				values: [
-					(+r.total_vinculos_a_rais_2024 / _totalBrazilFormalLabor) * 100,
-					+r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
-				],
-				colors: [lightColor, darkColor],
-			}));
-		return [{ label: regiao, values: [], isSeparator: true as const }, ...stateRows];
-	}
-);
-
-// Region-level comparison: PNAB formal % vs. general population formal %
-// General pop % aggregated from UF IBGE rows; PNAB % from region CSV.
-export const regionIbgeComparisonData = ['Nordeste', 'Sudeste', 'Norte', 'Sul', 'Centro-Oeste'].map(
-	(regiao) => {
-		const r = regionRows4.find((d) => d.regiao === regiao)!;
-		const ufSet = ufIbgeRows.filter((u) => _ibgeRegionForUF[u.uf] === regiao);
-		const totalFormal = ufSet.reduce((s, u) => s + +u.total_vinculos_a_rais_2024, 0);
-		const [lightColor, mainColor] = _ibgeRegionColors[regiao];
-		return {
-			label: regiao,
-			values: [
-				(totalFormal / _totalBrazilFormalLabor) * 100,
-				+r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
-			],
-			colors: [lightColor, mainColor],
-		};
-	}
-);
-
-export const regionIbgeComparisonLegend = [
-	{ label: '% RAIS', color: '#c0c0c0' },
-	{ label: '% PNAB', color: '#444444' },
-];
-
-export const ufIbgeRegionLegend = [
-	{ label: '% RAIS', color: '#c0c0c0' },
-	{ label: '% PNAB', color: '#444444' },
-];
+// // Shared color pairs for IBGE comparison charts (UF and region).
+// const _ibgeRegionColors: Record<string, [string, string]> = {
+// 	Nordeste:       ['#f7bf95', '#ea662f'],
+// 	Sudeste:        ['#9fbbe0', '#4271b5'],
+// 	Norte:          ['#95c0b7', '#317a68'],
+// 	Sul:            ['#f9e6a1', '#f6c341'],
+// 	'Centro-Oeste': ['#d5a6c8', '#a44c7f'],
+// };
+// const _ibgeRegionForUF: Record<string, string> = {
+// 	AC: 'Norte',  AM: 'Norte',  AP: 'Norte',  PA: 'Norte',  RO: 'Norte',  RR: 'Norte',  TO: 'Norte',
+// 	AL: 'Nordeste', BA: 'Nordeste', CE: 'Nordeste', MA: 'Nordeste', PB: 'Nordeste',
+// 	PE: 'Nordeste', PI: 'Nordeste', RN: 'Nordeste', SE: 'Nordeste',
+// 	DF: 'Centro-Oeste', GO: 'Centro-Oeste', MS: 'Centro-Oeste', MT: 'Centro-Oeste',
+// 	ES: 'Sudeste', MG: 'Sudeste', RJ: 'Sudeste', SP: 'Sudeste',
+// 	PR: 'Sul', RS: 'Sul', SC: 'Sul',
+// };
+//
+// const _totalBrazilFormalLabor = ufIbgeRows.reduce((s, r) => s + +r.total_vinculos_a_rais_2024, 0);
+//
+// export const ufIbgeByRegionData = ['Nordeste', 'Sudeste', 'Norte', 'Sul', 'Centro-Oeste'].flatMap(
+// 	(regiao) => {
+// 		const [lightColor, darkColor] = _ibgeRegionColors[regiao];
+// 		const stateRows = [...ufIbgeRows]
+// 			.filter((r) => _ibgeRegionForUF[r.uf] === regiao)
+// 			.sort((a, b) =>
+// 				(+b.percentual_numero_contemplados_com_vinculo_no_total_geral - +b.total_vinculos_a_rais_2024 / _totalBrazilFormalLabor) -
+// 				(+a.percentual_numero_contemplados_com_vinculo_no_total_geral - +a.total_vinculos_a_rais_2024 / _totalBrazilFormalLabor)
+// 			)
+// 			.map((r) => ({
+// 				label: r.uf,
+// 				values: [
+// 					(+r.total_vinculos_a_rais_2024 / _totalBrazilFormalLabor) * 100,
+// 					+r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
+// 				],
+// 				colors: [lightColor, darkColor],
+// 			}));
+// 		return [{ label: regiao, values: [], isSeparator: true as const }, ...stateRows];
+// 	}
+// );
+//
+// export const regionIbgeComparisonData = ['Nordeste', 'Sudeste', 'Norte', 'Sul', 'Centro-Oeste'].map(
+// 	(regiao) => {
+// 		const r = regionRows4.find((d) => d.regiao === regiao)!;
+// 		const ufSet = ufIbgeRows.filter((u) => _ibgeRegionForUF[u.uf] === regiao);
+// 		const totalFormal = ufSet.reduce((s, u) => s + +u.total_vinculos_a_rais_2024, 0);
+// 		const [lightColor, mainColor] = _ibgeRegionColors[regiao];
+// 		return {
+// 			label: regiao,
+// 			values: [
+// 				(totalFormal / _totalBrazilFormalLabor) * 100,
+// 				+r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
+// 			],
+// 			colors: [lightColor, mainColor],
+// 		};
+// 	}
+// );
+//
+// export const regionIbgeComparisonLegend = [
+// 	{ label: '% RAIS', color: '#c0c0c0' },
+// 	{ label: '% PNAB', color: '#444444' },
+// ];
+//
+// export const ufIbgeRegionLegend = [
+// 	{ label: '% RAIS', color: '#c0c0c0' },
+// 	{ label: '% PNAB', color: '#444444' },
+// ];
 
 // ── Por UF × Região (correlação) ────────────────────────────────────────────────
 const regionForUF: Record<string, string> = {

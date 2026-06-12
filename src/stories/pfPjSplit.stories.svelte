@@ -3,7 +3,7 @@
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import { DonutChart, colorScales } from 'sniic-design-system';
   // @ts-ignore
-  import { pfPjDonutData, totalBeneficiarios } from '$lib/data/section3';
+  // import { pfPjDonutData, totalBeneficiarios } from '$lib/data/section3'; // CSV faltante: aggregate_contemplados_pf_pj_proportion.csv
 
   // @ts-ignore
   const formatNum = (v) => v.toLocaleString('pt-BR');
@@ -32,6 +32,7 @@ Essa proporção é central para interpretar as análises de valor: embora as pe
   });
 </script>
 
+<!-- DISABLED: aggregate_contemplados_pf_pj_proportion.csv faltante
 <Story name="Donut — Pessoa Física vs Pessoa Jurídica">
   {#snippet template()}
     <DonutChart
@@ -44,3 +45,4 @@ Essa proporção é central para interpretar as análises de valor: embora as pe
     />
   {/snippet}
 </Story>
+-->

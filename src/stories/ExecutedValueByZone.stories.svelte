@@ -2,7 +2,7 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import { HorizontalStackedBarChart, colorScales } from 'sniic-design-system';
-  import { zoneData, zoneMunicipalityData } from '$lib/data/section1';
+  // import { zoneData, zoneMunicipalityData } from '$lib/data/section1'; // CSVs faltantes: executed_value_zone_by_state/uf.csv
 
   const redBlue = [colorScales.red[2], colorScales.blue[2]];
 
@@ -35,6 +35,7 @@ Este padrão levanta questões estruturais sobre o alcance do programa em zonas 
   });
 </script>
 
+<!-- DISABLED: executed_value_zone_by_state/uf.csv faltantes
 <Story name="Proporção Urbano/Rural por UF (Total UF)">
   {#snippet template()}
     <HorizontalStackedBarChart
@@ -94,3 +95,4 @@ Este padrão levanta questões estruturais sobre o alcance do programa em zonas 
     />
   {/snippet}
 </Story>
+-->

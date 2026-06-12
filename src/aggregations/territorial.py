@@ -6016,3 +6016,87 @@ def aggregate_valor_executado_por_uf_e_tipo_ente(
     )
 
     return df_resultado
+
+
+
+def aggregate_estatisticas_valor_por_uf(
+    df_aux: pd.DataFrame,
+    tipo_ente: str = "UF",
+    coluna_tipo_ente: str = "tipo_ente_bbagil",
+    coluna_uf: str = "uf_bbagil",
+    coluna_valor: str = "valor_transacao_total_bbagil"
+) -> pd.DataFrame:
+    """
+    Agrega estatísticas de valor por UF a partir do df_aux.
+
+    Parâmetro tipo_ente:
+    - "ESTADO": filtra tipo_ente_bbagil == "ESTADO"
+    - "MUNICIPIO": filtra tipo_ente_bbagil == "MUNICIPIO"
+    - "UF": não aplica filtro
+
+    Cada linha do df_aux representa um contemplado.
+
+    Retorna:
+    - uf
+    - quantidade_contemplados
+    - valor_total
+    - valor_minimo
+    - quartil1
+    - quartil2
+    - quartil3
+    - percentil_99
+    - valor_maximo
+    - valor_medio
+    - media_aparada
+
+    A média aparada remove, dentro de cada UF, os valores acima do percentil 99.
+    """
+
+    tipo_ente = tipo_ente.upper()
+
+    tipos_validos = ["UF", "ESTADO", "MUNICIPIO"]
+
+    if tipo_ente not in tipos_validos:
+        raise ValueError(
+            f"tipo_ente deve ser um dos seguintes valores: {tipos_validos}"
+        )
+
+    df = df_aux.copy()
+
+    df[coluna_valor] = pd.to_numeric(df[coluna_valor], errors="coerce")
+
+    if tipo_ente in ["ESTADO", "MUNICIPIO"]:
+        df = df[df[coluna_tipo_ente].eq(tipo_ente)].copy()
+
+    def calcular_media_aparada_1pct(serie: pd.Series) -> float:
+        serie = serie.dropna()
+
+        if serie.empty:
+            return np.nan
+
+        p99 = serie.quantile(0.99)
+
+        return serie[serie <= p99].mean()
+
+    df_resultado = (
+        df
+        .groupby(coluna_uf)
+        .agg(
+            quantidade_contemplados=(coluna_valor, "size"),
+            valor_total=(coluna_valor, "sum"),
+            valor_minimo=(coluna_valor, "min"),
+            quartil1=(coluna_valor, lambda x: x.quantile(0.25)),
+            quartil2=(coluna_valor, lambda x: x.quantile(0.50)),
+            quartil3=(coluna_valor, lambda x: x.quantile(0.75)),
+            percentil_99=(coluna_valor, lambda x: x.quantile(0.99)),
+            valor_maximo=(coluna_valor, "max"),
+            valor_medio=(coluna_valor, "mean"),
+            media_aparada=(coluna_valor, calcular_media_aparada_1pct)
+        )
+        .reset_index()
+        .rename(columns={coluna_uf: "uf"})
+        .sort_values("uf")
+        .reset_index(drop=True)
+    )
+
+    return df_resultado

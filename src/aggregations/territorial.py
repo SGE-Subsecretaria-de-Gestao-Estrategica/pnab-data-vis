@@ -5888,3 +5888,131 @@ def aggregate_recurso_municipios_por_porte(
     )
 
     return df_resultado
+
+
+def aggregate_valor_executado_por_uf_e_tipo_ente(
+    df_cubo: pd.DataFrame,
+    coluna_uf: str = "uf",
+    coluna_tipo_ente: str = "tipo_ente",
+    coluna_valor: str = "valor_transacao",
+    coluna_territorio: str = "cod_tipo_nome"
+) -> pd.DataFrame:
+    """
+    Agrega o valor executado por UF, separando execução estadual e municipal,
+    considerando apenas linhas associadas a territórios especiais.
+
+    Filtro aplicado em cod_tipo_nome:
+    - Favela e Comunidade Urbana
+    - Agrupamento quilombola
+    - Agrupamento indígena
+
+    Retorna:
+    - uf
+    - valor_executado_uf
+    - perc_valor_executado_uf
+    - valor_executado_estado
+    - perc_valor_executado_estado
+    - valor_executado_municipio
+    - perc_valor_executado_municipio
+
+    Percentuais retornam em escala decimal:
+    0.25 = 25%
+    """
+
+    territorios_especiais = [
+        "Favela e Comunidade Urbana",
+        "Agrupamento quilombola",
+        "Agrupamento indígena"
+    ]
+
+    df = df_cubo.copy()
+
+    df[coluna_valor] = pd.to_numeric(df[coluna_valor], errors="coerce")
+
+    # Normaliza a coluna de território para evitar problemas com espaços
+    df[coluna_territorio] = df[coluna_territorio].astype(str).str.strip()
+
+    # Filtra apenas os territórios especiais desejados
+    df = df[df[coluna_territorio].isin(territorios_especiais)].copy()
+
+    # Mantém apenas ESTADO e MUNICIPIO
+    df = df[df[coluna_tipo_ente].isin(["ESTADO", "MUNICIPIO"])].copy()
+
+    # Valor total por UF
+    df_uf = (
+        df
+        .groupby(coluna_uf, as_index=False)
+        .agg(valor_executado_uf=(coluna_valor, "sum"))
+    )
+
+    valor_total_brasil = df_uf["valor_executado_uf"].sum()
+
+    df_uf["perc_valor_executado_uf"] = np.where(
+        valor_total_brasil > 0,
+        df_uf["valor_executado_uf"] / valor_total_brasil,
+        np.nan
+    )
+
+    # Valor por UF e tipo de ente
+    df_tipo = (
+        df
+        .groupby([coluna_uf, coluna_tipo_ente], as_index=False)
+        .agg(valor_executado=(coluna_valor, "sum"))
+        .pivot(
+            index=coluna_uf,
+            columns=coluna_tipo_ente,
+            values="valor_executado"
+        )
+        .reset_index()
+        .rename(columns={
+            "ESTADO": "valor_executado_estado",
+            "MUNICIPIO": "valor_executado_municipio"
+        })
+    )
+
+    # Garante colunas mesmo se algum tipo não existir
+    if "valor_executado_estado" not in df_tipo.columns:
+        df_tipo["valor_executado_estado"] = 0
+
+    if "valor_executado_municipio" not in df_tipo.columns:
+        df_tipo["valor_executado_municipio"] = 0
+
+    df_tipo[["valor_executado_estado", "valor_executado_municipio"]] = (
+        df_tipo[["valor_executado_estado", "valor_executado_municipio"]]
+        .fillna(0)
+    )
+
+    # Junta tudo
+    df_resultado = df_uf.merge(df_tipo, on=coluna_uf, how="left")
+
+    # Percentuais dentro da UF
+    df_resultado["perc_valor_executado_estado"] = np.where(
+        df_resultado["valor_executado_uf"] > 0,
+        df_resultado["valor_executado_estado"] / df_resultado["valor_executado_uf"],
+        np.nan
+    )
+
+    df_resultado["perc_valor_executado_municipio"] = np.where(
+        df_resultado["valor_executado_uf"] > 0,
+        df_resultado["valor_executado_municipio"] / df_resultado["valor_executado_uf"],
+        np.nan
+    )
+
+    df_resultado = (
+        df_resultado[
+            [
+                coluna_uf,
+                "valor_executado_uf",
+                "perc_valor_executado_uf",
+                "valor_executado_estado",
+                "perc_valor_executado_estado",
+                "valor_executado_municipio",
+                "perc_valor_executado_municipio",
+            ]
+        ]
+        .rename(columns={coluna_uf: "uf"})
+        .sort_values("uf")
+        .reset_index(drop=True)
+    )
+
+    return df_resultado

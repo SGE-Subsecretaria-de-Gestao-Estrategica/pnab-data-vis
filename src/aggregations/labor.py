@@ -2779,3 +2779,123 @@ def aggregate_vinculo_formal_cpf(
     })
 
     return resultado
+
+
+def aggregate_vinculo_formal_cpf_por_uf(
+    df_cubo: pd.DataFrame,
+    coluna_uf: str = "uf",
+    coluna_tipo_documento: str = "tipo_documento",
+    coluna_vinculo: str = "tipo_vinculo_description",
+    coluna_quantidade: str = "quantidade",
+) -> pd.DataFrame:
+    """
+    Agrega contemplados CPF por UF segundo presença ou ausência de vínculo formal.
+
+    Regras:
+    - considera apenas tipo_documento == CPF;
+    - cria flag_vinculo_formal:
+        True  = tipo_vinculo_description preenchido;
+        False = tipo_vinculo_description vazio/nulo/"VAZIO";
+    - número de contemplados = soma da coluna quantidade;
+    - percentual_contemplados_com_vinculo_trabalho_formal:
+        com vínculo na UF / total de contemplados CPF na UF;
+    - percentual_numero_contemplados_com_vinculo_no_total_geral:
+        com vínculo na UF / total de contemplados CPF com vínculo no Brasil.
+    """
+
+    df = df_cubo.copy()
+
+    # Filtra apenas CPF
+    df = df.loc[
+        df[coluna_tipo_documento].astype(str).str.upper().eq("CPF")
+    ].copy()
+
+    # Garante quantidade numérica
+    df[coluna_quantidade] = pd.to_numeric(
+        df[coluna_quantidade],
+        errors="coerce"
+    ).fillna(0)
+
+    # Cria flag de vínculo formal
+    vinculo_norm = (
+        df[coluna_vinculo]
+        .astype("string")
+        .str.strip()
+    )
+
+    df["flag_vinculo_formal"] = (
+        vinculo_norm.notna()
+        & ~vinculo_norm.eq("")
+        & ~vinculo_norm.str.upper().eq("VAZIO")
+    )
+
+    # Agrega por UF e flag
+    df_agg = (
+        df
+        .groupby([coluna_uf, "flag_vinculo_formal"], as_index=False)
+        .agg(numero_contemplados=(coluna_quantidade, "sum"))
+    )
+
+    # Abre as flags em colunas
+    df_uf = (
+        df_agg
+        .pivot(
+            index=coluna_uf,
+            columns="flag_vinculo_formal",
+            values="numero_contemplados"
+        )
+        .fillna(0)
+        .reset_index()
+        .rename(columns={
+            False: "numero_contemplados_sem_vinculo_trabalho_formal",
+            True: "numero_contemplados_com_vinculo_trabalho_formal",
+        })
+    )
+
+    # Garante que as duas colunas existam, mesmo se uma categoria não aparecer
+    if "numero_contemplados_sem_vinculo_trabalho_formal" not in df_uf.columns:
+        df_uf["numero_contemplados_sem_vinculo_trabalho_formal"] = 0
+
+    if "numero_contemplados_com_vinculo_trabalho_formal" not in df_uf.columns:
+        df_uf["numero_contemplados_com_vinculo_trabalho_formal"] = 0
+
+    # Total por UF
+    df_uf["numero_contemplados_total"] = (
+        df_uf["numero_contemplados_sem_vinculo_trabalho_formal"]
+        + df_uf["numero_contemplados_com_vinculo_trabalho_formal"]
+    )
+
+    # Percentual com vínculo dentro da própria UF
+    df_uf["percentual_contemplados_com_vinculo_trabalho_formal"] = (
+        df_uf["numero_contemplados_com_vinculo_trabalho_formal"]
+        / df_uf["numero_contemplados_total"]
+    ).fillna(0)
+
+    # Percentual dos contemplados com vínculo da UF em relação ao total Brasil
+    total_com_vinculo_brasil = (
+        df_uf["numero_contemplados_com_vinculo_trabalho_formal"].sum()
+    )
+
+    df_uf["percentual_numero_contemplados_com_vinculo_no_total_geral"] = (
+        df_uf["numero_contemplados_com_vinculo_trabalho_formal"]
+        / total_com_vinculo_brasil
+        if total_com_vinculo_brasil != 0
+        else 0
+    )
+
+    # Ordem final das colunas
+    colunas_finais = [
+        coluna_uf,
+        "numero_contemplados_sem_vinculo_trabalho_formal",
+        "numero_contemplados_com_vinculo_trabalho_formal",
+        "percentual_contemplados_com_vinculo_trabalho_formal",
+        "percentual_numero_contemplados_com_vinculo_no_total_geral",
+    ]
+
+    df_uf = (
+        df_uf[colunas_finais]
+        .sort_values(coluna_uf)
+        .reset_index(drop=True)
+    )
+
+    return df_uf

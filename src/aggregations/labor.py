@@ -2684,3 +2684,98 @@ def aggregate_vinculo_formal_labor_by_uf(
 #         .sort_values(col_uf)
 #         .reset_index(drop=True)
 #     )
+
+
+
+def aggregate_vinculo_formal_cpf(
+    df_cubo: pd.DataFrame,
+    coluna_tipo_documento: str = "tipo_documento",
+    coluna_vinculo: str = "tipo_vinculo_description",
+    coluna_valor: str = "valor_transacao",
+    coluna_quantidade: str = "quantidade",
+) -> pd.DataFrame:
+    """
+    Agrega contemplados CPF segundo presença ou ausência de vínculo formal.
+
+    Regras:
+    - considera apenas tipo_documento == CPF;
+    - cria flag_vinculo_formal:
+        True  = tipo_vinculo_description preenchido;
+        False = tipo_vinculo_description vazio/nulo;
+    - quantidade de contemplados = soma da coluna quantidade;
+    - valor pago = soma da coluna valor_transacao.
+    """
+
+    df = df_cubo.copy()
+
+    # Filtra apenas CPF
+    df = df.loc[
+        df[coluna_tipo_documento].astype(str).str.upper().eq("CPF")
+    ].copy()
+
+    # Garante valores numéricos
+    df[coluna_valor] = pd.to_numeric(df[coluna_valor], errors="coerce").fillna(0)
+    df[coluna_quantidade] = pd.to_numeric(df[coluna_quantidade], errors="coerce").fillna(0)
+
+    # Cria flag de vínculo formal
+    vinculo_norm = (
+        df[coluna_vinculo]
+        .astype("string")
+        .str.strip()
+    )
+
+    df["flag_vinculo_formal"] = (
+        vinculo_norm.notna()
+        & ~vinculo_norm.eq("")
+        & ~vinculo_norm.str.upper().eq("VAZIO")
+    )
+
+    # Agregações
+    numero_com_vinculo = df.loc[
+        df["flag_vinculo_formal"],
+        coluna_quantidade
+    ].sum()
+
+    numero_sem_vinculo = df.loc[
+        ~df["flag_vinculo_formal"],
+        coluna_quantidade
+    ].sum()
+
+    valor_com_vinculo = df.loc[
+        df["flag_vinculo_formal"],
+        coluna_valor
+    ].sum()
+
+    valor_sem_vinculo = df.loc[
+        ~df["flag_vinculo_formal"],
+        coluna_valor
+    ].sum()
+
+    numero_total = numero_com_vinculo + numero_sem_vinculo
+    valor_total = valor_com_vinculo + valor_sem_vinculo
+
+    resultado = pd.DataFrame({
+        "numero_contemplados_sem_vinculo_trabalho_formal": [numero_sem_vinculo],
+        "numero_contemplados_com_vinculo_trabalho_formal": [numero_com_vinculo],
+        "numero_contemplados_total": [numero_total],
+
+        "percentual_contemplados_sem_vinculo_trabalho_formal": [
+            numero_sem_vinculo / numero_total if numero_total != 0 else 0
+        ],
+        "percentual_contemplados_com_vinculo_trabalho_formal": [
+            numero_com_vinculo / numero_total if numero_total != 0 else 0
+        ],
+
+        "valor_pago_sem_vinculo_trabalho_formal": [valor_sem_vinculo],
+        "valor_pago_com_vinculo_trabalho_formal": [valor_com_vinculo],
+        "valor_pago_total": [valor_total],
+
+        "percentual_valor_pago_sem_vinculo_trabalho_formal": [
+            valor_sem_vinculo / valor_total if valor_total != 0 else 0
+        ],
+        "percentual_valor_pago_com_vinculo_trabalho_formal": [
+            valor_com_vinculo / valor_total if valor_total != 0 else 0
+        ],
+    })
+
+    return resultado

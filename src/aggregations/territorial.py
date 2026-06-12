@@ -1690,7 +1690,7 @@ def aggregate_special_territories_by(
     df_agg[colunas_valor] = (
         np.ceil(df_agg[colunas_valor])
         .fillna(0)
-        .astype("Int64")
+        .astype(float)
     )
 
     df_agg[colunas_quantidade] = (

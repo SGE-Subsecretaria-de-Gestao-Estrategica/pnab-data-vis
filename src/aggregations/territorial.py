@@ -5823,3 +5823,68 @@ def aggregate_execution_by_porte_with_estado_sexo(
     )
 
     return df_porte
+
+
+
+def aggregate_recurso_municipios_por_porte(
+    df_cubo: pd.DataFrame,
+    coluna_tipo_ente: str = "tipo_ente",
+    coluna_porte: str = "porte_populacional",
+    coluna_ente: str = "ente",
+    coluna_valor: str = "valor_transacao"
+) -> pd.DataFrame:
+    """
+    Agrega os recursos executados por porte populacional dos municípios.
+
+    Filtros:
+    - considera apenas tipo_ente == "MUNICIPIO"
+
+    Retorna:
+    - porte
+    - n_municipio: número de municípios únicos no porte
+    - recurso_total: soma do valor_transacao
+    - media_recurso: recurso_total / n_municipio
+    """
+
+    ordem_portes = [
+        "1_pequeno_i",
+        "2_pequeno_ii",
+        "3_medio",
+        "4_grande"
+    ]
+
+    df = df_cubo.copy()
+
+    df = df[df[coluna_tipo_ente].eq("MUNICIPIO")].copy()
+
+    df[coluna_valor] = pd.to_numeric(df[coluna_valor], errors="coerce")
+
+    df = df[df[coluna_porte].isin(ordem_portes)].copy()
+
+    df_resultado = (
+        df
+        .groupby(coluna_porte, as_index=False)
+        .agg(
+            n_municipio=(coluna_ente, "nunique"),
+            recurso_total=(coluna_valor, "sum")
+        )
+        .rename(columns={coluna_porte: "porte"})
+    )
+
+    df_resultado["media_recurso"] = (
+        df_resultado["recurso_total"] / df_resultado["n_municipio"]
+    )
+
+    df_resultado["porte"] = pd.Categorical(
+        df_resultado["porte"],
+        categories=ordem_portes,
+        ordered=True
+    )
+
+    df_resultado = (
+        df_resultado
+        .sort_values("porte")
+        .reset_index(drop=True)
+    )
+
+    return df_resultado

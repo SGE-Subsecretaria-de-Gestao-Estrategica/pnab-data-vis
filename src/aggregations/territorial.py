@@ -1690,7 +1690,7 @@ def aggregate_special_territories_by(
     df_agg[colunas_valor] = (
         np.ceil(df_agg[colunas_valor])
         .fillna(0)
-        .astype("Int64")
+        .astype(float)
     )
 
     df_agg[colunas_quantidade] = (
@@ -5819,6 +5819,899 @@ def aggregate_execution_by_porte_with_estado_sexo(
     df_porte = (
         df_porte
         .sort_values("valor_total_por_porte", ascending=False)
+        .reset_index(drop=True)
+    )
+
+    return df_porte
+
+
+
+def aggregate_recurso_municipios_por_porte(
+    df_cubo: pd.DataFrame,
+    coluna_tipo_ente: str = "tipo_ente",
+    coluna_porte: str = "porte_populacional",
+    coluna_ente: str = "ente",
+    coluna_valor: str = "valor_transacao"
+) -> pd.DataFrame:
+    """
+    Agrega os recursos executados por porte populacional dos municípios.
+
+    Filtros:
+    - considera apenas tipo_ente == "MUNICIPIO"
+
+    Retorna:
+    - porte
+    - n_municipio: número de municípios únicos no porte
+    - recurso_total: soma do valor_transacao
+    - media_recurso: recurso_total / n_municipio
+    """
+
+    ordem_portes = [
+        "1_pequeno_i",
+        "2_pequeno_ii",
+        "3_medio",
+        "4_grande"
+    ]
+
+    df = df_cubo.copy()
+
+    df = df[df[coluna_tipo_ente].eq("MUNICIPIO")].copy()
+
+    df[coluna_valor] = pd.to_numeric(df[coluna_valor], errors="coerce")
+
+    df = df[df[coluna_porte].isin(ordem_portes)].copy()
+
+    df_resultado = (
+        df
+        .groupby(coluna_porte, as_index=False)
+        .agg(
+            n_municipio=(coluna_ente, "nunique"),
+            recurso_total=(coluna_valor, "sum")
+        )
+        .rename(columns={coluna_porte: "porte"})
+    )
+
+    df_resultado["media_recurso"] = (
+        df_resultado["recurso_total"] / df_resultado["n_municipio"]
+    )
+
+    df_resultado["porte"] = pd.Categorical(
+        df_resultado["porte"],
+        categories=ordem_portes,
+        ordered=True
+    )
+
+    df_resultado = (
+        df_resultado
+        .sort_values("porte")
+        .reset_index(drop=True)
+    )
+
+    return df_resultado
+
+
+def aggregate_valor_executado_por_uf_e_tipo_ente(
+    df_cubo: pd.DataFrame,
+    coluna_uf: str = "uf",
+    coluna_tipo_ente: str = "tipo_ente",
+    coluna_valor: str = "valor_transacao",
+    coluna_territorio: str = "cod_tipo_nome"
+) -> pd.DataFrame:
+    """
+    Agrega o valor executado por UF, separando execução estadual e municipal,
+    considerando apenas linhas associadas a territórios especiais.
+
+    Filtro aplicado em cod_tipo_nome:
+    - Favela e Comunidade Urbana
+    - Agrupamento quilombola
+    - Agrupamento indígena
+
+    Retorna:
+    - uf
+    - valor_executado_uf
+    - perc_valor_executado_uf
+    - valor_executado_estado
+    - perc_valor_executado_estado
+    - valor_executado_municipio
+    - perc_valor_executado_municipio
+
+    Percentuais retornam em escala decimal:
+    0.25 = 25%
+    """
+
+    territorios_especiais = [
+        "Favela e Comunidade Urbana",
+        "Agrupamento quilombola",
+        "Agrupamento indígena"
+    ]
+
+    df = df_cubo.copy()
+
+    df[coluna_valor] = pd.to_numeric(df[coluna_valor], errors="coerce")
+
+    # Normaliza a coluna de território para evitar problemas com espaços
+    df[coluna_territorio] = df[coluna_territorio].astype(str).str.strip()
+
+    # Filtra apenas os territórios especiais desejados
+    df = df[df[coluna_territorio].isin(territorios_especiais)].copy()
+
+    # Mantém apenas ESTADO e MUNICIPIO
+    df = df[df[coluna_tipo_ente].isin(["ESTADO", "MUNICIPIO"])].copy()
+
+    # Valor total por UF
+    df_uf = (
+        df
+        .groupby(coluna_uf, as_index=False)
+        .agg(valor_executado_uf=(coluna_valor, "sum"))
+    )
+
+    valor_total_brasil = df_uf["valor_executado_uf"].sum()
+
+    df_uf["perc_valor_executado_uf"] = np.where(
+        valor_total_brasil > 0,
+        df_uf["valor_executado_uf"] / valor_total_brasil,
+        np.nan
+    )
+
+    # Valor por UF e tipo de ente
+    df_tipo = (
+        df
+        .groupby([coluna_uf, coluna_tipo_ente], as_index=False)
+        .agg(valor_executado=(coluna_valor, "sum"))
+        .pivot(
+            index=coluna_uf,
+            columns=coluna_tipo_ente,
+            values="valor_executado"
+        )
+        .reset_index()
+        .rename(columns={
+            "ESTADO": "valor_executado_estado",
+            "MUNICIPIO": "valor_executado_municipio"
+        })
+    )
+
+    # Garante colunas mesmo se algum tipo não existir
+    if "valor_executado_estado" not in df_tipo.columns:
+        df_tipo["valor_executado_estado"] = 0
+
+    if "valor_executado_municipio" not in df_tipo.columns:
+        df_tipo["valor_executado_municipio"] = 0
+
+    df_tipo[["valor_executado_estado", "valor_executado_municipio"]] = (
+        df_tipo[["valor_executado_estado", "valor_executado_municipio"]]
+        .fillna(0)
+    )
+
+    # Junta tudo
+    df_resultado = df_uf.merge(df_tipo, on=coluna_uf, how="left")
+
+    # Percentuais dentro da UF
+    df_resultado["perc_valor_executado_estado"] = np.where(
+        df_resultado["valor_executado_uf"] > 0,
+        df_resultado["valor_executado_estado"] / df_resultado["valor_executado_uf"],
+        np.nan
+    )
+
+    df_resultado["perc_valor_executado_municipio"] = np.where(
+        df_resultado["valor_executado_uf"] > 0,
+        df_resultado["valor_executado_municipio"] / df_resultado["valor_executado_uf"],
+        np.nan
+    )
+
+    df_resultado = (
+        df_resultado[
+            [
+                coluna_uf,
+                "valor_executado_uf",
+                "perc_valor_executado_uf",
+                "valor_executado_estado",
+                "perc_valor_executado_estado",
+                "valor_executado_municipio",
+                "perc_valor_executado_municipio",
+            ]
+        ]
+        .rename(columns={coluna_uf: "uf"})
+        .sort_values("uf")
+        .reset_index(drop=True)
+    )
+
+    return df_resultado
+
+
+
+def aggregate_estatisticas_valor_por_uf(
+    df_aux: pd.DataFrame,
+    tipo_ente: str = "UF",
+    coluna_tipo_ente: str = "tipo_ente_bbagil",
+    coluna_uf: str = "uf_bbagil",
+    coluna_valor: str = "valor_transacao_total_bbagil"
+) -> pd.DataFrame:
+    """
+    Agrega estatísticas de valor por UF a partir do df_aux.
+
+    Parâmetro tipo_ente:
+    - "ESTADO": filtra tipo_ente_bbagil == "ESTADO"
+    - "MUNICIPIO": filtra tipo_ente_bbagil == "MUNICIPIO"
+    - "UF": não aplica filtro
+
+    Cada linha do df_aux representa um contemplado.
+
+    Retorna:
+    - uf
+    - quantidade_contemplados
+    - valor_total
+    - valor_minimo
+    - quartil1
+    - quartil2
+    - quartil3
+    - percentil_99
+    - valor_maximo
+    - valor_medio
+    - media_aparada
+
+    A média aparada remove, dentro de cada UF, os valores acima do percentil 99.
+    """
+
+    tipo_ente = tipo_ente.upper()
+
+    tipos_validos = ["UF", "ESTADO", "MUNICIPIO"]
+
+    if tipo_ente not in tipos_validos:
+        raise ValueError(
+            f"tipo_ente deve ser um dos seguintes valores: {tipos_validos}"
+        )
+
+    df = df_aux.copy()
+
+    df[coluna_valor] = pd.to_numeric(df[coluna_valor], errors="coerce")
+
+    if tipo_ente in ["ESTADO", "MUNICIPIO"]:
+        df = df[df[coluna_tipo_ente].eq(tipo_ente)].copy()
+
+    def calcular_media_aparada_1pct(serie: pd.Series) -> float:
+        serie = serie.dropna()
+
+        if serie.empty:
+            return np.nan
+
+        p99 = serie.quantile(0.99)
+
+        return serie[serie <= p99].mean()
+
+    df_resultado = (
+        df
+        .groupby(coluna_uf)
+        .agg(
+            quantidade_contemplados=(coluna_valor, "size"),
+            valor_total=(coluna_valor, "sum"),
+            valor_minimo=(coluna_valor, "min"),
+            quartil1=(coluna_valor, lambda x: x.quantile(0.25)),
+            quartil2=(coluna_valor, lambda x: x.quantile(0.50)),
+            quartil3=(coluna_valor, lambda x: x.quantile(0.75)),
+            percentil_99=(coluna_valor, lambda x: x.quantile(0.99)),
+            valor_maximo=(coluna_valor, "max"),
+            valor_medio=(coluna_valor, "mean"),
+            media_aparada=(coluna_valor, calcular_media_aparada_1pct)
+        )
+        .reset_index()
+        .rename(columns={coluna_uf: "uf"})
+        .sort_values("uf")
+        .reset_index(drop=True)
+    )
+
+    return df_resultado
+
+
+
+def aggregate_execution_by_porte_municipios(
+    df_cubo: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Agrega valores, quantidades e percentuais por porte populacional,
+    considerando apenas municípios.
+
+    Filtro aplicado:
+    - tipo_ente == "MUNICIPIO"
+
+    Também acrescenta:
+    - quantidade de contemplados por faixa_vlr_pago;
+    - quantidade por tipo_documento;
+    - valor total por tipo_documento;
+    - percentual do valor entre CPF e CNPJ;
+    - valor mínimo, mediana, máximo e média por tipo_documento;
+    - quantidade por Sexo;
+    - valor por Sexo;
+    - percentual de quantidade por Sexo;
+    - percentual de valor por Sexo.
+
+    Observação:
+    - perc_valor_CPF + perc_valor_CNPJ = 1 em cada linha, quando houver valor de CPF ou CNPJ;
+    - os percentuais retornam em escala decimal, sem multiplicar por 100;
+    - a regra de manter apenas Sexo válido é aplicada somente nas agregações de Sexo;
+    - o restante da função usa a base municipal completa.
+    """
+
+    df = df_cubo.copy()
+
+    # ------------------------------------------------------------
+    # 1. Normalizar tipo_ente
+    # ------------------------------------------------------------
+
+    df["tipo_ente_norm"] = (
+        df["tipo_ente"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    # Filtra apenas municípios
+    df = df[df["tipo_ente_norm"].eq("MUNICIPIO")].copy()
+
+    # ------------------------------------------------------------
+    # 2. Normalizar valores numéricos
+    # ------------------------------------------------------------
+
+    df["valor_transacao"] = pd.to_numeric(
+        df["valor_transacao"],
+        errors="coerce"
+    ).fillna(0)
+
+    df["quantidade"] = pd.to_numeric(
+        df["quantidade"],
+        errors="coerce"
+    ).fillna(0)
+
+    # ------------------------------------------------------------
+    # 3. Normalizar SITUACAO
+    # ------------------------------------------------------------
+
+    df["situacao_norm"] = (
+        df["SITUACAO"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    mask_urbano = df["situacao_norm"].isin(["URBANA", "URBANO"])
+    mask_rural = df["situacao_norm"].isin(["RURAL"])
+
+    # ------------------------------------------------------------
+    # 4. Criar colunas auxiliares
+    # ------------------------------------------------------------
+
+    df["valor_urbano"] = np.where(
+        mask_urbano,
+        df["valor_transacao"],
+        0
+    )
+
+    df["valor_rural"] = np.where(
+        mask_rural,
+        df["valor_transacao"],
+        0
+    )
+
+    df["quantidade_urbano"] = np.where(
+        mask_urbano,
+        df["quantidade"],
+        0
+    )
+
+    df["quantidade_rural"] = np.where(
+        mask_rural,
+        df["quantidade"],
+        0
+    )
+
+    df["faixa_vlr_pago_tratada"] = (
+        df["faixa_vlr_pago"]
+        .fillna("Não informado")
+    )
+
+    df["tipo_documento_tratado"] = (
+        df["tipo_documento"]
+        .fillna("Não informado")
+        .astype(str)
+    )
+
+    df["sexo_norm"] = (
+        df["Sexo"]
+        .fillna("Não informado")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    df["sexo_tratado"] = df["sexo_norm"].map({
+        "FEMININO": "Feminino",
+        "MASCULINO": "Masculino"
+    })
+
+    # ------------------------------------------------------------
+    # 5. Agregar municípios por porte populacional
+    # ------------------------------------------------------------
+
+    df_porte = (
+        df
+        .groupby("porte_populacional", dropna=False, as_index=False)
+        .agg(
+            numero_municipios=("ente", "nunique"),
+            valor_total_por_porte=("valor_transacao", "sum"),
+            valor_urbano_por_porte=("valor_urbano", "sum"),
+            valor_rural_por_porte=("valor_rural", "sum"),
+            quantidade_contemplados_por_porte=("quantidade", "sum"),
+            quantidade_contemplados_urbano=("quantidade_urbano", "sum"),
+            quantidade_contemplados_rural=("quantidade_rural", "sum"),
+        )
+    )
+
+    # ------------------------------------------------------------
+    # 6. Quantidade de contemplados por faixa de valor
+    # ------------------------------------------------------------
+
+    df_faixa = (
+        df
+        .pivot_table(
+            index="porte_populacional",
+            columns="faixa_vlr_pago_tratada",
+            values="quantidade",
+            aggfunc="sum",
+            fill_value=0
+        )
+        .reset_index()
+    )
+
+    # ------------------------------------------------------------
+    # 7. Função auxiliar para pivot por tipo_documento
+    # ------------------------------------------------------------
+
+    def pivot_tipo_documento_por_porte(
+        df_base: pd.DataFrame,
+        values: str,
+        aggfunc: str,
+        prefixo_coluna: str
+    ) -> pd.DataFrame:
+        df_pivot = (
+            df_base
+            .pivot_table(
+                index="porte_populacional",
+                columns="tipo_documento_tratado",
+                values=values,
+                aggfunc=aggfunc,
+                fill_value=0
+            )
+            .reset_index()
+        )
+
+        df_pivot = df_pivot.rename(
+            columns={
+                col: f"{prefixo_coluna}_tipo_documento_{col}"
+                for col in df_pivot.columns
+                if col != "porte_populacional"
+            }
+        )
+
+        return df_pivot
+
+    # ------------------------------------------------------------
+    # 8. Função auxiliar para pivot por Sexo
+    # ------------------------------------------------------------
+
+    def pivot_sexo_por_porte(
+        df_base: pd.DataFrame,
+        values: str,
+        aggfunc: str,
+        prefixo_coluna: str
+    ) -> pd.DataFrame:
+        df_pivot = (
+            df_base
+            .pivot_table(
+                index="porte_populacional",
+                columns="sexo_tratado",
+                values=values,
+                aggfunc=aggfunc,
+                fill_value=0
+            )
+            .reset_index()
+        )
+
+        df_pivot = df_pivot.rename(
+            columns={
+                col: f"{prefixo_coluna}_sexo_{col}"
+                for col in df_pivot.columns
+                if col != "porte_populacional"
+            }
+        )
+
+        return df_pivot
+
+    # ------------------------------------------------------------
+    # 9. Tipo_documento
+    # ------------------------------------------------------------
+
+    df_qtd_tipo_doc = pivot_tipo_documento_por_porte(
+        df_base=df,
+        values="quantidade",
+        aggfunc="sum",
+        prefixo_coluna="qtd"
+    )
+
+    df_valor_tipo_doc = pivot_tipo_documento_por_porte(
+        df_base=df,
+        values="valor_transacao",
+        aggfunc="sum",
+        prefixo_coluna="valor"
+    )
+
+    df_min_valor_tipo_doc = pivot_tipo_documento_por_porte(
+        df_base=df,
+        values="valor_transacao",
+        aggfunc="min",
+        prefixo_coluna="min_valor"
+    )
+
+    df_mediana_valor_tipo_doc = pivot_tipo_documento_por_porte(
+        df_base=df,
+        values="valor_transacao",
+        aggfunc="median",
+        prefixo_coluna="mediana_valor"
+    )
+
+    df_max_valor_tipo_doc = pivot_tipo_documento_por_porte(
+        df_base=df,
+        values="valor_transacao",
+        aggfunc="max",
+        prefixo_coluna="max_valor"
+    )
+
+    df_media_valor_tipo_doc = pivot_tipo_documento_por_porte(
+        df_base=df,
+        values="valor_transacao",
+        aggfunc="mean",
+        prefixo_coluna="media_valor"
+    )
+
+    # ------------------------------------------------------------
+    # 10. Sexo
+    # Mantém apenas Sexo válido somente nesta agregação
+    # ------------------------------------------------------------
+
+    df_sexo = df[
+        df["sexo_tratado"].isin(["Feminino", "Masculino"])
+    ].copy()
+
+    df_qtd_sexo = pivot_sexo_por_porte(
+        df_base=df_sexo,
+        values="quantidade",
+        aggfunc="sum",
+        prefixo_coluna="qtd"
+    )
+
+    df_valor_sexo = pivot_sexo_por_porte(
+        df_base=df_sexo,
+        values="valor_transacao",
+        aggfunc="sum",
+        prefixo_coluna="valor"
+    )
+
+    df_total_sexo = (
+        df_sexo
+        .groupby("porte_populacional", dropna=False, as_index=False)
+        .agg(
+            total_qtd_sexo_valido=("quantidade", "sum"),
+            total_valor_sexo_valido=("valor_transacao", "sum")
+        )
+    )
+
+    # ------------------------------------------------------------
+    # 11. Juntar tabelas
+    # ------------------------------------------------------------
+
+    df_porte = (
+        df_porte
+        .merge(df_faixa, on="porte_populacional", how="left")
+        .merge(df_qtd_tipo_doc, on="porte_populacional", how="left")
+        .merge(df_valor_tipo_doc, on="porte_populacional", how="left")
+        .merge(df_min_valor_tipo_doc, on="porte_populacional", how="left")
+        .merge(df_mediana_valor_tipo_doc, on="porte_populacional", how="left")
+        .merge(df_max_valor_tipo_doc, on="porte_populacional", how="left")
+        .merge(df_media_valor_tipo_doc, on="porte_populacional", how="left")
+        .merge(df_qtd_sexo, on="porte_populacional", how="left")
+        .merge(df_valor_sexo, on="porte_populacional", how="left")
+        .merge(df_total_sexo, on="porte_populacional", how="left")
+    )
+
+    # ------------------------------------------------------------
+    # 12. Calcular percentuais gerais
+    # ------------------------------------------------------------
+
+    valor_total_geral = df_porte["valor_total_por_porte"].sum()
+    quantidade_total_geral = df_porte["quantidade_contemplados_por_porte"].sum()
+
+    df_porte["percentual_valor_urbano_por_porte"] = np.where(
+        df_porte["valor_total_por_porte"].ne(0),
+        df_porte["valor_urbano_por_porte"] / df_porte["valor_total_por_porte"],
+        np.nan
+    )
+
+    df_porte["percentual_valor_rural_por_porte"] = np.where(
+        df_porte["valor_total_por_porte"].ne(0),
+        df_porte["valor_rural_por_porte"] / df_porte["valor_total_por_porte"],
+        np.nan
+    )
+
+    df_porte["percentual_valor_por_porte"] = np.where(
+        valor_total_geral != 0,
+        df_porte["valor_total_por_porte"] / valor_total_geral,
+        np.nan
+    )
+
+    df_porte["percentual_quantidade_por_porte"] = np.where(
+        quantidade_total_geral != 0,
+        df_porte["quantidade_contemplados_por_porte"] / quantidade_total_geral,
+        np.nan
+    )
+
+    # ------------------------------------------------------------
+    # 13. Calcular percentuais de valor por tipo_documento
+    # Denominador: CPF + CNPJ dentro da própria linha
+    # ------------------------------------------------------------
+
+    if "valor_tipo_documento_CPF" not in df_porte.columns:
+        df_porte["valor_tipo_documento_CPF"] = 0
+
+    if "valor_tipo_documento_CNPJ" not in df_porte.columns:
+        df_porte["valor_tipo_documento_CNPJ"] = 0
+
+    df_porte["valor_total_CPF_CNPJ"] = (
+        df_porte["valor_tipo_documento_CPF"].fillna(0)
+        + df_porte["valor_tipo_documento_CNPJ"].fillna(0)
+    )
+
+    df_porte["perc_valor_CPF"] = np.where(
+        df_porte["valor_total_CPF_CNPJ"].ne(0),
+        df_porte["valor_tipo_documento_CPF"] / df_porte["valor_total_CPF_CNPJ"],
+        np.nan
+    )
+
+    df_porte["perc_valor_CNPJ"] = np.where(
+        df_porte["valor_total_CPF_CNPJ"].ne(0),
+        df_porte["valor_tipo_documento_CNPJ"] / df_porte["valor_total_CPF_CNPJ"],
+        np.nan
+    )
+
+    # ------------------------------------------------------------
+    # 14. Calcular percentuais por Sexo
+    # Denominador: apenas registros com Sexo válido
+    # ------------------------------------------------------------
+
+    colunas_qtd_sexo = [
+        col for col in df_porte.columns
+        if col.startswith("qtd_sexo_")
+    ]
+
+    colunas_valor_sexo = [
+        col for col in df_porte.columns
+        if col.startswith("valor_sexo_")
+    ]
+
+    for coluna in colunas_qtd_sexo:
+        nome_percentual = coluna.replace("qtd_sexo_", "percentual_qtd_sexo_")
+
+        df_porte[nome_percentual] = np.where(
+            df_porte["total_qtd_sexo_valido"].fillna(0).ne(0),
+            df_porte[coluna] / df_porte["total_qtd_sexo_valido"],
+            np.nan
+        )
+
+    for coluna in colunas_valor_sexo:
+        nome_percentual = coluna.replace("valor_sexo_", "percentual_valor_sexo_")
+
+        df_porte[nome_percentual] = np.where(
+            df_porte["total_valor_sexo_valido"].fillna(0).ne(0),
+            df_porte[coluna] / df_porte["total_valor_sexo_valido"],
+            np.nan
+        )
+
+    # ------------------------------------------------------------
+    # 15. Identificar colunas
+    # ------------------------------------------------------------
+
+    colunas_base = [
+        "porte_populacional",
+        "numero_municipios",
+        "valor_total_por_porte",
+        "valor_urbano_por_porte",
+        "valor_rural_por_porte",
+        "quantidade_contemplados_por_porte",
+        "quantidade_contemplados_urbano",
+        "quantidade_contemplados_rural",
+        "percentual_valor_urbano_por_porte",
+        "percentual_valor_rural_por_porte",
+        "percentual_valor_por_porte",
+        "percentual_quantidade_por_porte",
+        "valor_total_CPF_CNPJ",
+        "perc_valor_CPF",
+        "perc_valor_CNPJ",
+        "total_qtd_sexo_valido",
+        "total_valor_sexo_valido",
+    ]
+
+    colunas_qtd_tipo_documento = [
+        col for col in df_porte.columns
+        if col.startswith("qtd_tipo_documento_")
+    ]
+
+    colunas_valor_tipo_documento = [
+        col for col in df_porte.columns
+        if col.startswith("valor_tipo_documento_")
+    ]
+
+    colunas_min_valor_tipo_documento = [
+        col for col in df_porte.columns
+        if col.startswith("min_valor_tipo_documento_")
+    ]
+
+    colunas_mediana_valor_tipo_documento = [
+        col for col in df_porte.columns
+        if col.startswith("mediana_valor_tipo_documento_")
+    ]
+
+    colunas_max_valor_tipo_documento = [
+        col for col in df_porte.columns
+        if col.startswith("max_valor_tipo_documento_")
+    ]
+
+    colunas_media_valor_tipo_documento = [
+        col for col in df_porte.columns
+        if col.startswith("media_valor_tipo_documento_")
+    ]
+
+    colunas_qtd_sexo = [
+        col for col in df_porte.columns
+        if col.startswith("qtd_sexo_")
+    ]
+
+    colunas_valor_sexo = [
+        col for col in df_porte.columns
+        if col.startswith("valor_sexo_")
+    ]
+
+    colunas_percentual_qtd_sexo = [
+        col for col in df_porte.columns
+        if col.startswith("percentual_qtd_sexo_")
+    ]
+
+    colunas_percentual_valor_sexo = [
+        col for col in df_porte.columns
+        if col.startswith("percentual_valor_sexo_")
+    ]
+
+    colunas_faixa_vlr_pago = [
+        col for col in df_porte.columns
+        if col not in (
+            colunas_base
+            + colunas_qtd_tipo_documento
+            + colunas_valor_tipo_documento
+            + colunas_min_valor_tipo_documento
+            + colunas_mediana_valor_tipo_documento
+            + colunas_max_valor_tipo_documento
+            + colunas_media_valor_tipo_documento
+            + colunas_qtd_sexo
+            + colunas_valor_sexo
+            + colunas_percentual_qtd_sexo
+            + colunas_percentual_valor_sexo
+        )
+    ]
+
+    # ------------------------------------------------------------
+    # 16. Converter tipos sem arredondar valores monetários
+    # ------------------------------------------------------------
+
+    colunas_valor = [
+        "valor_total_por_porte",
+        "valor_urbano_por_porte",
+        "valor_rural_por_porte",
+        "valor_total_CPF_CNPJ",
+        "total_valor_sexo_valido",
+    ]
+
+    colunas_valor_tipo_documento_todas = (
+        colunas_valor_tipo_documento
+        + colunas_min_valor_tipo_documento
+        + colunas_mediana_valor_tipo_documento
+        + colunas_max_valor_tipo_documento
+        + colunas_media_valor_tipo_documento
+    )
+
+    colunas_valor_todas = (
+        colunas_valor
+        + colunas_valor_tipo_documento_todas
+        + colunas_valor_sexo
+    )
+
+    colunas_valor_todas = [
+        col for col in colunas_valor_todas
+        if col in df_porte.columns
+    ]
+
+    df_porte[colunas_valor_todas] = (
+        df_porte[colunas_valor_todas]
+        .apply(pd.to_numeric, errors="coerce")
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    colunas_quantidade = [
+        "numero_municipios",
+        "quantidade_contemplados_por_porte",
+        "quantidade_contemplados_urbano",
+        "quantidade_contemplados_rural",
+        "total_qtd_sexo_valido",
+    ]
+
+    colunas_quantidade_todas = (
+        colunas_quantidade
+        + colunas_faixa_vlr_pago
+        + colunas_qtd_tipo_documento
+        + colunas_qtd_sexo
+    )
+
+    colunas_quantidade_todas = [
+        col for col in colunas_quantidade_todas
+        if col in df_porte.columns
+    ]
+
+    df_porte[colunas_quantidade_todas] = (
+        df_porte[colunas_quantidade_todas]
+        .apply(pd.to_numeric, errors="coerce")
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    colunas_percentuais = [
+        col for col in df_porte.columns
+        if (
+            col.startswith("percentual_")
+            or col.startswith("perc_")
+        )
+    ]
+
+    df_porte[colunas_percentuais] = (
+        df_porte[colunas_percentuais]
+        .apply(pd.to_numeric, errors="coerce")
+        .astype("Float64")
+    )
+
+    # ------------------------------------------------------------
+    # 17. Ordenar tabela
+    # ------------------------------------------------------------
+
+    ordem_portes = [
+        "1_pequeno_i",
+        "2_pequeno_ii",
+        "3_medio",
+        "4_grande"
+    ]
+
+    df_porte["porte_populacional"] = pd.Categorical(
+        df_porte["porte_populacional"],
+        categories=ordem_portes,
+        ordered=True
+    )
+
+    df_porte = (
+        df_porte
+        .sort_values("porte_populacional")
         .reset_index(drop=True)
     )
 

@@ -35,12 +35,14 @@ Estados com barra laranja maior que a teal apresentam sobrerrepresentação; o i
         '% contemplados PNAB/CadÚnico (UF)',
         '% pessoas CadÚnico (UF)',
       ]}
-      colors={[colorScales.teal[2], colorScales.orange[2]]}
+      colors={[colorScales.orange[2], colorScales.teal[2]]}
       format={(v) => `${v.toFixed(1)}%`}
-      margin={{ top: 28, right: 90, bottom: 40, left: 50 }}
-      barPad={2}
-      groupPad={18}
+      margin={{ top: 28, right: 20, bottom: 40, left: 50 }}
+      barHeight={22}
+      barPad={4}
+      groupPad={12}
       legendBottom={true}
+      labelsInside={true}
     />
   {/snippet}
 </Story>

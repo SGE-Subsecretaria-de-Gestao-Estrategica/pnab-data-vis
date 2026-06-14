@@ -36,7 +36,7 @@ Em números absolutos, o Nordeste também lidera em beneficiários com vínculo 
       data={regionStackedData}
       keys={[...ageGroupKeys]}
       labels={ageGroupLabels}
-      colors={[colorScales.red[2], colorScales.blue[2]]}
+      colors={[colorScales.red[2], colorScales.lime[2]]}
       format={formatPct}
       showTotalLabel={false}
     />

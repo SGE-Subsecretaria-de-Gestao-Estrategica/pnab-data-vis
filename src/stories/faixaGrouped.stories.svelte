@@ -2,11 +2,12 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
+  import { colorPairs } from 'sniic-design-system';
   // @ts-ignore
   import { faixaGroupedData } from '$lib/data/section2';
 
   const seriesLabels = ['Número de Contemplados', 'Recurso Executado'];
-  const colors = ['#c0504d', '#4472c4'];
+  const colors = [colorPairs.purpleYellow[0], colorPairs.purpleYellow[1]];
 
   // @ts-ignore
   const formatPct = (v) =>
@@ -38,8 +39,9 @@ A maioria dos contemplados (**71,6%**) recebeu valores até R$ 10 mil, mas esse 
       colors={colors}
       format={formatPct}
       margin={{ top: 30, right: 90, bottom: 60, left: 160 }}
-      barHeight={18}
-      barPad={5}
+      barHeight={22}
+      barPad={6}
+      rx={0}
       legendBottom={true}
     />
   {/snippet}

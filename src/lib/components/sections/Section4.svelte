@@ -40,10 +40,6 @@
 		racaCorSexoGroupedData,
 		ufRankingData,
 		ufByRegionGroups,
-		ufIbgeByRegionData,
-		ufIbgeRegionLegend,
-		regionIbgeComparisonData,
-		regionIbgeComparisonLegend,
 		cboRaisTop20,
 		cboRaisTableHeight,
 	} from '$lib/data/section4';
@@ -184,45 +180,8 @@
 
 <!-- ══════════════════════════════════════════════════════════════════════════
      4.1 — FORMALIZAÇÃO PNAB vs. POPULAÇÃO GERAL POR UF
+     DESABILITADO: CSV aggregate_vinculo_formal_labor_by_uf_ibge.csv faltante
      ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-4-41-ibge">
-	<p class="frase-destaque">
-		Em quase todos os estados, os contemplados pela PNAB têm proporção de vínculo formal maior do que a população geral
-	</p>
-	<p>
-		O Nordeste concentra <strong>48,6%</strong> dos contemplados com vínculo formal na PNAB, mais
-		que o dobro de sua participação no mercado formal brasileiro (<strong>18,6%</strong> dos
-		vínculos RAIS 2024). O Sudeste, ao contrário, responde por apenas <strong>26,5%</strong> dos
-		contemplados formais na PNAB, contra <strong>48,3%</strong> dos vínculos RAIS nacionais.
-	</p>
-	<HorizontalGroupedBarChart
-		data={regionIbgeComparisonData}
-		seriesLabels={[]}
-		legendItems={regionIbgeComparisonLegend}
-		format={(v) => `${v.toFixed(1)}%`}
-		xLabel="% do total nacional"
-		margin={{ top: 16, right: 60, bottom: 56, left: 120 }}
-		barHeight={18}
-		barPad={5}
-		legendBottom={true}
-	/>
-	<p>
-		O gráfico a seguir detalha, para cada UF, a participação no mercado formal de trabalho nacional
-		(RAIS 2024) e a participação no total de contemplados pela PNAB com vínculo formal. Estados
-		ordenados pela maior diferença entre os dois indicadores.
-	</p>
-	<HorizontalGroupedBarChart
-		data={ufIbgeByRegionData}
-		seriesLabels={[]}
-		legendItems={ufIbgeRegionLegend}
-		format={(v) => `${v.toFixed(1)}%`}
-		xLabel="% do total nacional"
-		margin={{ top: 16, right: 60, bottom: 150, left: 44 }}
-		barHeight={7}
-		barPad={2}
-		legendBottom={true}
-	/>
-</ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
      4.2 — PERFIL: SEXO

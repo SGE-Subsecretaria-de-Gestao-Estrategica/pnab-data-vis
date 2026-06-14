@@ -49,7 +49,7 @@ Valor estimado por categoria, com percentual estimado e intervalo de confiança 
             <tr style={i > 0 ? 'border-top: 1px solid #e2e8f0;' : ''}>
               <td style="padding: 7px 12px 7px 0;">{row.label}</td>
               <td style="padding: 7px 0 7px 16px; text-align: right; font-weight: 600; white-space: nowrap;">{formatBRL(row.valor)}</td>
-              <td style="padding: 7px 0 7px 16px; text-align: right; font-weight: 600; white-space: nowrap; color: {colorScales.teal[2]};">{row.pct.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</td>
+              <td style="padding: 7px 0 7px 16px; text-align: right; font-weight: 600; white-space: nowrap; color: {colorScales.blue[2]};">{row.pct.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</td>
               <td style="padding: 7px 0 7px 16px; text-align: right; white-space: nowrap; color: #666; font-size: 11px;">IC95% {formatBRL(row.p025)} – {formatBRL(row.p975)}</td>
             </tr>
           {/each}

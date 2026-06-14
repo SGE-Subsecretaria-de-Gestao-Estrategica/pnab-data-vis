@@ -26,10 +26,10 @@ As cores claras representam a referência populacional (IBGE) e as cores cheias 
   });
 
   const colors = [
-    colorScales.blue[1],
-    colorScales.blue[2],
-    colorScales.purple[1],
-    colorScales.purple[2],
+    colorScales.teal[1],
+    colorScales.teal[2],
+    colorScales.yellow[2],
+    colorScales.yellow[3],
   ];
 </script>
 

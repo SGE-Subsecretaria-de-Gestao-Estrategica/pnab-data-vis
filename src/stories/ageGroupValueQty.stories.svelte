@@ -14,7 +14,7 @@
     (v * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
   // valor = orange, quantidade = blue
-  const colors = [colorPairs.blueOrange[1], colorPairs.blueOrange[0]];
+  const colors = [colorPairs.tealYellow[1], colorPairs.tealYellow[0]];
 
   const { Story } = defineMeta({
     title: 'Section 3/ageGroupValueQty',

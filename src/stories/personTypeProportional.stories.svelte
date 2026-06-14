@@ -44,7 +44,7 @@ Este gráfico não mostra o total acumulado (que seria próximo entre os dois gr
     <ProportionalAreaChart
       data={mediaPorTipoData}
       maxRadius={130}
-      colors={colorPairs.blueOrange}
+      colors={colorPairs.purpleYellow}
       format={formatBRL}
       showLabels={true}
     />

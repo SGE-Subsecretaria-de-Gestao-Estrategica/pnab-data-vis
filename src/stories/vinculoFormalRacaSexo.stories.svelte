@@ -31,7 +31,7 @@ O cruzamento de raça/cor com sexo revela que **homens pardos** formam o maior g
     <HeatMap
       data={racaCorSexoHeatmapData}
       height={320}
-      colorRange={colorScales.blue}
+      colorRange={colorScales.lime}
       xLabel="Sexo"
       yLabel="Raça/cor"
       format={formatN}
@@ -48,7 +48,7 @@ O cruzamento de raça/cor com sexo revela que **homens pardos** formam o maior g
     <HeatMap
       data={racaCorSexoHeatmapData}
       height={320}
-      colorRange={colorScales.teal}
+      colorRange={colorScales.red}
       xLabel="Sexo"
       yLabel="Raça/cor"
       format={formatN}

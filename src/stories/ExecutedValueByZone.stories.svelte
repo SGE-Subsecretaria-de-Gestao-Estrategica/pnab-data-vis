@@ -4,7 +4,7 @@
   import { HorizontalStackedBarChart, colorScales } from 'sniic-design-system';
   // import { zoneData, zoneMunicipalityData } from '$lib/data/section1'; // CSVs faltantes: executed_value_zone_by_state/uf.csv
 
-  const redBlue = [colorScales.red[2], colorScales.blue[2]];
+  const redBlue = [colorScales.blue[2], colorScales.orange[2]];
 
   const stateFlags = Object.fromEntries(
     ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO']

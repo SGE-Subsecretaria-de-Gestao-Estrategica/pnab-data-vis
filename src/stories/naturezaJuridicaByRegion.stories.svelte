@@ -34,6 +34,10 @@ As **entidades sem fins lucrativos** lideram em volume de recursos em todas as r
       colors={categorical8.slice(0, 6)}
       format={(v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'}
       marginLeft={120}
+      legendAlign="right"
+      labels={{
+        'Entidades sem fins lucrativos': 'Sem fins lucrativos',
+      }}
     />
   {/snippet}
 </Story>

@@ -1,9 +1,9 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart } from 'sniic-design-system';
+  import { HorizontalStackedBarChart, colorPairs } from 'sniic-design-system';
 
-  const COLORS = ['#F5C842', '#2B6CB0'];
+  const COLORS = [colorPairs.blueOrange[0], colorPairs.blueOrange[1]];
   // @ts-ignore
   // import { terrEspeciaisData, TERR_KEYS, TERR_LABELS } from '$lib/data/section2'; // CSV faltante: territorios_especiais_por_municipio.csv
 

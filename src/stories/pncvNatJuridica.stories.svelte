@@ -1,7 +1,8 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart, colorScales } from 'sniic-design-system';
+  import { colorPairs } from 'sniic-design-system';
+  import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
   // @ts-ignore
   import {
     pncvNatJuridicaData,
@@ -15,7 +16,7 @@
 
   const { Story } = defineMeta({
     title: 'Section 6/pncvNatJuridica',
-    component: HorizontalStackedBarChart,
+    component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {
       docs: {
@@ -38,30 +39,30 @@ Participação percentual entre **CNPJ** e **CPF** dentro de cada modalidade da 
 
 <Story name="HorizontalStackedBarChart — PNCV por Modalidade e Natureza Jurídica (blue e orange)">
   {#snippet template()}
-    <div style="padding-left: 220px;">
-      <HorizontalStackedBarChart
-        data={pncvNatJuridicaData}
-        keys={[...pncvNatJuridicaKeys]}
-        labels={pncvNatJuridicaLabels}
-        colors={[colorScales.blue[2], colorScales.orange[2]]}
-        format={formatPct}
-        showTotalLabel={false}
-      />
-    </div>
+    <HorizontalStackedBarChartCustom
+      data={pncvNatJuridicaData}
+      keys={[...pncvNatJuridicaKeys]}
+      labels={pncvNatJuridicaLabels}
+      colors={colorPairs.bluePurple}
+      format={formatPct}
+      showTotalLabel={false}
+      marginLeft={160}
+      legendAlign="left"
+    />
   {/snippet}
 </Story>
 
 <Story name="HorizontalStackedBarChart — PNCV por Modalidade e Natureza Jurídica (teal e orange)">
   {#snippet template()}
-    <div style="padding-left: 220px;">
-      <HorizontalStackedBarChart
-        data={pncvNatJuridicaData}
-        keys={[...pncvNatJuridicaKeys]}
-        labels={pncvNatJuridicaLabels}
-        colors={[colorScales.teal[2], colorScales.orange[2]]}
-        format={formatPct}
-        showTotalLabel={false}
-      />
-    </div>
+    <HorizontalStackedBarChartCustom
+      data={pncvNatJuridicaData}
+      keys={[...pncvNatJuridicaKeys]}
+      labels={pncvNatJuridicaLabels}
+      colors={colorPairs.bluePurple}
+      format={formatPct}
+      showTotalLabel={false}
+      marginLeft={160}
+      legendAlign="left"
+    />
   {/snippet}
 </Story>

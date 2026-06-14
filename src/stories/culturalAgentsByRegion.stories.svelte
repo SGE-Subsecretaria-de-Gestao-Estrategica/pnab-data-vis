@@ -37,7 +37,7 @@ Norte, Centro-Oeste e Sul apresentaram participação de contemplados bastante p
   {#snippet template()}
     <HorizontalBarChart
       data={regiaoDistData}
-      color={colorScales.blue[2]}
+      color={colorScales.purple[2]}
       format={formatPct}
       xLabel="% dos agentes culturais"
       margin={{ top: 20, right: 80, bottom: 40, left: 140 }}

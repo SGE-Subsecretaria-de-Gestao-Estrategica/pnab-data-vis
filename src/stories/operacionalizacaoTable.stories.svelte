@@ -50,7 +50,7 @@ Valor estimado por categoria de despesa de Operacionalização da Política, com
               <td style="padding: 7px 12px 7px 0;">{row.label}</td>
               <td style="padding: 7px 0 7px 16px; text-align: right; font-weight: 600; white-space: nowrap;">{formatBRL(row.valor)}</td>
               <td style="padding: 7px 0 7px 16px; text-align: right; white-space: nowrap; color: #666; font-size: 11px;">{formatBRL(row.p025)} – {formatBRL(row.p975)}</td>
-              <td style="padding: 7px 0 7px 16px; text-align: right; font-weight: 600; white-space: nowrap; color: {colorScales.teal[2]};">{row.pct.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</td>
+              <td style="padding: 7px 0 7px 16px; text-align: right; font-weight: 600; white-space: nowrap; color: {colorScales.blue[2]};">{row.pct.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</td>
             </tr>
           {/each}
         </tbody>

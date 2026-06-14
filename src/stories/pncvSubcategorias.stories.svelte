@@ -6,13 +6,13 @@
   import { pncvSubData } from '$lib/data/section6';
 
   const W = 760;
-  const M = { top: 24, right: 16, bottom: 48, left: 260 };
+  const M = { top: 24, right: 120, bottom: 48, left: 260 };
   const ROW_H = 32;
   const ROW_GAP = 20;
   const LEG_SEP = 28;
   const LEG_ROW_H = 44;
   const SWATCH = 10;
-  const COLOR = colorScales.orange[2];
+  const COLOR = colorScales.blue[2];
   const FONT = "'Space Grotesk', system-ui, sans-serif";
 
   // @ts-ignore

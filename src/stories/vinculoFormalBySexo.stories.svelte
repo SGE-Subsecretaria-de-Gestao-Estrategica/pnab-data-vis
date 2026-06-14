@@ -31,7 +31,7 @@ Entre as mulheres beneficiárias, **60,1%** não possuem vínculo formal — pro
       rightLabel="Com vínculo formal"
       referenceValue={50}
       referenceLabel="50%"
-      colors={colorPairs.blueOrange}
+      colors={colorPairs.limeRed}
     />
   {/snippet}
 </Story>

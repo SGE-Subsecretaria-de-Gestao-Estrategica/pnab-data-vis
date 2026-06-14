@@ -29,7 +29,7 @@ Quase metade dos beneficiários CadÚnico recebeu até R$2 mil, e mais de **86%*
   {#snippet template()}
     <HorizontalBarChart
       data={cadunicoValorData}
-      color={colorScales.blue[2]}
+      color={colorScales.orange[2]}
       format={(v) => `${v.toFixed(1)}%`}
       xLabel="% dos beneficiários CadÚnico"
       margin={{ top: 20, right: 80, bottom: 40, left: 160 }}

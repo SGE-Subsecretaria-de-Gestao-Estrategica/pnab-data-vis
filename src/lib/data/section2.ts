@@ -101,10 +101,14 @@ export const benefVsValorData = [
 ];
 
 // ── 3. HorizontalBarChart — distribuição nacional por faixa de valor ──────────
+function normalizeFaixa(raw: string): string {
+	return raw?.startsWith('De ') ? raw.slice(3) : raw;
+}
+
 export const faixaDistData = rangeRows
-	.filter((r) => r.faixa_vlr_pago)
+	.filter((r) => r.faixa_vlr_pago_ju_bbagil)
 	.map((r) => ({
-		label: r.faixa_vlr_pago,
+		label: normalizeFaixa(r.faixa_vlr_pago_ju_bbagil),
 		value: +r['% de contemplados'] * 100,
 	}));
 
@@ -128,7 +132,7 @@ export const faixaValorPercData = [
 export const faixaGroupedData = (() => {
 	const pagMap: Record<string, number> = {};
 	for (const r of rangeRows) {
-		const faixa = r.faixa_vlr_pago;
+		const faixa = normalizeFaixa(r.faixa_vlr_pago_ju_bbagil);
 		if (!faixa) continue;
 		const v = +r['% de contemplados'] * 100;
 		const key =

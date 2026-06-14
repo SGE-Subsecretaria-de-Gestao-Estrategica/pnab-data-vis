@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalBarChart, categorical8 } from 'sniic-design-system';
+  import { HorizontalBarChart, categorical8, colorScales } from 'sniic-design-system';
   // @ts-ignore
   import { hierarchy, treemap as d3treemap } from 'd3-hierarchy';
   import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
@@ -78,7 +78,7 @@ O treemap torna visível a concentração: Parda e Branca juntas ocupam mais de 
     <HorizontalGroupedBarChart
       data={racaCorGroupedData}
       seriesLabels={['PNAB', 'Total Trabalhadores Formais']}
-      colors={[categorical8[0], '#cb4034']}
+      colors={[colorScales.lime[2], colorScales.red[2]]}
       format={formatN}
       xLabel="% do total de trabalhadores formais"
       margin={{ top: 20, right: 60, bottom: 40, left: 120 }}

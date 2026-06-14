@@ -2,11 +2,12 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
+  import { colorScales } from 'sniic-design-system';
   // @ts-ignore
   import { racaCorSexoGroupedData } from '$lib/data/section4';
 
   const seriesLabels = ['Feminino', 'Masculino'];
-  const colors = ['#a44c7f', '#ea662f'];
+  const colors = [colorScales.lime[2], colorScales.red[2]];
 
   const { Story } = defineMeta({
     title: 'Section 4/racaCorSexoGrouped',

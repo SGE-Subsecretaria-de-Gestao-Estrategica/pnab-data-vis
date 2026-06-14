@@ -51,7 +51,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
   {#snippet template()}
     <HorizontalBarChartCustom
       data={escolaridadeProporcionalData}
-      color={colorScales.blue[2]}
+      color={colorScales.lime[2]}
       format={formatPct}
       xLabel="% dos trabalhadores formais"
       margin={{ top: 20, right: 60, bottom: 40, left: 260 }}
@@ -63,7 +63,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
   {#snippet template()}
     <HorizontalBarChartCustom
       data={escolaridadeValorMedioData}
-      color={colorScales.orange[2]}
+      color={colorScales.lime[2]}
       format={formatBRL}
       xLabel="Valor médio pago (R$)"
       margin={{ top: 20, right: 60, bottom: 40, left: 260 }}
@@ -75,7 +75,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
   {#snippet template()}
     <VerticalBarChartCustom
       data={escolaridadeProporcionalVertData}
-      color={colorScales.red[2]}
+      color={colorScales.lime[2]}
       format={formatPct}
       yLabel="% dos trabalhadores formais"
       margin={{ top: 30, right: 20, bottom: 60, left: 60 }}

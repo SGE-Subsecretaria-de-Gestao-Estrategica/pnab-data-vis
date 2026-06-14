@@ -33,7 +33,7 @@ O padrão é consistente: em todos os estados, a maioria esmagadora dos benefici
       data={zoneQtdData}
       keys={['qtde_rural', 'qtde_urbano']}
       labels={{ qtde_urbano: 'Urbano', qtde_rural: 'Rural' }}
-      colors={[colorScales.red[2], colorScales.blue[2]]}
+      colors={[colorScales.orange[2], colorScales.blue[2]]}
       normalize={true}
       height={320}
       sortDirection="desc"

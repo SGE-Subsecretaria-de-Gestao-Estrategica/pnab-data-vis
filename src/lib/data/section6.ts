@@ -146,12 +146,14 @@ export const expensesLegendItems = g1Data.map((r) => ({
 }));
 
 // ── Grafico 2 — Subcategorias de Fomento Cultural ──────────────────────────────
+const parseBRL = (s: string) => parseFloat(s.replace(/R\$\s*/g, '').replace(/,/g, '').trim());
+
 const fomentoSubRaw = parseCSV(csvGrafico2Raw).map((r) => ({
 	label: r['Categorização Nivel 0'],
-	valor: +r.valor_estimado,
-	p025:  +r.p025,
-	p975:  +r.p975,
-	valorFormatted: formatBRL(+r.valor_estimado),
+	valor: parseBRL(r.valor_estimado),
+	p025:  parseBRL(r.p025),
+	p975:  parseBRL(r.p975),
+	valorFormatted: formatBRL(parseBRL(r.valor_estimado)),
 }));
 const fomentoSubTotal = fomentoSubRaw.reduce((s, r) => s + r.valor, 0);
 export const fomentoSubData = fomentoSubRaw.map((r) => ({
@@ -178,10 +180,10 @@ export const fomentoDomainsRows = g3Rows;
 // ── Grafico 4 — Subcategorias de PNCV ─────────────────────────────────────────
 const pncvSubRaw = parseCSV(csvGrafico4Raw).map((r) => ({
 	label: r['Categorização Nivel 0'],
-	valor: +r.valor_estimado,
-	p025:  +r.p025,
-	p975:  +r.p975,
-	valorFormatted: formatBRL(+r.valor_estimado),
+	valor: parseBRL(r.valor_estimado),
+	p025:  parseBRL(r.p025),
+	p975:  parseBRL(r.p975),
+	valorFormatted: formatBRL(parseBRL(r.valor_estimado)),
 }));
 const pncvSubTotal = pncvSubRaw.reduce((s, r) => s + r.valor, 0);
 export const pncvSubData = pncvSubRaw.map((r) => ({
@@ -278,9 +280,9 @@ export const tipoExecRegiaoLabels: Record<string, string> = {
 const g5Rows = parseCSV(csvGrafico5Raw).map((r) => ({
 	modalidade: r['Categorização Nivel 0'],
 	tipo_doc:   r.tipo_documento,
-	valor:      +r.valor_estimado,
-	p025:       +r.p025,
-	p975:       +r.p975,
+	valor:      parseBRL(r.valor_estimado),
+	p025:       parseBRL(r.p025),
+	p975:       parseBRL(r.p975),
 }));
 
 const _pncvModalMap = new Map<string, { cnpj: number; cpf: number }>();

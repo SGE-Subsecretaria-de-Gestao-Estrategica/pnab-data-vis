@@ -50,7 +50,7 @@
 		const g = parseInt(hex.slice(3, 5), 16) / 255;
 		const b = parseInt(hex.slice(5, 7), 16) / 255;
 		const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-		return lum > 0.45 ? '#1a1a1a' : '#fffffe';
+		return lum > 0.55 ? '#1a1a1a' : '#fffffe';
 	}
 
 	// Stacked segments per category
@@ -174,7 +174,7 @@
 				{/each}
 
 				<!-- Legend -->
-				<g transform="translate(0,{legendY})">
+				<g transform="translate({(innerW - legendTotalW) / 2},{legendY})">
 					{#each keys as key, ki}
 						<rect
 							x={legendBoxX(ki)}

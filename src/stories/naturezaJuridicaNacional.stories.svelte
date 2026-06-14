@@ -1,7 +1,8 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalBarChart, categorical8 } from 'sniic-design-system';
+  import { colorScales } from 'sniic-design-system';
+  import HorizontalBarChartCustom from '$lib/components/HorizontalBarChartCustom.svelte';
   // @ts-ignore
   import { naturezaJuridicaData } from '$lib/data/section3';
 
@@ -11,7 +12,7 @@
 
   const { Story } = defineMeta({
     title: 'Section 3/naturezaJuridicaNacional',
-    component: HorizontalBarChart,
+    component: HorizontalBarChartCustom,
     tags: ['autodocs'],
     parameters: {
       docs: {
@@ -31,12 +32,12 @@ Os dados revelam forte presença de estruturas de pequeno porte e organizações
 
 <Story name="Distribuição por Natureza Jurídica">
   {#snippet template()}
-    <HorizontalBarChart
+    <HorizontalBarChartCustom
       data={naturezaJuridicaData}
-      color={categorical8[4]}
+      color={colorScales.teal[2]}
       format={formatPct}
       xLabel="% de CNPJs contemplados"
-      title="% - Distribuição de Agentes Culturais Pessoas Jurídicas Contemplados na Aldir Blanc por Natureza Jurídica"
+      rowHeight={52}
       margin={{ top: 20, right: 80, bottom: 40, left: 230 }}
     />
   {/snippet}

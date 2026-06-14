@@ -45,7 +45,7 @@ Em volume absoluto, **SP, MG e BA** lideram em beneficiários com vínculo forma
   {#snippet template()}
     <HorizontalBarChart
       data={ufRankingData}
-      color={colorScales.blue[2]}
+      color={colorScales.lime[2]}
       format={formatPct}
       xLabel="% beneficiários com vínculo formal"
       margin={{ top: 20, right: 60, bottom: 40, left: 50 }}

@@ -304,7 +304,7 @@ export const porteBubbleData = porteRaw.map((d) => ({
 	group: d.porte,
 }));
 
-export const porteStackedKeys   = porteRaw.map((d) => porteKeyMap[d.porte]);
+export const porteStackedKeys   = ['grande', 'medio', 'pequeno_i', 'pequeno_ii'];
 export const porteStackedLabels = Object.fromEntries(
 	porteRaw.map((d) => [porteKeyMap[d.porte], d.porte])
 );

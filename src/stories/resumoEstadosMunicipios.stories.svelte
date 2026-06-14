@@ -10,8 +10,8 @@
   ];
 
   const rows = [
-    { indicador: 'Número de contemplados',                          estados: '22.050',          municipios: '144.836'       },
-    { indicador: 'Ticket médio dos pagamentos',                     estados: 'R$ 52.711',        municipios: 'R$ 7.839'      },
+    { indicador: 'Número de contemplados',                          estados: '22.582',          municipios: '145.235'       },
+    { indicador: 'Ticket médio dos pagamentos',                     estados: 'R$ 64.959',        municipios: 'R$ 9.691'      },
     { indicador: 'Concentração dos contemplados, por faixa de valor', estados: 'De 10 a 50 mil', municipios: 'De 2 a 10 mil' },
     { indicador: 'Concentração do recurso executado, por faixa de valor', estados: 'Acima de 200 mil', municipios: 'De 10 a 50 mil' },
   ];
@@ -28,8 +28,8 @@
 
 Síntese dos principais indicadores de execução financeira comparando os dois níveis de esfera pública:
 
-- **Número de contemplados**: estados (22.050) vs municípios (144.836)
-- **Ticket médio**: estados concentram pagamentos muito maiores (R$52.711 vs R$7.839)
+- **Número de contemplados**: estados (22.582) vs municípios (145.235)
+- **Ticket médio**: estados concentram pagamentos muito maiores (R$64.959 vs R$9.691)
 - **Concentração por faixa**: estados lideram na faixa R$10–50k (contemplados) e acima de R$200k (valor); municípios na faixa R$2–10k e R$10–50k respectivamente
 
 **Fonte**: execução estadual e municipal agregada por faixa de valor.
@@ -44,7 +44,7 @@ Síntese dos principais indicadores de execução financeira comparando os dois 
   {#snippet template()}
     <div style="overflow-x: auto;">
       <svg width={700} height={220}>
-        <DataTable {columns} {rows} />
+        <DataTable {columns} {rows} headerColor="#a44c7f" />
       </svg>
     </div>
   {/snippet}

@@ -81,7 +81,7 @@ A comparação entre o percentual do valor recebido e o percentual de agentes co
         data={capitalInteriorStackedData}
         keys={['capital', 'metropolitana', 'interior']}
         labels={{ capital: 'Capital', metropolitana: 'Região Metropolitana', interior: 'Interior' }}
-        colors={[categorical8[1], categorical8[3], categorical8[0]]}
+        colors={categorical8.slice(0, 3)}
         format={formatPct}
         showTotalLabel={false}
       />
@@ -96,7 +96,7 @@ A comparação entre o percentual do valor recebido e o percentual de agentes co
       data={capitalInteriorStackedData}
       keys={['capital', 'metropolitana', 'interior']}
       labels={{ capital: 'Capital', metropolitana: 'Região Metropolitana', interior: 'Interior' }}
-      colors={[colorScales.orange[2], colorScales.teal[2], colorScales.blue[2]]}
+      colors={categorical8.slice(0, 3)}
       format={formatPct}
       marginLeft={220}
     />

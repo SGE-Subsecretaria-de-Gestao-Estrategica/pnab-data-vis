@@ -1,12 +1,13 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalBarChart, VerticalBarChart, colorScales } from 'sniic-design-system';
+  import { HorizontalBarChart, VerticalBarChart, colorScales, categorical8 } from 'sniic-design-system';
   import HorizontalBarChartCustom from '$lib/components/HorizontalBarChartCustom.svelte';
+  import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
   import VerticalGroupedBarChart from '$lib/components/VerticalGroupedBarChart.svelte';
   import VerticalBarChartCustom from '$lib/components/VerticalBarChartCustom.svelte';
   // @ts-ignore
-  import { escolaridadeBarData, escolaridadeValorMedioData, escolaridadeProporcionalData/*, escolaridadeGroupedData*/ } from '$lib/data/section4'; // escolaridadeGroupedData: resumo_escolaridade_com_vinculo_rais.csv faltante
+  import { escolaridadeBarData, escolaridadeValorMedioData, escolaridadeProporcionalData, escolaridadeComparisonGroupedData, escolaridadeValorMedioNewData } from '$lib/data/section4';
 
   // @ts-ignore
   const formatN = (v) => v.toLocaleString('pt-BR');
@@ -14,6 +15,8 @@
   const formatBRL = (v) => `R$${new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 }).format(v)}`;
   // @ts-ignore
   const formatPct = (v) => `${v.toFixed(1)}%`;
+  // @ts-ignore
+  const formatPctN = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
   // Labels abreviadas para o gráfico vertical (labels originais são longas demais para eixo X)
   const escolaridadeLabelAbrev = {
@@ -84,19 +87,32 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
   {/snippet}
 </Story>
 
-<!-- DISABLED: resumo_escolaridade_com_vinculo_rais.csv faltante
-<Story name="Barras verticais agrupadas — PNAB vs. Brasil por escolaridade">
+<Story name="Grafico 28 — Escolaridade PNAB vs RAIS">
   {#snippet template()}
-    <VerticalGroupedBarChart
-      data={escolaridadeGroupedData}
-      seriesLabels={['PNAB', 'Total Trabalhadores Formais']}
-      colors={[colorScales.blue[2], colorScales.orange[2]]}
-      format={(v) => `${v.toFixed(1)}%`}
-      barWidth={36}
-      barPad={6}
-      innerH={300}
-      margin={{ top: 20, right: 20, bottom: 70, left: 20 }}
+    <HorizontalGroupedBarChart
+      data={escolaridadeComparisonGroupedData}
+      seriesLabels={['PNAB', 'Total trabalhadores formais']}
+      colors={[categorical8[0], '#cb4034']}
+      format={formatPctN}
+      xLabel="% do total"
+      margin={{ top: 20, right: 80, bottom: 40, left: 260 }}
+      barHeight={20}
+      rx={0}
+      crispEdges
+      labelsInside
+      legendBottom={true}
     />
   {/snippet}
 </Story>
--->
+
+<Story name="Grafico 29 — Valor medio por escolaridade">
+  {#snippet template()}
+    <HorizontalBarChartCustom
+      data={escolaridadeValorMedioNewData}
+      color={categorical8[0]}
+      format={formatBRL}
+      xLabel="Valor médio recebido (R$)"
+      margin={{ top: 20, right: 100, bottom: 40, left: 260 }}
+    />
+  {/snippet}
+</Story>

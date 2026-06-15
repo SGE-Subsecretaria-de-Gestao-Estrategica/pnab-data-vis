@@ -9,9 +9,9 @@ import csvSexoRaw        from '../../../data/section_4/aggregate_vinculo_formal_
 import csvRacaCorRaw     from '../../../data/section_4/aggregate_vinculo_formal_labor_by_raca_cor.csv?raw';
 import csvRacaCorSexoRaw from '../../../data/section_4/aggregate_raca_cor_vinculo_formal_labor_by_sexo.csv?raw';
 import csvUfRaw          from '../../../data/section_4/aggregate_vinculo_formal_labor_by_uf.csv?raw';
-// import csvUfIbgeRaw      from '../../../data/section_4/aggregate_vinculo_formal_labor_by_uf_ibge.csv?raw'; // CSV faltante
+import csvUfIbgeRaw      from '../../../data/section_4/aggregate_vinculo_formal_labor_by_uf_ibge.csv?raw';
+import csvEscolaridadeNewRaw from '../../../data/section_4/aggregate_vinculo_formal_labor_by_escolaridade.csv?raw';
 import csvCboRaisRaw     from '../../../data/section_4/aggregate_cbo_rais.csv?raw';
-// import csvRaisEscRaw     from '../../../data/section_4/resumo_escolaridade_com_vinculo_rais.csv?raw';     // CSV faltante
 
 // Handles quoted fields with embedded commas (standard CSV)
 function parseCSV(text: string): Record<string, string>[] {
@@ -408,6 +408,121 @@ export const ufByRegionGroups = regionOrderCorr.map((regiao) => ({
 			com_vinculo: +r.percentual_contemplados_com_vinculo_trabalho_formal * 100,
 		})),
 }));
+
+// ── Gráfico 23 — Região: PNAB vs RAIS ─────────────────────────────────────────
+export const regionComparisonGroupedData = regionOrderSec4.map((regiao) => {
+	const r = regionRows4.find((d) => d.regiao === regiao)!;
+	return {
+		label: regiao,
+		values: [
+			+r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
+			+r.percentual_vinculos_rais_no_total_brasil * 100,
+		],
+	};
+});
+
+// ── Gráfico 24 — UF: PNAB vs RAIS ────────────────────────────────────────────
+const ufIbgeRows = parseCSV(csvUfIbgeRaw);
+
+const _ibgeRegionForUF: Record<string, string> = {
+	AC: 'Norte',  AM: 'Norte',  AP: 'Norte',  PA: 'Norte',  RO: 'Norte',  RR: 'Norte',  TO: 'Norte',
+	AL: 'Nordeste', BA: 'Nordeste', CE: 'Nordeste', MA: 'Nordeste', PB: 'Nordeste',
+	PE: 'Nordeste', PI: 'Nordeste', RN: 'Nordeste', SE: 'Nordeste',
+	DF: 'Centro-Oeste', GO: 'Centro-Oeste', MS: 'Centro-Oeste', MT: 'Centro-Oeste',
+	ES: 'Sudeste', MG: 'Sudeste', RJ: 'Sudeste', SP: 'Sudeste',
+	PR: 'Sul', RS: 'Sul', SC: 'Sul',
+};
+
+const _ufRegionOrder = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul'];
+
+export const ufComparisonGroupedData = _ufRegionOrder.flatMap((regiao) => {
+	const ufs = [...ufIbgeRows]
+		.filter((r) => _ibgeRegionForUF[r.uf] === regiao)
+		.sort((a, b) => +b.percentual_numero_contemplados_com_vinculo_no_total_geral - +a.percentual_numero_contemplados_com_vinculo_no_total_geral);
+	return [
+		{ label: regiao, values: [] as number[], isSeparator: true },
+		...ufs.map((r) => ({
+			label: r.uf,
+			values: [
+				+r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
+				+r.percentual_vinculos_rais_no_total_brasil * 100,
+			],
+		})),
+	];
+});
+
+// ── Gráfico 25 — Sexo: PNAB vs RAIS (stacked) ───────────────────────────────
+const _sexoFem = sexoRows.find((r) => r.Sexo === 'Feminino')!;
+const _sexoMasc = sexoRows.find((r) => r.Sexo === 'Masculino')!;
+
+export const sexoComparisonStackedKeys = ['feminino', 'masculino'] as const;
+export const sexoComparisonStackedLabels: Record<string, string> = {
+	feminino: 'Feminino',
+	masculino: 'Masculino',
+};
+export const sexoComparisonStackedData = [
+	{
+		label: 'Agentes culturais contemplados\ncom vínculo formal de trabalho',
+		feminino: +_sexoFem.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
+		masculino: +_sexoMasc.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
+	},
+	{
+		label: 'Pessoas com vínculo formal\nde trabalho no Brasil',
+		feminino: +_sexoFem.percentual_vinculos_rais_no_total_brasil * 100,
+		masculino: +_sexoMasc.percentual_vinculos_rais_no_total_brasil * 100,
+	},
+];
+
+// ── Gráfico 26 — Raça/cor: PNAB vs RAIS (using CSV values) ───────────────────
+export const racaCorComparisonGroupedData = [...racaCorRows]
+	.sort((a, b) => +b.percentual_numero_contemplados_com_vinculo_no_total_geral - +a.percentual_numero_contemplados_com_vinculo_no_total_geral)
+	.map((r) => ({
+		label: shortRaceLabel(r.raca_cor_desc_description),
+		values: [
+			+r.percentual_numero_contemplados_no_total_geral * 100,
+			+r.percentual_vinculos_rais_no_total_brasil * 100,
+		],
+	}));
+
+// ── Gráfico 27 — Raça/cor × sexo ─────────────────────────────────────────────
+export const racaCorSexoComparisonData = _racaSexoOrder.map((race) => {
+	const r = racaCorSexoRows.find((d) => shortRaceLabel(d.raca_cor_desc_description) === race)!;
+	return {
+		label: race,
+		values: [
+			+r.percentual_numero_contemplados_masculino_no_total_geral * 100,
+			+r.percentual_numero_contemplados_feminino_no_total_geral * 100,
+		],
+	};
+});
+
+// ── Gráficos 28 & 29 — Escolaridade: PNAB vs RAIS + Valor médio ──────────────
+const escNewRows = parseCSV(csvEscolaridadeNewRaw);
+
+export const escolaridadeComparisonGroupedData = _escOrder
+	.map((esc) => {
+		const r = escNewRows.find((d) => d.escolaridade_agregado_rais === esc);
+		if (!r) return null;
+		return {
+			label: escShort[esc] ?? esc,
+			values: [
+				+r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100,
+				+r.percentual_vinculos_rais_no_total_brasil * 100,
+			],
+		};
+	})
+	.filter((d): d is NonNullable<typeof d> => d !== null);
+
+export const escolaridadeValorMedioNewData = _escOrder
+	.map((esc) => {
+		const r = escNewRows.find((d) => d.escolaridade_agregado_rais === esc);
+		if (!r) return null;
+		return {
+			label: escShort[esc] ?? esc,
+			value: +r.valor_medio,
+		};
+	})
+	.filter((d): d is NonNullable<typeof d> => d !== null);
 
 // ── CBO RAIS — infographic data ───────────────────────────────────────────────
 const cboRaisRows = parseCSV(csvCboRaisRaw);

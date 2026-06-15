@@ -434,11 +434,11 @@ export const brasilBoxPlotData = [
 export const estadosBoxPlotData = parseCSV(csvQuartisEstadosRaw).map((row) => ({
 	label: row.uf,
 	stats: {
-		min:    +row.p1,
-		q1:     +row.p25,
-		median: +row.mediana,
-		q3:     +row.p75,
-		max:    +row.p99,
+		min:    +row.valor_minimo,
+		q1:     +row.quartil1,
+		median: +row.quartil2,
+		q3:     +row.quartil3,
+		max:    +row.percentil_99,
 	},
 }));
 

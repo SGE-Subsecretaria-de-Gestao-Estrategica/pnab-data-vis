@@ -19,6 +19,7 @@
 		groupPad: groupPadProp = 6,
 		legendBottom = false,
 		rx = 2,
+		crispEdges = false,
 		labelsInside = false,
 	}: {
 		data: GroupedBarRow[];
@@ -33,6 +34,7 @@
 		groupPad?: number;
 		legendBottom?: boolean;
 		rx?: number;
+		crispEdges?: boolean;
 		labelsInside?: boolean;
 	} = $props();
 
@@ -41,7 +43,7 @@
 		const g = parseInt(hex.slice(3, 5), 16) / 255;
 		const b = parseInt(hex.slice(5, 7), 16) / 255;
 		const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-		return luminance > 0.35 ? '#1a1a1a' : '#fffffe';
+		return luminance > 0.55 ? '#1a1a1a' : '#fffffe';
 	}
 
 	let containerWidth = $state(0);
@@ -237,37 +239,28 @@
 							height={barHeight}
 							fill={barColor}
 							rx={rx}
+							shape-rendering={crispEdges ? 'crispEdges' : undefined}
 						/>
 						<!-- value label -->
-						{#if labelsInside}
-							{@const labelText = format(val)}
-							{@const minW = labelText.length * 7 + 10}
-							{#if barW >= minW}
-								<text
-									x={margin.left + barW - 6}
-									y={by + barHeight / 2}
-									text-anchor="end"
-									dominant-baseline="middle"
-									font-size="11"
-									font-weight="600"
-									fill="#fffffe">{labelText}</text
-								>
-							{:else}
-								<text
-									x={margin.left + barW + 4}
-									y={by + barHeight / 2}
-									dominant-baseline="middle"
-									font-size="10"
-									fill="#444">{labelText}</text
-								>
-							{/if}
+						{@const labelText = format(val)}
+						{@const minW = labelText.length * 7 + 10}
+						{#if labelsInside && barW >= minW}
+							<text
+								x={margin.left + barW - 6}
+								y={by + barHeight / 2}
+								text-anchor="end"
+								dominant-baseline="middle"
+								font-size="11"
+								font-weight="600"
+								fill={labelColor(barColor)}>{labelText}</text
+							>
 						{:else}
 							<text
 								x={margin.left + barW + 4}
 								y={by + barHeight / 2}
 								dominant-baseline="middle"
 								font-size="10"
-								fill="#444">{format(val)}</text
+								fill="#444">{labelText}</text
 							>
 						{/if}
 					{/each}

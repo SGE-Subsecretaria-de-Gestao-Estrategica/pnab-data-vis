@@ -234,6 +234,7 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
       format={formatPerc}
       showTotalLabel={true}
       marginLeft={180}
+      legendAlign="left"
     />
   {/snippet}
 </Story>

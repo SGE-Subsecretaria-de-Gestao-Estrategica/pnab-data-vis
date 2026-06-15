@@ -305,7 +305,7 @@
 	<ExecutedValueByStateMap
 		states={mediaValorByState}
 		metric="media_aparada_1pct_valor"
-		label="Média aparada (1%) paga por estado"
+		label="Ticket médio (R$) pago por unidade federativa"
 		format={formatBRL2}
 		showSideLegend={true}
 	/>

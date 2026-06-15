@@ -1,9 +1,13 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
+  import { categorical8 } from 'sniic-design-system';
   import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
   // @ts-ignore
-  // import { ufIbgeByRegionData, ufIbgeRegionLegend, regionIbgeComparisonData, regionIbgeComparisonLegend } from '$lib/data/section4'; // CSV faltante: aggregate_vinculo_formal_labor_by_uf_ibge.csv
+  import { ufComparisonGroupedData, regionComparisonGroupedData } from '$lib/data/section4';
+
+  // @ts-ignore
+  const formatPctN = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
   const { Story } = defineMeta({
     title: 'Section 4/vinculoFormalPnabVsPopulacao',
@@ -13,9 +17,9 @@
       docs: {
         description: {
           component: `
-**Formalização dos contemplados PNAB vs. população geral por UF, agrupado por região**
+**Formalização dos contemplados PNAB vs. população geral por UF e região**
 
-Compara, para cada UF, o percentual de trabalhadores formais na população geral (RAIS 2024) com o percentual de contemplados pela PNAB que possuem vínculo formal. Estados agrupados por região, cada uma com sua família de cores.
+Compara, para cada UF e região, o percentual de contemplados pela PNAB com vínculo formal com o percentual de vínculos formais na RAIS 2024.
           `,
         },
       },
@@ -23,36 +27,39 @@ Compara, para cada UF, o percentual de trabalhadores formais na população gera
   });
 </script>
 
-<!-- DISABLED: aggregate_vinculo_formal_labor_by_uf_ibge.csv faltante
-<Story name="PNAB vs. população geral — vínculo formal por UF e região">
+<Story name="Grafico 24 — Distribuicao por UF PNAB vs RAIS">
   {#snippet template()}
     <HorizontalGroupedBarChart
-      data={ufIbgeByRegionData}
-      seriesLabels={[]}
-      legendItems={ufIbgeRegionLegend}
-      format={(v) => `${v.toFixed(1)}%`}
-      xLabel="% do total nacional"
-      margin={{ top: 16, right: 60, bottom: 150, left: 44 }}
-      barHeight={7}
-      barPad={2}
+      data={ufComparisonGroupedData}
+      seriesLabels={['Contemplados PNAB', 'Vínculos RAIS 2024']}
+      colors={[categorical8[0], '#cb4034']}
+      format={formatPctN}
+      xLabel="% do total"
+      margin={{ top: 20, right: 80, bottom: 40, left: 50 }}
+      barHeight={14}
+      barPad={3}
+      rx={0}
+      crispEdges
+      labelsInside
       legendBottom={true}
     />
   {/snippet}
 </Story>
 
-<Story name="Por região — PNAB vs. população geral">
+<Story name="Por regiao — PNAB vs RAIS">
   {#snippet template()}
     <HorizontalGroupedBarChart
-      data={regionIbgeComparisonData}
-      seriesLabels={[]}
-      legendItems={regionIbgeComparisonLegend}
-      format={(v) => `${v.toFixed(1)}%`}
-      xLabel="% Agentes Culturais Contemplados com Vínculo Formal de Trabalho"
-      margin={{ top: 16, right: 60, bottom: 56, left: 120 }}
-      barHeight={18}
-      barPad={5}
+      data={regionComparisonGroupedData}
+      seriesLabels={['Contemplados PNAB', 'Vínculos RAIS 2024']}
+      colors={[categorical8[0], '#cb4034']}
+      format={formatPctN}
+      xLabel="% do total"
+      margin={{ top: 20, right: 80, bottom: 40, left: 120 }}
+      barHeight={20}
+      rx={0}
+      crispEdges
+      labelsInside
       legendBottom={true}
     />
   {/snippet}
 </Story>
--->

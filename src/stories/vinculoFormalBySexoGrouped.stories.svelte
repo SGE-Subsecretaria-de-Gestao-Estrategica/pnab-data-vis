@@ -38,7 +38,7 @@ Entre os contemplados pelo PNAB com vínculo formal, **58,3%** são homens e **4
       barWidth={40}
       barPad={8}
       innerH={280}
-      margin={{ top: 20, right: 20, bottom: 10, left: 44 }}
+      margin={{ top: 20, right: 20, bottom: 10, left: 64 }}
     />
   {/snippet}
 </Story>

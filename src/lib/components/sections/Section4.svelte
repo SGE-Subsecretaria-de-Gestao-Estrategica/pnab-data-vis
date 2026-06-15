@@ -5,6 +5,7 @@
 	import CboRaisTable from '$lib/components/CboRaisTable.svelte';
 	import VerticalGroupedBarChart from '$lib/components/VerticalGroupedBarChart.svelte';
 	import HorizontalBarChartCustom from '$lib/components/HorizontalBarChartCustom.svelte';
+	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
 	import {
 		BigNumber,
 		HorizontalBarChart,
@@ -31,17 +32,26 @@
 		escolaridadeValorMedioData,
 		regionStackedData,
 		regionSilhouetteData,
+		regionComparisonGroupedData,
+		ufComparisonGroupedData,
 		sexoDivergingData,
 		sexoVinculoFormalGroupedData,
+		sexoComparisonStackedData,
+		sexoComparisonStackedKeys,
+		sexoComparisonStackedLabels,
 		racaCorBarData,
 		racaCorGroupedData,
+		racaCorComparisonGroupedData,
 		racaCorTreemapData,
 		racaCorSexoHeatmapData,
 		racaCorSexoGroupedData,
+		racaCorSexoComparisonData,
 		ufRankingData,
 		ufByRegionGroups,
 		cboRaisTop20,
 		cboRaisTableHeight,
+		escolaridadeComparisonGroupedData,
+		escolaridadeValorMedioNewData,
 	} from '$lib/data/section4';
 	import { top20CboData } from '$lib/data/section3';
 
@@ -143,6 +153,27 @@
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
+     GRÁFICO 23 — Distribuição por Região: PNAB vs RAIS
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-4-grafico-23">
+	<h3>Gráfico 23 — Distribuição dos Agentes Culturais Pessoas Físicas contemplados pela Aldir Blanc com Vínculo de Trabalho Formal por Região</h3>
+	<HorizontalGroupedBarChart
+		data={regionComparisonGroupedData}
+		seriesLabels={['Contemplados PNAB', 'Vínculos RAIS 2024']}
+		colors={[categorical8[0], '#cb4034']}
+		format={formatPctN}
+		xLabel="% do total"
+		margin={{ top: 20, right: 80, bottom: 40, left: 120 }}
+		barHeight={20}
+		groupPad={24}
+		rx={0}
+		crispEdges
+		labelsInside
+		legendBottom={true}
+	/>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
      4.1 — DISTRIBUIÇÃO REGIONAL (STACKED) E POR UF
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-4-41-regions">
@@ -179,9 +210,25 @@
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
-     4.1 — FORMALIZAÇÃO PNAB vs. POPULAÇÃO GERAL POR UF
-     DESABILITADO: CSV aggregate_vinculo_formal_labor_by_uf_ibge.csv faltante
+     GRÁFICO 24 — Distribuição por UF: PNAB vs RAIS
      ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-4-grafico-24">
+	<h3>Gráfico 24 — Distribuição dos Agentes Culturais Pessoas Físicas contemplados pela Aldir Blanc com vínculo de trabalho formal por UF</h3>
+	<HorizontalGroupedBarChart
+		data={ufComparisonGroupedData}
+		seriesLabels={['Contemplados PNAB', 'Vínculos RAIS 2024']}
+		colors={[categorical8[0], '#cb4034']}
+		format={formatPctN}
+		xLabel="% do total"
+		margin={{ top: 20, right: 80, bottom: 40, left: 50 }}
+		barHeight={14}
+		barPad={3}
+		rx={0}
+		crispEdges
+		labelsInside
+		legendBottom={true}
+	/>
+</ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
      4.2 — PERFIL: SEXO
@@ -218,6 +265,21 @@
 		barWidth={40}
 		barPad={8}
 		innerH={280}
+	/>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     GRÁFICO 25 — Sexo: PNAB vs RAIS
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-4-grafico-25">
+	<h3>Gráfico 25 — Comparativo entre Distribuição de Agentes Culturais com Vínculo Formal de Trabalho Contemplados na Aldir Blanc por Sexo e Distribuição de Pessoas com Vínculo Formal no Brasil por Sexo</h3>
+	<HorizontalStackedBarChartCustom
+		data={sexoComparisonStackedData}
+		keys={[...sexoComparisonStackedKeys]}
+		labels={sexoComparisonStackedLabels}
+		colors={[categorical8[0], '#cb4034']}
+		format={formatPctN}
+		labelsAbove
 	/>
 </ScrollSection>
 
@@ -259,13 +321,19 @@
 		A maioria dos trabalhadores formais que receberam recursos da Aldir Blanc é negra: pessoas
 		pretas e pardas somam <strong>62,4%</strong> do total de contemplados
 	</p>
+	<h4>Gráfico 26 — Distribuição dos Agentes Culturais Pessoas Físicas Contemplados pela Aldir Blanc com Vínculo Formal de Trabalho por Raça/Cor</h4>
 	<HorizontalGroupedBarChart
-		data={racaCorGroupedData}
-		seriesLabels={['PNAB', 'Total Trabalhadores Formais']}
+		data={racaCorComparisonGroupedData}
+		seriesLabels={['Contemplados PNAB', 'Vínculos RAIS 2024']}
 		colors={[categorical8[0], '#cb4034']}
 		format={formatPctN}
-		xLabel="% do total de trabalhadores formais"
+		xLabel="% do total"
 		margin={{ top: 20, right: 80, bottom: 40, left: 120 }}
+		barHeight={20}
+		rx={0}
+		crispEdges
+		labelsInside
+		legendBottom={true}
 	/>
 	<p>
 		Pessoas pardas formam o grupo mais expressivo, representando <strong>51,4%</strong> dos agentes
@@ -309,15 +377,18 @@
 		Dentre os trabalhadores formais, os homens negros foram os mais contemplados pela Aldir Blanc
 		com <strong>37,8%</strong>
 	</p>
+	<h4>Gráfico 27 — Distribuição Pessoas Físicas Contempladas na Aldir Blanc com Vínculo Formal de Trabalho por Raça/Cor e Sexo</h4>
 	<HorizontalGroupedBarChart
-		data={racaCorSexoGroupedData}
-		seriesLabels={['Feminino', 'Masculino']}
-		colors={['#a44c7f', '#ea662f']}
+		data={racaCorSexoComparisonData}
+		seriesLabels={['Masculino', 'Feminino']}
+		colors={[categorical8[0], '#cb4034']}
 		format={formatPctN}
 		xLabel="% do total de beneficiários com vínculo formal"
 		margin={{ top: 20, right: 80, bottom: 40, left: 120 }}
-		barHeight={12}
-		barPad={4}
+		barHeight={20}
+		rx={0}
+		crispEdges
+		labelsInside
 		legendBottom={true}
 	/>
 	<p>
@@ -350,12 +421,19 @@
 		Ensino médio e superior completos predominam entre os trabalhadores formais contemplados pela
 		Aldir Blanc
 	</p>
-	<HorizontalBarChartCustom
-		data={escolaridadeProporcionalData}
-		color={colorScales.blue[2]}
-		format={formatPct}
-		xLabel="% dos trabalhadores formais"
-		margin={{ top: 20, right: 60, bottom: 40, left: 260 }}
+	<h4>Gráfico 28 — Distribuição de Agentes Culturais Pessoas Físicas Contemplados na Aldir Blanc com Vínculo Formal de Trabalho por Escolaridade</h4>
+	<HorizontalGroupedBarChart
+		data={escolaridadeComparisonGroupedData}
+		seriesLabels={['PNAB', 'Total trabalhadores formais']}
+		colors={[categorical8[0], '#cb4034']}
+		format={formatPctN}
+		xLabel="% do total"
+		margin={{ top: 20, right: 80, bottom: 40, left: 260 }}
+		barHeight={20}
+		rx={0}
+		crispEdges
+		labelsInside
+		legendBottom={true}
 	/>
 	<p>
 		Quase metade dos agentes fomentados no primeiro ciclo possui ensino médio completo ou curso
@@ -383,9 +461,10 @@
 	<p class="frase-destaque">
 		Escolaridade mais alta está associada a valores médios maiores
 	</p>
+	<h4>Gráfico 29 — Valor Médio Recebido pelas Pessoas Físicas Contemplados na Aldir Blanc com Vínculo Formal de Trabalho por Escolaridade</h4>
 	<HorizontalBarChartCustom
-		data={escolaridadeValorMedioData}
-		color={colorScales.teal[2]}
+		data={escolaridadeValorMedioNewData}
+		color={categorical8[0]}
 		format={formatBRL}
 		xLabel="Valor médio recebido (R$)"
 		margin={{ top: 20, right: 100, bottom: 40, left: 260 }}

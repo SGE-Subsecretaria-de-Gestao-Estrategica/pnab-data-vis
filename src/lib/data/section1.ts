@@ -18,6 +18,7 @@ import csvSpecialUfRaw  from '../../../data/section_1/values_by_special_territor
 import csvLocalResidRaw       from '../../../data/section_1/aggregate_by_local_residencia_uf.csv?raw';
 // import csvPortePopRaw         from '../../../data/section_1/resumo_por_porte_populacional.csv?raw'; // CSV faltante (existe em section_2/)
 import csvEstadoLocalResidRaw from '../../../data/section_1/aggregate_estado_by_uf_local_residencia.csv?raw';
+import csvSpecialExecUfRaw   from '../../../data/section_1/special_territory_executed_value_uf.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -487,6 +488,18 @@ export const capitalInteriorByUfData = parseCSV(csvEstadoLocalResidRaw)
 		interior:      +d.percentual_quantidade_interior      * 100,
 	}))
 	.sort((a, b) => b.interior - a.interior);
+
+// ── Territórios especiais: valor executado por UF (estado vs município) ──────
+export const specialExecByUfData = parseCSV(csvSpecialExecUfRaw)
+	.map((d) => ({
+		label:              d.uf,
+		valor_executado_estado:    +d.valor_executado_estado,
+		valor_executado_municipio: +d.valor_executado_municipio,
+	}))
+	.sort((a, b) =>
+		(b.valor_executado_estado + b.valor_executado_municipio) -
+		(a.valor_executado_estado + a.valor_executado_municipio)
+	);
 
 // // ── Métricas por porte populacional (resumo_por_porte_populacional.csv faltante em section_1/) ──
 // export const porteMeanData = parseCSV(csvPortePopRaw)

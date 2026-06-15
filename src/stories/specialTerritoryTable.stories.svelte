@@ -31,13 +31,34 @@
   ];
 
   // @ts-ignore
-  const rows = specialTerritoriesMetrics.map((d) => ({
+  const dataRows = specialTerritoriesMetrics.map((d) => ({
     territorio:     territoryNames[d.territorio] ?? d.territorio,
     valor:          formatBRL(d.valor),
     perc_recurso:   formatPerc(d.perc_recurso),
     perc_agentes:   formatPerc(d.perc_agentes),
     perc_populacao: formatPerc(d.perc_populacao),
   }));
+
+  const totals = specialTerritoriesMetrics.reduce(
+    (acc, d) => ({
+      valor:          acc.valor + d.valor,
+      perc_recurso:   acc.perc_recurso + d.perc_recurso,
+      perc_agentes:   acc.perc_agentes + d.perc_agentes,
+      perc_populacao: acc.perc_populacao + d.perc_populacao,
+    }),
+    { valor: 0, perc_recurso: 0, perc_agentes: 0, perc_populacao: 0 },
+  );
+
+  const rows = [
+    ...dataRows,
+    {
+      territorio:     'Total',
+      valor:          formatBRL(totals.valor),
+      perc_recurso:   formatPerc(totals.perc_recurso),
+      perc_agentes:   formatPerc(totals.perc_agentes),
+      perc_populacao: formatPerc(totals.perc_populacao),
+    },
+  ];
 
   const { Story } = defineMeta({
     title: 'Section 1/specialTerritoryTable',
@@ -60,7 +81,7 @@ Comparação entre o valor executado, a participação nos recursos da política
 <Story name="Tabela — Territórios Especiais">
   {#snippet template()}
     <div style="overflow-x: auto;">
-      <svg width={840} height={220}>
+      <svg width={840} height={260}>
         <DataTable {columns} {rows} headerColor="#4271b5" />
       </svg>
     </div>

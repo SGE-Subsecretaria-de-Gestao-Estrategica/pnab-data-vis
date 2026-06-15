@@ -4,20 +4,21 @@ import csvStateRaw      from '../../../data/section_1/executed_value_by_state.cs
 import csvMunRaw        from '../../../data/section_1/executed_value_by_municipality.csv?raw';
 import csvUfRaw         from '../../../data/section_1/executed_value_by_uf.csv?raw';
 import csvRegionRaw     from '../../../data/section_1/executed_value_by_region_state.csv?raw';
-import csvZoneRaw       from '../../../data/section_1/executed_value_zone_by_state.csv?raw';
-import csvZoneUfRaw     from '../../../data/section_1/executed_value_zone_by_uf.csv?raw';
+// import csvZoneRaw       from '../../../data/section_1/executed_value_zone_by_state.csv?raw'; // CSV faltante
+// import csvZoneUfRaw     from '../../../data/section_1/executed_value_zone_by_uf.csv?raw';   // CSV faltante
 import csvPorteRaw      from '../../../data/section_1/values_by_population_size.csv?raw';
 import csvSpecialRaw    from '../../../data/section_1/special_territory_w_ibge_by_brazil.csv?raw';
 import csvSpecialStRaw  from '../../../data/section_1/values_by_special_territory_state.csv?raw';
 import csvSpecialMunRaw from '../../../data/section_1/values_by_special_territory_municipality.csv?raw';
-import csvBnRaw         from '../../../data/section_1/bignumber1.csv?raw';
+// import csvBnRaw         from '../../../data/section_1/bignumber1.csv?raw';         // CSV faltante
 import csvRegionUfRaw   from '../../../data/section_1/executed_value_by_region_uf.csv?raw';
 import csvCapitalRaw    from '../../../data/section_1/aggregate_values_by_capital.csv?raw';
 import csvSpecialUfRaw  from '../../../data/section_1/values_by_special_territory_uf.csv?raw';
-import csvPorteMeanRaw  from '../../../data/section_1/population_size_mean.csv?raw';
+// import csvPorteMeanRaw  from '../../../data/section_1/population_size_mean.csv?raw'; // CSV faltante
 import csvLocalResidRaw       from '../../../data/section_1/aggregate_by_local_residencia_uf.csv?raw';
-import csvPortePopRaw         from '../../../data/section_1/resumo_por_porte_populacional.csv?raw';
+// import csvPortePopRaw         from '../../../data/section_1/resumo_por_porte_populacional.csv?raw'; // CSV faltante (existe em section_2/)
 import csvEstadoLocalResidRaw from '../../../data/section_1/aggregate_estado_by_uf_local_residencia.csv?raw';
+import csvSpecialExecUfRaw   from '../../../data/section_1/special_territory_executed_value_uf.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
@@ -30,13 +31,13 @@ function parseCSV(text: string): Record<string, string>[] {
 		});
 }
 
-// ── Totais ────────────────────────────────────────────────────────────────────
-const [bnRow] = parseCSV(csvBnRaw);
-export const percExecEstados    = +bnRow.perc_executado_estados    * 100;
-export const percExecMunicipios = +bnRow.perc_executado_municipios * 100;
-export const valorExecEstados    = +bnRow.Estados_DF;
-export const valorExecMunicipios = +bnRow.Municipios_DF;
-export const valorExecTotal      = +bnRow.Estados_DF + +bnRow.Municipios_DF;
+// // ── Totais (bignumber1.csv faltante) ──────────────────────────────────────────
+// const [bnRow] = parseCSV(csvBnRaw);
+// export const percExecEstados    = +bnRow.perc_executado_estados    * 100;
+// export const percExecMunicipios = +bnRow.perc_executado_municipios * 100;
+// export const valorExecEstados    = +bnRow.Estados_DF;
+// export const valorExecMunicipios = +bnRow.Municipios_DF;
+// export const valorExecTotal      = +bnRow.Estados_DF + +bnRow.Municipios_DF;
 
 // ── Lookup tables ─────────────────────────────────────────────────────────────
 export const siglaToName: Record<string, string> = {
@@ -246,14 +247,14 @@ export const zoneQtdData = parseCSV(csvStateRaw)
 			a.qtde_rural / (a.qtde_urbano + a.qtde_rural)
 	);
 
-// ── Urbano vs Rural por UF (executed_value_zone_by_uf.csv) ───────────────────
-export const zoneData = parseCSV(csvZoneUfRaw)
-	.map((d) => ({ label: d.uf, valor_urbano: +d.valor_uf_urbano, valor_rural: +d.valor_uf_rural }))
-	.sort(
-		(a, b) =>
-			b.valor_rural / (b.valor_urbano + b.valor_rural) -
-			a.valor_rural / (a.valor_urbano + a.valor_rural)
-	);
+// // ── Urbano vs Rural por UF (executed_value_zone_by_uf.csv faltante) ──────────
+// export const zoneData = parseCSV(csvZoneUfRaw)
+// 	.map((d) => ({ label: d.uf, valor_urbano: +d.valor_uf_urbano, valor_rural: +d.valor_uf_rural }))
+// 	.sort(
+// 		(a, b) =>
+// 			b.valor_rural / (b.valor_urbano + b.valor_rural) -
+// 			a.valor_rural / (a.valor_urbano + a.valor_rural)
+// 	);
 
 // ── Porte municipal (values_by_population_size.csv) ───────────────────────────
 const porteNameMap: Record<string, string> = {
@@ -304,7 +305,7 @@ export const porteBubbleData = porteRaw.map((d) => ({
 	group: d.porte,
 }));
 
-export const porteStackedKeys   = porteRaw.map((d) => porteKeyMap[d.porte]);
+export const porteStackedKeys   = ['grande', 'medio', 'pequeno_i', 'pequeno_ii'];
 export const porteStackedLabels = Object.fromEntries(
 	porteRaw.map((d) => [porteKeyMap[d.porte], d.porte])
 );
@@ -370,25 +371,25 @@ export const ufData = ufRows.map((d) => {
 	};
 });
 
-// ── Zona municipal (UF total − estado) ────────────────────────────────────
-const zoneStateRaw = parseCSV(csvZoneRaw)
-	.map((d) => ({ label: d.uf, valor_urbano: +d.valor_urbano, valor_rural: +d.valor_rural }));
-const zoneStateMap = Object.fromEntries(zoneStateRaw.map((d) => [d.label, d]));
-
-export const zoneMunicipalityData = parseCSV(csvZoneUfRaw)
-	.map((d) => {
-		const st = zoneStateMap[d.uf] ?? { valor_urbano: 0, valor_rural: 0 };
-		return {
-			label:        d.uf,
-			valor_urbano: +d.valor_uf_urbano - st.valor_urbano,
-			valor_rural:  +d.valor_uf_rural  - st.valor_rural,
-		};
-	})
-	.sort(
-		(a, b) =>
-			b.valor_rural / (b.valor_urbano + b.valor_rural) -
-			a.valor_rural / (a.valor_urbano + a.valor_rural)
-	);
+// // ── Zona municipal (CSVs faltantes: executed_value_zone_by_state/uf) ──────────
+// const zoneStateRaw = parseCSV(csvZoneRaw)
+// 	.map((d) => ({ label: d.uf, valor_urbano: +d.valor_urbano, valor_rural: +d.valor_rural }));
+// const zoneStateMap = Object.fromEntries(zoneStateRaw.map((d) => [d.label, d]));
+//
+// export const zoneMunicipalityData = parseCSV(csvZoneUfRaw)
+// 	.map((d) => {
+// 		const st = zoneStateMap[d.uf] ?? { valor_urbano: 0, valor_rural: 0 };
+// 		return {
+// 			label:        d.uf,
+// 			valor_urbano: +d.valor_uf_urbano - st.valor_urbano,
+// 			valor_rural:  +d.valor_uf_rural  - st.valor_rural,
+// 		};
+// 	})
+// 	.sort(
+// 		(a, b) =>
+// 			b.valor_rural / (b.valor_urbano + b.valor_rural) -
+// 			a.valor_rural / (a.valor_urbano + a.valor_rural)
+// 	);
 
 // ── Territórios especiais stacked (estado vs município) ───────────────────
 const specialShortLabels: Record<string, string> = {
@@ -439,9 +440,9 @@ export const specialTerritoriesMetrics = specialUfRows.map((d) => {
 	};
 });
 
-// ── Rural total (sum across all UFs from zone UF data) ────────────────────────
-export const valorRuralTotal = parseCSV(csvZoneUfRaw)
-	.reduce((s, d) => s + +d.valor_uf_rural, 0);
+// // ── Rural total (executed_value_zone_by_uf.csv faltante) ──────────────────────
+// export const valorRuralTotal = parseCSV(csvZoneUfRaw)
+// 	.reduce((s, d) => s + +d.valor_uf_rural, 0);
 
 // ── Contemplados em zona rural (estado + município) ────────────────────────────
 const _qtdeRuralState = parseCSV(csvStateRaw).reduce((s, d) => s + +d.qtde_rural, 0);
@@ -450,7 +451,7 @@ const _qtdeTotalState = parseCSV(csvStateRaw).reduce((s, d) => s + +d.qtde_conte
 const _qtdeTotalMun   = parseCSV(csvMunRaw).reduce((s, d) => s + (+d.qtde_rural + +d.qtde_urbano), 0);
 export const qtdeRuralTotal  = _qtdeRuralState + _qtdeRuralMun;
 export const percRuralQtde   = (qtdeRuralTotal / (_qtdeTotalState + _qtdeTotalMun)) * 100;
-export const percRuralValor  = (valorRuralTotal / parseCSV(csvZoneUfRaw).reduce((s, d) => s + +d.valor_uf, 0)) * 100;
+// export const percRuralValor  = (valorRuralTotal / parseCSV(csvZoneUfRaw).reduce((s, d) => s + +d.valor_uf, 0)) * 100; // CSV faltante
 
 // ── Capital vs Região Metropolitana vs Interior (aggregate_by_local_residencia_uf.csv) ──
 const localResidRows = parseCSV(csvLocalResidRaw);
@@ -488,17 +489,29 @@ export const capitalInteriorByUfData = parseCSV(csvEstadoLocalResidRaw)
 	}))
 	.sort((a, b) => b.interior - a.interior);
 
-// ── Métricas por porte populacional (resumo_por_porte_populacional.csv) ────────
-export const porteMeanData = parseCSV(csvPortePopRaw)
-	.filter((d) => d.porte_populacional)
+// ── Territórios especiais: valor executado por UF (estado vs município) ──────
+export const specialExecByUfData = parseCSV(csvSpecialExecUfRaw)
 	.map((d) => ({
-		label:           porteNameMap[d.porte_populacional] ?? d.porte_populacional,
-		municipios:      +d.numero_municipios,
-		valor_total:     +d.valor_total_por_porte,
-		valor_medio:     +d.valor_medio_por_porte,
-		valor_mediano:   +d.valor_mediano_por_porte,
-		quantidade:      +d.quantidade_contemplados_por_porte,
-		perc_valor:      +d.percentual_valor_por_porte * 100,
-		perc_quantidade: +d.percentual_quantidade_contemplados_por_porte * 100,
+		label:              d.uf,
+		valor_executado_estado:    +d.valor_executado_estado,
+		valor_executado_municipio: +d.valor_executado_municipio,
 	}))
-	.sort((a, b) => b.valor_mediano - a.valor_mediano);
+	.sort((a, b) =>
+		(b.valor_executado_estado + b.valor_executado_municipio) -
+		(a.valor_executado_estado + a.valor_executado_municipio)
+	);
+
+// // ── Métricas por porte populacional (resumo_por_porte_populacional.csv faltante em section_1/) ──
+// export const porteMeanData = parseCSV(csvPortePopRaw)
+// 	.filter((d) => d.porte_populacional)
+// 	.map((d) => ({
+// 		label:           porteNameMap[d.porte_populacional] ?? d.porte_populacional,
+// 		municipios:      +d.numero_municipios,
+// 		valor_total:     +d.valor_total_por_porte,
+// 		valor_medio:     +d.valor_medio_por_porte,
+// 		valor_mediano:   +d.valor_mediano_por_porte,
+// 		quantidade:      +d.quantidade_contemplados_por_porte,
+// 		perc_valor:      +d.percentual_valor_por_porte * 100,
+// 		perc_quantidade: +d.percentual_quantidade_contemplados_por_porte * 100,
+// 	}))
+// 	.sort((a, b) => b.valor_mediano - a.valor_mediano);

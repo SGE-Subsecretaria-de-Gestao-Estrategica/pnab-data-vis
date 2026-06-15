@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart, colorScales } from 'sniic-design-system';
+  import { HorizontalStackedBarChart, categorical8 } from 'sniic-design-system';
   // @ts-ignore
   import {
     tipoExecRegiaoData,
@@ -40,7 +40,7 @@ Participação percentual do valor estimado por tipo de execução (**Ação Cul
         data={tipoExecRegiaoData}
         keys={[...tipoExecRegiaoKeys]}
         labels={tipoExecRegiaoLabels}
-        colors={[colorScales.blue[2], colorScales.teal[2], colorScales.orange[2]]}
+        colors={categorical8.slice(0, 3)}
         format={formatPct}
         showTotalLabel={false}
       />

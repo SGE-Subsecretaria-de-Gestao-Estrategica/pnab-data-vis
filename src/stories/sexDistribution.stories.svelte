@@ -12,8 +12,8 @@
     (v * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
   const pictogramData = [
-    { label: 'Masculino', value: 8, color: colorScales.lime[2] },
-    { label: 'Feminino', value: 7, color: colorScales.orange[2] },
+    { label: 'Masculino', value: 8, color: colorScales.teal[2] },
+    { label: 'Feminino', value: 7, color: colorScales.yellow[2] },
   ];
 
   const { Story } = defineMeta({

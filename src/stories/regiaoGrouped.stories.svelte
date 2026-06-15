@@ -2,11 +2,12 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
+  import { colorPairs } from 'sniic-design-system';
   // @ts-ignore
   import { regiaoGroupedData } from '$lib/data/section2';
 
   const seriesLabels = ['% agentes contemplados', '% população'];
-  const colors = ['#c0504d', '#4472c4'];
+  const colors = [colorPairs.purpleYellow[0], colorPairs.purpleYellow[1]];
 
   // @ts-ignore
   const formatPct = (v) =>
@@ -38,8 +39,9 @@ O Nordeste concentra **47,6%** dos contemplados, bem acima de sua participação
       colors={colors}
       format={formatPct}
       margin={{ top: 30, right: 90, bottom: 60, left: 140 }}
-      barHeight={18}
-      barPad={5}
+      barHeight={22}
+      barPad={6}
+      rx={0}
       legendBottom={true}
     />
   {/snippet}

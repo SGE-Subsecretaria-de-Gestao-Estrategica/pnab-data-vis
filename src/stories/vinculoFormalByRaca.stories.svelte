@@ -1,12 +1,12 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalBarChart, categorical8 } from 'sniic-design-system';
+  import { HorizontalBarChart, categorical8, colorScales } from 'sniic-design-system';
   // @ts-ignore
   import { hierarchy, treemap as d3treemap } from 'd3-hierarchy';
   import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
   // @ts-ignore
-  import { racaCorGroupedData, racaCorTreemapData, racaCorTreemapValorData } from '$lib/data/section4';
+  import { racaCorGroupedData, racaCorComparisonGroupedData, racaCorTreemapData, racaCorTreemapValorData } from '$lib/data/section4';
 
   // @ts-ignore
   const formatN = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
@@ -73,15 +73,33 @@ O treemap torna visível a concentração: Parda e Branca juntas ocupam mais de 
   });
 </script>
 
-<Story name="Barras — Beneficiários com vínculo formal por raça/cor">
+<Story name="Barras — Beneficiarios com vinculo formal por raca/cor">
   {#snippet template()}
     <HorizontalGroupedBarChart
       data={racaCorGroupedData}
       seriesLabels={['PNAB', 'Total Trabalhadores Formais']}
-      colors={[categorical8[0], '#cb4034']}
+      colors={[colorScales.lime[2], colorScales.red[2]]}
       format={formatN}
       xLabel="% do total de trabalhadores formais"
       margin={{ top: 20, right: 60, bottom: 40, left: 120 }}
+    />
+  {/snippet}
+</Story>
+
+<Story name="Grafico 26 — Raca/cor PNAB vs RAIS">
+  {#snippet template()}
+    <HorizontalGroupedBarChart
+      data={racaCorComparisonGroupedData}
+      seriesLabels={['Contemplados PNAB', 'Vínculos RAIS 2024']}
+      colors={[categorical8[0], '#cb4034']}
+      format={formatN}
+      xLabel="% do total"
+      margin={{ top: 20, right: 80, bottom: 40, left: 120 }}
+      barHeight={20}
+      rx={0}
+      crispEdges
+      labelsInside
+      legendBottom={true}
     />
   {/snippet}
 </Story>

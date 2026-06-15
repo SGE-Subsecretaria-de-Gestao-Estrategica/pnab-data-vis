@@ -5,8 +5,9 @@ import csvGrafico2Raw from '../../../data/section_6/capitulo_6_grafico_2.csv?raw
 import csvGrafico3Raw from '../../../data/section_6/capitulo_6_grafico_3.csv?raw';
 import csvGrafico4Raw from '../../../data/section_6/capitulo_6_grafico_4.csv?raw';
 import csvGrafico5Raw from '../../../data/section_6/capitulo_6_grafico_5.csv?raw';
-import csvPncvOuOutrosRaw from '../../../data/section_6/capitulo_6_grafico_pncv_ou_outros__2026-06-03_17-52.csv?raw';
-import csvTipoExecRegiaoRaw from '../../../data/section_6/capitulo_6_grafico_tipo_exec_regiao__2026-06-03_18-36.csv?raw';
+import csvGrafico6Raw from '../../../data/section_6/capitulo_6_grafico_6.csv?raw';
+import csvPncvOuOutrosRaw from '../../../data/section_6/capitulo_6_grafico_pncv_ou_outros.csv?raw';
+import csvTipoExecRegiaoRaw from '../../../data/section_6/capitulo_6_grafico_tipo_exec_regiao.csv?raw';
 
 import type { MekkoDatum, TreemapNode } from 'sniic-design-system';
 
@@ -146,12 +147,14 @@ export const expensesLegendItems = g1Data.map((r) => ({
 }));
 
 // ── Grafico 2 — Subcategorias de Fomento Cultural ──────────────────────────────
+const parseBRL = (s: string) => parseFloat(s.replace(/R\$\s*/g, '').replace(/,/g, '').trim());
+
 const fomentoSubRaw = parseCSV(csvGrafico2Raw).map((r) => ({
 	label: r['Categorização Nivel 0'],
-	valor: +r.valor_estimado,
-	p025:  +r.p025,
-	p975:  +r.p975,
-	valorFormatted: formatBRL(+r.valor_estimado),
+	valor: parseBRL(r.valor_estimado),
+	p025:  parseBRL(r.p025),
+	p975:  parseBRL(r.p975),
+	valorFormatted: formatBRL(parseBRL(r.valor_estimado)),
 }));
 const fomentoSubTotal = fomentoSubRaw.reduce((s, r) => s + r.valor, 0);
 export const fomentoSubData = fomentoSubRaw.map((r) => ({
@@ -178,10 +181,10 @@ export const fomentoDomainsRows = g3Rows;
 // ── Grafico 4 — Subcategorias de PNCV ─────────────────────────────────────────
 const pncvSubRaw = parseCSV(csvGrafico4Raw).map((r) => ({
 	label: r['Categorização Nivel 0'],
-	valor: +r.valor_estimado,
-	p025:  +r.p025,
-	p975:  +r.p975,
-	valorFormatted: formatBRL(+r.valor_estimado),
+	valor: parseBRL(r.valor_estimado),
+	p025:  parseBRL(r.p025),
+	p975:  parseBRL(r.p975),
+	valorFormatted: formatBRL(parseBRL(r.valor_estimado)),
 }));
 const pncvSubTotal = pncvSubRaw.reduce((s, r) => s + r.valor, 0);
 export const pncvSubData = pncvSubRaw.map((r) => ({
@@ -278,9 +281,9 @@ export const tipoExecRegiaoLabels: Record<string, string> = {
 const g5Rows = parseCSV(csvGrafico5Raw).map((r) => ({
 	modalidade: r['Categorização Nivel 0'],
 	tipo_doc:   r.tipo_documento,
-	valor:      +r.valor_estimado,
-	p025:       +r.p025,
-	p975:       +r.p975,
+	valor:      parseBRL(r.valor_estimado),
+	p025:       parseBRL(r.p025),
+	p975:       parseBRL(r.p975),
 }));
 
 const _pncvModalMap = new Map<string, { cnpj: number; cpf: number }>();
@@ -313,24 +316,31 @@ export const pncvNatJuridicaLabels: Record<string, string> = {
 	cpf_pct:  'CPF',
 };
 
+// ── Grafico 6 — Subcategorias de Obras e Operacionalização ────────────────────
+const g6Rows = parseCSV(csvGrafico6Raw).map((r) => ({
+	nivel0: r.nivel_0.trim(),
+	label:  r.nivel_2.trim(),
+	valor:  parseBRL(r.valor_estimado),
+	p025:   parseBRL(r.p025),
+	p975:   parseBRL(r.p975),
+	pct:    parseFloat(r.valor_estimado_pct),
+}));
+
 // ── Tabela — Modalidade de Obras, Reformas e Aquisição de Bens Culturais ─────
-export const modalidadeObrasData = [
-	{ label: 'Consultoria',                           valor: 14089896.00, p025: 12689237.22, p975: 15731644.51, pct: 35.5 },
-	{ label: 'Pareceristas',                          valor: 13673416.57, p025: 11147936.43, p975: 17240908.35, pct: 34.5 },
-	{ label: 'Apoio Adm',                             valor:  6440659.26, p025:  5151209.64, p975:  7870559.32, pct: 16.2 },
-	{ label: 'Outros',                                valor:  3018799.11, p025:  2030031.50, p975:  4098874.10, pct:  7.6 },
-	{ label: 'Serviços Digitais',                     valor:  1589217.64, p025:   722661.85, p975:  2901198.19, pct:  4.0 },
-	{ label: 'Fortalecimento de Sistemas de Cultura', valor:   454435.37, p025:   228588.33, p975:   716566.30, pct:  1.1 },
-	{ label: 'Comissão',                              valor:   404230.58, p025:   227817.01, p975:   625183.97, pct:  1.0 },
-];
+export const modalidadeObrasData = g6Rows
+	.filter((r) => r.nivel0 === 'Obras, Reformas e Aquisição de Bens Culturais');
 
 // ── Tabela — Subcategorias de Operacionalização da Política ───────────────────
-export const operacionalizacaoSubData = [
-	{ label: 'Consultoria',                            valor: 14089896.00, p025: 12689237.22, p975: 15731644.51, pct: 35.5 },
-	{ label: 'Pareceristas',                           valor: 13673416.57, p025: 11147936.43, p975: 17240908.35, pct: 34.5 },
-	{ label: 'Apoio Adm',                              valor:  6440659.26, p025:  5151209.64, p975:  7870559.32, pct: 16.2 },
-	{ label: 'Outros',                                 valor:  3018799.11, p025:  2030031.50, p975:  4098874.10, pct:  7.6 },
-	{ label: 'Serviços Digitais',                      valor:  1589217.64, p025:   722661.85, p975:  2901198.19, pct:  4.0 },
-	{ label: 'Fortalecimento de Sistemas de Cultura',  valor:   454435.37, p025:   228588.33, p975:   716566.30, pct:  1.1 },
-	{ label: 'Comissão',                               valor:   404230.58, p025:   227817.01, p975:   625183.97, pct:  1.0 },
-];
+const opRaw = g6Rows
+	.filter((r) => r.nivel0 === 'Operacionalização da Política');
+
+// Merge "Comissão" into "Outros"
+const outrosRow = opRaw.find((r) => r.label === 'Outros');
+const comissaoRow = opRaw.find((r) => r.label === 'Comissão');
+if (outrosRow && comissaoRow) {
+	outrosRow.valor += comissaoRow.valor;
+	outrosRow.p025  += comissaoRow.p025;
+	outrosRow.p975  += comissaoRow.p975;
+	outrosRow.pct   += comissaoRow.pct;
+}
+export const operacionalizacaoSubData = opRaw.filter((r) => r.label !== 'Comissão');

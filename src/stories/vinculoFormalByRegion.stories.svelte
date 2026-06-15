@@ -2,11 +2,14 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import { HorizontalStackedBarChart, RegionSilhouetteChart, colorScales, categorical8 } from 'sniic-design-system';
+  import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
   // @ts-ignore
-  import { regionStackedData, regionSilhouetteData, ageGroupKeys, ageGroupLabels } from '$lib/data/section4';
+  import { regionStackedData, regionSilhouetteData, regionComparisonGroupedData, ageGroupKeys, ageGroupLabels } from '$lib/data/section4';
 
   // @ts-ignore
   const formatPct = (v) => `${v.toFixed(1)}%`;
+  // @ts-ignore
+  const formatPctN = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
   // @ts-ignore
   const formatN = (v) => v.toLocaleString('pt-BR');
 
@@ -36,14 +39,14 @@ Em números absolutos, o Nordeste também lidera em beneficiários com vínculo 
       data={regionStackedData}
       keys={[...ageGroupKeys]}
       labels={ageGroupLabels}
-      colors={[colorScales.red[2], colorScales.blue[2]]}
+      colors={[colorScales.red[2], colorScales.lime[2]]}
       format={formatPct}
       showTotalLabel={false}
     />
   {/snippet}
 </Story>
 
-<Story name="Silhueta — Beneficiários com vínculo formal por região">
+<Story name="Silhueta — Beneficiarios com vinculo formal por regiao">
   {#snippet template()}
     <RegionSilhouetteChart
       data={regionSilhouetteData}
@@ -51,6 +54,25 @@ Em números absolutos, o Nordeste também lidera em beneficiários com vínculo 
       colors={categorical8}
       format={formatN}
       showLabels={true}
+    />
+  {/snippet}
+</Story>
+
+<Story name="Grafico 23 — Distribuicao por regiao PNAB vs RAIS">
+  {#snippet template()}
+    <HorizontalGroupedBarChart
+      data={regionComparisonGroupedData}
+      seriesLabels={['Contemplados PNAB', 'Vínculos RAIS 2024']}
+      colors={[categorical8[0], '#cb4034']}
+      format={formatPctN}
+      xLabel="% do total"
+      margin={{ top: 20, right: 80, bottom: 40, left: 120 }}
+      barHeight={20}
+      groupPad={24}
+      rx={0}
+      crispEdges
+      labelsInside
+      legendBottom={true}
     />
   {/snippet}
 </Story>

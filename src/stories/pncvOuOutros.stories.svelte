@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { colorScales } from 'sniic-design-system';
+  import { colorPairs } from 'sniic-design-system';
   import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
   // @ts-ignore
   import {
@@ -44,10 +44,11 @@ Compara a participação percentual do valor estimado entre a **Política Nacion
       data={pncvOuOutrosData}
       keys={[...pncvOuOutrosKeys]}
       labels={pncvOuOutrosLabels}
-      colors={[colorScales.teal[2], colorScales.blue[2]]}
+      colors={colorPairs.bluePurple}
       format={formatPct}
       showTotalLabel={false}
       marginLeft={220}
+      legendAlign="left"
     />
   {/snippet}
 </Story>
@@ -58,10 +59,11 @@ Compara a participação percentual do valor estimado entre a **Política Nacion
       data={pncvOuOutrosData}
       keys={[...pncvOuOutrosKeys]}
       labels={pncvOuOutrosLabels}
-      colors={[colorScales.orange[2], colorScales.blue[2]]}
+      colors={colorPairs.bluePurple}
       format={formatPct}
       showTotalLabel={false}
       marginLeft={220}
+      legendAlign="left"
     />
   {/snippet}
 </Story>

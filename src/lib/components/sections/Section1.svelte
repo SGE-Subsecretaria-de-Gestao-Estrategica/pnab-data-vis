@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ScrollSection from '$lib/components/ScrollSection.svelte';
 	import ExecutedValueByStateMap from '$lib/components/ExecutedValueByStateMap.svelte';
+	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
 	import {
 		BigNumber,
 		HorizontalStackedBarChart,
@@ -36,6 +37,7 @@
 		percRuralValor,
 		specialTerritoryCount,
 		specialTerritoryValue,
+		specialExecByUfData,
 	} from '$lib/data/section1';
 
 	// ── Flags via import.meta.glob ──────────────────────────────────────────────
@@ -270,13 +272,14 @@
 		Quando analisamos a participação dos municípios na execução do valor total executado na Política Nacional Aldir Blanc, incluindo os entes estaduais, percebemos que a participação dos municípios de Grande Porte representa <strong>25%</strong> do valor total executado. O gráfico a seguir apresenta essa distribuição.
 	</p>
 	<div style="padding-left: 100px; margin-top: 1.5rem;">
-		<HorizontalStackedBarChart
+		<HorizontalStackedBarChartCustom
 			data={porteStackedData}
 			keys={porteStackedKeys}
 			labels={porteStackedLabels}
 			colors={categorical8}
 			format={formatPercFix}
 			showTotalLabel={true}
+			legendAlign="left"
 		/>
 	</div>
 	<p style="margin-top: 1.5rem;">
@@ -509,6 +512,20 @@
 			showTotalLabel={true}
 		/>
 	</div>
+
+	<h4 style="margin-top: 2.5rem;">Valor executado em territórios especiais por UF</h4>
+	<p>
+		O gráfico a seguir apresenta a distribuição do valor executado em territórios especiais por Unidade Federativa, distinguindo a participação dos governos estaduais e municipais.
+	</p>
+	<HorizontalStackedBarChart
+		data={specialExecByUfData}
+		keys={['valor_executado_estado', 'valor_executado_municipio']}
+		categoryKey="label"
+		labels={{ valor_executado_estado: 'Governo Estadual', valor_executado_municipio: 'Governo Municipal' }}
+		colors={[colorScales.blue[2], colorScales.red[2]]}
+		format={(v: number) => `R$ ${(v / 1e6).toFixed(1)}M`}
+		showTotalLabel={true}
+	/>
 </ScrollSection>
 
 <style>

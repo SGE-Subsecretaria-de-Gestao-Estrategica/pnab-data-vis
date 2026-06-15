@@ -47,6 +47,8 @@
 	const domainColorMap = new Map(
 		fomentoDomainsRows.map((r, i) => [r.name, categorical8[i % categorical8.length] as string]),
 	);
+	
+	let containerWidth = $state(0);
 
 	const treemapW = $derived((containerWidth - 32) || 728);
 
@@ -83,7 +85,6 @@
 	const CHART_W = $derived(containerWidth || 760);
 
 	let wrapperEl: HTMLDivElement | undefined = $state();
-	let containerWidth = $state(0);
 
 	$effect(() => {
 		if (!wrapperEl) return;
@@ -213,50 +214,54 @@
 	<h3>Operacionalização da Política — Subcategorias</h3>
 	<p class="chart-caption">Valor estimado por subcategoria de despesa de Operacionalização da Política, com intervalo de confiança de 95%.</p>
 
-	<table class="data-table">
-		<thead>
-			<tr>
-				<th class="dt-label-col">Subcategoria</th>
-				<th class="dt-num-col">Valor estimado</th>
-				<th class="dt-num-col">IC 95%</th>
-				<th class="dt-num-col">% do total</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each operacionalizacaoSubData as row}
-				<tr>
-					<td class="dt-label-cell">{row.label}</td>
-					<td class="dt-num-cell">{formatBRL(row.valor)}</td>
-					<td class="dt-num-cell dt-ci">{formatBRL(row.p025)} – {formatBRL(row.p975)}</td>
-					<td class="dt-num-cell dt-pct" style="color:{colorScales.teal[2]}">{row.pct.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</td>
-				</tr>
-			{/each}
-		</tbody>
-	</table>
+	{@const opRowH = 36}
+	{@const opHeaderH = 32}
+	{@const opSvgH = opHeaderH + operacionalizacaoSubData.length * opRowH + 4}
+	<svg class="data-table-svg" width={CHART_W} height={opSvgH} font-family="'Space Grotesk', system-ui, sans-serif" font-size="12">
+		<!-- header -->
+		<text x={4} y={20} fill="var(--chart-fg-muted, #666)" font-size="11" font-weight="600">Subcategoria</text>
+		<text x={CHART_W - 260} y={20} text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="11" font-weight="600">Valor estimado</text>
+		<text x={CHART_W - 100} y={20} text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="11" font-weight="600">IC 95%</text>
+		<text x={CHART_W - 4} y={20} text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="11" font-weight="600">% do total</text>
+		<line x1={0} y1={opHeaderH - 2} x2={CHART_W} y2={opHeaderH - 2} stroke="var(--chart-fg-muted, #cbd5e1)" stroke-width="2" />
+
+		{#each operacionalizacaoSubData as row, i}
+			{@const ry = opHeaderH + i * opRowH + 22}
+			{#if i > 0}
+				<line x1={0} y1={ry - 16} x2={CHART_W} y2={ry - 16} stroke="var(--chart-fg-muted, #e2e8f0)" />
+			{/if}
+			<text x={4} y={ry} fill="var(--chart-fg, #1a1a1a)" font-size="12">{row.label}</text>
+			<text x={CHART_W - 260} y={ry} text-anchor="end" fill="var(--chart-fg-strong, #111)" font-weight="600">{formatBRL(row.valor)}</text>
+			<text x={CHART_W - 100} y={ry} text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="11">{formatBRL(row.p025)} – {formatBRL(row.p975)}</text>
+			<text x={CHART_W - 4} y={ry} text-anchor="end" fill={colorScales.teal[2]} font-weight="700">{row.pct.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</text>
+		{/each}
+	</svg>
 
 	<h3>Obras, Reformas e Aquisição de Bens Culturais — Por Modalidade</h3>
 	<p class="chart-caption">Valor estimado por modalidade de Obras, Reformas e Aquisição de Bens Culturais, com intervalo de confiança de 95%.</p>
 
-	<table class="data-table">
-		<thead>
-			<tr>
-				<th class="dt-label-col">Modalidade</th>
-				<th class="dt-num-col">Valor Estimado</th>
-				<th class="dt-num-col">% Estimado</th>
-				<th class="dt-num-col">Intervalo de Confiança</th>
-			</tr>
-		</thead>
-		<tbody>
-			{#each modalidadeObrasData as row}
-				<tr>
-					<td class="dt-label-cell">{row.label}</td>
-					<td class="dt-num-cell">{formatBRL(row.valor)}</td>
-					<td class="dt-num-cell dt-pct" style="color:{colorScales.teal[2]}">{row.pct.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</td>
-					<td class="dt-num-cell dt-ci">IC95% {formatBRL(row.p025)} – {formatBRL(row.p975)}</td>
-				</tr>
-			{/each}
-		</tbody>
-	</table>
+	{@const obRowH = 36}
+	{@const obHeaderH = 32}
+	{@const obSvgH = obHeaderH + modalidadeObrasData.length * obRowH + 4}
+	<svg class="data-table-svg" width={CHART_W} height={obSvgH} font-family="'Space Grotesk', system-ui, sans-serif" font-size="12">
+		<!-- header -->
+		<text x={4} y={20} fill="var(--chart-fg-muted, #666)" font-size="11" font-weight="600">Modalidade</text>
+		<text x={CHART_W - 400} y={20} text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="11" font-weight="600">Valor Estimado</text>
+		<text x={CHART_W - 260} y={20} text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="11" font-weight="600">% Estimado</text>
+		<text x={CHART_W - 4} y={20} text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="11" font-weight="600">Intervalo de Confiança</text>
+		<line x1={0} y1={obHeaderH - 2} x2={CHART_W} y2={obHeaderH - 2} stroke="var(--chart-fg-muted, #cbd5e1)" stroke-width="2" />
+
+		{#each modalidadeObrasData as row, i}
+			{@const ry = obHeaderH + i * obRowH + 22}
+			{#if i > 0}
+				<line x1={0} y1={ry - 16} x2={CHART_W} y2={ry - 16} stroke="var(--chart-fg-muted, #e2e8f0)" />
+			{/if}
+			<text x={4} y={ry} fill="var(--chart-fg, #1a1a1a)" font-size="12">{row.label}</text>
+			<text x={CHART_W - 400} y={ry} text-anchor="end" fill="var(--chart-fg-strong, #111)" font-weight="600">{formatBRL(row.valor)}</text>
+			<text x={CHART_W - 260} y={ry} text-anchor="end" fill={colorScales.teal[2]} font-weight="700">{row.pct.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</text>
+			<text x={CHART_W - 4} y={ry} text-anchor="end" fill="var(--chart-fg-muted, #666)" font-size="11">IC95% {formatBRL(row.p025)} – {formatBRL(row.p975)}</text>
+		{/each}
+	</svg>
 
 	<h3>PNCV vs. Outros — Participação por faixa de repasse</h3>
 	<p class="chart-caption">Participação percentual do valor estimado entre PNCV e demais despesas, por faixa de repasse municipal.</p>
@@ -403,50 +408,9 @@
 		display: block;
 	}
 
-.data-table {
-		width: 100%;
-		border-collapse: collapse;
+	.data-table-svg {
+		display: block;
 		margin: 0 0 1.5rem;
-		font-family: 'Space Grotesk', system-ui, sans-serif;
-		font-size: 0.8rem;
-	}
-
-	.data-table thead tr {
-		border-bottom: 2px solid var(--chart-fg-muted, #cbd5e1);
-	}
-
-	.data-table th {
-		padding: 0.4rem 0.75rem 0.4rem 0;
-		text-align: left;
-		font-weight: 600;
-		font-size: 0.75rem;
-		color: var(--chart-fg-muted, #666);
-		white-space: nowrap;
-	}
-
-	.data-table th.dt-num-col {
-		text-align: right;
-	}
-
-	.data-table tbody tr + tr td {
-		border-top: 1px solid var(--chart-fg-muted, #e2e8f0);
-	}
-
-	.dt-label-cell {
-		padding: 0.45rem 0.75rem 0.45rem 0;
-	}
-
-	.dt-num-cell {
-		padding: 0.45rem 0 0.45rem 1rem;
-		text-align: right;
-		white-space: nowrap;
-		font-weight: 600;
-	}
-
-	.dt-ci {
-		font-weight: 400;
-		color: var(--chart-fg-muted, #666);
-		font-size: 0.75rem;
 	}
 
 </style>

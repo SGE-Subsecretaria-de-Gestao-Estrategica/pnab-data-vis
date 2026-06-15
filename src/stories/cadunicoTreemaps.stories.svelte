@@ -38,7 +38,7 @@
       data={domicilioTreemapData}
       height={260}
       format={formatNum}
-      colors={[colorScales.blue[2], colorScales.teal[2]]}
+      colors={[colorScales.orange[2], colorScales.teal[2]]}
     />
   {/snippet}
 </Story>

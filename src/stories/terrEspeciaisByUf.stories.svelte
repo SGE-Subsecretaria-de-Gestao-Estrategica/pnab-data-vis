@@ -1,11 +1,11 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart } from 'sniic-design-system';
+  import { HorizontalStackedBarChart, colorPairs } from 'sniic-design-system';
 
-  const COLORS = ['#F5C842', '#2B6CB0'];
+  const COLORS = [colorPairs.blueOrange[0], colorPairs.blueOrange[1]];
   // @ts-ignore
-  import { terrEspeciaisData, TERR_KEYS, TERR_LABELS } from '$lib/data/section2';
+  // import { terrEspeciaisData, TERR_KEYS, TERR_LABELS } from '$lib/data/section2'; // CSV faltante: territorios_especiais_por_municipio.csv
 
   // @ts-ignore
   const formatBRL = (v) =>
@@ -31,6 +31,7 @@ Cada barra representa um estado, mostrando o valor total (R$) destinado a agente
   });
 </script>
 
+<!-- DISABLED: territorios_especiais_por_municipio.csv faltante
 <Story name="HorizontalStackedBarChart — valor em territórios especiais por UF e esfera">
   {#snippet template()}
     <HorizontalStackedBarChart
@@ -44,3 +45,4 @@ Cada barra representa um estado, mostrando o valor total (R$) destinado a agente
     />
   {/snippet}
 </Story>
+-->

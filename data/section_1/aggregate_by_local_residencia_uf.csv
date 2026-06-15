@@ -1,4 +1,4 @@
-,local_residencia_contemplados,numero_municipios,quantidade_contemplados,valor_total,percentual_quantidade,percentual_valor,visao,tipo_documento_filtro
-0,Interior,4400,97026,966747807.25,0.5813908895893005,0.33968703580972476,uf,Todos
-1,Regiao Metropolitana,3212,47311,853237122.3,0.2834929233129202,0.2998026856056328,uf,Todos
-2,Capital,2807,22549,1026010664.44,0.1351161870977793,0.3605102785846426,uf,Todos
+,local_residencia_contemplados,numero_municipios,quantidade_contemplados,valor_total,populacao,percentual_quantidade,percentual_valor,perc_populacao,visao,tipo_documento_filtro
+0,Interior,4403,97051,967032223.05,398188383.0,0.5783144735038762,0.3364248492568511,0.339375456655272,uf,Todos
+1,Regiao Metropolitana,3214,47723,866324618.33,387692891.0,0.2843752420791696,0.30138926313120373,0.330430162060071,uf,Todos
+2,Capital,2809,23043,1041080719.3,387416250.0,0.13731028441695417,0.36218588761194503,0.330194381284657,uf,Todos

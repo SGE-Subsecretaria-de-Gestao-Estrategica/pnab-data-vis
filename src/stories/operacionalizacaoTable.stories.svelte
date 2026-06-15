@@ -14,6 +14,12 @@
       maximumFractionDigits: 1,
     }).format(v);
 
+  const W = 760;
+  const ROW_H = 36;
+  const HEADER_H = 32;
+  const SVG_H = HEADER_H + operacionalizacaoSubData.length * ROW_H + 4;
+  const FONT = "'Space Grotesk', system-ui, sans-serif";
+
   const { Story } = defineMeta({
     title: 'Section 6/operacionalizacaoTable',
     component: {},
@@ -34,27 +40,24 @@ Valor estimado por categoria de despesa de Operacionalização da Política, com
 
 <Story name="Operacionalização da Política — Categorias">
   {#snippet template()}
-    <div style="font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 13px; max-width: 760px; padding: 16px;">
-      <table style="width: 100%; border-collapse: collapse;">
-        <thead>
-          <tr style="border-bottom: 2px solid #cbd5e1;">
-            <th style="padding: 6px 12px 6px 0; text-align: left; font-size: 11px; color: #666; white-space: nowrap; font-weight: 600;">Categoria</th>
-            <th style="padding: 6px 0 6px 16px; text-align: right; font-size: 11px; color: #666; white-space: nowrap; font-weight: 600;">Valor estimado</th>
-            <th style="padding: 6px 0 6px 16px; text-align: right; font-size: 11px; color: #666; white-space: nowrap; font-weight: 600;">IC 95%</th>
-            <th style="padding: 6px 0 6px 16px; text-align: right; font-size: 11px; color: #666; white-space: nowrap; font-weight: 600;">% do total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each operacionalizacaoSubData as row, i}
-            <tr style={i > 0 ? 'border-top: 1px solid #e2e8f0;' : ''}>
-              <td style="padding: 7px 12px 7px 0;">{row.label}</td>
-              <td style="padding: 7px 0 7px 16px; text-align: right; font-weight: 600; white-space: nowrap;">{formatBRL(row.valor)}</td>
-              <td style="padding: 7px 0 7px 16px; text-align: right; white-space: nowrap; color: #666; font-size: 11px;">{formatBRL(row.p025)} – {formatBRL(row.p975)}</td>
-              <td style="padding: 7px 0 7px 16px; text-align: right; font-weight: 600; white-space: nowrap; color: {colorScales.teal[2]};">{row.pct.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</td>
-            </tr>
-          {/each}
-        </tbody>
-      </table>
-    </div>
+    <svg width={W} height={SVG_H} font-family={FONT} font-size="12" style="display:block">
+      <!-- header -->
+      <text x={4} y={20} fill="#666" font-size="11" font-weight="600">Subcategoria</text>
+      <text x={W - 260} y={20} text-anchor="end" fill="#666" font-size="11" font-weight="600">Valor estimado</text>
+      <text x={W - 100} y={20} text-anchor="end" fill="#666" font-size="11" font-weight="600">IC 95%</text>
+      <text x={W - 4} y={20} text-anchor="end" fill="#666" font-size="11" font-weight="600">% do total</text>
+      <line x1={0} y1={HEADER_H - 2} x2={W} y2={HEADER_H - 2} stroke="#cbd5e1" stroke-width="2" />
+
+      {#each operacionalizacaoSubData as row, i}
+        {@const ry = HEADER_H + i * ROW_H + 22}
+        {#if i > 0}
+          <line x1={0} y1={ry - 16} x2={W} y2={ry - 16} stroke="#e2e8f0" />
+        {/if}
+        <text x={4} y={ry} fill="#1a1a1a" font-size="12">{row.label}</text>
+        <text x={W - 260} y={ry} text-anchor="end" fill="#111" font-weight="600">{formatBRL(row.valor)}</text>
+        <text x={W - 100} y={ry} text-anchor="end" fill="#666" font-size="11">{formatBRL(row.p025)} – {formatBRL(row.p975)}</text>
+        <text x={W - 4} y={ry} text-anchor="end" fill={colorScales.teal[2]} font-weight="700">{row.pct.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</text>
+      {/each}
+    </svg>
   {/snippet}
 </Story>

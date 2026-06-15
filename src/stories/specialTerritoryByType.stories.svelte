@@ -33,7 +33,7 @@ Dos recursos que chegaram a territórios especiais, as **favelas e comunidades u
   {#snippet template()}
     <HorizontalBarChart
       data={specialTerritoryBarData}
-      color={colorScales.teal[2]}
+      color={colorScales.purple[2]}
       format={formatBRL}
       xLabel="Valor total (R$)"
       margin={{ top: 20, right: 80, bottom: 40, left: 280 }}
@@ -45,7 +45,7 @@ Dos recursos que chegaram a territórios especiais, as **favelas e comunidades u
   {#snippet template()}
     <HorizontalBarChart
       data={specialTerritoryBarData}
-      color={colorScales.blue[2]}
+      color={colorScales.purple[2]}
       format={formatBRL}
       xLabel="Valor total (R$)"
       margin={{ top: 20, right: 80, bottom: 40, left: 280 }}

@@ -1,9 +1,12 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { categorical8, colorScales } from 'sniic-design-system';
   import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
   import { capitalInteriorByUfData } from '$lib/data/section1';
+
+  const colorCapital = '#4271b5';       // azul
+  const colorMetropolitana = '#ea662f'; // laranja
+  const colorInterior = '#317a68';      // verde
 
   // @ts-ignore
   const formatPct = (v) => `${v.toFixed(1)}%`;
@@ -39,7 +42,7 @@ Estados ordenados pelo maior percentual de contemplados no interior. Destaque pa
       data={capitalInteriorByUfData}
       keys={['interior', 'metropolitana', 'capital']}
       labels={{ interior: 'Interior', metropolitana: 'Região Metropolitana', capital: 'Capital' }}
-      colors={[colorScales.blue[2], colorScales.teal[2], colorScales.orange[2]]}
+      colors={[colorInterior, colorMetropolitana, colorCapital]}
       format={formatPct}
       showTotalLabel={false}
       marginLeft={50}
@@ -54,7 +57,7 @@ Estados ordenados pelo maior percentual de contemplados no interior. Destaque pa
       data={capitalInteriorByUfData}
       keys={['capital', 'metropolitana', 'interior']}
       labels={{ capital: 'Capital', metropolitana: 'Região Metropolitana', interior: 'Interior' }}
-      colors={[categorical8[1], categorical8[3], categorical8[0]]}
+      colors={[colorCapital, colorMetropolitana, colorInterior]}
       format={formatPct}
       showTotalLabel={false}
       marginLeft={50}

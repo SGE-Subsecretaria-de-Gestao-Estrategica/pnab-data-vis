@@ -39,7 +39,7 @@ O "flip" evidencia a inversão: no eixo de **beneficiários**, o CPF domina com 
       rightLabel="CNPJ — % do valor"
       referenceValue={50}
       referenceLabel="Equidade"
-      colors={colorPairs.blueOrange}
+      colors={colorPairs.purpleYellow}
       marginLeft={220}
     />
   {/snippet}
@@ -51,7 +51,7 @@ O "flip" evidencia a inversão: no eixo de **beneficiários**, o CPF domina com 
       data={benefVsValorData}
       keys={['cpf', 'cnpj']}
       labels={{ cpf: 'CPF', cnpj: 'CNPJ' }}
-      colors={colorPairs.blueOrange}
+      colors={colorPairs.purpleYellow}
       format={formatPct}
       showTotalLabel={false}
     />

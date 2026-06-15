@@ -37,7 +37,7 @@ Um detalhe relevante: nas faixas de **55 a 64 anos** e **65 anos ou mais**, as m
       data={pyramidData}
       leftLabel="Masculino"
       rightLabel="Feminino"
-      colors={colorPairs.bluePurple}
+      colors={colorPairs.tealYellow}
       format={formatNum}
       height={400}
       centerGap={96}

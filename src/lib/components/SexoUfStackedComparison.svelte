@@ -160,8 +160,10 @@
 			{#each legendRows as row, ri}
 				{@const rowY = LEGEND_Y + ri * (LEGEND_BLOCK_H + LEGEND_ROW_GAP)}
 				{@const widths = legendRowWidths[ri]}
+				{@const rowTotalW = widths.reduce((s, w) => s + w, 0)}
+				{@const rowStartX = (containerWidth - rowTotalW) / 2}
 				{#each row as item, ci}
-					{@const bx = margin.left + widths.slice(0, ci).reduce((s, w) => s + w, 0)}
+					{@const bx = rowStartX + widths.slice(0, ci).reduce((s, w) => s + w, 0)}
 					{@const w = widths[ci]}
 					<rect x={bx} y={rowY} width={w} height={LEGEND_BLOCK_H} fill={item.color} opacity={item.opacity} shape-rendering="crispEdges" />
 					<text x={bx + LEGEND_PAD_X} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" font-size="12" font-weight="600" fill={textColor(item.color, item.opacity)}>{item.label}</text>
@@ -169,8 +171,7 @@
 						<line x1={bx + w} y1={rowY} x2={bx + w} y2={rowY + LEGEND_BLOCK_H} stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" />
 					{/if}
 				{/each}
-				{@const rowTotalW = widths.reduce((s, w) => s + w, 0)}
-				<rect fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" x={margin.left} y={rowY} width={rowTotalW} height={LEGEND_BLOCK_H} />
+				<rect fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" x={rowStartX} y={rowY} width={rowTotalW} height={LEGEND_BLOCK_H} />
 			{/each}
 
 		</svg>

@@ -1,7 +1,7 @@
 <script module>
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import { BigNumber } from 'sniic-design-system';
-  import { percExecEstados, percExecMunicipios } from '$lib/data/section1';
+  // import { percExecEstados, percExecMunicipios } from '$lib/data/section1'; // CSV faltante: bignumber1.csv
 
   const { Story } = defineMeta({
     title: 'Section 1/executedValueTotals',
@@ -52,6 +52,7 @@ Este painel apresenta os grandes números que abrem a narrativa: quanto foi, de 
   }}
 />
 
+<!-- DISABLED: bignumber1.csv faltante
 <Story
   name="Estados - % Executado"
   args={{
@@ -69,3 +70,4 @@ Este painel apresenta os grandes números que abrem a narrativa: quanto foi, de 
     fontSize: 96,
   }}
 />
+-->

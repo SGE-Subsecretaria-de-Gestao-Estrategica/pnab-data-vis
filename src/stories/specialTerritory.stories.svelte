@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { BigNumber, DivergingBarChart, HorizontalStackedBarChart, colorPairs, colorScales } from 'sniic-design-system';
+  import { BigNumber, DivergingBarChart, HorizontalStackedBarChart, colorPairs } from 'sniic-design-system';
   import {
     specialData,
     percRecursoEspecial,
@@ -93,7 +93,7 @@ O gráfico divergente mostra essa assimetria de forma direta: em todos os territ
           rightLabel="% do total de recursos"
           referenceValue={50}
           referenceLabel="Equidade"
-          colors={colorPairs.blueTeal}
+          colors={colorPairs.blueOrange}
         />
       </div>
     </div>
@@ -127,7 +127,7 @@ O gráfico divergente mostra essa assimetria de forma direta: em todos os territ
           rightLabel="% do total de recursos"
           referenceValue={50}
           referenceLabel="Equidade"
-          colors={colorPairs.purpleYellow}
+          colors={colorPairs.blueOrange}
         />
       </div>
     </div>
@@ -144,7 +144,7 @@ O gráfico divergente mostra essa assimetria de forma direta: em todos os territ
         keys={['valor_estado', 'valor_municipio']}
         categoryKey="shortLabel"
         labels={{ valor_estado: 'Governo Estadual', valor_municipio: 'Governo Municipal' }}
-        colors={[colorScales.blue[2], colorScales.red[2]]}
+        colors={colorPairs.blueOrange}
         format={(v) => `R$ ${(v / 1e6).toFixed(1)}M`}
         showTotalLabel={true}
       />
@@ -160,7 +160,7 @@ O gráfico divergente mostra essa assimetria de forma direta: em todos os territ
         keys={['valor_estado', 'valor_municipio']}
         categoryKey="shortLabel"
         labels={{ valor_estado: 'Governo Estadual', valor_municipio: 'Governo Municipal' }}
-        colors={[colorScales.teal[2], colorScales.orange[2]]}
+        colors={colorPairs.blueOrange}
         format={(v) => `R$ ${(v / 1e6).toFixed(1)}M`}
         showTotalLabel={true}
       />

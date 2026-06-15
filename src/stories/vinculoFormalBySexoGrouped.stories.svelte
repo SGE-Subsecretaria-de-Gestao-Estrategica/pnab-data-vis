@@ -2,11 +2,12 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import VerticalGroupedBarChart from '$lib/components/VerticalGroupedBarChart.svelte';
+  import { colorScales } from 'sniic-design-system';
   // @ts-ignore
   import { sexoVinculoFormalGroupedData } from '$lib/data/section4';
 
   // Feminino: red, Masculino: purple — from sniic palette
-  const colors = ['#cb4034', '#a44c7f'];
+  const colors = [colorScales.lime[2], colorScales.red[2]];
   const seriesLabels = ['Feminino', 'Masculino'];
 
   const { Story } = defineMeta({
@@ -37,7 +38,7 @@ Entre os contemplados pelo PNAB com vínculo formal, **58,3%** são homens e **4
       barWidth={40}
       barPad={8}
       innerH={280}
-      margin={{ top: 20, right: 20, bottom: 10, left: 44 }}
+      margin={{ top: 20, right: 20, bottom: 10, left: 64 }}
     />
   {/snippet}
 </Story>

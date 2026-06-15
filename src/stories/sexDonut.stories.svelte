@@ -13,7 +13,7 @@
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', maximumFractionDigits: 1 }).format(v);
 
   // feminino=purple, masculino=blue
-  const sexColors = [colorPairs.bluePurple[1], colorPairs.bluePurple[0]];
+  const sexColors = [colorPairs.tealYellow[1], colorPairs.tealYellow[0]];
 
   const { Story } = defineMeta({
     title: 'Section 3/sexDonut',

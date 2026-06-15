@@ -30,8 +30,8 @@ Permite identificar rapidamente quais UFs apresentam maior ou menor sub-represen
   {#snippet template()}
     <SexoUfStackedComparison
       data={sexoUfComparisonData}
-      colorMasc={colorScales.blue[2]}
-      colorFem={colorScales.purple[2]}
+      colorMasc={colorScales.teal[2]}
+      colorFem={colorScales.yellow[2]}
     />
   {/snippet}
 </Story>

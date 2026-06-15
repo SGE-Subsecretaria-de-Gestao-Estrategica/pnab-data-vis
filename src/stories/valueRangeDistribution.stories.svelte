@@ -35,7 +35,7 @@ A cauda direita existe — e ela importa para entender a concentração de valor
   {#snippet template()}
     <HorizontalBarChart
       data={faixaDistData}
-      color={colorScales.blue[2]}
+      color={colorScales.purple[2]}
       format={formatPct}
       xLabel="% dos beneficiários"
       margin={{ top: 20, right: 80, bottom: 40, left: 160 }}

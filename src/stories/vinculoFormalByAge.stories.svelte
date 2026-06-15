@@ -32,7 +32,7 @@ A faixa de **25 a 54 anos** é a única em que a maioria dos beneficiários poss
       data={ageGroupStackedData}
       keys={[...ageGroupKeys]}
       labels={ageGroupLabels}
-      colors={[colorScales.red[2], colorScales.blue[2]]}
+      colors={[colorScales.red[2], colorScales.lime[2]]}
       format={formatPct}
       showTotalLabel={false}
     />

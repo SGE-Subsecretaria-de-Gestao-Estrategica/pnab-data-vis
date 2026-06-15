@@ -3,9 +3,10 @@
 import csvAgeGroupSexoRaw from '../../../data/section_3/aggregate_valor_quantity_by_age_group_sexo_wide.csv?raw';
 import csvAgeGroupRegionRaw from '../../../data/section_3/aggregate_value_quantity_by_age_group_region_wide.csv?raw';
 import csvSexoPropRaw from '../../../data/section_3/aggregate_contemplados_by_sexo_proportion.csv?raw';
-import csvPfPjRaw from '../../../data/section_3/aggregate_contemplados_pf_pj_proportion.csv?raw';
+// import csvPfPjRaw from '../../../data/section_3/aggregate_contemplados_pf_pj_proportion.csv?raw'; // CSV faltante
 import csvCboRaw  from '../../../data/section_4/aggregate_cbo_rais.csv?raw';
-import csvCnaesRaw from '../../../data/section_3/top_cnaes_cnpj_cultura.csv?raw';
+import csvCnaesRaw from '../../../data/section_3/top_cnaes_cnpj.csv?raw';
+import csvCnaesCulturaRaw from '../../../data/section_3/top_cnaes_cnpj_cultura.csv?raw';
 import csvNaturezaJuridicaRegiaoRaw from '../../../data/section_3/aggregate_cnpj_natureza_juridica_por_regiao.csv?raw';
 import csvNaturezaJuridicaRaw from '../../../data/section_3/aggregate_cnpj_natureza_juridica.csv?raw';
 import csvSexoUfIbgeRaw from '../../../data/section_3/aggregate_sexo_uf_ibge_pnab.csv?raw';
@@ -22,13 +23,13 @@ function parseCSV(text: string): Record<string, string>[] {
 		});
 }
 
-// ── PF vs PJ ─────────────────────────────────────────────────────────────────
-const [pfPjRow] = parseCSV(csvPfPjRaw);
-export const totalBeneficiarios = +pfPjRow.quantidade_contemplados;
-export const pfPjDonutData = [
-	{ label: 'Pessoa Física (PF)', value: +pfPjRow.quantidade_contemplados_pf },
-	{ label: 'Pessoa Jurídica (PJ)', value: +pfPjRow.quantidade_contemplados_pj },
-];
+// // ── PF vs PJ (aggregate_contemplados_pf_pj_proportion.csv faltante) ──────────
+// const [pfPjRow] = parseCSV(csvPfPjRaw);
+// export const totalBeneficiarios = +pfPjRow.quantidade_contemplados;
+// export const pfPjDonutData = [
+// 	{ label: 'Pessoa Física (PF)', value: +pfPjRow.quantidade_contemplados_pf },
+// 	{ label: 'Pessoa Jurídica (PJ)', value: +pfPjRow.quantidade_contemplados_pj },
+// ];
 export const valorTotalPJ = 1_591_311_693;
 export const valorTotalMEI = 238_855_896;
 
@@ -134,6 +135,23 @@ function _cnaeHeight(data: { posicao: number; descricao: string }[]): number {
 export const cnaesQtdTableHeight = _cnaeHeight(top20CnaesQtdTableData);
 export const cnaesValTableHeight = _cnaeHeight(top20CnaesValTableData);
 
+// ── Top 20 CNAEs culturais (por valor repassado) ────────────────────────────
+const cnaesCulturaRows = parseCSVQuoted(csvCnaesCulturaRaw);
+const _cnaesCulturaBase = cnaesCulturaRows.map((d) => ({
+	descricao:               d.cnae_principal,
+	percQuantidade:          +d.perc_quantidade_contemplados * 100,
+	percQuantidadeFormatted: _fmt1(+d.perc_quantidade_contemplados),
+	percValor:               +d.perc_valor_transacao * 100,
+	percValorFormatted:      _fmt1(+d.perc_valor_transacao),
+}));
+
+export const top20CnaesCulturaValTableData = [..._cnaesCulturaBase]
+	.sort((a, b) => b.percValor - a.percValor)
+	.slice(0, 20)
+	.map((d, i) => ({ posicao: i + 1, ...d }));
+
+export const cnaesCulturaValTableHeight = _cnaeHeight(top20CnaesCulturaValTableData);
+
 // ── Top 20 atividades econômicas (CBO/RAIS) ───────────────────────────────────
 function toTitleCase(s: string) {
 	return s
@@ -150,7 +168,7 @@ export const top20CboData = parseCSV(csvCboRaw)
 export const naturezaJuridicaData = parseCSV(csvNaturezaJuridicaRaw)
 	.map((r) => ({
 		label: r.natureza_juridica,
-		value: +r.perc_quantidade_contemplados * 100,
+		value: +r.perc_valor_contemplados * 100,
 	}))
 	.sort((a, b) => b.value - a.value);
 

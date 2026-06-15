@@ -51,7 +51,7 @@ Dois donuts mostram as distribuições: por faixa de renda per capita (5 categor
   {#snippet template()}
     <DonutChartWithLegend
       data={situacaoRendaDonutData}
-      colors={[colorScales.red[2], colorScales.orange[2], colorScales.blue[2]]}
+      colors={categorical8.slice(0, 3)}
       centerLabel="pessoas"
       centerValue={formatNum(totalSituacao)}
       format={formatNum}

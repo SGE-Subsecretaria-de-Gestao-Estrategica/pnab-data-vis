@@ -11,6 +11,8 @@
 		rowHeight = 52,
 		showTotalLabel = false,
 		marginLeft = 180,
+		legendAlign = 'center' as 'left' | 'center' | 'right',
+		labelsAbove = false,
 	}: {
 		data?: DataRow[];
 		keys?: string[];
@@ -21,6 +23,8 @@
 		rowHeight?: number;
 		showTotalLabel?: boolean;
 		marginLeft?: number;
+		legendAlign?: 'left' | 'center' | 'right';
+		labelsAbove?: boolean;
 	} = $props();
 
 	let containerWidth = $state(0);
@@ -36,16 +40,20 @@
 	}
 
 	// Fixed margins (bottom is computed dynamically based on legend height)
-	const MT = 16, MR = 28;
-	const innerWidth  = $derived(Math.max(0, containerWidth - marginLeft - MR));
+	const MT = 16, MR = 28, ML_ABOVE = 8;
+	const LABEL_ABOVE_H = 20; // extra height per row when labelsAbove
+	const XAXIS_H = 28; // space for x-axis tick labels below bars
+	const effectiveMarginLeft = $derived(labelsAbove ? ML_ABOVE : marginLeft);
+	const innerWidth  = $derived(Math.max(0, containerWidth - effectiveMarginLeft - MR));
 
 	// d3 scaleBand equivalent: padding(0.28) sets paddingInner = paddingOuter = 0.28
 	const PAD = 0.28;
+	const effectiveRowHeight = $derived(labelsAbove ? rowHeight + LABEL_ABOVE_H : rowHeight);
 	const n = $derived(data.length);
-	const innerHeight = $derived(n * rowHeight);
-	const step      = $derived(n > 0 ? innerHeight / (n - PAD + PAD * 2) : rowHeight);
-	const bandwidth = $derived(step * (1 - PAD));
-	const bandY     = (i: number) => i * step + PAD * step;
+	const innerHeight = $derived(n * effectiveRowHeight);
+	const step      = $derived(n > 0 ? innerHeight / (n - PAD + PAD * 2) : effectiveRowHeight);
+	const bandwidth = $derived(labelsAbove ? (step * (1 - PAD)) - LABEL_ABOVE_H : step * (1 - PAD));
+	const bandY     = (i: number) => i * step + PAD * step + (labelsAbove ? LABEL_ABOVE_H : 0);
 
 	// X scale: linear 0..maxRowTotal → 0..innerWidth, 5 nice ticks
 	const maxRowTotal = $derived(
@@ -109,9 +117,10 @@
 		return result;
 	});
 
-	const legendY         = $derived(innerHeight + 22);
+	const legendAvailW    = $derived(containerWidth - effectiveMarginLeft - MR);
+	const legendY         = $derived(MT + innerHeight + XAXIS_H);
 	const legendTotalH    = $derived(legendRows.length * LEGEND_ROW_H + Math.max(0, legendRows.length - 1) * LEGEND_GAP);
-	const totalHeight     = $derived(MT + innerHeight + 22 + legendTotalH + 16);
+	const totalHeight     = $derived(MT + innerHeight + XAXIS_H + legendTotalH + 16);
 </script>
 
 <div bind:clientWidth={containerWidth} style="width: 100%;">
@@ -124,7 +133,7 @@
 			font-family={FONT_FAMILY}
 			style="overflow: visible;"
 		>
-			<g transform="translate({marginLeft},{MT})">
+			<g transform="translate({effectiveMarginLeft},{MT})">
 
 				<!-- Vertical grid lines -->
 				{#each ticks as tick}
@@ -164,16 +173,26 @@
 						{/if}
 					{/each}
 
-					<!-- Category label (left axis) -->
-					<text
-						x={-8}
-						y={row.midY}
-						dy="0.35em"
-						text-anchor="end"
-						dominant-baseline="middle"
-						font-size="11"
-						fill="var(--chart-fg, #64748b)"
-					>{row.label}</text>
+					<!-- Category label -->
+					{#if labelsAbove}
+						<text
+							x={0}
+							y={row.y - 6}
+							font-size="12"
+							font-weight="400"
+							fill="var(--chart-fg-strong, #333)"
+						>{row.label}</text>
+					{:else}
+						<text
+							x={-8}
+							y={row.midY}
+							dy="0.35em"
+							text-anchor="end"
+							dominant-baseline="middle"
+							font-size="11"
+							fill="var(--chart-fg, #64748b)"
+						>{row.label}</text>
+					{/if}
 
 					{#if showTotalLabel}
 						<text
@@ -189,63 +208,68 @@
 
 				<!-- X-axis tick labels -->
 				<g transform="translate(0,{innerHeight})">
-					{#each ticks as tick}
+					{#each ticks as tick, ti}
 						<text
 							x={tick.x}
 							y={0}
 							dy="1.2em"
-							text-anchor="middle"
+							text-anchor={ti === 0 ? 'start' : ti === ticks.length - 1 ? 'end' : 'middle'}
 							font-size="10"
 							fill="var(--chart-fg, #64748b)"
 						>{format(tick.v)}</text>
 					{/each}
 				</g>
 
-				<!-- Legend (multi-row) -->
-				{#each legendRows as row, ri}
-					{@const rowY = legendY + ri * (LEGEND_ROW_H + LEGEND_GAP)}
-					{@const rowTotalW = row.reduce((s, item) => s + item.w, 0)}
-					<g transform="translate(0,{rowY})">
-						{#each row as item}
-							<rect
-								x={item.x}
-								y={0}
-								width={item.w}
-								height={LEGEND_ROW_H}
-								fill={colors[item.ki] ?? '#999'}
-								shape-rendering="crispEdges"
-							/>
-							<text
-								x={item.x + 8}
-								y={LEGEND_ROW_H / 2}
-								dy="0.35em"
-								font-size="10"
-								font-weight="600"
-								fill={labelColor(colors[item.ki] ?? '#999')}
-							>{labels[item.key] ?? item.key}</text>
-						{/each}
-						{#each row.slice(0, row.length - 1) as item}
-							<line
-								x1={item.x + item.w} y1={0}
-								x2={item.x + item.w} y2={LEGEND_ROW_H}
-								stroke="var(--chart-fg-strong, #000000)"
-								stroke-width="0.5"
-								shape-rendering="crispEdges"
-							/>
-						{/each}
-						<rect
-							fill="none"
-							stroke="var(--chart-fg-strong, #000000)"
-							shape-rendering="crispEdges"
-							x={0} y={0}
-							width={rowTotalW}
-							height={LEGEND_ROW_H}
-							stroke-width="0.5"
-						/>
-					</g>
-				{/each}
-
 			</g>
+
+			<!-- Legend (multi-row, uses full container width) -->
+			{#each legendRows as row, ri}
+				{@const rowY = legendY + ri * (LEGEND_ROW_H + LEGEND_GAP)}
+				{@const rowTotalW = row.reduce((s, item) => s + item.w, 0)}
+				{@const legendOffsetX = legendAlign === 'right'
+					? effectiveMarginLeft + innerWidth - rowTotalW
+					: legendAlign === 'left'
+					? effectiveMarginLeft
+					: effectiveMarginLeft + Math.max(0, (innerWidth - rowTotalW) / 2)}
+				<g transform="translate({legendOffsetX},{rowY})">
+					{#each row as item}
+						<rect
+							x={item.x}
+							y={0}
+							width={item.w}
+							height={LEGEND_ROW_H}
+							fill={colors[item.ki] ?? '#999'}
+							shape-rendering="crispEdges"
+						/>
+						<text
+							x={item.x + 8}
+							y={LEGEND_ROW_H / 2}
+							dy="0.35em"
+							font-size="10"
+							font-weight="600"
+							fill={labelColor(colors[item.ki] ?? '#999')}
+						>{labels[item.key] ?? item.key}</text>
+					{/each}
+					{#each row.slice(0, row.length - 1) as item}
+						<line
+							x1={item.x + item.w} y1={0}
+							x2={item.x + item.w} y2={LEGEND_ROW_H}
+							stroke="var(--chart-fg-strong, #000000)"
+							stroke-width="0.5"
+							shape-rendering="crispEdges"
+						/>
+					{/each}
+					<rect
+						fill="none"
+						stroke="var(--chart-fg-strong, #000000)"
+						shape-rendering="crispEdges"
+						x={0} y={0}
+						width={rowTotalW}
+						height={LEGEND_ROW_H}
+						stroke-width="0.5"
+					/>
+				</g>
+			{/each}
 		</svg>
 	{/if}
 </div>

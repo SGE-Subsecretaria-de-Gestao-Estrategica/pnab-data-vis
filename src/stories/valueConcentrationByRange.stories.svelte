@@ -35,7 +35,7 @@ Aproximadamente **R$2,1 bilhões** (75% do orçamento total executado) foram des
   {#snippet template()}
     <HorizontalBarChart
       data={faixaValorPercData}
-      color={colorScales.blue[2]}
+      color={colorScales.purple[2]}
       format={formatPct}
       xLabel="% do valor total"
       margin={{ top: 20, right: 80, bottom: 40, left: 200 }}

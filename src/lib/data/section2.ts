@@ -13,11 +13,11 @@ import csvFaixaUfRaw       from '../../../data/section_2/aggregate_faixa_valor_j
 import csvFaixaStateRaw    from '../../../data/section_2/aggregate_faixa_valor_ju_wide_by_state.csv?raw';
 import csvAuxQuartisBrasilRaw from '../../../data/section_2/aux_quartis_estados_brasil.csv?raw';
 import csvQuartisEstadosRaw from '../../../data/section_2/quartis_estados.csv?raw';
-import csvResumoValoresUfEstadoRaw from '../../../data/section_2/resumo_valores_uf_estado.csv?raw';
+// import csvResumoValoresUfEstadoRaw from '../../../data/section_2/resumo_valores_uf_estado.csv?raw'; // CSV faltante
 import csvResumoValoresUfRaw       from '../../../data/section_2/resumo_valores_uf.csv?raw';
 import csvTerrUfRaw      from '../../../data/section_2/territorios_especiais_por_uf.csv?raw';
 import csvTerrEstadoRaw  from '../../../data/section_2/territorios_especiais_por_estado.csv?raw';
-import csvTerrMunRaw     from '../../../data/section_2/territorios_especiais_por_municipio.csv?raw';
+// import csvTerrMunRaw     from '../../../data/section_2/territorios_especiais_por_municipio.csv?raw'; // CSV faltante
 import csvFaixaValorPorteRaw from '../../../data/section_2/faixa_valor_porte_populacional.csv?raw';
 
 function parseCSV(text: string): Record<string, string>[] {
@@ -101,10 +101,14 @@ export const benefVsValorData = [
 ];
 
 // ── 3. HorizontalBarChart — distribuição nacional por faixa de valor ──────────
+function normalizeFaixa(raw: string): string {
+	return raw?.startsWith('De ') ? raw.slice(3) : raw;
+}
+
 export const faixaDistData = rangeRows
-	.filter((r) => r.faixa_vlr_pago)
+	.filter((r) => r.faixa_vlr_pago_ju_bbagil)
 	.map((r) => ({
-		label: r.faixa_vlr_pago,
+		label: normalizeFaixa(r.faixa_vlr_pago_ju_bbagil),
 		value: +r['% de contemplados'] * 100,
 	}));
 
@@ -128,7 +132,7 @@ export const faixaValorPercData = [
 export const faixaGroupedData = (() => {
 	const pagMap: Record<string, number> = {};
 	for (const r of rangeRows) {
-		const faixa = r.faixa_vlr_pago;
+		const faixa = normalizeFaixa(r.faixa_vlr_pago_ju_bbagil);
 		if (!faixa) continue;
 		const v = +r['% de contemplados'] * 100;
 		const key =
@@ -401,40 +405,40 @@ export const brasilBoxPlotData = [
 	},
 ];
 
-// ── HorizontalStackedBarChart — territórios especiais por UF/estado/município ──
-const terrUfRows     = parseCSV(csvTerrUfRaw);
-const terrEstadoRows = parseCSV(csvTerrEstadoRaw);
-const terrMunRows    = parseCSV(csvTerrMunRaw);
-
-const terrByUf     = Object.fromEntries(terrUfRows.map((r)     => [r.uf, +r.valor_transacao_territorios_especiais]));
-const terrByEstado = Object.fromEntries(terrEstadoRows.map((r) => [r.uf, +r.valor_transacao_territorios_especiais]));
-const terrByMun    = Object.fromEntries(terrMunRows.map((r)    => [r.uf, +r.valor_transacao_territorios_especiais]));
-
-const allUFs = [...new Set([...Object.keys(terrByUf), ...Object.keys(terrByEstado), ...Object.keys(terrByMun)])].sort();
-
-export const TERR_KEYS   = ['estado', 'municipio'] as const;
-export const TERR_LABELS: Record<string, string> = {
-	estado:    'Estado',
-	municipio: 'Município',
-};
-
-export const terrEspeciaisData = allUFs
-	.map((uf) => ({
-		label:     uf,
-		estado:    terrByEstado[uf] ?? 0,
-		municipio: terrByMun[uf]    ?? 0,
-	}))
-	.sort((a, b) => (b.estado + b.municipio) - (a.estado + a.municipio));
+// // ── HorizontalStackedBarChart — territórios especiais (territorios_especiais_por_municipio.csv faltante) ──
+// const terrUfRows     = parseCSV(csvTerrUfRaw);
+// const terrEstadoRows = parseCSV(csvTerrEstadoRaw);
+// const terrMunRows    = parseCSV(csvTerrMunRaw);
+//
+// const terrByUf     = Object.fromEntries(terrUfRows.map((r)     => [r.uf, +r.valor_transacao_territorios_especiais]));
+// const terrByEstado = Object.fromEntries(terrEstadoRows.map((r) => [r.uf, +r.valor_transacao_territorios_especiais]));
+// const terrByMun    = Object.fromEntries(terrMunRows.map((r)    => [r.uf, +r.valor_transacao_territorios_especiais]));
+//
+// const allUFs = [...new Set([...Object.keys(terrByUf), ...Object.keys(terrByEstado), ...Object.keys(terrByMun)])].sort();
+//
+// export const TERR_KEYS   = ['estado', 'municipio'] as const;
+// export const TERR_LABELS: Record<string, string> = {
+// 	estado:    'Estado',
+// 	municipio: 'Município',
+// };
+//
+// export const terrEspeciaisData = allUFs
+// 	.map((uf) => ({
+// 		label:     uf,
+// 		estado:    terrByEstado[uf] ?? 0,
+// 		municipio: terrByMun[uf]    ?? 0,
+// 	}))
+// 	.sort((a, b) => (b.estado + b.municipio) - (a.estado + a.municipio));
 
 // ── BoxPlot — quartis por estado (quartis_estados.csv) ────────────────────────
 export const estadosBoxPlotData = parseCSV(csvQuartisEstadosRaw).map((row) => ({
 	label: row.uf,
 	stats: {
-		min:    +row.p1,
-		q1:     +row.p25,
-		median: +row.mediana,
-		q3:     +row.p75,
-		max:    +row.p99,
+		min:    +row.valor_minimo,
+		q1:     +row.quartil1,
+		median: +row.quartil2,
+		q3:     +row.quartil3,
+		max:    +row.percentil_99,
 	},
 }));
 

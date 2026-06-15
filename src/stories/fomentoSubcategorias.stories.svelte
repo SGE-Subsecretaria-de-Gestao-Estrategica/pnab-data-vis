@@ -6,7 +6,7 @@
   import { fomentoSubData } from '$lib/data/section6';
 
   const W = 760;
-  const M = { top: 24, right: 16, bottom: 48, left: 260 };
+  const M = { top: 24, right: 120, bottom: 48, left: 260 };
   const ROW_H = 32;
   const ROW_GAP = 20;
   const LEG_SEP = 28;

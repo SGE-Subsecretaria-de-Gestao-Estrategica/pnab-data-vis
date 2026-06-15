@@ -8,7 +8,7 @@
     capitalInteriorStackedData,
     percInteriorPagamentos,
     valorInteriorTotal,
-    valorRuralTotal,
+    // valorRuralTotal,  // CSV faltante: executed_value_zone_by_uf.csv
   } from '$lib/data/section1';
 
   // @ts-ignore
@@ -31,8 +31,6 @@ Dos recursos executados pelos estados, **${percInteriorPagamentos}%** dos pagame
 
 A comparação entre o percentual do valor recebido e o percentual de agentes contemplados revela que as capitais concentram proporcionalmente mais recursos do que beneficiários, enquanto o interior apresenta o padrão inverso.
 
-A zona rural recebeu **${formatBRL(valorRuralTotal)}** no total.
-
 **Fonte**: \`aggregate_values_by_capital.csv\` (execução estadual) e \`executed_value_zone_by_uf.csv\`.
           `,
         },
@@ -53,11 +51,13 @@ A zona rural recebeu **${formatBRL(valorRuralTotal)}** no total.
   {/snippet}
 </Story>
 
+<!-- DISABLED: executed_value_zone_by_uf.csv faltante
 <Story name="BigNumber — valor total para zona rural">
   {#snippet template()}
     <BigNumber value={formatBRL(valorRuralTotal)} fontSize={72} />
   {/snippet}
 </Story>
+-->
 
 <Story name="Stacked — capital vs interior (valor e quantidade)">
   {#snippet template()}
@@ -81,7 +81,7 @@ A zona rural recebeu **${formatBRL(valorRuralTotal)}** no total.
         data={capitalInteriorStackedData}
         keys={['capital', 'metropolitana', 'interior']}
         labels={{ capital: 'Capital', metropolitana: 'Região Metropolitana', interior: 'Interior' }}
-        colors={[categorical8[1], categorical8[3], categorical8[0]]}
+        colors={categorical8.slice(0, 3)}
         format={formatPct}
         showTotalLabel={false}
       />
@@ -96,7 +96,7 @@ A zona rural recebeu **${formatBRL(valorRuralTotal)}** no total.
       data={capitalInteriorStackedData}
       keys={['capital', 'metropolitana', 'interior']}
       labels={{ capital: 'Capital', metropolitana: 'Região Metropolitana', interior: 'Interior' }}
-      colors={[colorScales.orange[2], colorScales.teal[2], colorScales.blue[2]]}
+      colors={categorical8.slice(0, 3)}
       format={formatPct}
       marginLeft={220}
     />

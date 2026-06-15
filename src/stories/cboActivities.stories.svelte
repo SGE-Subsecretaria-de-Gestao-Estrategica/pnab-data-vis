@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalBarChart, categorical8 } from 'sniic-design-system';
+  import { HorizontalBarChart, colorScales } from 'sniic-design-system';
   // @ts-ignore
   import { top20CboData } from '$lib/data/section3';
 
@@ -34,7 +34,7 @@ A lista evidencia que o setor cultural formal no Brasil vai muito além das arte
   {#snippet template()}
     <HorizontalBarChart
       data={top20CboData}
-      color={categorical8[0]}
+      color={colorScales.teal[2]}
       format={formatNum}
       xLabel="Quantidade de vínculos formais"
       margin={{ top: 20, right: 60, bottom: 40, left: 320 }}

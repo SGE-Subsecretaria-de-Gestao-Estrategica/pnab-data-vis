@@ -50,7 +50,7 @@ Esses dados resultam do cruzamento da base de contemplados do PNAB com a RAIS (R
     <ProportionalAreaChart
       data={valorAreaData}
       maxRadius={120}
-      colors={[colorScales.red[2], colorScales.blue[2]]}
+      colors={[colorScales.red[2], colorScales.lime[2]]}
       format={formatBRL}
       showLabels={true}
     />

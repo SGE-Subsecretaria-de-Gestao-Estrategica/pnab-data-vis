@@ -44,6 +44,8 @@
 		sexoUfComparisonData,
 		valorMedioSexoPorteData,
 		valorMedioSexoSeriesLabels,
+		top20CnaesCulturaValTableData,
+		cnaesCulturaValTableHeight,
 	} from '$lib/data/section3';
 
 	const formatNum = (v: number) => v.toLocaleString('pt-BR');
@@ -550,7 +552,7 @@
 		data={naturezaJuridicaData}
 		color={categorical8[4]}
 		format={(v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'}
-		xLabel="% de CNPJs contemplados"
+		xLabel="% do valor repassado"
 		title="% - Distribuição de Agentes Culturais Pessoas Jurídicas Contemplados na Aldir Blanc por Natureza Jurídica"
 		margin={{ top: 20, right: 80, bottom: 40, left: 230 }}
 	/>
@@ -641,7 +643,19 @@
 </ScrollSection>
 
 <!-- ══════════════════════════════════════════════════════════════════════════
-     3.3.2 — TOP 20 CNAEs CULTURAIS
+     3.3.2 — TOP 20 CNAEs CULTURAIS (valor repassado)
+     ══════════════════════════════════════════════════════════════════════════ -->
+<ScrollSection id="section-3-332-cnae-cultura">
+	<h3>Top 20 CNAEs culturais das pessoas jurídicas contempladas — por valor repassado</h3>
+	<div style="overflow-x: auto;">
+		<svg width={700} height={cnaesCulturaValTableHeight}>
+			<CnaeTable data={top20CnaesCulturaValTableData} metric="valor" width={700} />
+		</svg>
+	</div>
+</ScrollSection>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     3.3.2 — TOP 20 CNAEs (todas)
      ══════════════════════════════════════════════════════════════════════════ -->
 <ScrollSection id="section-3-332-cnae-top20">
 	<h3>Top 20 CNAEs principais das pessoas jurídicas contempladas</h3>

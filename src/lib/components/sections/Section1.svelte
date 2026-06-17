@@ -1,567 +1,405 @@
 <script lang="ts">
-	import ScrollSection from '$lib/components/ScrollSection.svelte';
+	import DashboardFilters from '$lib/components/DashboardFilters.svelte';
+	import DashboardCard from '$lib/components/DashboardCard.svelte';
 	import ExecutedValueByStateMap from '$lib/components/ExecutedValueByStateMap.svelte';
 	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
+	import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
+	import { createFilters } from '$lib/stores/filters.svelte';
+	import type { Visao, Regiao } from '$lib/stores/filters.svelte';
 	import {
 		BigNumber,
-		HorizontalStackedBarChart,
-		VerticalStackedBarChart,
-		DivergingBarChart,
 		TreemapChart,
-		DataTable,
-		AnnotationBox,
-		colorPairs,
+		HorizontalBarChart,
+		HorizontalStackedBarChart,
 		colorScales,
+		colorPairs,
 		categorical8,
 	} from 'sniic-design-system';
 	import {
-		percExecEstados, percExecMunicipios,
+		siglaToName, regionMap,
 		valorExecEstados, valorExecMunicipios, valorExecTotal,
-		percInteriorContemplados,
-		valorInteriorTotal,
-		capitalInteriorStackedData,
-		percapitaData,
-		ufSplitData,
-		zoneData, zoneQtdData,
-		porteTreemapData,
-		porteStackedKeys, porteStackedLabels, porteStackedData,
-		porteMeanData,
-		percPopulacaoEspecial,
-		specialStackedData,
-		specialTerritoriesMetrics,
-		ufData,
+		percExecEstados, percExecMunicipios,
+		stateRows,
 		states,
-		valorRuralTotal,
-		qtdeRuralTotal,
+		percapitaData,
+		porteTreemapData, porteRaw,
+		capitalInteriorStackedData, capitalInteriorByUfData,
+		specialTerritoriesMetrics,
+		zoneData,
 		percRuralQtde,
-		percRuralValor,
-		specialTerritoryCount,
-		specialTerritoryValue,
-		specialExecByUfData,
 	} from '$lib/data/section1';
+	import {
+		percBenefCPF, percBenefCNPJ,
+		percValorCPF, percValorCNPJ,
+		totalBenefCPF, totalBenefCNPJ,
+		benefVsValorData,
+		faixaGroupedData,
+		regiaoGroupedData,
+		UF_BAND_KEYS, UF_BAND_LABELS,
+		ufBandPercData, ufValorBandPercData,
+	} from '$lib/data/section2';
 
-	// ── Flags via import.meta.glob ──────────────────────────────────────────────
-	const flagModules = import.meta.glob(
-		'/node_modules/sniic-design-system/dist/flags/states/*.svg',
-		{ query: '?url', import: 'default', eager: true }
+	const filters = createFilters();
+
+	function handleFilterChange(key: 'visao' | 'regiao' | 'uf', value: string) {
+		if (key === 'visao') filters.visao = value as Visao;
+		else if (key === 'regiao') filters.regiao = value as Regiao;
+		else if (key === 'uf') filters.uf = value;
+	}
+
+	// Format helpers
+	const fmtBRL = (v: number) =>
+		new Intl.NumberFormat('pt-BR', {
+			style: 'currency', currency: 'BRL',
+			notation: 'compact', maximumFractionDigits: 1,
+		}).format(v);
+
+	const fmtNum = (v: number) => v.toLocaleString('pt-BR');
+	const fmtPct = (v: number) => v.toFixed(1).replace('.', ',') + '%';
+
+	// ── Derived filtered data ───────────────────────────────────────────────────
+
+	// Map data filtered by region/UF
+	const filteredMapData = $derived(() => {
+		const filtered = stateRows.filter((d) => filters.filteredUFs.includes(d.uf));
+		return Object.fromEntries(
+			filtered.map((d) => [siglaToName[d.uf], d])
+		);
+	});
+
+	const filteredMapMetric = $derived(() => {
+		if (filters.visao === 'estados') return 'valor_executado_rs';
+		if (filters.visao === 'municipios') return 'valor_executado_rs';
+		return 'valor_executado_rs';
+	});
+
+	// BigNumbers filtered
+	const filteredTotals = $derived(() => {
+		const filtered = stateRows.filter((d) => filters.filteredUFs.includes(d.uf));
+		const totalVal = filtered.reduce((s, d) => s + d.valor_executado_rs, 0);
+		const totalPop = filtered.reduce((s, d) => s + d.sum_populacao, 0);
+		const totalContemp = filtered.reduce((s, d) => s + d.qtde_contemplados, 0);
+		return { totalVal, totalPop, totalContemp, perCapita: totalPop > 0 ? totalVal / totalPop : 0 };
+	});
+
+	// Per capita ranking filtered
+	const filteredPercapita = $derived(
+		percapitaData.filter((d) => filters.filteredUFs.includes(d.uf))
 	);
-	const stateFlags = Object.fromEntries(
-		Object.entries(flagModules).map(([path, url]) => {
-			const uf = path.split('/').pop()!.replace('.svg', '');
-			return [uf, url as string];
-		})
+
+	// Capital/Interior filtered
+	const filteredCapitalInterior = $derived(
+		capitalInteriorByUfData.filter((d) => filters.filteredUFs.includes(d.label))
 	);
 
-	// ── Formatadores ────────────────────────────────────────────────────────────
-	const formatBRL = (v: number) =>
-		new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', maximumFractionDigits: 1 }).format(v);
-	const formatBRLM  = (v: number) => `R$ ${(v / 1e6).toFixed(1)}M`;
-	const formatBRLpc = (v: number) =>
-		`R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-	const formatPercFix = (v: number) => `${v.toFixed(1)}%`;
+	// Faixa valor por UF filtered
+	const filteredFaixaUf = $derived(
+		ufBandPercData.filter((d) => filters.filteredUFs.includes(d.label))
+	);
 
-	// ── Special territories stacked chart ───────────────────────────────────────
-	const stByName: Record<string, typeof specialTerritoriesMetrics[0]> = {};
-	specialTerritoriesMetrics.forEach((d) => { stByName[d.territorio] = d; });
-	const _stFav  = stByName['Favela e Comunidade Urbana'] ?? { perc_populacao: 0, perc_recurso: 0, perc_agentes: 0 };
-	const _stQui  = stByName['Agrupamento quilombola']     ?? { perc_populacao: 0, perc_recurso: 0, perc_agentes: 0 };
-	const _stInd  = stByName['Agrupamento indígena']       ?? { perc_populacao: 0, perc_recurso: 0, perc_agentes: 0 };
-	const stStackedKeys   = ['favela', 'quilombola', 'indigena'] as const;
-	const stStackedLabels = { favela: 'Favela / Com. Urbana', quilombola: 'Quilombola', indigena: 'Indígena' };
-	const stStackedData = [
-		{ cat: '% da população', favela: _stFav.perc_populacao,  quilombola: _stQui.perc_populacao,  indigena: _stInd.perc_populacao  },
-		{ cat: '% dos recursos', favela: _stFav.perc_recurso,    quilombola: _stQui.perc_recurso,    indigena: _stInd.perc_recurso    },
-		{ cat: '% dos agentes',  favela: _stFav.perc_agentes,    quilombola: _stQui.perc_agentes,    indigena: _stInd.perc_agentes    },
-	];
+	const filteredFaixaValorUf = $derived(
+		ufValorBandPercData.filter((d) => filters.filteredUFs.includes(d.label))
+	);
 
-	// ── Porte mean stacked chart ─────────────────────────────────────────────────
-	const porteKeyByLabel: Record<string, string> = {
-		'Grande': 'grande', 'Pequeno I': 'pequeno_i', 'Pequeno II': 'pequeno_ii', 'Médio': 'medio',
-	};
-	const porteMeanStackedData = [
-		{
-			label: '% do recurso executado',
-			...Object.fromEntries(porteMeanData.map((d) => [porteKeyByLabel[d.label], d.perc_valor])),
-		},
-		{
-			label: '% dos contemplados',
-			...Object.fromEntries(porteMeanData.map((d) => [porteKeyByLabel[d.label], d.perc_quantidade])),
-		},
-	];
+	// Zone data filtered
+	const filteredZoneData = $derived(
+		zoneData.filter((d) => filters.filteredUFs.includes(d.label))
+	);
 
-	// ── Tabela UF ────────────────────────────────────────────────────────────────
-	const ufTableColumns = [
-		{ key: 'uf', label: 'UF', align: 'left', width: 80 },
-		{ key: 'valor_executado_estado', label: 'Recurso Executado Estado', align: 'right', width: 200 },
-		{ key: 'valor_executado_municipio', label: 'Recurso Executado Município', align: 'right', width: 200 },
-		{ key: 'perc_valor_executado_estado', label: '% Estado', align: 'right', width: 120 },
-		{ key: 'perc_valor_executado_municipio', label: '% Município', align: 'right', width: 120 },
-		{ key: 'valor_executado_perc', label: '% Total', align: 'right', width: 100 },
-	];
-	const brl = (v: number) => `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-	const pct = (v: number) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
-	const ufTableRows = ufData.map((d) => ({
-		uf: d.uf,
-		valor_executado_estado:         brl(d.valor_executado_estado),
-		valor_executado_municipio:      brl(d.valor_executado_municipio),
-		valor_executado_total_uf:       brl(d.valor_executado_total_uf),
-		perc_valor_executado_estado:    pct(d.perc_valor_executado_estado),
-		perc_valor_executado_municipio: pct(d.perc_valor_executado_municipio),
-		valor_executado_perc:           pct(d.valor_executado_perc),
-	}));
+	// Map tab
+	let mapMetricTab = $state(0);
+	const MAP_METRICS = ['valor_executado_rs', 'qtde_contemplados', 'sum_populacao'] as const;
+	const MAP_LABELS = ['Valor executado', 'Contemplados', 'População'];
+	const MAP_FORMATS: ((v: number) => string)[] = [fmtBRL, fmtNum, fmtNum];
+
+	// Faixa tab
+	let faixaTab = $state(0);
+
+	// Capital/Interior tab
+	let capitalTab = $state(0);
 </script>
 
-<!-- ══════════════════════════════════════════════════════════════════════════
-     INTRODUÇÃO
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-1-intro">
-	<h2>1. Em quais territórios os recursos da Política Nacional Aldir Blanc chegaram?</h2>
-	<p>
-		Neste capítulo, vamos entender como foram distribuídos territorialmente os <strong>R$ 3 bilhões</strong> da Política Nacional Aldir Blanc. Vamos descrever e analisar a distribuição entre os municípios, estados e Distrito Federal; entre os diversos portes de municípios; entre zona urbana ou rural e também a distribuição em territórios específicos como as favelas, comunidades urbanas e as comunidades indígenas e quilombolas.
-	</p>
-	<svg width={600} height={200} style="overflow: hidden; margin-top: 1rem;">
-		<AnnotationBox
-			title=""
-			subtitle={"As análises apresentadas neste capítulo resultam do banco de dados do BB ágil\na partir de recortes para unidades federativas, estados, municípios e territórios\nespeciais. Nesta pesquisa, os dados de uma unidade federativa devem ser\nentendidos como a soma da execução do estado e dos municípios. Os dados dos\nmunicípios foram organizados a partir da organização dos municípios por porte\npopulacional utilizada pelo IBGE, considerando pequeno porte I – até 20 mil\nhabitantes, pequeno porte II – de 20 a 50 mil habitantes, médio porte – de 50 a\n100 mil habitantes e grande porte – acima de 100 mil habitantes. Os territórios\nespeciais também foram trabalhados a partir da classificação proposta pelo IBGE."}
-			boxX={0}
-			boxY={0}
-			boxWidth={560}
-			pointX={-30}
-			pointY={100}
-			showTitle={false}
-			circleRadius={0}
-		/>
-	</svg>
-</ScrollSection>
+<section id="section-1-intro" class="dashboard">
+	<div class="dashboard-header">
+		<h2>Distribuição Territorial dos Recursos</h2>
+		<p class="lead">Como os R$ {fmtBRL(valorExecTotal)} da PNAB foram distribuídos pelo território brasileiro?</p>
+	</div>
 
-<!-- ══════════════════════════════════════════════════════════════════════════
-     SEÇÃO 1.1 — DISTRIBUIÇÃO DOS RECURSOS — BIGNUMBERS
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-1-totals">
-	<h2>1.1. Como ocorreu a distribuição dos recursos?</h2>
-	<p>
-		A Lei 14.399/2022 que institui a Política Nacional Aldir Blanc de Fomento à Cultura estabelece a divisão de destinação de <strong>50% dos recursos para os Estados e Distrito Federal</strong> e de <strong>50% dos recursos para os Municípios e ao Distrito Federal</strong>.
-	</p>
-	<p>
-		No Ciclo I da Política Nacional Aldir Blanc, o Governo Federal, por meio do Ministério da Cultura, repassou R$ 3 bilhões para estados, municípios e Distrito Federal. O montante executado, em 2025, pelos Estados e pelo Distrito Federal representa <strong>96%</strong> do recurso repassado. Já os municípios e Distrito Federal executaram, em 2025, <strong>93,6%</strong> do recurso recebido. Confira os valores:
-	</p>
-	<div class="bignumbers-row">
-		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorExecTotal)} fontSize={80} label="Total" />
-		</div>
-	</div>
-	<div class="bignumbers-row">
-		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorExecEstados)} fontSize={80} label="Estados e Distrito Federal" />
-		</div>
-		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorExecMunicipios)} fontSize={80} label="Municípios e Distrito Federal" />
-		</div>
-	</div>
-	<div class="bignumbers-row">
-		<div class="bignumber-cell">
-			<BigNumber value={percExecEstados.toFixed(1)} suffix="%" fontSize={80} label="executado pelos estados e DF" />
-		</div>
-		<div class="bignumber-cell">
-			<BigNumber value={percExecMunicipios.toFixed(1)} suffix="%" fontSize={80} label="executado pelos municípios" />
-		</div>
-	</div>
-	<p style="margin-top: 1.5rem;">
-		Os percentuais de execução dos recursos observados, ainda em 2025, são expressivos — o resultado sugere uma elevada capacidade institucional por parte dos entes federativos, mesmo em um contexto ainda recente de implementação da política.
-	</p>
-	<p>
-		A distribuição dos recursos da Política Nacional Aldir Blanc é orientada por um índice que contabiliza dois critérios: o rateio do Fundos de Participação dos Estados e do Distrito Federal (FPE) e do Fundo de Participação dos Municípios (FPM), que correspondem a <strong>20%</strong> desse índice; e a proporcionalidade da população, que corresponde a <strong>80%</strong>. Isso quer dizer que o cálculo de repasse estabelece que mais recursos cheguem em municípios mais populosos.
-	</p>
-</ScrollSection>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     SEÇÃO 1.1 — MAPA POR UF
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-1-map">
-	<p>
-		Você pode conferir no gráfico a seguir os valores executados por Unidade Federativa (UF). Os valores apresentados são a soma da execução dos estados e dos municípios de cada UF até 31/12/2025. Os percentuais representam a participação da UF no valor total executado no país.
-	</p>
-	<div style="margin-top: 2.5rem;">
+	<!-- Map — full width -->
+	<DashboardCard
+		title="Mapa de distribuição por UF"
+		subtitle="Valor total executado por estado (estado + municípios)"
+		tabs={MAP_LABELS}
+		activeTab={mapMetricTab}
+		ontabchange={(i) => (mapMetricTab = i)}
+	>
 		<ExecutedValueByStateMap
-			{states}
-			metric="valor_executado_rs"
-			label="Valor executado"
-			format={formatBRL}
-			formatLine2={(row) => formatPercFix(row.valor_executado_perc * 100)}
+			states={filteredMapData()}
+			metric={MAP_METRICS[mapMetricTab]}
+			label={MAP_LABELS[mapMetricTab]}
+			format={MAP_FORMATS[mapMetricTab]}
+			formatLine2={mapMetricTab === 0 ? (row) => fmtPct(row.valor_executado_perc * 100) : undefined}
 			showSideLegend={true}
 		/>
-	</div>
-	<p style="margin-top: 2rem;">
-		De maneira geral, a execução dos recursos apresentou uma distribuição equilibrada entre entes estaduais e municipais. Chamam atenção, entretanto, as UFs do Acre, Amapá, Roraima e Tocantins, todos da região Norte, que tiveram uma atuação mais concentrada no nível estadual. Em Rondônia, por outro lado, os municípios foram responsáveis pela maior parte do recurso executado.
-	</p>
-	<p>
-		A seguir, é possível verificar os valores executados e o percentual de participação dos governos estaduais e dos governos municipais na execução de cada UF:
-	</p>
-	<div style="overflow: hidden; margin-top: 1.5rem;">
-		<div style="margin-left: -100px; width: calc(100% + 80px);">
-			<DivergingBarChart
-				data={ufSplitData}
-				leftLabel="Estado"
-				rightLabel="Município"
-				referenceValue={50}
-				referenceLabel=" "
-				colors={colorPairs.blueOrange}
+	</DashboardCard>
+
+	<!-- Per capita — full width -->
+	<DashboardCard title="Valor per capita por UF" subtitle="Valor executado dividido pela população da UF">
+		<HorizontalBarChart
+			data={filteredPercapita.map((d) => ({ label: d.uf, value: d.valor_percapita_uf }))}
+			format={fmtBRL}
+			color={colorScales.blue[2]}
+			height={Math.max(300, filteredPercapita.length * 22)}
+		/>
+	</DashboardCard>
+
+	<!-- Faixa de valor — full width -->
+	<DashboardCard
+		title="Distribuição por faixa de valor"
+		subtitle="Percentual de contemplados e recursos por faixa de pagamento, por UF"
+		tabs={['% de contemplados', '% do valor']}
+		activeTab={faixaTab}
+		ontabchange={(i) => (faixaTab = i)}
+	>
+		{#if faixaTab === 0}
+			<HorizontalStackedBarChartCustom
+				data={filteredFaixaUf}
+				keys={[...UF_BAND_KEYS]}
+				labels={UF_BAND_LABELS}
+				colors={[colorScales.blue[0], colorScales.blue[1], colorScales.blue[2], colorScales.blue[3], colorScales.blue[4]]}
+				height={Math.max(300, filteredFaixaUf.length * 24)}
 			/>
+		{:else}
+			<HorizontalStackedBarChartCustom
+				data={filteredFaixaValorUf}
+				keys={[...UF_BAND_KEYS]}
+				labels={UF_BAND_LABELS}
+				colors={[colorScales.blue[0], colorScales.blue[1], colorScales.blue[2], colorScales.blue[3], colorScales.blue[4]]}
+				height={Math.max(300, filteredFaixaValorUf.length * 24)}
+			/>
+		{/if}
+	</DashboardCard>
+
+	<!-- Capital / Interior — full width -->
+	<DashboardCard
+		title="Capital, Metropolitana e Interior"
+		subtitle="Distribuição de recursos e contemplados por localização"
+		tabs={['Visão Brasil', 'Por UF']}
+		activeTab={capitalTab}
+		ontabchange={(i) => (capitalTab = i)}
+	>
+		{#if capitalTab === 0}
+			<HorizontalStackedBarChartCustom
+				data={capitalInteriorStackedData}
+				keys={['capital', 'metropolitana', 'interior']}
+				labels={{ capital: 'Capital', metropolitana: 'Metropolitana', interior: 'Interior' }}
+				colors={[colorScales.orange[2], colorScales.teal[2], colorScales.lime[2]]}
+				height={140}
+			/>
+		{:else}
+			<HorizontalStackedBarChartCustom
+				data={filteredCapitalInterior}
+				keys={['capital', 'metropolitana', 'interior']}
+				labels={{ capital: 'Capital', metropolitana: 'Metropolitana', interior: 'Interior' }}
+				colors={[colorScales.orange[2], colorScales.teal[2], colorScales.lime[2]]}
+				height={Math.max(200, filteredCapitalInterior.length * 24)}
+			/>
+		{/if}
+	</DashboardCard>
+
+	<!-- Porte municipal treemap — full width -->
+	<DashboardCard title="Distribuição por porte municipal" subtitle="Valor total executado por tamanho do município">
+		<TreemapChart data={porteTreemapData} height={360} />
+	</DashboardCard>
+
+	<!-- Urbano vs Rural — full width -->
+	<DashboardCard title="Urbano vs Rural" subtitle="Distribuição por zona de residência dos contemplados">
+		<div class="rural-highlight">
+			<BigNumber value={fmtPct(percRuralQtde)} label="dos contemplados vivem em zona rural" />
 		</div>
-	</div>
-</ScrollSection>
+		<HorizontalStackedBarChart
+			data={filteredZoneData.map((d) => ({
+				label: d.label,
+				urbano: d.valor_urbano / (d.valor_urbano + d.valor_rural) * 100,
+				rural: d.valor_rural / (d.valor_urbano + d.valor_rural) * 100,
+			}))}
+			keys={['urbano', 'rural']}
+			labels={{ urbano: 'Urbano', rural: 'Rural' }}
+			colors={[colorScales.teal[2], colorScales.lime[2]]}
+			height={Math.max(200, filteredZoneData.length * 22)}
+		/>
+	</DashboardCard>
 
-<!-- ══════════════════════════════════════════════════════════════════════════
-     SEÇÃO 1.1 — TABELA POR UF
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-1-uf-table">
-	<div style="overflow-x: auto;">
-		<svg width={1020} height={920}>
-			<DataTable columns={ufTableColumns} rows={ufTableRows} />
-		</svg>
-	</div>
-</ScrollSection>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     1.1.2 — VALORES PER CAPITA
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-1-percapita">
-	<h3>1.1.2. Valores per Capita</h3>
-	<p class="frase-destaque">
-		A maioria das Unidades Federativas com o maior valor per capita são aquelas que têm as menores populações
-	</p>
-	<HorizontalStackedBarChart
-		data={percapitaData}
-		keys={['valor_percapita_uf']}
-		categoryKey="uf"
-		labels={{ valor_percapita_uf: 'Valor per capita (R$)' }}
-		format={formatBRLpc}
-		icons={stateFlags}
-		iconSize={20}
-		showTotalLabel={false}
-	/>
-	<p style="margin-top: 1.5rem;">
-		Analisamos o valor per capita da Política Nacional Aldir Blanc para entender a proporcionalidade do montante da Política que foi executado em relação ao tamanho da população em cada UF. O cálculo foi feito a partir da divisão entre o total executado pela UF (valor executado por estados e municípios) e sua população.
-	</p>
-	<p>
-		O valor per capita nos dá uma visão sobre a distribuição do dinheiro e reafirma a lógica de distribuição do recurso presente no texto da Lei. Enquanto a maioria das UFs com populações menores possuem maiores valores per capita, o contrário também é verdade, com exceção de Rondônia e Mato Grosso, que não figuram entre as maiores populações do país.
-	</p>
-</ScrollSection>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     1.1.3 — VALORES POR PORTE DOS MUNICÍPIOS
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-1-porte">
-	<h3>1.1.3. Valores por porte dos municípios</h3>
-	<p class="frase-destaque">
-		A análise por porte de município indica que a Aldir Blanc não se restringe aos grandes centros urbanos.
-	</p>
-	<p>
-		Foram analisados <strong>5.097 municípios</strong> que executaram recursos no Ciclo I da Política Nacional Aldir Blanc. Os municípios foram analisados segundo o porte populacional, definido por faixas que classificam as localidades de acordo com o número de habitantes.
-	</p>
-	<TreemapChart
-		data={porteTreemapData}
-		height={420}
-		format={formatBRL}
-		colors={categorical8}
-	/>
-	<p style="margin-top: 1.5rem;">
-		Mais da metade dos recursos foi executada pelos municípios de Grande Porte, que representam <strong>6,5%</strong> dos municípios analisados pela pesquisa. Já as médias dos municípios de Médio e Grande Porte estão acima da média de execução do total dos municípios, que é de <strong>R$ 273.784,83</strong>.
-	</p>
-	<p>
-		Quando analisamos a participação dos municípios na execução do valor total executado na Política Nacional Aldir Blanc, incluindo os entes estaduais, percebemos que a participação dos municípios de Grande Porte representa <strong>25%</strong> do valor total executado. O gráfico a seguir apresenta essa distribuição.
-	</p>
-	<div style="padding-left: 100px; margin-top: 1.5rem;">
+	<!-- CPF vs CNPJ — full width -->
+	<DashboardCard title="Pessoa Física vs Jurídica" subtitle="Distribuição de beneficiários e recursos por tipo de documento">
+		<div class="cpf-cnpj-grid">
+			<div class="mini-metric">
+				<span class="mini-value">{fmtPct(percBenefCPF)}</span>
+				<span class="mini-label">Beneficiários CPF</span>
+			</div>
+			<div class="mini-metric">
+				<span class="mini-value">{fmtPct(percBenefCNPJ)}</span>
+				<span class="mini-label">Beneficiários CNPJ</span>
+			</div>
+			<div class="mini-metric">
+				<span class="mini-value">{fmtPct(percValorCPF)}</span>
+				<span class="mini-label">Valor para CPF</span>
+			</div>
+			<div class="mini-metric">
+				<span class="mini-value">{fmtPct(percValorCNPJ)}</span>
+				<span class="mini-label">Valor para CNPJ</span>
+			</div>
+		</div>
 		<HorizontalStackedBarChartCustom
-			data={porteStackedData}
-			keys={porteStackedKeys}
-			labels={porteStackedLabels}
-			colors={categorical8}
-			format={formatPercFix}
-			showTotalLabel={true}
-			legendAlign="left"
+			data={benefVsValorData}
+			keys={['cpf', 'cnpj']}
+			labels={{ cpf: 'CPF (Pessoa Física)', cnpj: 'CNPJ (Pessoa Jurídica)' }}
+			colors={[colorScales.blue[2], colorScales.orange[2]]}
+			height={120}
 		/>
-	</div>
-	<p style="margin-top: 1.5rem;">
-		Os <strong>3.401 municípios de Pequeno Porte I</strong> juntos executaram mais de <strong>R$ 266 milhões</strong>, o que equivale ao valor total executado pelas seguintes UFs: Mato Grosso, Mato Grosso do Sul, Sergipe, Tocantins, Acre, Amapá e Distrito Federal.
-	</p>
-	<div style="padding-left: 100px; margin-top: 1.5rem;">
-		<HorizontalStackedBarChart
-			data={porteMeanStackedData}
-			keys={porteStackedKeys}
-			labels={porteStackedLabels}
-			colors={categorical8}
-			format={formatPercFix}
-			showTotalLabel={true}
+	</DashboardCard>
+
+	<!-- Territórios especiais — full width -->
+	<DashboardCard title="Territórios especiais" subtitle="Participação dos territórios especiais na distribuição de recursos">
+		<div class="special-table">
+			<table>
+				<thead>
+					<tr>
+						<th>Território</th>
+						<th>% Recurso</th>
+						<th>% Agentes</th>
+						<th>% Pop.</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each specialTerritoriesMetrics as t}
+						<tr>
+							<td>{t.shortLabel}</td>
+							<td>{fmtPct(t.perc_recurso)}</td>
+							<td>{fmtPct(t.perc_agentes)}</td>
+							<td>{fmtPct(t.perc_populacao)}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</DashboardCard>
+
+	<!-- Agentes por região — full width -->
+	<DashboardCard title="Agentes culturais vs população por região" subtitle="Comparação entre a distribuição de agentes contemplados e a distribuição da população">
+		<HorizontalGroupedBarChart
+			data={regiaoGroupedData}
+			seriesLabels={['% agentes contemplados', '% população']}
+			colors={[colorPairs.purpleYellow[0], colorPairs.purpleYellow[1]]}
+			format={(v: number) => fmtPct(v)}
+			margin={{ top: 30, right: 90, bottom: 60, left: 140 }}
+			barHeight={22}
+			barPad={6}
+			rx={0}
+			legendBottom={true}
+			labelsInside={true}
 		/>
-	</div>
-</ScrollSection>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     SEÇÃO 1.2 — DESCONCENTRAÇÃO TERRITORIAL
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-1-desconcentration">
-	<h2>1.2. Como ocorreu a desconcentração territorial?</h2>
-	<p>
-		A Política Nacional Aldir Blanc tem como objetivo democratizar o acesso à fruição e à produção artística e cultural e estabelece um percentual de pelo menos <strong>20%</strong> para projetos e ações de democratização do acesso à fruição e à produção artística e cultural em áreas periféricas, urbanas e rurais, e em territórios e regiões de maior vulnerabilidade econômica ou social, bem como em áreas de povos e comunidades tradicionais.
-	</p>
-	<p>
-		Embora não tenha sido possível aferir todas as ações listadas pela IN nº10/2023 para desconcentração territorial, é possível identificar que os valores executados em Zonas Rurais, Favelas e Comunidades Urbanas, bem como Agrupamentos Indígenas e Quilombolas refletem esse compromisso.
-	</p>
-	<p class="frase-destaque">
-		Ou seja, a desconcentração é ainda maior do que pudemos verificar nesta pesquisa.
-	</p>
-	<p>
-		A presença desses grupos no conjunto de beneficiários evidencia o potencial das políticas culturais para promover inclusão e diversidade, ao mesmo tempo em que aponta para a importância de estratégias mais direcionadas para ampliar o acesso nesses territórios.
-	</p>
-</ScrollSection>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     1.2.1 — INTERIOR VERSUS CAPITAL
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-1-capital-interior">
-	<h3>1.2.1. Interior <em>versus</em> capital</h3>
-	<p class="metodologico">
-		Para fins desta análise, os municípios foram classificados em três grupos: capitais, regiões metropolitanas e interior. Considerou-se como interior todo município que não é capital e que não pertence à região metropolitana.
-	</p>
-	<div class="bignumbers-row">
-		<div class="bignumber-cell">
-			<BigNumber value={percInteriorContemplados.toFixed(0)} suffix="%" fontSize={72} label="contemplados no interior" />
-		</div>
-	</div>
-	<p style="margin-top: 1.5rem;">
-		Os dados analisados mostram que a Política Nacional Aldir Blanc teve forte capilaridade territorial, alcançando majoritariamente contemplados residentes no interior do país.
-	</p>
-	<div class="bignumbers-row">
-		<div class="bignumber-cell">
-			<BigNumber value={formatBRL(valorInteriorTotal)} fontSize={72} label="destinado ao interior" />
-		</div>
-	</div>
-	<p style="margin-top: 1.5rem;">
-		Embora o desenho de repasse da PNAB favoreça, em alguma medida, territórios mais populosos — como capitais e regiões metropolitanas —, os dados revelam uma distribuição financeira relativamente equilibrada entre os diferentes espaços do país. Interior, regiões metropolitanas e capitais concentraram, respectivamente, <strong>34%</strong>, <strong>30%</strong> e <strong>36%</strong> do valor executado. Esse resultado sugere que a PNAB não se restringiu aos grandes centros urbanos, alcançando também de forma expressiva os municípios do interior.
-	</p>
-	<p>
-		Pode-se dizer que a mobilização dos recursos para o interior é também um movimento que ajuda a lidar com a demanda dos agentes culturais dos pequenos e médios municípios que, em sua maioria, não receberam grandes valores.
-	</p>
-	<div style="padding-left: 60px; margin-top: 1.5rem;">
-		<HorizontalStackedBarChart
-			data={capitalInteriorStackedData}
-			keys={['capital', 'metropolitana', 'interior']}
-			labels={{ capital: 'Capital', metropolitana: 'Região Metropolitana', interior: 'Interior' }}
-			colors={[categorical8[1], categorical8[3], categorical8[0]]}
-			format={formatPercFix}
-			showTotalLabel={false}
-		/>
-	</div>
-</ScrollSection>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     1.2.2 — ZONA RURAL
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-1-zone">
-	<h3>1.2.2. Zona rural</h3>
-	<div class="bignumbers-row" style="margin-bottom: 1.5rem;">
-		<div class="bignumber-cell">
-			<BigNumber
-				value={qtdeRuralTotal.toLocaleString('pt-BR')}
-				fontSize={72}
-				label={`(${percRuralQtde.toFixed(1).replace('.', ',')}%)`}
-				subtitle="contemplados em zona rural"
-			/>
-		</div>
-		<div class="bignumber-cell">
-			<BigNumber
-				value={`R$${(valorRuralTotal / 1e6).toFixed(0)}M`}
-				fontSize={72}
-				label={`(${percRuralValor.toFixed(1).replace('.', ',')}%)`}
-				subtitle="destinado à zona rural"
-			/>
-		</div>
-	</div>
-	<p>
-		Quando visualizamos as regiões do país, percebemos que essa tendência se mantém. O Nordeste, região com maior população rural (22,3%), foi a que mais destinou recursos para agentes culturais em área rural, o que constitui 19,5% do total dos agentes contemplados nesta região. Já o Sudeste, região com maior população urbana (94,4%), foi a que mais destinou para área urbana: 92,6% dos agentes sudestinos encontram-se em territórios mais urbanizados.
-	</p>
-	<p>
-		Ao analisar como ocorreu essa distribuição nas unidades federativas, verificamos que Ceará (23,8%), Bahia (23,4%), Sergipe (21,5%), Pará (20%) e Piauí (19,3%) foram os estados que mais contemplaram agentes culturais da zona rural, quase todos do Nordeste, com exceção do Pará.
-	</p>
-	<p>
-		Por outro lado, as unidades federativas que mais contemplaram agentes na zona urbana são São Paulo (95,3%), Rio de Janeiro (94,5%), Paraná (92,3%) e Goiás (90,5%).
-	</p>
-	<p>
-		Os estados que proporcionalmente mais destinaram recursos para a zona rural foram Tocantins (14,7%), Acre (12,9%), Rondônia (12,9%), Paraíba (11,9%), Bahia (10,2%) e Sergipe (10,0%). Já os estados que mais destinaram recursos para a zona rural em termos absolutos foram Bahia (R$ 7.781.357,73), São Paulo (R$ 7.607.110,89), Pernambuco (R$ 6.683.248,13), Minas Gerais (R$ 5.708.916,42) e Ceará (R$ 5.660.591,63).
-	</p>
-	<VerticalStackedBarChart
-		data={zoneQtdData}
-		keys={['qtde_rural', 'qtde_urbano']}
-		labels={{ qtde_urbano: 'Urbano', qtde_rural: 'Rural' }}
-		colors={[colorScales.red[2], colorScales.blue[2]]}
-		normalize={true}
-		height={320}
-		sortDirection="desc"
-	/>
-	<p style="margin-top: 1.5rem;">
-		Ao analisar a proporção de contemplados da Política Nacional Aldir Blanc entre áreas rurais e urbanas, observa-se que Acre (21,0%), Tocantins (20,8%), Sergipe (12,6%), Pará (12,2%) e Bahia (12,0%) foram os estados com maior participação relativa de agentes culturais residentes em territórios rurais.
-	</p>
-	<HorizontalStackedBarChart
-		data={zoneData}
-		keys={['valor_rural', 'valor_urbano']}
-		labels={{ valor_urbano: 'Urbano', valor_rural: 'Rural' }}
-		colors={[colorScales.red[2], colorScales.blue[2]]}
-		format={formatBRLM}
-		showTotalLabel={true}
-		icons={stateFlags}
-		iconSize={20}
-	/>
-	<p style="margin-top: 1.5rem;">
-		Na análise da distribuição proporcional dos valores destinados aos contemplados residentes em áreas rurais, destacam-se Tocantins (14,7%) e Acre (12,9%) como os estados com maior participação relativa de recursos direcionados a esses territórios. Contudo, Acre e Tocantins também apresentam parcelas expressivas de sua população residente em áreas rurais, correspondendo a 19,8% e 14,2%, respectivamente.
-	</p>
-	<p>
-		Já no âmbito municipal, verifica-se que os municípios de pequeno porte I são os que mais contemplaram agentes culturais na zona rural (22,3%), seguido dos de pequeno porte II (17,2%), médio porte (9,5%) e grande porte (3%).
-	</p>
-</ScrollSection>
-
-<!-- ══════════════════════════════════════════════════════════════════════════
-     1.2.3 — TERRITÓRIOS ESPECIAIS
-     ══════════════════════════════════════════════════════════════════════════ -->
-<ScrollSection id="section-1-special">
-	<h3>1.2.3. Territórios especiais</h3>
-	<p class="metodologico">
-		O IBGE (Instituto Brasileiro de Geografia e Estatística) define os setores censitários como as menores divisões territoriais utilizadas para organizar e realizar pesquisas, como o Censo Demográfico. Essa classificação permite identificar a população residente em diferentes tipos de áreas, como urbanas e rurais, entre outras categorias territoriais.
-	</p>
-	<p>
-		Ao analisar os recursos executados sob o ponto de vista dos setores censitários do IBGE, os dados mostram que, embora a maior parte dos recursos da Política Nacional Aldir Blanc esteja concentrada em setores classificados como "não especiais", há a presença de investimentos em territórios denominados "especiais", como favelas, comunidades urbanas, agrupamentos indígenas e quilombolas.
-	</p>
-
-	<h4>Favelas e Comunidades Urbanas</h4>
-	<p>
-		Cerca de <strong>16 milhões de pessoas</strong>, 8% da população brasileira, habitam favelas e comunidades urbanas. Entre os agentes contemplados com a PNAB, <strong>2,7%</strong> estão nestes territórios e receberam <strong>4,9%</strong> dos recursos totais da PNAB, o que representa mais de <strong>R$ 138 milhões</strong>, demonstrando que há espaço para o avanço da indução da política para esse território.
-	</p>
-	<p>
-		Esse desempenho é impulsionado pela Região Norte, onde o aporte nesses territórios atinge <strong>19,9%</strong> do valor executado na região, com destaque para as execuções no Amapá (27,6%), Pará (27,3%) e Amazonas (22,7%). Cabe assinalar que a presença de repasses em todas as 27 unidades da federação atesta a capilaridade nacional da medida.
-	</p>
-
-	<h4>Agrupamentos Quilombolas</h4>
-	<p>
-		No Brasil, um total de <strong>1,3 milhões de pessoas</strong> residem em comunidades quilombolas, o que equivale a <strong>0,66%</strong> da população. Os agrupamentos quilombolas receberam um aporte de recursos superior a <strong>R$ 7 milhões</strong> da Política Nacional Aldir Blanc, o que equivale a <strong>0,26%</strong> dos recursos totais. Essa presença se distribui de forma ampla pelo território nacional, com ações identificadas em <strong>20 estados</strong>, abrangendo todas as regiões do país.
-	</p>
-	<p>
-		O Nordeste concentra a maior parte desses recursos, tendo repassado <strong>R$ 4.032.436,80</strong>, valor que representa <strong>54,7%</strong> do total destinado aos contemplados residentes em agrupamentos quilombolas. Essa distribuição é coerente com a concentração territorial da população quilombola no país, tendo em vista que a região Nordeste reúne <strong>68,14%</strong> da população quilombola brasileira.
-	</p>
-	<p>
-		As unidades federativas da Bahia e Minas Gerais lideram individualmente os maiores repasses nessa categoria, respondendo juntas por <strong>46,2%</strong> do total nacional. Na Bahia, agentes culturais que residem em agrupamentos quilombolas representam <strong>0,93%</strong> do recurso e em Sergipe esse percentual chega a <strong>1,04%</strong>, o maior peso relativo no país.
-	</p>
-
-	<h4>Agrupamentos Indígenas</h4>
-	<p>
-		A população indígena representa <strong>0,83%</strong> da população brasileira. O valor total de projetos apoiados pela PNAB destinado especificamente aos agentes culturais residentes em agrupamentos indígenas é superior a <strong>R$ 5 milhões</strong>.
-	</p>
-	<p>
-		O impacto dessa política estende-se por <strong>18 estados</strong> brasileiros, abrangendo todas as regiões do país. Destacam-se a Paraíba, onde os agrupamentos indígenas concentram <strong>1,52%</strong> de todo o recurso executado, e o Mato Grosso do Sul, com <strong>1,35%</strong>.
-	</p>
-	<p>
-		Um achado relevante diz respeito à distribuição regional: o Nordeste concentra <strong>58,2%</strong> do montante total destinado a agrupamentos indígenas, liderado por Paraíba, Pernambuco e Ceará.
-	</p>
-
-	<div class="bignumbers-row" style="margin-top: 2rem;">
-		<div class="bignumber-cell">
-			<BigNumber
-				value={specialTerritoryCount.toLocaleString('pt-BR')}
-				fontSize={72}
-				label="em Favelas, Quilombos e Territ. Indígenas"
-			/>
-		</div>
-		<div class="bignumber-cell">
-			<BigNumber
-				value={formatBRL(specialTerritoryValue)}
-				fontSize={72}
-				label="em territórios especiais"
-			/>
-		</div>
-	</div>
-	<div class="bignumbers-row">
-		<div class="bignumber-cell">
-			<BigNumber
-				value={percPopulacaoEspecial}
-				suffix="%"
-				fontSize={72}
-				label="da pop. vive em territ. especiais"
-			/>
-		</div>
-	</div>
-
-	<div style="padding-left: 100px; margin-top: 1.5rem;">
-		<HorizontalStackedBarChart
-			data={stStackedData}
-			keys={stStackedKeys}
-			categoryKey="cat"
-			labels={stStackedLabels}
-			colors={categorical8}
-			format={(v: number) => `${v.toFixed(1)}%`}
-			showTotalLabel={true}
-		/>
-	</div>
-
-	<div style="padding-left: 100px; margin-top: 2rem;">
-		<HorizontalStackedBarChart
-			data={specialStackedData}
-			keys={['valor_estado', 'valor_municipio']}
-			categoryKey="shortLabel"
-			labels={{ valor_estado: 'Governo Estadual', valor_municipio: 'Governo Municipal' }}
-			colors={[colorScales.blue[2], colorScales.red[2]]}
-			format={(v: number) => `R$ ${(v / 1e6).toFixed(1)}M`}
-			showTotalLabel={true}
-		/>
-	</div>
-
-	<h4 style="margin-top: 2.5rem;">Valor executado em territórios especiais por UF</h4>
-	<p>
-		O gráfico a seguir apresenta a distribuição do valor executado em territórios especiais por Unidade Federativa, distinguindo a participação dos governos estaduais e municipais.
-	</p>
-	<HorizontalStackedBarChart
-		data={specialExecByUfData}
-		keys={['valor_executado_estado', 'valor_executado_municipio']}
-		categoryKey="label"
-		labels={{ valor_executado_estado: 'Governo Estadual', valor_executado_municipio: 'Governo Municipal' }}
-		colors={[colorScales.blue[2], colorScales.red[2]]}
-		format={(v: number) => `R$ ${(v / 1e6).toFixed(1)}M`}
-		showTotalLabel={true}
-	/>
-</ScrollSection>
-
+	</DashboardCard>
+</section>
 <style>
-	.bignumbers-row {
-		display: flex;
-		gap: 2rem;
-		flex-wrap: wrap;
-		margin-top: 1.5rem;
+	.dashboard {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 3rem 2rem;
 	}
 
-	.bignumber-cell {
-		flex: 1 1 240px;
-		min-width: 0;
-		display: flex;
-		justify-content: center;
-		margin-top: 1.5rem;
+	.dashboard-header {
+		margin-bottom: 2rem;
 	}
 
-	.frase-destaque {
-		font-size: 1.15rem;
-		font-weight: 600;
-		font-style: italic;
-		border-left: 3px solid var(--color-accent, currentColor);
-		padding-left: 1rem;
-		opacity: 0.85;
-		margin: 1.5rem 0;
+	.dashboard-header h2 {
+		font-size: 1.75rem;
+		font-weight: 800;
+		color: #1B1B1B;
+		margin: 0 0 0.5rem;
 	}
 
-	.metodologico {
-		font-size: 0.88rem;
-		opacity: 0.7;
-		background: var(--color-surface, #f8fafc);
-		border: 1px solid var(--color-border, #e2e8f0);
-		border-radius: 6px;
-		padding: 0.75rem 1rem;
+	.lead {
+		font-size: 1.05rem;
+		color: #555;
+		margin: 0;
+		line-height: 1.5;
+	}
+
+	.metrics-row {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		gap: 1rem;
 		margin-bottom: 1.5rem;
+	}
+
+	.metric {
+		background: transparent;
+		border-radius: 0.75rem;
+		padding: 1rem 1.25rem;
+		border: 1px solid rgba(0, 0, 0, 0.09);
+	}
+
+
+
+	.cpf-cnpj-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.75rem;
+		margin-bottom: 1rem;
+	}
+
+	.mini-metric {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 0.5rem;
+		background: transparent;
+		border-radius: 0.5rem;
+		border: 1px solid rgba(0, 0, 0, 0.07);
+	}
+
+	.mini-value {
+		font-size: 1.3rem;
+		font-weight: 700;
+		color: #1351B4;
+	}
+
+	.mini-label {
+		font-size: 0.72rem;
+		color: #666;
+		text-align: center;
+	}
+
+	.special-table table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 0.82rem;
+	}
+
+	.special-table th {
+		text-align: left;
+		font-weight: 600;
+		color: #666;
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		padding: 0.5rem 0.75rem;
+		border-bottom: 2px solid #e0e0e0;
+	}
+
+	.special-table td {
+		padding: 0.4rem 0.75rem;
+		border-bottom: 1px solid #f0f0f0;
+		color: #333;
+	}
+
+	.special-table tr:hover {
+		background: #f8f8f8;
+	}
+
+	.rural-highlight {
+		margin-bottom: 1rem;
+		text-align: center;
 	}
 
 </style>

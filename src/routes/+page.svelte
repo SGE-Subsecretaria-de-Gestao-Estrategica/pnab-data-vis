@@ -3,9 +3,6 @@
 	import Section2 from '$lib/components/sections/Section2.svelte';
 	import Section3 from '$lib/components/sections/Section3.svelte';
 	import Section4 from '$lib/components/sections/Section4.svelte';
-	import Section5 from '$lib/components/sections/Section5.svelte';
-	import Section6 from '$lib/components/sections/Section6.svelte';
-	import Section7 from '$lib/components/sections/Section7.svelte';
 	import { cream, white } from 'sniic-design-system';
 
 	type BgColor = 'cream' | 'white';
@@ -14,13 +11,10 @@
 	let activeBg = $state<BgColor>('cream');
 
 	const sections = [
-		{ id: 'section-1-intro', label: '1. Onde o dinheiro da PNAB chegou?' },
-		{ id: 'section-2-intro', label: '2. Como o recurso foi distribuido?' },
-		{ id: 'section-3-intro', label: '3. Quem acessou os recursos da PNAB?' },
-		{ id: 'section-4-intro', label: '4. Trabalhadores formais da PNAB' },
-		{ id: 'section-5-intro', label: '5. Agentes em vulnerabilidade social' },
-		{ id: 'section-6', label: '6. Quais ações a Aldir Blanc apoiou?' },
-		{ id: 'section-7', label: '7. Seção 7' }
+		{ id: 'section-1-intro', label: '1. Distribuição Territorial' },
+		{ id: 'section-2-intro', label: '2. Perfil dos Agentes' },
+		{ id: 'section-3-intro', label: '3. Vulnerabilidade Social' },
+		{ id: 'section-4', label: '4. Classificação das Despesas' },
 	];
 
 	function scrollTo(id: string) {
@@ -29,7 +23,7 @@
 </script>
 
 <svelte:head>
-	<title>PNAB - Visualizacao de Dados</title>
+	<title>PNAB - Painel de Dados</title>
 </svelte:head>
 
 <div class="controls">
@@ -56,9 +50,6 @@
 	<Section2 />
 	<Section3 />
 	<Section4 />
-	<Section5 />
-	<Section6 />
-	<Section7 />
 </main>
 
 <style>

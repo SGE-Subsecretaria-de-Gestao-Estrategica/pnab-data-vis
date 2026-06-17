@@ -3,7 +3,8 @@
 import csvAgeGroupSexoRaw from '../../../data/section_3/aggregate_valor_quantity_by_age_group_sexo_wide.csv?raw';
 import csvAgeGroupRegionRaw from '../../../data/section_3/aggregate_value_quantity_by_age_group_region_wide.csv?raw';
 import csvSexoPropRaw from '../../../data/section_3/aggregate_contemplados_by_sexo_proportion.csv?raw';
-// import csvPfPjRaw from '../../../data/section_3/aggregate_contemplados_pf_pj_proportion.csv?raw'; // CSV faltante
+import csvStateRaw from '../../../data/section_1/executed_value_by_state.csv?raw';
+import csvMunRaw   from '../../../data/section_1/executed_value_by_municipality.csv?raw';
 import csvCboRaw  from '../../../data/section_4/aggregate_cbo_rais.csv?raw';
 import csvCnaesRaw from '../../../data/section_3/top_cnaes_cnpj.csv?raw';
 import csvCnaesCulturaRaw from '../../../data/section_3/top_cnaes_cnpj_cultura.csv?raw';
@@ -23,13 +24,15 @@ function parseCSV(text: string): Record<string, string>[] {
 		});
 }
 
-// // ── PF vs PJ (aggregate_contemplados_pf_pj_proportion.csv faltante) ──────────
-// const [pfPjRow] = parseCSV(csvPfPjRaw);
-// export const totalBeneficiarios = +pfPjRow.quantidade_contemplados;
-// export const pfPjDonutData = [
-// 	{ label: 'Pessoa Física (PF)', value: +pfPjRow.quantidade_contemplados_pf },
-// 	{ label: 'Pessoa Jurídica (PJ)', value: +pfPjRow.quantidade_contemplados_pj },
-// ];
+// ── PF vs PJ (derivado de state + municipality CSVs) ──────────────────────────
+const _pfPjRows = [...parseCSV(csvStateRaw), ...parseCSV(csvMunRaw)];
+const _qtdPF  = _pfPjRows.reduce((s, d) => s + +d.qtd_tipo_documento_CPF, 0);
+const _qtdPJ  = _pfPjRows.reduce((s, d) => s + +d.qtd_tipo_documento_CNPJ, 0);
+export const totalBeneficiarios = _qtdPF + _qtdPJ;
+export const pfPjDonutData = [
+	{ label: 'Pessoa Física (PF)', value: _qtdPF },
+	{ label: 'Pessoa Jurídica (PJ)', value: _qtdPJ },
+];
 export const valorTotalPJ = 1_591_311_693;
 export const valorTotalMEI = 238_855_896;
 
@@ -67,6 +70,26 @@ export const pyramidData = ageGroupSexoRows.map((r) => ({
 	label: r.faixa_etaria,
 	left: +r.quantidade_contemplados_masculino,
 	right: +r.quantidade_contemplados_feminino,
+}));
+
+export const pyramidPercentData = ageGroupSexoRows.map((r) => ({
+	label: r.faixa_etaria,
+	left: +r.perc_quantidade_masculino_na_faixa * 100,
+	right: +r.perc_quantidade_feminino_na_faixa * 100,
+}));
+
+export const ageGroupDonutData = ageGroupSexoRows.map((r) => ({
+	label: r.faixa_etaria,
+	value: +r.valor_recebido_total,
+}));
+
+export const sexoDonutByAgeGroup = ageGroupSexoRows.map((r) => ({
+	faixa: r.faixa_etaria,
+	total: +r.quantidade_contemplados_total,
+	donutData: [
+		{ label: 'Feminino', value: +r.perc_quantidade_feminino_na_faixa * 100 },
+		{ label: 'Masculino', value: +r.perc_quantidade_masculino_na_faixa * 100 },
+	],
 }));
 
 // ── Top 20 CNAEs culturais (CNPJ) ────────────────────────────────────────────

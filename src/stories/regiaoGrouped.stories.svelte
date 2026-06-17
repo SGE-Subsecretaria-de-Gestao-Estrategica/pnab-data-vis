@@ -43,6 +43,7 @@ O Nordeste concentra **47,6%** dos contemplados, bem acima de sua participação
       barPad={6}
       rx={0}
       legendBottom={true}
+      labelsInside={true}
     />
   {/snippet}
 </Story>

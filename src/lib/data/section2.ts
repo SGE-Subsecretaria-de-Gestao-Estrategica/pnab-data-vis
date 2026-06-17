@@ -405,30 +405,28 @@ export const brasilBoxPlotData = [
 	},
 ];
 
-// // ── HorizontalStackedBarChart — territórios especiais (territorios_especiais_por_municipio.csv faltante) ──
-// const terrUfRows     = parseCSV(csvTerrUfRaw);
-// const terrEstadoRows = parseCSV(csvTerrEstadoRaw);
-// const terrMunRows    = parseCSV(csvTerrMunRaw);
-//
-// const terrByUf     = Object.fromEntries(terrUfRows.map((r)     => [r.uf, +r.valor_transacao_territorios_especiais]));
-// const terrByEstado = Object.fromEntries(terrEstadoRows.map((r) => [r.uf, +r.valor_transacao_territorios_especiais]));
-// const terrByMun    = Object.fromEntries(terrMunRows.map((r)    => [r.uf, +r.valor_transacao_territorios_especiais]));
-//
-// const allUFs = [...new Set([...Object.keys(terrByUf), ...Object.keys(terrByEstado), ...Object.keys(terrByMun)])].sort();
-//
-// export const TERR_KEYS   = ['estado', 'municipio'] as const;
-// export const TERR_LABELS: Record<string, string> = {
-// 	estado:    'Estado',
-// 	municipio: 'Município',
-// };
-//
-// export const terrEspeciaisData = allUFs
-// 	.map((uf) => ({
-// 		label:     uf,
-// 		estado:    terrByEstado[uf] ?? 0,
-// 		municipio: terrByMun[uf]    ?? 0,
-// 	}))
-// 	.sort((a, b) => (b.estado + b.municipio) - (a.estado + a.municipio));
+// ── HorizontalStackedBarChart — territórios especiais (município = UF − estado) ──
+const terrUfRows     = parseCSV(csvTerrUfRaw);
+const terrEstadoRows = parseCSV(csvTerrEstadoRaw);
+
+const terrByUf     = Object.fromEntries(terrUfRows.map((r)     => [r.uf, +r.valor_transacao_territorios_especiais]));
+const terrByEstado = Object.fromEntries(terrEstadoRows.map((r) => [r.uf, +r.valor_transacao_territorios_especiais]));
+
+const allUFs = [...new Set([...Object.keys(terrByUf), ...Object.keys(terrByEstado)])].sort();
+
+export const TERR_KEYS   = ['estado', 'municipio'] as const;
+export const TERR_LABELS: Record<string, string> = {
+	estado:    'Estado',
+	municipio: 'Município',
+};
+
+export const terrEspeciaisData = allUFs
+	.map((uf) => ({
+		label:     uf,
+		estado:    terrByEstado[uf] ?? 0,
+		municipio: Math.max(0, (terrByUf[uf] ?? 0) - (terrByEstado[uf] ?? 0)),
+	}))
+	.sort((a, b) => (b.estado + b.municipio) - (a.estado + a.municipio));
 
 // ── BoxPlot — quartis por estado (quartis_estados.csv) ────────────────────────
 export const estadosBoxPlotData = parseCSV(csvQuartisEstadosRaw).map((row) => ({

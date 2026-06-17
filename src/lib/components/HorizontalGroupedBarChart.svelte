@@ -285,18 +285,18 @@
 					{@const rowY = legendStartY + ri * (LEGEND_BLOCK_H + LEGEND_ROW_GAP)}
 					{@const rowItems = row.map((idx) => ({ item: legendAllItems[idx], w: legendNaturalW[idx] }))}
 					{@const rowTotalW = rowItems.reduce((s, r) => s + r.w, 0)}
-					{@const rowOffsetX = margin.left + (innerW - rowTotalW) / 2}
+					{@const rowOffsetX = margin.left}
 					{#each rowItems as { item, w }, col}
 						{@const bx = rowOffsetX + rowItems.slice(0, col).reduce((s, r) => s + r.w, 0)}
 						{#if item.secondLabel && item.secondColor}
 							<rect x={bx} y={rowY} width={w / 2} height={LEGEND_BLOCK_H} fill={item.color} shape-rendering="crispEdges" />
 							<rect x={bx + w / 2} y={rowY} width={w / 2} height={LEGEND_BLOCK_H} fill={item.secondColor} shape-rendering="crispEdges" />
-							<text x={bx + w / 4} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" text-anchor="middle" font-size="11" font-weight="600" fill="#fffffe">{item.label}</text>
-							<text x={bx + w * 3 / 4} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" text-anchor="middle" font-size="11" font-weight="600" fill="#fffffe">{item.secondLabel}</text>
+							<text x={bx + w / 4} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" text-anchor="middle" font-size="11" font-weight="600" fill={labelColor(item.color)}>{item.label}</text>
+							<text x={bx + w * 3 / 4} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" text-anchor="middle" font-size="11" font-weight="600" fill={labelColor(item.secondColor)}>{item.secondLabel}</text>
 							<line x1={bx + w / 2} y1={rowY} x2={bx + w / 2} y2={rowY + LEGEND_BLOCK_H} stroke="rgba(255,255,255,0.4)" stroke-width="1" shape-rendering="crispEdges" />
 						{:else}
 							<rect x={bx} y={rowY} width={w} height={LEGEND_BLOCK_H} fill={item.color} shape-rendering="crispEdges" />
-							<text x={bx + LEGEND_PAD_X} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" font-size="12" font-weight="600" fill="#fffffe">{item.label}</text>
+							<text x={bx + LEGEND_PAD_X} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" font-size="12" font-weight="600" fill={labelColor(item.color)}>{item.label}</text>
 						{/if}
 						{#if col < rowItems.length - 1}
 							<line x1={bx + w} y1={rowY} x2={bx + w} y2={rowY + LEGEND_BLOCK_H} stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" />

@@ -43,6 +43,7 @@ A maioria dos contemplados (**71,6%**) recebeu valores até R$ 10 mil, mas esse 
       barPad={6}
       rx={0}
       legendBottom={true}
+      labelsInside={true}
     />
   {/snippet}
 </Story>

@@ -134,7 +134,7 @@
 					</text>
 				{/if}
 				{#if aFemW > 36}
-					<text x={margin.left + aMascW + 5} y={aldirY + barHeight / 2} dominant-baseline="middle" font-size="10" font-weight="600" fill={textColor(colorFem)}>
+					<text x={margin.left + aMascW + 5} y={aldirY + barHeight / 2} dominant-baseline="middle" font-size="10" font-weight="800" fill={textColor(colorFem)}>
 						{row.aldirFem.toFixed(1)}%
 					</text>
 				{/if}

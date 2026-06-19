@@ -12,7 +12,7 @@
   const formatPercFix = (v) => `${v.toFixed(1)}%`;
 
   const { Story } = defineMeta({
-    title: 'Section 1/executedValueByState',
+    title: 'Section 1/Grafico 1',
     component: ChoroplethMapLabeled,
     tags: ['autodocs'],
   });

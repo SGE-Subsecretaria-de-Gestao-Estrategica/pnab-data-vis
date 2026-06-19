@@ -90,7 +90,7 @@ A comparação entre o percentual do valor recebido e o percentual de agentes co
 </Story>
 
 
-<Story name="Stacked — capital, metropolitana e interior (valor e quantidade)">
+<Story name="Grafico 5">
   {#snippet template()}
     <HorizontalStackedBarChartCustom
       data={capitalInteriorStackedData}

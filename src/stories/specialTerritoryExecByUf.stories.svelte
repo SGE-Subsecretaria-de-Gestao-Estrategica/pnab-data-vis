@@ -12,7 +12,7 @@
   const formatBRLDot = (v) => `R$${(v / 1e6).toFixed(0)}M`;
 
   const { Story } = defineMeta({
-    title: 'Section 1/specialTerritoryExecByUf',
+    title: 'Section 1/Grafico 7',
     component: HorizontalStackedBarChart,
     tags: ['autodocs'],
     parameters: {
@@ -45,7 +45,7 @@ Distribuicao do valor executado em territorios especiais (favelas, comunidades u
   {/snippet}
 </Story>
 
-<Story name="Valor executado em territorios especiais por UF">
+<Story name="Grafico 7">
   {#snippet template()}
     <HorizontalStackedBarChart
       data={specialExecByUfData}

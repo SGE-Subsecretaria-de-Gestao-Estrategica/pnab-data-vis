@@ -22,7 +22,7 @@
     `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const { Story } = defineMeta({
-    title: 'Section 1/valuePerCaptaByState',
+    title: 'Section 1/Grafico 2',
     component: HorizontalStackedBarChart,
     tags: ['autodocs'],
     parameters: {

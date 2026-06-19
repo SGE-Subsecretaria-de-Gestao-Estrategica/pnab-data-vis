@@ -36,7 +36,7 @@ Estados ordenados pelo maior percentual de contemplados no interior. Destaque pa
   });
 </script>
 
-<Story name="Stacked — Contemplados por Capital, RM e Interior (por UF)">
+<Story name="Grafico 6">
   {#snippet template()}
     <HorizontalStackedBarChartCustom
       data={capitalInteriorByUfData}

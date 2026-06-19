@@ -18,7 +18,7 @@
   ];
 
   const { Story } = defineMeta({
-    title: 'Section 1/executedValueByPorte',
+    title: 'Section 1/Tabela 2',
     component: DataTable,
     tags: ['autodocs'],
     parameters: {

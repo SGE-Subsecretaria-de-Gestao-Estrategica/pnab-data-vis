@@ -145,7 +145,7 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
   });
 </script>
 
-<Story name="Treemap — Distribuição de Valores por Porte">
+<Story name="Grafico 3">
   {#snippet template()}
     <svg width={TM_W_PORTE} height={TM_TOTAL_H_PORTE} font-family="'Space Grotesk', system-ui, sans-serif" font-size="12" style="display:block">
       {#each porteLeaves as leaf}
@@ -224,7 +224,7 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
   {/snippet}
 </Story>
 
-<Story name="Stacked Bars — Equidade: Valor Investido vs Beneficiários">
+<Story name="Grafico 4">
   {#snippet template()}
     <HorizontalStackedBarChartCustom
       data={porteStackedData}

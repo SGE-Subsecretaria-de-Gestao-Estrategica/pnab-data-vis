@@ -56,7 +56,7 @@
 	const HDR_CLR   = '#255c4f'; // teal[3]
 	const SEP_CLR   = 'rgba(0,0,0,0.09)';
 	const TXT_CLR   = 'var(--chart-fg-strong, #1a1a1a)';
-	const FONT      = "'Inter', system-ui, sans-serif";
+	const FONT      = "'Space Grotesk', system-ui, sans-serif";
 
 	// ── Derived from metric ───────────────────────────────────────────────────
 	const isQtd      = $derived(metric === 'quantidade');

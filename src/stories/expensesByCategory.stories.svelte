@@ -27,6 +27,8 @@
 
   const FONT = "'Space Grotesk', system-ui, sans-serif";
 
+  const LARGE_LABEL_KEYS = new Set(['fomento', 'cultura_viva', 'obras', 'subsidio']);
+
   // @ts-ignore
   const formatBRL = (v) =>
     new Intl.NumberFormat('pt-BR', {
@@ -127,7 +129,7 @@ Os demais investimentos somam aproximadamente **R$ 154,6M**, distribuídos entre
             text-anchor="middle"
             dominant-baseline="middle"
             fill={contrastColor(seg.color)}
-            font-size="10"
+            font-size={LARGE_LABEL_KEYS.has(seg.key) ? "13" : "10"}
             pointer-events="none"
           >{seg.label}</text>
         {/if}

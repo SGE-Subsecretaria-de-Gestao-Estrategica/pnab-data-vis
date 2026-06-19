@@ -2,12 +2,12 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
-  import { colorPairs } from 'sniic-design-system';
+  import { colorScales } from 'sniic-design-system';
   // @ts-ignore
   import { regiaoGroupedData } from '$lib/data/section2';
 
   const seriesLabels = ['% agentes contemplados', '% população'];
-  const colors = [colorPairs.purpleYellow[0], colorPairs.purpleYellow[1]];
+  const colors = [colorScales.blue[2], colorScales.purple[2]];
 
   // @ts-ignore
   const formatPct = (v) =>

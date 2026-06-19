@@ -32,8 +32,9 @@ Nas faixas de **25 a 64 anos** as mulheres são maioria entre os contemplados in
       data={faixaEtariaSexoData}
       keys={[...FAIXA_SEXO_KEYS]}
       labels={FAIXA_SEXO_LABELS}
-      colors={[colorPairs.orangeTeal[1], colorPairs.orangeTeal[0]]}
+      colors={[colorPairs.bluePurple[0], colorPairs.bluePurple[1]]}
       format={(v) => `${v.toFixed(1)}%`}
+      rowHeight={44}
       showTotalLabel={false}
       marginLeft={110}
     />
@@ -46,8 +47,9 @@ Nas faixas de **25 a 64 anos** as mulheres são maioria entre os contemplados in
       data={faixaEtariaSexoData}
       keys={[...FAIXA_SEXO_KEYS]}
       labels={FAIXA_SEXO_LABELS}
-      colors={[colorPairs.orangeTeal[1], colorPairs.orangeTeal[0]]}
+      colors={[colorPairs.bluePurple[0], colorPairs.bluePurple[1]]}
       format={(v) => `${v.toFixed(1)}%`}
+      rowHeight={44}
       showTotalLabel={false}
       marginLeft={110}
     />

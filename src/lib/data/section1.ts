@@ -150,7 +150,7 @@ export const formatSlope = (v: number) => `${n + 1 - v}º`;
 
 // ── BoxPlot: distribuição de repasses por região ─────────────────────────────
 const regionOrder = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul'];
-const regionUfRows = parseCSV(csvRegionUfRaw);
+export const regionUfRows = parseCSV(csvRegionUfRaw);
 
 // Opção 3: mediana por estado dentro de cada região (4–9 pontos por caixa)
 // Para grupos com menos de 5 pontos, desativa detecção de outliers — quartis interpolados
@@ -508,6 +508,11 @@ export const specialExecByUfData = parseCSV(csvSpecialExecUfRaw)
 		(b.valor_executado_estado + b.valor_executado_municipio) -
 		(a.valor_executado_estado + a.valor_executado_municipio)
 	);
+
+export const specialExecByUfDotData = specialExecByUfData.map((d) => ({
+	label:  d.label,
+	values: [d.valor_executado_estado, d.valor_executado_municipio],
+}));
 
 // ── Métricas por porte populacional ──
 export const porteMeanData = parseCSV(csvPortePopRaw)

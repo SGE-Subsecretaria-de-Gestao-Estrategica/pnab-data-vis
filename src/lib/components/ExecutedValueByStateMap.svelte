@@ -31,6 +31,10 @@
     formatLine2?: (row: any) => string;
     /** Replace inline labels with a sorted side legend table. */
     showSideLegend?: boolean;
+    /** Number of legend columns when showSideLegend=true (default 3). */
+    legCols?: number;
+    /** Map column fraction of total width when showSideLegend=true (default 0.63). */
+    mapFrac?: number;
   }
 
   let {
@@ -40,6 +44,8 @@
     format = (v: number) => v.toLocaleString('pt-BR'),
     formatLine2 = undefined,
     showSideLegend = false,
+    legCols = 3,
+    mapFrac = 0.63,
   }: Props = $props();
 
   let geojson = $state<any>(null);
@@ -63,16 +69,14 @@
   });
 
   const TOP_PAD  = 45;
-  const MAP_FRAC = 0.63; // map column fraction when showSideLegend=true
-  const LEG_COLS = 3;
   const LEG_GAP  = 20;
   const effectiveLabelW = $derived(showSideLegend ? 0 : LABEL_W);
   const mapW    = $derived(showSideLegend
-    ? Math.max(0, Math.round(width * MAP_FRAC))
+    ? Math.max(0, Math.round(width * mapFrac))
     : Math.max(0, width - effectiveLabelW * 2));
   const mapH    = $derived(Math.round(mapW * 0.72));
   const svgH    = $derived(mapH + 20 + TOP_PAD);
-  const legColW = $derived(Math.floor((width - mapW - LEG_GAP) / LEG_COLS));
+  const legColW = $derived(Math.floor((width - mapW - LEG_GAP) / legCols));
 
   const valueMap = $derived(
     new Map(Object.entries(states).map(([name, d]) => [name, (d[metric] ?? 0) as number]))
@@ -242,7 +246,7 @@
     {#if geojson && pathFn && mapW > 0}
       {@const sortedStates = [...stateEntries].sort((a, b) => b.val - a.val)}
       {@const legRowH     = formatLine2 ? 28 : 18}
-      {@const legRowCount = Math.ceil(sortedStates.length / LEG_COLS)}
+      {@const legRowCount = Math.ceil(sortedStates.length / legCols)}
       {@const legContentH = legRowCount * legRowH}
       {@const legTotalH   = legContentH + (label ? 24 : 0)}
       {@const legStartY   = Math.max(TOP_PAD, TOP_PAD + Math.round(mapH / 2 - legTotalH / 2))}
@@ -262,8 +266,8 @@
           <text x={mapW + LEG_GAP} y={legStartY - 8} fill="#6b7280" font-size="11" font-family={FONT_FAMILY}>{label.toUpperCase()}</text>
         {/if}
         {#each sortedStates as item, i}
-          {@const col = i % LEG_COLS}
-          {@const row = Math.floor(i / LEG_COLS)}
+          {@const col = i % legCols}
+          {@const row = Math.floor(i / legCols)}
           {@const lx  = mapW + LEG_GAP + col * legColW}
           {@const ly  = legStartY + (label ? 22 : 0) + row * legRowH}
           <rect x={lx} y={ly} width={10} height={10} rx="2" fill={item.fill} />

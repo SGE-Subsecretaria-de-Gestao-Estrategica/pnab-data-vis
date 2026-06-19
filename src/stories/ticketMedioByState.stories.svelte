@@ -37,6 +37,8 @@ Estados do Centro-Oeste e do Sudeste concentraram os maiores valores médios por
         label="Ticket médio (R$) pago por unidade federativa"
         format={formatBRL}
         showSideLegend={true}
+        legCols={2}
+        mapFrac={0.72}
       />
     </div>
   {/snippet}

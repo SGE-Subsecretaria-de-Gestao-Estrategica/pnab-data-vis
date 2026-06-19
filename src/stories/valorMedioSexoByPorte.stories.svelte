@@ -2,7 +2,7 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   // @ts-ignore
-  import { colorPairs } from 'sniic-design-system';
+  import { colorScales } from 'sniic-design-system';
   import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
   // @ts-ignore
   import { valorMedioSexoPorteData, valorMedioSexoSeriesLabels } from '$lib/data/section3';
@@ -16,7 +16,7 @@
       maximumFractionDigits: 1,
     }).format(v);
 
-  const sexColors = [colorPairs.tealYellow[1], colorPairs.tealYellow[0]];
+  const sexColors = [colorScales.blue[2], colorScales.yellow[2]];
 
   const { Story } = defineMeta({
     title: 'Section 3/valorMedioSexoByPorte',

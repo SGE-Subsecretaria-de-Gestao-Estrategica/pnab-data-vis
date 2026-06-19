@@ -2,11 +2,14 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import { HorizontalStackedBarChart, colorScales } from 'sniic-design-system';
+  import ConnectedDotPlot from '$lib/components/ConnectedDotPlot.svelte';
   // @ts-ignore
-  import { specialExecByUfData } from '$lib/data/section1';
+  import { specialExecByUfData, specialExecByUfDotData } from '$lib/data/section1';
 
   // @ts-ignore
   const formatBRL = (v) => `R$ ${(v / 1e6).toFixed(1)}M`;
+  // @ts-ignore
+  const formatBRLDot = (v) => `R$${(v / 1e6).toFixed(0)}M`;
 
   const { Story } = defineMeta({
     title: 'Section 1/specialTerritoryExecByUf',
@@ -28,6 +31,20 @@ Distribuicao do valor executado em territorios especiais (favelas, comunidades u
   });
 </script>
 
+<Story name="Valor executado em territorios especiais por UF — dot plot">
+  {#snippet template()}
+    <ConnectedDotPlot
+      data={specialExecByUfDotData}
+      seriesLabels={['Governo Estadual', 'Governo Municipal']}
+      colors={[colorScales.blue[2], colorScales.orange[2]]}
+      format={formatBRLDot}
+      margin={{ top: 20, right: 56, bottom: 56, left: 44 }}
+      rowHeight={28}
+      dotRadius={5}
+    />
+  {/snippet}
+</Story>
+
 <Story name="Valor executado em territorios especiais por UF">
   {#snippet template()}
     <HorizontalStackedBarChart
@@ -35,7 +52,7 @@ Distribuicao do valor executado em territorios especiais (favelas, comunidades u
       keys={['valor_executado_estado', 'valor_executado_municipio']}
       categoryKey="label"
       labels={{ valor_executado_estado: 'Governo Estadual', valor_executado_municipio: 'Governo Municipal' }}
-      colors={[colorScales.blue[2], colorScales.red[2]]}
+      colors={[colorScales.blue[2], colorScales.orange[2]]}
       format={formatBRL}
       showTotalLabel={true}
     />

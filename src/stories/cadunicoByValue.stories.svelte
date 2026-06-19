@@ -1,13 +1,14 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalBarChart, colorScales } from 'sniic-design-system';
+  import { colorScales } from 'sniic-design-system';
+  import HorizontalBarChartCustom from '$lib/components/HorizontalBarChartCustom.svelte';
   // @ts-ignore
   import { cadunicoValorData } from '$lib/data/section5';
 
   const { Story } = defineMeta({
     title: 'Section 5/cadunicoByValue',
-    component: HorizontalBarChart,
+    component: HorizontalBarChartCustom,
     tags: ['autodocs'],
     parameters: {
       docs: {
@@ -27,24 +28,26 @@ Quase metade dos beneficiários CadÚnico recebeu até R$2 mil, e mais de **86%*
 
 <Story name="HorizontalBarChart — distribuição por faixa de valor (blue)">
   {#snippet template()}
-    <HorizontalBarChart
+    <HorizontalBarChartCustom
       data={cadunicoValorData}
       color={colorScales.orange[2]}
       format={(v) => `${v.toFixed(1)}%`}
       xLabel="% dos beneficiários CadÚnico"
       margin={{ top: 20, right: 80, bottom: 40, left: 160 }}
+      rowHeight={52}
     />
   {/snippet}
 </Story>
 
 <Story name="HorizontalBarChart — distribuição por faixa de valor (teal)">
   {#snippet template()}
-    <HorizontalBarChart
+    <HorizontalBarChartCustom
       data={cadunicoValorData}
       color={colorScales.teal[2]}
       format={(v) => `${v.toFixed(1)}%`}
       xLabel="% dos beneficiários CadÚnico"
       margin={{ top: 20, right: 80, bottom: 40, left: 160 }}
+      rowHeight={52}
     />
   {/snippet}
 </Story>

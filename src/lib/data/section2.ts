@@ -1,7 +1,7 @@
 // All Section 2 data, parsed from CSVs at build time.
 // Narrativa: CPF (pessoas físicas) vs CNPJ (entidades) — quem recebe o quê.
 
-import { stateRows, siglaToName } from '$lib/data/section1';
+import { stateRows, siglaToName, regionUfRows } from '$lib/data/section1';
 
 import csvStateRaw         from '../../../data/section_2/aggregate_execution_by_person_type_state.csv?raw';
 import csvUfRaw            from '../../../data/section_2/aggregate_execution_by_person_type_uf.csv?raw';
@@ -153,22 +153,21 @@ export const faixaGroupedData = (() => {
 })();
 
 // ── 3c. HorizontalBarChart — agentes culturais por região ─────────────────────
-export const regiaoDistData = [
-	{ label: 'Nordeste',     value: 47.7, count: 79446 },
-	{ label: 'Sudeste',      value: 27.4, count: 45655 },
-	{ label: 'Sul',          value: 10.8, count: 17946 },
-	{ label: 'Norte',        value: 8.7,  count: 14504 },
-	{ label: 'Centro-Oeste', value: 5.4,  count: 9018  },
-];
+export const regiaoDistData = [...regionUfRows]
+	.sort((a, b) => +b.perc_qtde_contemplados - +a.perc_qtde_contemplados)
+	.map((r) => ({
+		label: r.regiao,
+		value: +r.perc_qtde_contemplados * 100,
+		count: +r.qtde_contemplados,
+	}));
 
 // ── 3d. HorizontalGroupedBarChart — agentes culturais vs população por região ──
-export const regiaoGroupedData = [
-	{ label: 'Nordeste',     values: [47.6, 26.9] },
-	{ label: 'Sudeste',      values: [27.4, 41.7] },
-	{ label: 'Sul',          values: [10.8, 14.6] },
-	{ label: 'Norte',        values: [8.7,  8.8]  },
-	{ label: 'Centro-Oeste', values: [5.6,  8.0]  },
-];
+export const regiaoGroupedData = [...regionUfRows]
+	.sort((a, b) => +b.perc_qtde_contemplados - +a.perc_qtde_contemplados)
+	.map((r) => ({
+		label: r.regiao,
+		values: [+r.perc_qtde_contemplados * 100, +r.perc_populacao * 100],
+	}));
 
 // ── 4. HorizontalStackedBarChart — faixas por tipo CPF vs CNPJ ───────────────
 export const BAND_LABELS: Record<string, string> = {

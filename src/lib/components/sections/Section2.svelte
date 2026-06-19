@@ -11,8 +11,6 @@
 		HorizontalBarChart,
 		TreemapChart,
 		colorScales,
-		colorPairs,
-		categorical8,
 	} from 'sniic-design-system';
 	import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
 	import {
@@ -81,7 +79,7 @@
 				data={pyramidData}
 				leftLabel="Masculino"
 				rightLabel="Feminino"
-				colors={colorPairs.tealYellow}
+				colors={[colorScales.yellow[2], colorScales.blue[2]]}
 				height={320}
 			/>
 		</DashboardCard>
@@ -137,7 +135,7 @@
 			<HorizontalGroupedBarChart
 				data={regionComparisonGroupedData}
 				seriesLabels={['Contemplados PNAB', 'Vínculos RAIS 2024']}
-				colors={[categorical8[0], '#cb4034']}
+				colors={[colorScales.yellow[2], colorScales.blue[2]]}
 				format={(v: number) => fmtPct(v)}
 				margin={{ top: 20, right: 80, bottom: 40, left: 120 }}
 				barHeight={20}
@@ -153,7 +151,7 @@
 			<HorizontalGroupedBarChart
 				data={escolaridadeComparisonGroupedData}
 				seriesLabels={['PNAB', 'Total trabalhadores formais']}
-				colors={[categorical8[0], '#cb4034']}
+				colors={[colorScales.yellow[2], colorScales.blue[2]]}
 				format={(v: number) => fmtPct(v)}
 				margin={{ top: 20, right: 80, bottom: 40, left: 260 }}
 				barHeight={20}
@@ -170,7 +168,7 @@
 			data={sexoComparisonStackedData}
 			keys={[...sexoComparisonStackedKeys]}
 			labels={sexoComparisonStackedLabels}
-			colors={[categorical8[0], '#cb4034']}
+			colors={[colorScales.yellow[2], colorScales.blue[2]]}
 			labelsAbove={true}
 		/>
 	</DashboardCard>

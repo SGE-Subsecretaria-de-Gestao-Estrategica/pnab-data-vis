@@ -1,7 +1,8 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart, categorical8 } from 'sniic-design-system';
+  import { categorical8 } from 'sniic-design-system';
+  import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
   // @ts-ignore
   import {
     tipoExecRegiaoData,
@@ -15,7 +16,7 @@
 
   const { Story } = defineMeta({
     title: 'Section 6/tipoExecRegiao',
-    component: HorizontalStackedBarChart,
+    component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {
       docs: {
@@ -35,15 +36,14 @@ Participação percentual do valor estimado por tipo de execução (**Ação Cul
 
 <Story name="HorizontalStackedBarChart — tipo de execucao por regiao">
   {#snippet template()}
-    <div style="padding-left: 220px;">
-      <HorizontalStackedBarChart
-        data={tipoExecRegiaoData}
-        keys={[...tipoExecRegiaoKeys]}
-        labels={tipoExecRegiaoLabels}
-        colors={categorical8.slice(0, 3)}
-        format={formatPct}
-        showTotalLabel={false}
-      />
-    </div>
+    <HorizontalStackedBarChartCustom
+      data={tipoExecRegiaoData}
+      keys={[...tipoExecRegiaoKeys]}
+      labels={tipoExecRegiaoLabels}
+      colors={categorical8.slice(0, 3)}
+      format={formatPct}
+      showTotalLabel={false}
+      marginLeft={220}
+    />
   {/snippet}
 </Story>

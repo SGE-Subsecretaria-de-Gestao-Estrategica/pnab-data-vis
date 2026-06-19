@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { colorPairs } from 'sniic-design-system';
+  import { colorScales } from 'sniic-design-system';
   import DonutChartWithLegend from '$lib/components/DonutChartWithLegend.svelte';
   // @ts-ignore
   import { sexoQuantityDonutData, sexoValueDonutData, totalPF, valorTotalPF } from '$lib/data/section3';
@@ -13,7 +13,7 @@
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', maximumFractionDigits: 1 }).format(v);
 
   // feminino=purple, masculino=blue
-  const sexColors = [colorPairs.tealYellow[1], colorPairs.tealYellow[0]];
+  const sexColors = [colorScales.blue[2], colorScales.yellow[2]];
 
   const { Story } = defineMeta({
     title: 'Section 3/sexDonut',

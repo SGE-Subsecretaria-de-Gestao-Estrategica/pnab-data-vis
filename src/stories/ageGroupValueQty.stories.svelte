@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { GroupedColumnChart, colorPairs } from 'sniic-design-system';
+  import { GroupedColumnChart, colorScales } from 'sniic-design-system';
   // @ts-ignore
   import {
     ageGroupValueQtyData,
@@ -14,7 +14,7 @@
     (v * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
   // valor = orange, quantidade = blue
-  const colors = [colorPairs.tealYellow[1], colorPairs.tealYellow[0]];
+  const colors = [colorScales.blue[2], colorScales.yellow[2]];
 
   const { Story } = defineMeta({
     title: 'Section 3/ageGroupValueQty',

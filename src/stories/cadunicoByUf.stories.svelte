@@ -1,13 +1,14 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalBarChart, colorScales } from 'sniic-design-system';
+  import { colorScales } from 'sniic-design-system';
+  import HorizontalBarChartCustom from '$lib/components/HorizontalBarChartCustom.svelte';
   // @ts-ignore
   import { cadunicoUfData } from '$lib/data/section5';
 
   const { Story } = defineMeta({
     title: 'Section 5/cadunicoByUf',
-    component: HorizontalBarChart,
+    component: HorizontalBarChartCustom,
     tags: ['autodocs'],
     parameters: {
       docs: {
@@ -27,11 +28,12 @@ Para cada unidade federativa, mostra o percentual dos contemplados pela Aldir Bl
 
 <Story name="HorizontalBarChart — % CadÚnico por UF (teal)">
   {#snippet template()}
-    <HorizontalBarChart
+    <HorizontalBarChartCustom
       data={cadunicoUfData}
       color={colorScales.teal[2]}
       format={(v) => `${v.toFixed(1)}%`}
       xLabel="% dos contemplados da UF no CadÚnico"
+      rowHeight={52}
       margin={{ top: 20, right: 80, bottom: 40, left: 50 }}
     />
   {/snippet}
@@ -42,6 +44,7 @@ Para cada unidade federativa, mostra o percentual dos contemplados pela Aldir Bl
     <HorizontalBarChart
       data={cadunicoUfData}
       color={colorScales.orange[2]}
+      rowHeight={52}
       format={(v) => `${v.toFixed(1)}%`}
       xLabel="% dos contemplados da UF no CadÚnico"
       margin={{ top: 20, right: 80, bottom: 40, left: 50 }}

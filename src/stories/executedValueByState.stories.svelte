@@ -28,6 +28,8 @@
         format={formatBRL}
         formatLine2={(row) => formatPercFix(row.valor_executado_perc * 100)}
         showSideLegend={true}
+        legCols={2}
+        mapFrac={0.72}
       />
     </div>
   {/snippet}

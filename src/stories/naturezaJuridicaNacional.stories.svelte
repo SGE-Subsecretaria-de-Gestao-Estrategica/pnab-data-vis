@@ -37,7 +37,7 @@ Os dados revelam forte presença de estruturas de pequeno porte e organizações
       color={colorScales.teal[2]}
       format={formatPct}
       xLabel="% de CNPJs contemplados"
-      rowHeight={52}
+      rowHeight={72}
       margin={{ top: 20, right: 80, bottom: 40, left: 230 }}
     />
   {/snippet}

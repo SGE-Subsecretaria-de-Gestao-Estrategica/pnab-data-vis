@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { DivergingBarChart, colorPairs, categorical8 } from 'sniic-design-system';
+  import { DivergingBarChart, colorPairs, colorScales } from 'sniic-design-system';
   import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
   // @ts-ignore
   import { sexoDivergingData, sexoComparisonStackedData, sexoComparisonStackedKeys, sexoComparisonStackedLabels } from '$lib/data/section4';
@@ -46,8 +46,9 @@ Entre as mulheres beneficiárias, **60,1%** não possuem vínculo formal — pro
       data={sexoComparisonStackedData}
       keys={[...sexoComparisonStackedKeys]}
       labels={sexoComparisonStackedLabels}
-      colors={[categorical8[0], '#cb4034']}
+      colors={[colorScales.yellow[2], colorScales.blue[2]]}
       format={formatPctN}
+      rowHeight={40}
       labelsAbove
     />
   {/snippet}

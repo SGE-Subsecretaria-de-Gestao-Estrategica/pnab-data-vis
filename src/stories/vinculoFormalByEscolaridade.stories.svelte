@@ -92,11 +92,11 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
     <HorizontalGroupedBarChart
       data={escolaridadeComparisonGroupedData}
       seriesLabels={['PNAB', 'Total trabalhadores formais']}
-      colors={[categorical8[0], '#cb4034']}
+      colors={[colorScales.yellow[2], colorScales.blue[2]]}
       format={formatPctN}
       xLabel="% do total"
       margin={{ top: 20, right: 80, bottom: 40, left: 260 }}
-      barHeight={20}
+      barHeight={34}
       rx={0}
       crispEdges
       labelsInside
@@ -113,6 +113,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
       format={formatBRL}
       xLabel="Valor médio recebido (R$)"
       margin={{ top: 20, right: 100, bottom: 40, left: 260 }}
+      rowHeight={52}
     />
   {/snippet}
 </Story>

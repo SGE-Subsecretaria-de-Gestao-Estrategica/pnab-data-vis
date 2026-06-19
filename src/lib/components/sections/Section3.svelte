@@ -78,7 +78,7 @@
 			data={faixaEtariaSexoData}
 			keys={[...FAIXA_SEXO_KEYS]}
 			labels={FAIXA_SEXO_LABELS}
-			colors={[colorScales.orange[2], colorScales.blue[2]]}
+			colors={[colorScales.blue[2], colorScales.purple[2]]}
 			height={280}
 		/>
 	</DashboardCard>

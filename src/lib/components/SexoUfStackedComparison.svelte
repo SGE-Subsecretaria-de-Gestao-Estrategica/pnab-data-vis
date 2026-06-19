@@ -14,7 +14,7 @@
 		barHeight = 14,
 		pairGap = 3,
 		groupGap = 10,
-		margin = { top: 24, right: 20, bottom: 110, left: 130 },
+		margin = { top: 24, right: 20, bottom: 64, left: 130 },
 	}: {
 		data?: UfSexoRow[];
 		colorMasc?: string;
@@ -49,25 +49,17 @@
 	}
 
 	// Legend layout
-	const LEGEND_BLOCK_H = 34;
-	const LEGEND_CHAR_W  = 7.5;
-	const LEGEND_PAD_X   = 16;
-	const LEGEND_ROW_GAP = 2;
-
-	const legendRows = $derived([
-		[
-			{ label: 'Masculino – contemplados',      color: colorMasc, opacity: 1    },
-			{ label: 'Feminino – contempladas',        color: colorFem,  opacity: 1    },
-		],
-		[
-			{ label: 'Masculino – População',  color: colorMasc, opacity: 0.35 },
-			{ label: 'Feminino – População',   color: colorFem,  opacity: 0.35 },
-		],
-	]);
-	const legendRowWidths = $derived(
-		legendRows.map((row) => row.map((item) => item.label.length * LEGEND_CHAR_W + LEGEND_PAD_X * 2))
-	);
+	const LEGEND_BLOCK_H = 28;
 	const LEGEND_Y = $derived(margin.top + totalContentH + 28);
+	const legendItems = $derived([
+		{ label: 'Masculino – contemplados', color: colorMasc, opacity: 1   },
+		{ label: 'Feminino – contempladas',  color: colorFem,  opacity: 1   },
+		{ label: 'Masculino – população',    color: colorMasc, opacity: 0.4 },
+		{ label: 'Feminino – população',     color: colorFem,  opacity: 0.4 },
+	]);
+	const legX = $derived(margin.left - 78);
+	const legW = $derived(containerWidth - margin.right - legX);
+	const legItemW = $derived(legW / legendItems.length);
 </script>
 
 <div bind:clientWidth={containerWidth} style="width:100%;">
@@ -156,23 +148,16 @@
 				{/if}
 			{/each}
 
-			<!-- legend: 4 blocos em 2 linhas -->
-			{#each legendRows as row, ri}
-				{@const rowY = LEGEND_Y + ri * (LEGEND_BLOCK_H + LEGEND_ROW_GAP)}
-				{@const widths = legendRowWidths[ri]}
-				{@const rowTotalW = widths.reduce((s, w) => s + w, 0)}
-				{@const rowStartX = (containerWidth - rowTotalW) / 2}
-				{#each row as item, ci}
-					{@const bx = rowStartX + widths.slice(0, ci).reduce((s, w) => s + w, 0)}
-					{@const w = widths[ci]}
-					<rect x={bx} y={rowY} width={w} height={LEGEND_BLOCK_H} fill={item.color} opacity={item.opacity} shape-rendering="crispEdges" />
-					<text x={bx + LEGEND_PAD_X} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" font-size="12" font-weight="600" fill={textColor(item.color, item.opacity)}>{item.label}</text>
-					{#if ci < row.length - 1}
-						<line x1={bx + w} y1={rowY} x2={bx + w} y2={rowY + LEGEND_BLOCK_H} stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" />
-					{/if}
-				{/each}
-				<rect fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" x={rowStartX} y={rowY} width={rowTotalW} height={LEGEND_BLOCK_H} />
+			<!-- legend: 4 itens iguais em linha, alinhado com labels de UF -->
+			{#each legendItems as item, ci}
+				{@const bx = legX + ci * legItemW}
+				<rect x={bx} y={LEGEND_Y} width={legItemW} height={LEGEND_BLOCK_H} fill={item.color} opacity={item.opacity} shape-rendering="crispEdges" />
+				<text x={bx + legItemW / 2} y={LEGEND_Y + LEGEND_BLOCK_H / 2} dy="0.35em" text-anchor="middle" font-size="12" font-weight="600" fill={textColor(item.color, item.opacity)}>{item.label}</text>
+				{#if ci < legendItems.length - 1}
+					<line x1={bx + legItemW} y1={LEGEND_Y} x2={bx + legItemW} y2={LEGEND_Y + LEGEND_BLOCK_H} stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" />
+				{/if}
 			{/each}
+			<rect fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" x={legX} y={LEGEND_Y} width={legW} height={LEGEND_BLOCK_H} />
 
 		</svg>
 	{/if}

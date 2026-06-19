@@ -1,12 +1,12 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { colorPairs } from 'sniic-design-system';
+  import { colorScales } from 'sniic-design-system';
   import DonutChartWithLegend from '$lib/components/DonutChartWithLegend.svelte';
   // @ts-ignore
   import { sexoDonutByAgeGroup } from '$lib/data/section3';
 
-  const sexColors = [colorPairs.tealYellow[1], colorPairs.tealYellow[0]];
+  const sexColors = [colorScales.blue[2], colorScales.yellow[2]];
 
   // @ts-ignore
   const formatPct = (v) =>

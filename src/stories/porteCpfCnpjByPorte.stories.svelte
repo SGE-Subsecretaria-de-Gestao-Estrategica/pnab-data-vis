@@ -12,7 +12,7 @@
   // @ts-ignore
   const formatPerc = (v) => `${v.toFixed(1)}%`;
 
-  const cpfCnpjColors = [colorScales.teal[2], colorScales.yellow[2]];
+  const cpfCnpjColors = [colorScales.blue[2], colorScales.yellow[2]];
 
   const { Story } = defineMeta({
     title: 'Section 3/porteCpfCnpjByPorte',

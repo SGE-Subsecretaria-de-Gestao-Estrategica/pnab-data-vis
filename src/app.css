@@ -34,7 +34,7 @@ html {
 }
 
 body {
-	font-family: 'Rawline', 'Open Sans', sans-serif;
+	font-family: 'Rawline', system-ui, sans-serif;
 	color: var(--color-text);
 	background: var(--color-bg);
 	line-height: 1.6;

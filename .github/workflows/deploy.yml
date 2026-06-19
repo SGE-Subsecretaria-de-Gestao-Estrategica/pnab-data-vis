@@ -31,6 +31,8 @@ jobs:
         env:
           BASE_PATH: /pnab-data-vis
 
+      - run: touch build/.nojekyll
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: build/

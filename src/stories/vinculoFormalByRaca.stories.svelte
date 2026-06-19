@@ -91,11 +91,11 @@ O treemap torna visível a concentração: Parda e Branca juntas ocupam mais de 
     <HorizontalGroupedBarChart
       data={racaCorComparisonGroupedData}
       seriesLabels={['População Geral', 'Vínculos RAIS 2024']}
-      colors={[categorical8[0], '#cb4034']}
+      colors={[colorScales.yellow[2], colorScales.blue[2]]}
       format={formatN}
       xLabel="% do total"
       margin={{ top: 20, right: 80, bottom: 40, left: 120 }}
-      barHeight={20}
+      barHeight={34}
       rx={0}
       crispEdges
       labelsInside

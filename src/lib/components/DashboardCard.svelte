@@ -75,7 +75,7 @@
 	}
 
 	.tab {
-		font-family: 'Rawline', 'Raleway', system-ui, sans-serif;
+		font-family: 'Rawline', system-ui, sans-serif;
 		font-size: 0.78rem;
 		font-weight: 500;
 		padding: 0.5rem 1rem;

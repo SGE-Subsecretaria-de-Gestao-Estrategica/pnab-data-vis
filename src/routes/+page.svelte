@@ -93,7 +93,7 @@
 		background: none;
 		border: none;
 		cursor: pointer;
-		font-family: 'Rawline', 'Raleway', system-ui, sans-serif;
+		font-family: 'Rawline', system-ui, sans-serif;
 		font-size: 0.72rem;
 		text-align: right;
 		color: #333;

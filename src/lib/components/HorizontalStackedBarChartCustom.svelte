@@ -8,10 +8,10 @@
 		labels = {} as Record<string, string>,
 		colors = [] as string[],
 		format = (v: number) => v.toLocaleString(),
-		rowHeight = 52,
+		rowHeight = 72,
 		showTotalLabel = false,
 		marginLeft = 180,
-		legendAlign = 'center' as 'left' | 'center' | 'right',
+		legendAlign = 'left' as 'left' | 'center' | 'right',
 		labelsAbove = false,
 	}: {
 		data?: DataRow[];
@@ -47,7 +47,7 @@
 	const innerWidth  = $derived(Math.max(0, containerWidth - effectiveMarginLeft - MR));
 
 	// d3 scaleBand equivalent: padding(0.28) sets paddingInner = paddingOuter = 0.28
-	const PAD = 0.28;
+	const PAD = 0.15;
 	const effectiveRowHeight = $derived(labelsAbove ? rowHeight + LABEL_ABOVE_H : rowHeight);
 	const n = $derived(data.length);
 	const innerHeight = $derived(n * effectiveRowHeight);
@@ -89,8 +89,8 @@
 	);
 
 	// Legend: each box sized to fit its text (min 60px), wraps to multiple rows if needed
-	const CHAR_W       = 6;
-	const BOX_PAD      = 16;
+	const CHAR_W       = 8;
+	const BOX_PAD      = 20;
 	const LEGEND_ROW_H = 34;
 	const LEGEND_GAP   = 2;
 
@@ -245,7 +245,7 @@
 							x={item.x + 8}
 							y={LEGEND_ROW_H / 2}
 							dy="0.35em"
-							font-size="10"
+							font-size="13"
 							font-weight="600"
 							fill={labelColor(colors[item.ki] ?? '#999')}
 						>{labels[item.key] ?? item.key}</text>

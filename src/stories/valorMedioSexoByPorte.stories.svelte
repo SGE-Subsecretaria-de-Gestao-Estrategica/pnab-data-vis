@@ -19,7 +19,7 @@
   const sexColors = [colorScales.blue[2], colorScales.yellow[2]];
 
   const { Story } = defineMeta({
-    title: 'Section 3/valorMedioSexoByPorte',
+    title: 'Section 3/Grafico 20',
     component: HorizontalGroupedBarChart,
     tags: ['autodocs'],
     parameters: {

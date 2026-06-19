@@ -15,7 +15,7 @@
   const cpfCnpjColors = [colorScales.blue[2], colorScales.yellow[2]];
 
   const { Story } = defineMeta({
-    title: 'Section 3/porteCpfCnpjByPorte',
+    title: 'Section 3/Grafico 17',
     component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {

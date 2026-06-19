@@ -7,7 +7,7 @@
   import { naturezaJuridicaRegiaoData, naturezaJuridicaSeriesLabels } from '$lib/data/section3';
 
   const { Story } = defineMeta({
-    title: 'Section 3/naturezaJuridicaByRegion',
+    title: 'Section 3/Grafico 22',
     component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {

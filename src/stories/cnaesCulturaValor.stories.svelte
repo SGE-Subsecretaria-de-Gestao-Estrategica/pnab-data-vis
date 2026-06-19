@@ -5,7 +5,7 @@
   import { top20CnaesCulturaValTableData, cnaesCulturaValTableHeight } from '$lib/data/section3';
 
   const { Story } = defineMeta({
-    title: 'Section 3/CNAEs Culturais — Valor Repassado',
+    title: 'Section 3/Infografico 2',
     component: CnaeTable,
     tags: ['autodocs'],
     parameters: {
@@ -22,7 +22,7 @@ Ranking das 20 atividades economicas culturais (CNAE principal) entre os CNPJs c
   });
 </script>
 
-<Story name="Top 20 CNAEs Culturais — Valor Repassado">
+<Story name="Infografico 2">
   {#snippet template()}
     <svg width={700} height={cnaesCulturaValTableHeight}>
       <CnaeTable data={top20CnaesCulturaValTableData} metric="valor" width={700} />

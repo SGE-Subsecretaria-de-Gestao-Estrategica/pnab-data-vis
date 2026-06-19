@@ -7,7 +7,7 @@
   import { sexoUfComparisonData } from '$lib/data/section3';
 
   const { Story } = defineMeta({
-    title: 'Section 3/sexoUfComparison',
+    title: 'Section 3/Grafico 19',
     component: SexoUfStackedComparison,
     tags: ['autodocs'],
     parameters: {

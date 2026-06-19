@@ -35,7 +35,7 @@ Ranking das 20 atividades econômicas (CNAE principal) entre os CNPJs contemplad
   {/snippet}
 </Story>
 
-<Story name="Top 20 CNAEs — Valor Repassado">
+<Story name="Infografico 1">
   {#snippet template()}
     <svg width={700} height={cnaesValTableHeight}>
       <CnaeTable data={top20CnaesValTableData} metric="valor" width={700} />

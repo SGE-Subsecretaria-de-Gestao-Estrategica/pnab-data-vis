@@ -10,7 +10,7 @@
   const formatPctFixed = (v) => `${v.toFixed(1)}%`;
 
   const { Story } = defineMeta({
-    title: 'Section 2/ufBandPercDistribution',
+    title: 'Section 2/Grafico 13',
     component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {

@@ -9,7 +9,7 @@
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
 
   const { Story } = defineMeta({
-    title: 'Section 2/ticketMedioByState',
+    title: 'Section 2/Grafico 12',
     component: ExecutedValueByStateMap,
     tags: ['autodocs'],
     parameters: {

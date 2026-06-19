@@ -14,7 +14,7 @@
     v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
   const { Story } = defineMeta({
-    title: 'Section 2/faixaGrouped',
+    title: 'Section 2/Grafico 8',
     component: HorizontalGroupedBarChart,
     tags: ['autodocs'],
     parameters: {

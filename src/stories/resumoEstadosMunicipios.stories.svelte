@@ -17,7 +17,7 @@
   ];
 
   const { Story } = defineMeta({
-    title: 'Section 2/resumoEstadosMunicipios',
+    title: 'Section 2/Tabela 4',
     component: DataTable,
     tags: ['autodocs'],
     parameters: {

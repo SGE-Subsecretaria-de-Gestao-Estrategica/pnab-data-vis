@@ -7,7 +7,7 @@
   import { faixaEtariaSexoData, FAIXA_SEXO_KEYS, FAIXA_SEXO_LABELS } from '$lib/data/section5';
 
   const { Story } = defineMeta({
-    title: 'Section 5/cadunicoFaixaSexo',
+    title: 'Section 5/Grafico 30',
     component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {

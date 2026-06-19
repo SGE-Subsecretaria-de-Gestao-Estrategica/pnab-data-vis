@@ -7,7 +7,7 @@
   import { representacaoUfGroupedData } from '$lib/data/section5';
 
   const { Story } = defineMeta({
-    title: 'Section 5/cadunicoRepresentacaoByUf',
+    title: 'Section 5/Grafico 32',
     component: ConnectedDotPlot,
     tags: ['autodocs'],
     parameters: {

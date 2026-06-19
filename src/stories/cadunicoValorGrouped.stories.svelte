@@ -7,7 +7,7 @@
   import { valorGroupedData } from '$lib/data/section5';
 
   const { Story } = defineMeta({
-    title: 'Section 5/cadunicoValorGrouped',
+    title: 'Section 5/Grafico 33',
     component: HorizontalGroupedBarChart,
     tags: ['autodocs'],
     parameters: {

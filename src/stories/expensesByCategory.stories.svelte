@@ -84,7 +84,7 @@
   }
 
   const { Story } = defineMeta({
-    title: 'Section 6/expensesByCategory',
+    title: 'Section 6/Grafico 34',
     component: {},
     tags: ['autodocs'],
     parameters: {

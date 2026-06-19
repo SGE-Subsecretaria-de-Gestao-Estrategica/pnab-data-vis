@@ -18,7 +18,7 @@
   const chartData = fomentoSubData.map((d) => ({ label: d.label, value: d.valor }));
 
   const { Story } = defineMeta({
-    title: 'Section 6/fomentoSubcategorias',
+    title: 'Section 6/Grafico 35',
     component: HorizontalBarChartCustom,
     tags: ['autodocs'],
     parameters: {

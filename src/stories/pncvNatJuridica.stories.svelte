@@ -15,7 +15,7 @@
     v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
   const { Story } = defineMeta({
-    title: 'Section 6/pncvNatJuridica',
+    title: 'Section 6/Grafico 40',
     component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {

@@ -21,7 +21,7 @@
   const FONT = "'Space Grotesk', system-ui, sans-serif";
 
   const { Story } = defineMeta({
-    title: 'Section 6/modalidadeObrasTable',
+    title: 'Section 6/Tabela 5',
     component: {},
     tags: ['autodocs'],
     parameters: {

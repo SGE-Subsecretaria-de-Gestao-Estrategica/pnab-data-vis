@@ -55,7 +55,7 @@
   const leaves = root.leaves();
 
   const { Story } = defineMeta({
-    title: 'Section 6/fomentoDomainsTreemap',
+    title: 'Section 6/Grafico 37',
     component: {},
     tags: ['autodocs'],
     parameters: {

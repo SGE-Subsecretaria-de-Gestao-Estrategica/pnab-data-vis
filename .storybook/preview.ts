@@ -17,9 +17,9 @@ function makeFilename(title: string, name: string): string {
 const preview: Preview = {
   decorators: [
     // @ts-ignore
-    (story: unknown, context: { title: string; name: string }) => ({
+    (story: unknown, context: { id: string; title: string; name: string }) => ({
       Component: SvgExportDecoratorNamed,
-      props: { filename: makeFilename(context.title, context.name) },
+      props: { filename: makeFilename(context.title, context.name), storyId: context.id },
     }),
   ],
   parameters: {

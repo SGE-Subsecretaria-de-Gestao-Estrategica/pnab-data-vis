@@ -1,7 +1,8 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart, colorScales } from 'sniic-design-system';
+  import { colorScales } from 'sniic-design-system';
+  import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
   import ConnectedDotPlot from '$lib/components/ConnectedDotPlot.svelte';
   // @ts-ignore
   import { specialExecByUfData, specialExecByUfDotData } from '$lib/data/section1';
@@ -13,7 +14,7 @@
 
   const { Story } = defineMeta({
     title: 'Section 1/Grafico 7',
-    component: HorizontalStackedBarChart,
+    component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {
       docs: {
@@ -47,13 +48,14 @@ Distribuicao do valor executado em territorios especiais (favelas, comunidades u
 
 <Story name="Grafico 7">
   {#snippet template()}
-    <HorizontalStackedBarChart
+    <HorizontalStackedBarChartCustom width={600}
       data={specialExecByUfData}
       keys={['valor_executado_estado', 'valor_executado_municipio']}
       categoryKey="label"
       labels={{ valor_executado_estado: 'Governo Estadual', valor_executado_municipio: 'Governo Municipal' }}
       colors={[colorScales.blue[2], colorScales.orange[2]]}
       format={formatBRL}
+      marginLeft={50}
       showTotalLabel={true}
     />
   {/snippet}

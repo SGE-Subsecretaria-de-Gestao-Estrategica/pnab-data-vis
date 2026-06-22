@@ -226,7 +226,7 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
 
 <Story name="Grafico 4">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={porteStackedData}
       keys={porteStackedKeys}
       labels={porteStackedLabels}
@@ -242,7 +242,7 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
 <!-- DISABLED: resumo_por_porte_populacional.csv faltante em section_1/
 <Story name="Bars — Métricas por Porte">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={pmStackedData}
       keys={pmKeys}
       categoryKey="cat"
@@ -266,7 +266,7 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
 
 <Story name="Stacked — Recurso e Contemplados por Porte">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={pmPercStackedData}
       keys={pmKeys}
       categoryKey="cat"

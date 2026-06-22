@@ -25,8 +25,8 @@
 	const BAR_TW    = 210;
 	const PCT_X     = 646;  // text-anchor="start", 6px after bar end (640)
 	const PAD_Y     = 10;
-	const FS        = 13;
-	const FS_HDR    = 10;
+	const FS        = 12;
+	const FS_HDR    = 12;
 	const LH        = FS * 1.4;
 	const CW        = FS * 0.55;
 	const MIN_H_POD = 54;
@@ -55,8 +55,8 @@
 	const TRACK_CLR = 'rgba(0,0,0,0.07)';
 	const HDR_CLR   = '#255c4f'; // teal[3]
 	const SEP_CLR   = 'rgba(0,0,0,0.09)';
-	const TXT_CLR   = 'var(--chart-fg-strong, #1a1a1a)';
-	const FONT      = "'Space Grotesk', system-ui, sans-serif";
+	const TXT_CLR   = '#1a1a1a';
+	const FONT      = "'Rawline', system-ui, sans-serif";
 
 	// ── Derived from metric ───────────────────────────────────────────────────
 	const isQtd      = $derived(metric === 'quantidade');
@@ -146,11 +146,11 @@
 				<circle r={MEDAL_R - 3.5} fill="none" stroke={row.medal.ring}
 					stroke-width={1.2} opacity={0.55} />
 				<text text-anchor="middle" dominant-baseline="central"
-					font-size={13} font-weight="800" fill={row.medal.textFill}>{row.posicao}</text>
+					font-size={12} font-weight="800" fill={row.medal.textFill}>{row.posicao}</text>
 			{:else}
 				<circle r={BADGE_R} fill="rgba(0,0,0,0.05)" stroke="rgba(0,0,0,0.12)" stroke-width={0.8} />
 				<text text-anchor="middle" dominant-baseline="central"
-					font-size={11} font-weight="600" fill={TXT_CLR} opacity={0.6}>{row.posicao}</text>
+					font-size={12} font-weight="600" fill={TXT_CLR} opacity={0.6}>{row.posicao}</text>
 			{/if}
 		</g>
 

@@ -36,14 +36,16 @@ Participação percentual do valor estimado por tipo de execução (**Ação Cul
 
 <Story name="HorizontalStackedBarChart — tipo de execucao por regiao">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
-      data={tipoExecRegiaoData}
-      keys={[...tipoExecRegiaoKeys]}
-      labels={tipoExecRegiaoLabels}
-      colors={categorical8.slice(0, 3)}
-      format={formatPct}
-      showTotalLabel={false}
-      marginLeft={220}
-    />
+    <div style="max-width: 600px;">
+      <HorizontalStackedBarChartCustom width={600}
+        data={tipoExecRegiaoData}
+        keys={[...tipoExecRegiaoKeys]}
+        labels={tipoExecRegiaoLabels}
+        colors={categorical8.slice(0, 3)}
+        format={formatPct}
+        showTotalLabel={false}
+        marginLeft={120}
+      />
+    </div>
   {/snippet}
 </Story>

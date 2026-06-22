@@ -5,7 +5,7 @@
 		isSeparator?: boolean;
 	}
 
-	const FONT = "'Space Grotesk', system-ui, sans-serif";
+	const FONT = "'Rawline', system-ui, sans-serif";
 
 	function labelColor(hex: string): string {
 		const r = parseInt(hex.slice(1, 3), 16) / 255;
@@ -16,6 +16,7 @@
 	}
 
 	let {
+		width = undefined,
 		data = [] as DiffRow[],
 		colorPositive = '#1351B4',
 		colorNegative = '#cb4034',
@@ -26,6 +27,7 @@
 		xLabel = '',
 		zeroLabel = '0%',
 	}: {
+		width?: number;
 		data?: DiffRow[];
 		colorPositive?: string;
 		colorNegative?: string;
@@ -37,7 +39,8 @@
 		zeroLabel?: string;
 	} = $props();
 
-	let containerWidth = $state(0);
+	let measuredWidth = $state(0);
+	const containerWidth = $derived(width ?? measuredWidth);
 
 	const innerW = $derived(Math.max(0, containerWidth - margin.left - margin.right));
 
@@ -95,7 +98,7 @@
 	const legendX = $derived(margin.left + cx - legendTotalW / 2);
 </script>
 
-<div bind:clientWidth={containerWidth} style="width: 100%;">
+<div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
 	{#if containerWidth > 0}
 		<svg width={containerWidth} height={svgH} font-family={FONT} role="img" aria-label="Diferença PNAB vs RAIS por UF">
 			<g transform="translate({margin.left},{margin.top})">
@@ -141,7 +144,7 @@
 							y={by + barH / 2}
 							dy="0.35em"
 							text-anchor={showInside ? (diff >= 0 ? 'end' : 'start') : anchor}
-							font-size="10"
+							font-size="12"
 							font-weight="600"
 							fill={showInside ? labelColor(col) : '#333'}
 						>{format(diff)}</text>
@@ -152,7 +155,7 @@
 							y={row.y + rowHeight / 2}
 							dy="0.35em"
 							text-anchor="end"
-							font-size="11"
+							font-size="12"
 							fill="#555"
 						>{row.label}</text>
 					{/if}
@@ -167,12 +170,12 @@
 							y={8}
 							dy="0.71em"
 							text-anchor={ti === 0 ? 'start' : ti === ticks.length - 1 ? 'end' : 'middle'}
-							font-size="9"
+							font-size="12"
 							fill="#888"
 						>{Math.abs(tick.v) < 0.001 ? zeroLabel : format(tick.v)}</text>
 					{/each}
 					{#if xLabel}
-						<text x={cx} y={30} text-anchor="middle" font-size="10" fill="#888">{xLabel}</text>
+						<text x={cx} y={30} text-anchor="middle" font-size="12" fill="#888">{xLabel}</text>
 					{/if}
 				</g>
 
@@ -180,9 +183,9 @@
 			<!-- Legend -->
 			<g transform="translate({legendX - margin.left},{legendY - margin.top})">
 				<rect x={0} y={0} width={LEGEND_BOX_W} height={LEGEND_H} fill={colorPositive} shape-rendering="crispEdges" />
-				<text x={8} y={LEGEND_H / 2} dy="0.35em" font-size="11" font-weight="600" fill={labelColor(colorPositive)}>PNAB &gt; RAIS</text>
+				<text x={8} y={LEGEND_H / 2} dy="0.35em" font-size="12" font-weight="600" fill={labelColor(colorPositive)}>PNAB &gt; RAIS</text>
 				<rect x={LEGEND_BOX_W + LEGEND_GAP} y={0} width={LEGEND_BOX_W} height={LEGEND_H} fill={colorNegative} shape-rendering="crispEdges" />
-				<text x={LEGEND_BOX_W + LEGEND_GAP + 8} y={LEGEND_H / 2} dy="0.35em" font-size="11" font-weight="600" fill={labelColor(colorNegative)}>PNAB &lt; RAIS</text>
+				<text x={LEGEND_BOX_W + LEGEND_GAP + 8} y={LEGEND_H / 2} dy="0.35em" font-size="12" font-weight="600" fill={labelColor(colorNegative)}>PNAB &lt; RAIS</text>
 				<rect x={0} y={0} width={legendTotalW} height={LEGEND_H} fill="none" stroke="rgba(0,0,0,0.2)" stroke-width="0.5" shape-rendering="crispEdges" />
 				<line x1={LEGEND_BOX_W} y1={0} x2={LEGEND_BOX_W} y2={LEGEND_H} stroke="rgba(0,0,0,0.2)" stroke-width="0.5" shape-rendering="crispEdges" />
 			</g>

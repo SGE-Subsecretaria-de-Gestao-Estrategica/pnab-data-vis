@@ -28,7 +28,7 @@ As **entidades sem fins lucrativos** lideram em volume de recursos em todas as r
 
 <Story name="Percentual por natureza juridica e regiao">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={naturezaJuridicaRegiaoData}
       keys={naturezaJuridicaSeriesLabels}
       colors={categorical8.slice(0, 6)}

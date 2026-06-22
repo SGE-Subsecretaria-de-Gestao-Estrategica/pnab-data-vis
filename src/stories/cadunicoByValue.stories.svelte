@@ -28,7 +28,7 @@ Quase metade dos beneficiários CadÚnico recebeu até R$2 mil, e mais de **86%*
 
 <Story name="HorizontalBarChart — distribuição por faixa de valor (blue)">
   {#snippet template()}
-    <HorizontalBarChartCustom
+    <HorizontalBarChartCustom width={600}
       data={cadunicoValorData}
       color={colorScales.orange[2]}
       format={(v) => `${v.toFixed(1)}%`}
@@ -41,7 +41,7 @@ Quase metade dos beneficiários CadÚnico recebeu até R$2 mil, e mais de **86%*
 
 <Story name="HorizontalBarChart — distribuição por faixa de valor (teal)">
   {#snippet template()}
-    <HorizontalBarChartCustom
+    <HorizontalBarChartCustom width={600}
       data={cadunicoValorData}
       color={colorScales.teal[2]}
       format={(v) => `${v.toFixed(1)}%`}

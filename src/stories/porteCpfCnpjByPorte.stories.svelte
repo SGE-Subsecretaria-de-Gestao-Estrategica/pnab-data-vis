@@ -34,7 +34,7 @@ A distribuição entre Pessoa Física (CPF) e Pessoa Jurídica (CNPJ) varia conf
 
 <Story name="Stacked — CPF vs CNPJ por Porte Populacional">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={porteCpfCnpjStackedData}
       keys={porteCpfCnpjKeys}
       categoryKey="label"

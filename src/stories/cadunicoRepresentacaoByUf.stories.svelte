@@ -29,11 +29,11 @@ Dot laranja à direita do teal indica sobrerrepresentação; à esquerda indica 
 
 <Story name="Distribuição CadÚnico — Contemplados PNAB vs Pessoas CadÚnico por UF">
   {#snippet template()}
-    <ConnectedDotPlot
+    <ConnectedDotPlot width={600}
       data={representacaoUfGroupedData}
       seriesLabels={[
-        '% contemplados PNAB/CadÚnico (UF)',
-        '% pessoas CadÚnico (UF)',
+        '% contemplados PNAB/CadUnico (UF)',
+        '% pessoas CadUnico (UF)',
       ]}
       colors={[colorScales.blue[2], colorScales.purple[2]]}
       format={(v) => `${v.toFixed(1)}%`}

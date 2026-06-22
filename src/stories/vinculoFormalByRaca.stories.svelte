@@ -75,7 +75,7 @@ O treemap torna visível a concentração: Parda e Branca juntas ocupam mais de 
 
 <Story name="Barras — Beneficiarios com vinculo formal por raca/cor">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={racaCorGroupedData}
       seriesLabels={['PNAB', 'Total Trabalhadores Formais']}
       colors={[colorScales.lime[2], colorScales.red[2]]}
@@ -88,7 +88,7 @@ O treemap torna visível a concentração: Parda e Branca juntas ocupam mais de 
 
 <Story name="Grafico 26 — Raca/cor PNAB vs RAIS">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={racaCorComparisonGroupedData}
       seriesLabels={['População Geral', 'Vínculos RAIS 2024']}
       colors={[colorScales.yellow[2], colorScales.blue[2]]}

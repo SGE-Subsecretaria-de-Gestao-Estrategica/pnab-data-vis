@@ -28,7 +28,7 @@ Permite identificar rapidamente quais UFs apresentam maior ou menor sub-represen
 
 <Story name="Aldir Blanc vs IBGE por sexo e UF">
   {#snippet template()}
-    <SexoUfStackedComparison
+    <SexoUfStackedComparison width={600}
       data={sexoUfComparisonData}
       colorMasc={colorScales.blue[2]}
       colorFem={colorScales.yellow[2]}

@@ -33,7 +33,7 @@ Municípios de **grande porte** concentram proporcionalmente mais pagamentos nas
 
 <Story name="Faixa de valor por porte de município">
   {#snippet template()}
-    <VerticalStackedBarChartCustom
+    <VerticalStackedBarChartCustom width={600}
       data={portePagamentosData}
       keys={[...UF_BAND_KEYS]}
       labels={UF_BAND_LABELS}

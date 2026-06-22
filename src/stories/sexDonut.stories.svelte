@@ -41,7 +41,7 @@ Os dois donuts permitem comparar as distribuições por quantidade de agentes e 
 
 <Story name="Donut — distribuição por quantidade de agentes">
   {#snippet template()}
-    <DonutChartWithLegend
+    <DonutChartWithLegend width={600}
       data={sexoQuantityDonutData}
       colors={sexColors}
       centerLabel="Agentes contemplados"
@@ -54,7 +54,7 @@ Os dois donuts permitem comparar as distribuições por quantidade de agentes e 
 
 <Story name="Donut — distribuição por valor recebido">
   {#snippet template()}
-    <DonutChartWithLegend
+    <DonutChartWithLegend width={600}
       data={sexoValueDonutData}
       colors={sexColors}
       centerLabel="valor total"

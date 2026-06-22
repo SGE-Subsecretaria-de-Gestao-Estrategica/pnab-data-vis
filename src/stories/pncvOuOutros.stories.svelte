@@ -40,30 +40,34 @@ Compara a participação percentual do valor estimado entre a **Política Nacion
 
 <Story name="HorizontalStackedBarChart — PNCV vs Outros por faixa de repasse (teal e blue)">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
-      data={pncvOuOutrosData}
-      keys={[...pncvOuOutrosKeys]}
-      labels={pncvOuOutrosLabels}
-      colors={colorPairs.bluePurple}
-      format={formatPct}
-      showTotalLabel={false}
-      marginLeft={220}
-      legendAlign="left"
-    />
+    <div style="max-width: 680px;">
+      <HorizontalStackedBarChartCustom width={600}
+        data={pncvOuOutrosData}
+        keys={[...pncvOuOutrosKeys]}
+        labels={pncvOuOutrosLabels}
+        colors={colorPairs.bluePurple}
+        format={formatPct}
+        showTotalLabel={false}
+        marginLeft={280}
+        legendAlign="left"
+      />
+    </div>
   {/snippet}
 </Story>
 
 <Story name="HorizontalStackedBarChart — PNCV vs Outros por faixa de repasse (orange e blue)">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
-      data={pncvOuOutrosData}
-      keys={[...pncvOuOutrosKeys]}
-      labels={pncvOuOutrosLabels}
-      colors={colorPairs.bluePurple}
-      format={formatPct}
-      showTotalLabel={false}
-      marginLeft={220}
-      legendAlign="left"
-    />
+    <div style="max-width: 680px;">
+      <HorizontalStackedBarChartCustom width={600}
+        data={pncvOuOutrosData}
+        keys={[...pncvOuOutrosKeys]}
+        labels={pncvOuOutrosLabels}
+        colors={colorPairs.bluePurple}
+        format={formatPct}
+        showTotalLabel={false}
+        marginLeft={280}
+        legendAlign="left"
+      />
+    </div>
   {/snippet}
 </Story>

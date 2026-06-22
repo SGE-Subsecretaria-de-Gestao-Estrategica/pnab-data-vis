@@ -36,7 +36,7 @@ Cada donut mostra a proporcao de homens e mulheres dentro de uma faixa etaria. N
 
 <Story name="Donut — 15-24 anos">
   {#snippet template()}
-    <DonutChartWithLegend
+    <DonutChartWithLegend width={600}
       data={sexoDonutByAgeGroup[0].donutData}
       colors={sexColors}
       centerLabel={sexoDonutByAgeGroup[0].faixa}
@@ -49,7 +49,7 @@ Cada donut mostra a proporcao de homens e mulheres dentro de uma faixa etaria. N
 
 <Story name="Donut — 25-54 anos">
   {#snippet template()}
-    <DonutChartWithLegend
+    <DonutChartWithLegend width={600}
       data={sexoDonutByAgeGroup[1].donutData}
       colors={sexColors}
       centerLabel={sexoDonutByAgeGroup[1].faixa}
@@ -62,7 +62,7 @@ Cada donut mostra a proporcao de homens e mulheres dentro de uma faixa etaria. N
 
 <Story name="Donut — 55-64 anos">
   {#snippet template()}
-    <DonutChartWithLegend
+    <DonutChartWithLegend width={600}
       data={sexoDonutByAgeGroup[2].donutData}
       colors={sexColors}
       centerLabel={sexoDonutByAgeGroup[2].faixa}
@@ -75,7 +75,7 @@ Cada donut mostra a proporcao de homens e mulheres dentro de uma faixa etaria. N
 
 <Story name="Donut — 65+ anos">
   {#snippet template()}
-    <DonutChartWithLegend
+    <DonutChartWithLegend width={600}
       data={sexoDonutByAgeGroup[3].donutData}
       colors={sexColors}
       centerLabel={sexoDonutByAgeGroup[3].faixa}

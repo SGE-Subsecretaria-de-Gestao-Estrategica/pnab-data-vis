@@ -52,7 +52,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
 
 <Story name="Barras — Beneficiários com vínculo formal por escolaridade">
   {#snippet template()}
-    <HorizontalBarChartCustom
+    <HorizontalBarChartCustom width={600}
       data={escolaridadeProporcionalData}
       color={colorScales.lime[2]}
       format={formatPct}
@@ -64,7 +64,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
 
 <Story name="Barras horizontais — Valor médio por escolaridade">
   {#snippet template()}
-    <HorizontalBarChartCustom
+    <HorizontalBarChartCustom width={600}
       data={escolaridadeValorMedioData}
       color={colorScales.lime[2]}
       format={formatBRL}
@@ -76,7 +76,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
 
 <Story name="Barras verticais — Participacao proporcional por escolaridade">
   {#snippet template()}
-    <VerticalBarChartCustom
+    <VerticalBarChartCustom width={600}
       data={escolaridadeProporcionalVertData}
       color={colorScales.lime[2]}
       format={formatPct}
@@ -89,7 +89,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
 
 <Story name="Grafico 28 — Escolaridade PNAB vs RAIS">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={escolaridadeComparisonGroupedData}
       seriesLabels={['PNAB', 'Total trabalhadores formais']}
       colors={[colorScales.yellow[2], colorScales.blue[2]]}
@@ -107,7 +107,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
 
 <Story name="Grafico 29 — Valor medio por escolaridade">
   {#snippet template()}
-    <HorizontalBarChartCustom
+    <HorizontalBarChartCustom width={600}
       data={escolaridadeValorMedioNewData}
       color={categorical8[0]}
       format={formatBRL}

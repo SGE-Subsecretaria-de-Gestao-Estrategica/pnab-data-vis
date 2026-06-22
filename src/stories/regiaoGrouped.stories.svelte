@@ -33,7 +33,7 @@ O Nordeste concentra **47,6%** dos contemplados, bem acima de sua participação
 
 <Story name="Barras horizontais agrupadas — Contemplados vs. população por região">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={regiaoGroupedData}
       seriesLabels={seriesLabels}
       colors={colors}

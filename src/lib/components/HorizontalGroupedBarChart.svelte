@@ -7,6 +7,7 @@
 	}
 
 	let {
+		width = undefined,
 		data = [] as GroupedBarRow[],
 		seriesLabels = [] as string[],
 		colors = ['#2a9d8f', '#e9c46a'] as string[],
@@ -22,6 +23,7 @@
 		crispEdges = false,
 		labelsInside = false,
 	}: {
+		width?: number;
 		data: GroupedBarRow[];
 		seriesLabels: string[];
 		colors?: string[];
@@ -46,9 +48,10 @@
 		return luminance > 0.55 ? '#1a1a1a' : '#fffffe';
 	}
 
-	let containerWidth = $state(0);
+	let measuredWidth = $state(0);
+	const containerWidth = $derived(width ?? measuredWidth);
 
-	const FONT_FAMILY = "'Space Grotesk', system-ui, sans-serif";
+	const FONT_FAMILY = "'Rawline', system-ui, sans-serif";
 
 	// Derive nSeries from data when seriesLabels is not provided
 	const nSeries = $derived(
@@ -173,7 +176,7 @@
 	);
 </script>
 
-<div bind:clientWidth={containerWidth} style="width:100%;">
+<div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
 	{#if containerWidth > 0}
 		<svg width={containerWidth} height={svgHeight} role="img" font-family={FONT_FAMILY}>
 			<!-- grid lines -->
@@ -187,7 +190,7 @@
 					stroke="#e5e5e5"
 					stroke-width="1"
 				/>
-				<text x={x} y={margin.top + totalContentH + 14} text-anchor="middle" font-size="11" fill="#666"
+				<text x={x} y={margin.top + totalContentH + 14} text-anchor="middle" font-size="12" fill="#666"
 					>{format(tick)}</text
 				>
 			{/each}
@@ -198,7 +201,7 @@
 					x={margin.left + innerW / 2}
 					y={margin.top + totalContentH + 28}
 					text-anchor="middle"
-					font-size="11"
+					font-size="12"
 					fill="#888">{xLabel}</text
 				>
 			{/if}
@@ -213,7 +216,7 @@
 						x={margin.left}
 						y={gy + separatorH / 2}
 						dominant-baseline="middle"
-						font-size="11"
+						font-size="12"
 						font-weight="700"
 						fill="#444">{row.label}</text
 					>
@@ -224,7 +227,7 @@
 						y={gy + groupHeight / 2}
 						text-anchor="end"
 						dominant-baseline="middle"
-						font-size="11"
+						font-size="12"
 						fill="#333">{row.label}</text
 					>
 
@@ -250,7 +253,7 @@
 								y={by + barHeight / 2}
 								text-anchor="end"
 								dominant-baseline="middle"
-								font-size="11"
+								font-size="12"
 								font-weight="600"
 								fill={labelColor(barColor)}>{labelText}</text
 							>
@@ -259,7 +262,7 @@
 								x={margin.left + barW + 4}
 								y={by + barHeight / 2}
 								dominant-baseline="middle"
-								font-size="10"
+								font-size="12"
 								fill="#444">{labelText}</text
 							>
 						{/if}
@@ -291,8 +294,8 @@
 						{#if item.secondLabel && item.secondColor}
 							<rect x={bx} y={rowY} width={w / 2} height={LEGEND_BLOCK_H} fill={item.color} shape-rendering="crispEdges" />
 							<rect x={bx + w / 2} y={rowY} width={w / 2} height={LEGEND_BLOCK_H} fill={item.secondColor} shape-rendering="crispEdges" />
-							<text x={bx + w / 4} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" text-anchor="middle" font-size="11" font-weight="600" fill={labelColor(item.color)}>{item.label}</text>
-							<text x={bx + w * 3 / 4} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" text-anchor="middle" font-size="11" font-weight="600" fill={labelColor(item.secondColor)}>{item.secondLabel}</text>
+							<text x={bx + w / 4} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" text-anchor="middle" font-size="12" font-weight="600" fill={labelColor(item.color)}>{item.label}</text>
+							<text x={bx + w * 3 / 4} y={rowY + LEGEND_BLOCK_H / 2} dy="0.35em" text-anchor="middle" font-size="12" font-weight="600" fill={labelColor(item.secondColor)}>{item.secondLabel}</text>
 							<line x1={bx + w / 2} y1={rowY} x2={bx + w / 2} y2={rowY + LEGEND_BLOCK_H} stroke="rgba(255,255,255,0.4)" stroke-width="1" shape-rendering="crispEdges" />
 						{:else}
 							<rect x={bx} y={rowY} width={w} height={LEGEND_BLOCK_H} fill={item.color} shape-rendering="crispEdges" />
@@ -308,7 +311,7 @@
 				{#each seriesLabels as label, si}
 					{@const lx = margin.left + legendTopOffsets[si]}
 					<rect x={lx} y={6} width={12} height={10} fill={colors[si % colors.length]} rx="2" />
-					<text x={lx + 16} y={13} font-size="11" fill="#444">{label}</text>
+					<text x={lx + 16} y={13} font-size="12" fill="#444">{label}</text>
 				{/each}
 			{/if}
 		</svg>

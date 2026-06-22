@@ -33,7 +33,7 @@ Fonte: \`aggregate_contemplados_by_sexo_proportion.csv\` (cruzamento PNAB × Rec
 
 <Story name="Valor repassado e quantidade por sexo">
   {#snippet template()}
-    <div style="max-width: 420px; margin: 0 auto;">
+    <div style="width: 600px; margin: 0 auto;">
       <SexoDonutDuplo
         {outerFem}
         {outerMasc}

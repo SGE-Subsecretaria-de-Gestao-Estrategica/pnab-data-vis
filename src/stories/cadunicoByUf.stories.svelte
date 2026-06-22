@@ -28,7 +28,7 @@ Para cada unidade federativa, mostra o percentual dos contemplados pela Aldir Bl
 
 <Story name="HorizontalBarChart — % CadÚnico por UF (teal)">
   {#snippet template()}
-    <HorizontalBarChartCustom
+    <HorizontalBarChartCustom width={600}
       data={cadunicoUfData}
       color={colorScales.teal[2]}
       format={(v) => `${v.toFixed(1)}%`}

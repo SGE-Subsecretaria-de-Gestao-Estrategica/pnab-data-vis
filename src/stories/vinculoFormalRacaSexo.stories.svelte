@@ -65,7 +65,7 @@ O cruzamento de raça/cor com sexo revela que **homens pardos** formam o maior g
 
 <Story name="Grafico 27 — Raca/cor por sexo PNAB">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={racaCorSexoComparisonData}
       seriesLabels={['Masculino', 'Feminino']}
       colors={[colorScales.yellow[2], colorScales.blue[2]]}

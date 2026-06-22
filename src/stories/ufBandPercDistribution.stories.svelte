@@ -32,7 +32,7 @@ Cada barra representa uma UF e totaliza 100%, permitindo comparar o **perfil de 
 <Story name="Contemplados por faixa de valor — por UF">
   {#snippet template()}
     <div style="padding: 16px;">
-      <HorizontalStackedBarChartCustom
+      <HorizontalStackedBarChartCustom width={600}
         data={ufBandPercData}
         keys={[...UF_BAND_KEYS]}
         labels={UF_BAND_LABELS}

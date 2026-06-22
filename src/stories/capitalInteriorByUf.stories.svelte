@@ -38,7 +38,7 @@ Estados ordenados pelo maior percentual de contemplados no interior. Destaque pa
 
 <Story name="Grafico 6">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={capitalInteriorByUfData}
       keys={['interior', 'metropolitana', 'capital']}
       labels={{ interior: 'Interior', metropolitana: 'Região Metropolitana', capital: 'Capital' }}
@@ -53,7 +53,7 @@ Estados ordenados pelo maior percentual de contemplados no interior. Destaque pa
 
 <Story name="Stacked — Contemplados por Capital, RM e Interior — cores categorical8">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={capitalInteriorByUfData}
       keys={['capital', 'metropolitana', 'interior']}
       labels={{ capital: 'Capital', metropolitana: 'Região Metropolitana', interior: 'Interior' }}

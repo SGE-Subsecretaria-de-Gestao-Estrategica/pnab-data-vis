@@ -2,18 +2,21 @@
 	type DataRow = Record<string, string | number>;
 
 	let {
+		width = undefined,
 		data = [] as DataRow[],
 		keys = [] as string[],
 		categoryKey = 'label',
 		labels = {} as Record<string, string>,
 		colors = [] as string[],
 		format = (v: number) => v.toLocaleString(),
-		rowHeight = 72,
+		rowHeight = 48,
 		showTotalLabel = false,
 		marginLeft = 180,
 		legendAlign = 'left' as 'left' | 'center' | 'right',
 		labelsAbove = false,
+		yAxisFontSize = 12,
 	}: {
+		width?: number;
 		data?: DataRow[];
 		keys?: string[];
 		categoryKey?: string;
@@ -25,11 +28,13 @@
 		marginLeft?: number;
 		legendAlign?: 'left' | 'center' | 'right';
 		labelsAbove?: boolean;
+		yAxisFontSize?: number;
 	} = $props();
 
-	let containerWidth = $state(0);
+	let measuredWidth = $state(0);
+	const containerWidth = $derived(width ?? measuredWidth);
 
-	const FONT_FAMILY = "'Space Grotesk', system-ui, sans-serif";
+	const FONT_FAMILY = "'Rawline', system-ui, sans-serif";
 
 	function labelColor(hex: string): string {
 		const r = parseInt(hex.slice(1, 3), 16) / 255;
@@ -123,7 +128,7 @@
 	const totalHeight     = $derived(MT + innerHeight + XAXIS_H + legendTotalH + 16);
 </script>
 
-<div bind:clientWidth={containerWidth} style="width: 100%;">
+<div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
 	{#if containerWidth > 0}
 		<svg
 			width={containerWidth}
@@ -140,7 +145,7 @@
 					<line
 						x1={tick.x} y1={0}
 						x2={tick.x} y2={innerHeight}
-						stroke="var(--chart-grid, #e2e8f0)"
+						stroke="#e2e8f0"
 						stroke-width="1"
 						stroke-dasharray="3,3"
 					/>
@@ -163,7 +168,7 @@
 									x={seg.x + 6}
 									y={row.midY}
 									dy="0.35em"
-									font-size="12.48"
+									font-size="12"
 									font-weight="700"
 									fill={labelColor(seg.color)}
 									text-anchor="start"
@@ -180,7 +185,7 @@
 							y={row.y - 6}
 							font-size="12"
 							font-weight="400"
-							fill="var(--chart-fg-strong, #333)"
+							fill="#333333"
 						>{row.label}</text>
 					{:else}
 						<text
@@ -189,8 +194,8 @@
 							dy="0.35em"
 							text-anchor="end"
 							dominant-baseline="middle"
-							font-size="11"
-							fill="var(--chart-fg, #64748b)"
+							font-size={yAxisFontSize}
+							fill="#64748b"
 						>{row.label}</text>
 					{/if}
 
@@ -200,8 +205,8 @@
 							y={row.midY}
 							dy="0.35em"
 							dominant-baseline="middle"
-							font-size="11"
-							fill="var(--chart-fg, #64748b)"
+							font-size="12"
+							fill="#64748b"
 						>{format(row.total)}</text>
 					{/if}
 				{/each}
@@ -214,8 +219,8 @@
 							y={0}
 							dy="1.2em"
 							text-anchor={ti === 0 ? 'start' : ti === ticks.length - 1 ? 'end' : 'middle'}
-							font-size="10"
-							fill="var(--chart-fg, #64748b)"
+							font-size="12"
+							fill="#64748b"
 						>{format(tick.v)}</text>
 					{/each}
 				</g>
@@ -245,7 +250,7 @@
 							x={item.x + 8}
 							y={LEGEND_ROW_H / 2}
 							dy="0.35em"
-							font-size="13"
+							font-size="12"
 							font-weight="600"
 							fill={labelColor(colors[item.ki] ?? '#999')}
 						>{labels[item.key] ?? item.key}</text>
@@ -254,14 +259,14 @@
 						<line
 							x1={item.x + item.w} y1={0}
 							x2={item.x + item.w} y2={LEGEND_ROW_H}
-							stroke="var(--chart-fg-strong, #000000)"
+							stroke="#000000"
 							stroke-width="0.5"
 							shape-rendering="crispEdges"
 						/>
 					{/each}
 					<rect
 						fill="none"
-						stroke="var(--chart-fg-strong, #000000)"
+						stroke="#000000"
 						shape-rendering="crispEdges"
 						x={0} y={0}
 						width={rowTotalW}

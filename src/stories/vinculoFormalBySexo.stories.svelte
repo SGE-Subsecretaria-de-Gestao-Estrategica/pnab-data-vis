@@ -42,13 +42,13 @@ Entre as mulheres beneficiárias, **60,1%** não possuem vínculo formal — pro
 
 <Story name="Grafico 25 — Sexo PNAB vs RAIS">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={sexoComparisonStackedData}
       keys={[...sexoComparisonStackedKeys]}
       labels={sexoComparisonStackedLabels}
       colors={[colorScales.yellow[2], colorScales.blue[2]]}
       format={formatPctN}
-      rowHeight={40}
+      rowHeight={48}
       labelsAbove
     />
   {/snippet}

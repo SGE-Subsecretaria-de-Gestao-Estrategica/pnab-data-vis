@@ -33,7 +33,7 @@ A maioria dos contemplados (**71,6%**) recebeu valores até R$ 10 mil, mas esse 
 
 <Story name="Barras horizontais agrupadas — Faixa de valor nacional">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={faixaGroupedData}
       seriesLabels={seriesLabels}
       colors={colors}

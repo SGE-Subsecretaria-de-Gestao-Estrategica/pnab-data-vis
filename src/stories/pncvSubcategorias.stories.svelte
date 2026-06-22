@@ -37,13 +37,15 @@ Distribuição dos recursos dentro da categoria PNCV, mostrando valores absoluto
 
 <Story name="Subcategorias de PNCV">
   {#snippet template()}
-    <HorizontalBarChartCustom
-      data={chartData}
-      color={colorScales.blue[2]}
-      format={formatBRL}
-      xLabel="Valor estimado (R$)"
-      margin={{ top: 20, right: 120, bottom: 40, left: 260 }}
-      rowHeight={52}
-    />
+    <div style="max-width: 680px;">
+      <HorizontalBarChartCustom width={600}
+        data={chartData}
+        color={colorScales.blue[2]}
+        format={formatBRL}
+        xLabel="Valor estimado (R$)"
+        margin={{ top: 20, right: 80, bottom: 40, left: 160 }}
+        rowHeight={52}
+      />
+    </div>
   {/snippet}
 </Story>

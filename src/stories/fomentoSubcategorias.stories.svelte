@@ -37,13 +37,15 @@ Distribuição dos recursos dentro da categoria Fomento Cultural, mostrando valo
 
 <Story name="Subcategorias de Fomento Cultural">
   {#snippet template()}
-    <HorizontalBarChartCustom
-      data={chartData}
-      color={colorScales.blue[2]}
-      format={formatBRL}
-      xLabel="Valor estimado (R$)"
-      margin={{ top: 20, right: 120, bottom: 40, left: 260 }}
-      rowHeight={52}
-    />
+    <div style="max-width: 680px;">
+      <HorizontalBarChartCustom width={600}
+        data={chartData}
+        color={colorScales.blue[2]}
+        format={formatBRL}
+        xLabel="Valor estimado (R$)"
+        margin={{ top: 20, right: 80, bottom: 40, left: 240 }}
+        rowHeight={48}
+      />
+    </div>
   {/snippet}
 </Story>

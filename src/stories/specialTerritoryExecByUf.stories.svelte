@@ -33,7 +33,7 @@ Distribuicao do valor executado em territorios especiais (favelas, comunidades u
 
 <Story name="Valor executado em territorios especiais por UF — dot plot">
   {#snippet template()}
-    <ConnectedDotPlot
+    <ConnectedDotPlot width={600}
       data={specialExecByUfDotData}
       seriesLabels={['Governo Estadual', 'Governo Municipal']}
       colors={[colorScales.blue[2], colorScales.orange[2]]}

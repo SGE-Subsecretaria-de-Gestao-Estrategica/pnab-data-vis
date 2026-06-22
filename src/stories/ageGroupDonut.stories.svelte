@@ -36,7 +36,7 @@ Donut mostrando a proporcao de contemplados em cada faixa etaria. A faixa de 25 
 
 <Story name="Donut — distribuicao por faixa etaria">
   {#snippet template()}
-    <DonutChartWithLegend
+    <DonutChartWithLegend width={600}
       data={ageGroupDonutData}
       colors={[categorical8[0], categorical8[1], categorical8[2], categorical8[3]]}
       centerLabel="Agentes contemplados"

@@ -8,6 +8,7 @@
 	}
 
 	let {
+		width = undefined,
 		data = [] as UfSexoRow[],
 		colorMasc = '#4271b5',
 		colorFem = '#a44c7f',
@@ -16,6 +17,7 @@
 		groupGap = 10,
 		margin = { top: 24, right: 20, bottom: 64, left: 130 },
 	}: {
+		width?: number;
 		data?: UfSexoRow[];
 		colorMasc?: string;
 		colorFem?: string;
@@ -25,9 +27,10 @@
 		margin?: { top: number; right: number; bottom: number; left: number };
 	} = $props();
 
-	const FONT_FAMILY = "'Space Grotesk', system-ui, sans-serif";
+	const FONT_FAMILY = "'Rawline', system-ui, sans-serif";
 
-	let containerWidth = $state(0);
+	let measuredWidth = $state(0);
+	const containerWidth = $derived(width ?? measuredWidth);
 	const innerW = $derived(Math.max(0, containerWidth - margin.left - margin.right));
 
 	const groupH = $derived(barHeight * 2 + pairGap);
@@ -62,7 +65,7 @@
 	const legItemW = $derived(legW / legendItems.length);
 </script>
 
-<div bind:clientWidth={containerWidth} style="width:100%;">
+<div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
 	{#if containerWidth > 0}
 		<svg width={containerWidth} height={svgHeight} role="img" font-family={FONT_FAMILY}>
 
@@ -76,7 +79,7 @@
 					stroke-width="1"
 					stroke-dasharray={tick === 50 ? '4,3' : undefined}
 				/>
-				<text x={x} y={margin.top + totalContentH + 14} text-anchor="middle" font-size="11" fill="#666"
+				<text x={x} y={margin.top + totalContentH + 14} text-anchor="middle" font-size="12" fill="#666"
 					>{tick}%</text>
 			{/each}
 
@@ -92,7 +95,7 @@
 					x={margin.left - 78}
 					y={midGroupY}
 					dominant-baseline="middle"
-					font-size="11"
+					font-size="12"
 					font-weight="700"
 					fill="#333"
 				>{row.uf}</text>
@@ -103,7 +106,7 @@
 					y={aldirY + barHeight / 2}
 					dominant-baseline="middle"
 					text-anchor="end"
-					font-size="9"
+					font-size="12"
 					fill="#555"
 				>PNAB</text>
 				<text
@@ -111,7 +114,7 @@
 					y={ibgeY + barHeight / 2}
 					dominant-baseline="middle"
 					text-anchor="end"
-					font-size="9"
+					font-size="12"
 					fill="#999"
 				>População</text>
 
@@ -121,12 +124,12 @@
 				<rect x={margin.left}          y={aldirY} width={aMascW} height={barHeight} fill={colorMasc} />
 				<rect x={margin.left + aMascW} y={aldirY} width={aFemW}  height={barHeight} fill={colorFem} />
 				{#if aMascW > 36}
-					<text x={margin.left + 5} y={aldirY + barHeight / 2} dominant-baseline="middle" font-size="10" font-weight="600" fill={textColor(colorMasc)}>
+					<text x={margin.left + 5} y={aldirY + barHeight / 2} dominant-baseline="middle" font-size="12" font-weight="600" fill={textColor(colorMasc)}>
 						{row.aldirMasc.toFixed(1)}%
 					</text>
 				{/if}
 				{#if aFemW > 36}
-					<text x={margin.left + aMascW + 5} y={aldirY + barHeight / 2} dominant-baseline="middle" font-size="10" font-weight="800" fill={textColor(colorFem)}>
+					<text x={margin.left + aMascW + 5} y={aldirY + barHeight / 2} dominant-baseline="middle" font-size="12" font-weight="800" fill={textColor(colorFem)}>
 						{row.aldirFem.toFixed(1)}%
 					</text>
 				{/if}
@@ -137,12 +140,12 @@
 				<rect x={margin.left}          y={ibgeY} width={iMascW} height={barHeight} fill={colorMasc} opacity="0.35" />
 				<rect x={margin.left + iMascW} y={ibgeY} width={iFemW}  height={barHeight} fill={colorFem}  opacity="0.35" />
 				{#if iMascW > 36}
-					<text x={margin.left + 5} y={ibgeY + barHeight / 2} dominant-baseline="middle" font-size="10" fill={textColor(colorMasc, 0.35)}>
+					<text x={margin.left + 5} y={ibgeY + barHeight / 2} dominant-baseline="middle" font-size="12" fill={textColor(colorMasc, 0.35)}>
 						{row.ibgeMasc.toFixed(1)}%
 					</text>
 				{/if}
 				{#if iFemW > 36}
-					<text x={margin.left + iMascW + 5} y={ibgeY + barHeight / 2} dominant-baseline="middle" font-size="10" fill={textColor(colorFem, 0.35)}>
+					<text x={margin.left + iMascW + 5} y={ibgeY + barHeight / 2} dominant-baseline="middle" font-size="12" fill={textColor(colorFem, 0.35)}>
 						{row.ibgeFem.toFixed(1)}%
 					</text>
 				{/if}

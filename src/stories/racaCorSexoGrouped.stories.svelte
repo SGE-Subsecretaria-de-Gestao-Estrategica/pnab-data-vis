@@ -29,7 +29,7 @@ Em todos os grupos raciais, **homens superam mulheres** tanto em quantidade de b
 
 <Story name="Barras horizontais agrupadas — Raça/cor por sexo">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={racaCorSexoGroupedData}
       seriesLabels={seriesLabels}
       colors={colors}

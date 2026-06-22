@@ -5,6 +5,7 @@
 	}
 
 	let {
+		width = undefined,
 		data = [] as BarDatum[],
 		color = '#4271b5',
 		format = (v: number) => String(v),
@@ -12,6 +13,7 @@
 		rowHeight = 32,
 		margin = { top: 20, right: 40, bottom: 40, left: 120 },
 	}: {
+		width?: number;
 		data?: BarDatum[];
 		color?: string;
 		format?: (v: number) => string;
@@ -20,13 +22,14 @@
 		margin?: { top: number; right: number; bottom: number; left: number };
 	} = $props();
 
-	const FONT = "'Space Grotesk', system-ui, sans-serif";
+	const FONT = "'Rawline', system-ui, sans-serif";
 	const LABEL_PAD = 6;
-	const LABEL_FS = 10;
+	const LABEL_FS = 12;
 	// Minimum bar pixel width needed to fit a label inside
 	const MIN_INSIDE_PX = 44;
 
-	let containerWidth = $state(0);
+	let measuredWidth = $state(0);
+	const containerWidth = $derived(width ?? measuredWidth);
 
 	const sorted = $derived([...data].sort((a, b) => b.value - a.value));
 	const innerW = $derived(Math.max(0, containerWidth - margin.left - margin.right));
@@ -48,7 +51,7 @@
 	const barOffset = $derived((rowHeight - barH) / 2);
 </script>
 
-<div bind:clientWidth={containerWidth} style="width:100%;">
+<div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
 	{#if containerWidth > 0}
 		<svg width={containerWidth} height={svgHeight} role="img" font-family={FONT}>
 			<g transform="translate({margin.left},{margin.top})">
@@ -95,7 +98,7 @@
 							font-size={LABEL_FS}
 							font-weight="500"
 							font-family={FONT}
-							fill="var(--chart-fg-strong, #334155)"
+							fill="#334155"
 						>{formatted}</text>
 					{/if}
 				{/each}
@@ -110,7 +113,7 @@
 							y={8}
 							dy="0.71em"
 							text-anchor="middle"
-							font-size="9"
+							font-size="12"
 							fill="#888"
 							font-family={FONT}
 						>{format(tick)}</text>
@@ -120,7 +123,7 @@
 							x={innerW / 2}
 							y={28}
 							text-anchor="middle"
-							font-size="10"
+							font-size="12"
 							fill="#888"
 							font-family={FONT}
 						>{xLabel}</text>
@@ -136,9 +139,9 @@
 					y={ty}
 					dy="0.35em"
 					text-anchor="end"
-					font-size="11"
+					font-size="12"
 					font-family={FONT}
-					fill="var(--chart-fg, #64748b)"
+					fill="#64748b"
 				>{d.label}</text>
 			{/each}
 		</svg>

@@ -28,9 +28,9 @@ Compara o percentual de contemplados por faixa de valor recebido entre os cadast
 
 <Story name="HorizontalGroupedBarChart — faixa de valor CadÚnico vs PNAB">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={valorGroupedData}
-      seriesLabels={['% contemplados PNAB/CadÚnico', '% contemplados PNAB']}
+      seriesLabels={['% contemplados PNAB/CadUnico', '% contemplados PNAB']}
       colors={[colorScales.blue[2], colorScales.purple[2]]}
       format={(v) => `${v.toFixed(1)}%`}
       margin={{ top: 28, right: 20, bottom: 40, left: 160 }}

@@ -40,7 +40,7 @@ Nos **Entes Estatais** os valores médios são os mais elevados, refletindo o pe
 
 <Story name="Barras horizontais agrupadas — Valor médio por sexo e porte municipal">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={valorMedioSexoPorteData}
       seriesLabels={valorMedioSexoSeriesLabels}
       colors={sexColors}

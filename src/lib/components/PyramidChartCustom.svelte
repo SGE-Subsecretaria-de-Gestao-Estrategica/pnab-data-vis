@@ -6,6 +6,7 @@
 	}
 
 	let {
+		width = undefined,
 		data = [] as Row[],
 		leftLabel = 'Masculino',
 		rightLabel = 'Feminino',
@@ -14,6 +15,7 @@
 		height = 420,
 		centerGap = 96,
 	}: {
+		width?: number;
 		data: Row[];
 		leftLabel?: string;
 		rightLabel?: string;
@@ -23,7 +25,8 @@
 		centerGap?: number;
 	} = $props();
 
-	let containerWidth = $state(0);
+	let measuredWidth = $state(0);
+	const containerWidth = $derived(width ?? measuredWidth);
 
 	const margin = { top: 16, right: 16, bottom: 68, left: 16 };
 	const FONT_PAD = 4;
@@ -48,7 +51,7 @@
 			const lx = cx - centerGap / 2 - lw;
 			const rx = cx + centerGap / 2;
 			const midY = y + bw / 2;
-			const fs = Math.min(13, Math.max(11, bw * 0.55));
+			const fs = 12;
 			const lt = format(d.left);
 			const rt = format(d.right);
 			const leftFits = lw >= FONT_PAD + lt.length * fs * 0.62 + FONT_PAD;
@@ -61,13 +64,13 @@
 	const axisLabelY = $derived(plotH + 20);
 </script>
 
-<div bind:clientWidth={containerWidth} style="width: 100%;">
+<div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
 	{#if containerWidth > 0}
 		<svg
 			width={containerWidth}
 			{height}
 			aria-label="Population pyramid"
-			style="overflow: visible; font-family: var(--chart-value-font-family, 'Space Grotesk', system-ui, sans-serif);"
+			style="overflow: visible; font-family: 'Rawline', system-ui, sans-serif;"
 		>
 			<g transform="translate({margin.left}, {margin.top})">
 				{#each rows as row}
@@ -79,7 +82,7 @@
 							width={row.lw}
 							height={bw}
 							fill={colors[0]}
-							stroke="var(--chart-fg-strong, #000000)"
+							stroke="#000000"
 							stroke-width="0.5"
 							shape-rendering="crispEdges"
 						/>
@@ -116,7 +119,7 @@
 							width={row.rw}
 							height={bw}
 							fill={colors[1]}
-							stroke="var(--chart-fg-strong, #000000)"
+							stroke="#000000"
 							stroke-width="0.5"
 							shape-rendering="crispEdges"
 						/>
@@ -150,10 +153,10 @@
 						x={cx}
 						y={row.midY}
 						dy="0.35em"
-						font-size={Math.min(11, bw * 0.55)}
+						font-size="12"
 						font-weight="600"
 						text-anchor="middle"
-						fill="var(--chart-fg-strong, #000000)"
+						fill="#000000"
 					>{row.label}</text>
 				{/each}
 
@@ -161,26 +164,26 @@
 				<text
 					x={0}
 					y={axisLabelY}
-					font-size="11"
+					font-size="12"
 					text-anchor="start"
-					fill="var(--chart-fg-strong, #000000)"
+					fill="#000000"
 				>← {leftLabel}</text>
 				<text
 					x={iw}
 					y={axisLabelY}
-					font-size="11"
+					font-size="12"
 					text-anchor="end"
-					fill="var(--chart-fg-strong, #000000)"
+					fill="#000000"
 				>{rightLabel} →</text>
 
 				<!-- Legend -->
 				<g transform="translate({cx}, {legendY})">
 					<rect x={-80} y={-8} width={14} height={14} fill={colors[0]} />
-					<text x={-62} y={-1} dy="0.35em" font-size="11" text-anchor="start"
-						fill="var(--chart-fg-strong, #000000)">{leftLabel}</text>
+					<text x={-62} y={-1} dy="0.35em" font-size="12" text-anchor="start"
+						fill="#000000">{leftLabel}</text>
 					<rect x={20} y={-8} width={14} height={14} fill={colors[1]} />
-					<text x={38} y={-1} dy="0.35em" font-size="11" text-anchor="start"
-						fill="var(--chart-fg-strong, #000000)">{rightLabel}</text>
+					<text x={38} y={-1} dy="0.35em" font-size="12" text-anchor="start"
+						fill="#000000">{rightLabel}</text>
 				</g>
 			</g>
 		</svg>

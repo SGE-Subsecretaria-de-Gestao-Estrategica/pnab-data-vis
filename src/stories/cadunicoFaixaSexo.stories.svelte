@@ -28,7 +28,7 @@ Nas faixas de **25 a 64 anos** as mulheres são maioria entre os contemplados in
 
 <Story name="HorizontalStackedBarChart — faixa etaria por sexo (bluePurple)">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={faixaEtariaSexoData}
       keys={[...FAIXA_SEXO_KEYS]}
       labels={FAIXA_SEXO_LABELS}
@@ -43,7 +43,7 @@ Nas faixas de **25 a 64 anos** as mulheres são maioria entre os contemplados in
 
 <Story name="HorizontalStackedBarChart — faixa etaria por sexo (blueOrange)">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={faixaEtariaSexoData}
       keys={[...FAIXA_SEXO_KEYS]}
       labels={FAIXA_SEXO_LABELS}

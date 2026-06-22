@@ -32,12 +32,12 @@ Os dados revelam forte presença de estruturas de pequeno porte e organizações
 
 <Story name="Distribuição por Natureza Jurídica">
   {#snippet template()}
-    <HorizontalBarChartCustom
+    <HorizontalBarChartCustom width={600}
       data={naturezaJuridicaData}
-      color={colorScales.teal[2]}
+      color={colorScales.blue[2]}
       format={formatPct}
       xLabel="% de CNPJs contemplados"
-      rowHeight={72}
+      rowHeight={48}
       margin={{ top: 20, right: 80, bottom: 40, left: 230 }}
     />
   {/snippet}

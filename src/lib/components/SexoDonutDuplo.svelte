@@ -39,7 +39,7 @@
 	const INNER_OR = 108;
 	const INNER_IR = 70;
 
-	const FONT = "'Space Grotesk', system-ui, sans-serif";
+	const FONT = "'Rawline', system-ui, sans-serif";
 
 	// Annotation box layout
 	const BOX_W      = 155;
@@ -148,7 +148,8 @@
 
 <svg
 	viewBox="0 0 {W} {H}"
-	width="100%"
+	width="600"
+	height={Math.round((600 * H) / W)}
 	role="img"
 	aria-label="Gráfico donut duplo: distribuição por sexo do valor repassado (anel externo) e agentes contemplados de contemplados (anel interno)"
 	font-family={FONT}
@@ -164,11 +165,11 @@
 	{/each}
 
 	<!-- ── Center hole text ──────────────────────────────────────────────────── -->
-	<text x={CX} y={CY - 12} text-anchor="middle" font-size="20" font-weight="700" fill="currentColor">
+	<text x={CX} y={CY - 12} text-anchor="middle" font-size="12" font-weight="700" fill="currentColor">
 		{innerTotal.toLocaleString('pt-BR')}
 	</text>
-	<text x={CX} y={CY + 7}  text-anchor="middle" font-size="9" fill="currentColor" opacity="0.5">agentes (PF)</text>
-	<text x={CX} y={CY + 20} text-anchor="middle" font-size="9" fill="currentColor" opacity="0.5">contemplados</text>
+	<text x={CX} y={CY + 7}  text-anchor="middle" font-size="12" fill="currentColor" opacity="0.5">agentes (PF)</text>
+	<text x={CX} y={CY + 20} text-anchor="middle" font-size="12" fill="currentColor" opacity="0.5">contemplados</text>
 
 	<!-- ── Annotation helper macro ───────────────────────────────────────────
 	     Black connector + dot; colored box border + accent bar + text.
@@ -181,9 +182,9 @@
 		fill="white" stroke={colorMasc} stroke-width="1.5" />
 	<rect x={RIGHT_BOX_X} y={BOX_Y_UPPER} width="4" height={BOX_H} rx="2" fill={colorMasc} />
 	<text x={RIGHT_BOX_X + 12} y={BOX_Y_UPPER + 21}
-		font-size="14" font-weight="700" fill={colorMasc}>{innerMascPercStr}</text>
+		font-size="12" font-weight="700" fill={colorMasc}>{innerMascPercStr}</text>
 	<text x={RIGHT_BOX_X + 12} y={BOX_Y_UPPER + 38}
-		font-size="10" fill="currentColor" opacity="0.6">agentes contemplados</text>
+		font-size="12" fill="currentColor" opacity="0.6">agentes contemplados</text>
 
 	<!-- Masculino outer — lower right (blue) -->
 	<line x1={outerMascPx} y1={outerMascPy} x2={mo_c.tx} y2={mo_c.ty} stroke="black" stroke-width="1" opacity="0.55" />
@@ -192,9 +193,9 @@
 		fill="white" stroke={colorMasc} stroke-width="1.5" />
 	<rect x={RIGHT_BOX_X} y={BOX_Y_LOWER} width="4" height={BOX_H} rx="2" fill={colorMasc} />
 	<text x={RIGHT_BOX_X + 12} y={BOX_Y_LOWER + 21}
-		font-size="14" font-weight="700" fill={colorMasc}>{outerMascPercStr}</text>
+		font-size="12" font-weight="700" fill={colorMasc}>{outerMascPercStr}</text>
 	<text x={RIGHT_BOX_X + 12} y={BOX_Y_LOWER + 38}
-		font-size="10" fill="currentColor" opacity="0.6">valor repassado</text>
+		font-size="12" fill="currentColor" opacity="0.6">valor repassado</text>
 
 	<!-- Feminino inner — upper left (pink) -->
 	<line x1={innerFemPx} y1={innerFemPy} x2={fi_c.tx} y2={fi_c.ty} stroke="black" stroke-width="1" opacity="0.55" />
@@ -203,9 +204,9 @@
 		fill="white" stroke={colorFem} stroke-width="1.5" />
 	<rect x={LEFT_BOX_X} y={BOX_Y_UPPER} width="4" height={BOX_H} rx="2" fill={colorFem} />
 	<text x={LEFT_BOX_X + 12} y={BOX_Y_UPPER + 21}
-		font-size="14" font-weight="700" fill={colorFem}>{innerFemPercStr}</text>
+		font-size="12" font-weight="700" fill={colorFem}>{innerFemPercStr}</text>
 	<text x={LEFT_BOX_X + 12} y={BOX_Y_UPPER + 38}
-		font-size="10" fill="currentColor" opacity="0.6">agentes contemplados</text>
+		font-size="12" fill="currentColor" opacity="0.6">agentes contemplados</text>
 
 	<!-- Feminino outer — lower left (pink) -->
 	<line x1={outerFemPx} y1={outerFemPy} x2={fo_c.tx} y2={fo_c.ty} stroke="black" stroke-width="1" opacity="0.55" />
@@ -214,9 +215,9 @@
 		fill="white" stroke={colorFem} stroke-width="1.5" />
 	<rect x={LEFT_BOX_X} y={BOX_Y_LOWER} width="4" height={BOX_H} rx="2" fill={colorFem} />
 	<text x={LEFT_BOX_X + 12} y={BOX_Y_LOWER + 21}
-		font-size="14" font-weight="700" fill={colorFem}>{outerFemPercStr}</text>
+		font-size="12" font-weight="700" fill={colorFem}>{outerFemPercStr}</text>
 	<text x={LEFT_BOX_X + 12} y={BOX_Y_LOWER + 38}
-		font-size="10" fill="currentColor" opacity="0.6">valor repassado</text>
+		font-size="12" fill="currentColor" opacity="0.6">valor repassado</text>
 
 	<!-- ── Legend ────────────────────────────────────────────────────────────── -->
 	<rect x={lx1} y={LG_Y - 6} width={12} height={12} rx="2" fill={colorFem} />

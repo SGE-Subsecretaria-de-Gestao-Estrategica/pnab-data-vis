@@ -5,7 +5,7 @@
 		isSeparator?: boolean;
 	}
 
-	const FONT = "'Space Grotesk', system-ui, sans-serif";
+	const FONT = "'Rawline', system-ui, sans-serif";
 
 	function labelColor(hex: string): string {
 		const r = parseInt(hex.slice(1, 3), 16) / 255;
@@ -16,6 +16,7 @@
 	}
 
 	let {
+		width = undefined,
 		data = [] as DotRow[],
 		seriesLabels = [] as string[],
 		colors = ['#e76f51', '#2a9d8f'] as string[],
@@ -25,6 +26,7 @@
 		separatorHeight = 28,
 		dotRadius = 5,
 	}: {
+		width?: number;
 		data?: DotRow[];
 		seriesLabels?: string[];
 		colors?: string[];
@@ -35,7 +37,8 @@
 		dotRadius?: number;
 	} = $props();
 
-	let containerWidth = $state(0);
+	let measuredWidth = $state(0);
+	const containerWidth = $derived(width ?? measuredWidth);
 
 	const innerW = $derived(Math.max(0, containerWidth - margin.left - margin.right));
 
@@ -88,7 +91,7 @@
 	const MIN_LABEL_GAP = 30;
 </script>
 
-<div bind:clientWidth={containerWidth} style="width:100%;">
+<div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
 	{#if containerWidth > 0}
 		<svg
 			width={containerWidth}
@@ -119,7 +122,7 @@
 							x={12}
 							y={cy}
 							dy="0.35em"
-							font-size="14"
+							font-size="12"
 							font-weight="700"
 							fill="#555"
 							letter-spacing="0.04em"
@@ -139,7 +142,7 @@
 							y={cy}
 							dy="0.35em"
 							text-anchor="end"
-							font-size="13"
+							font-size="12"
 							fill="#333"
 						>{row.label}</text>
 
@@ -165,7 +168,7 @@
 								x={xLeft - dotRadius - 3}
 								y={cy - 6}
 								text-anchor="middle"
-								font-size="11"
+								font-size="12"
 								font-weight="600"
 								fill={x0 <= x1 ? colors[0] : colors[1]}
 							>{format(x0 <= x1 ? v0 : v1)}</text>
@@ -175,13 +178,13 @@
 								x={xRight + dotRadius + 3}
 								y={cy - 6}
 								text-anchor="middle"
-								font-size="11"
+								font-size="12"
 								font-weight="600"
 								fill={x0 > x1 ? colors[0] : colors[1]}
 							>{format(x0 > x1 ? v0 : v1)}</text>
 						{:else}
 							<!-- dots too close: show combined label to the right with per-series colors -->
-							<text x={xRight + dotRadius + 4} y={cy} dy="0.35em" font-size="11" font-weight="600">
+							<text x={xRight + dotRadius + 4} y={cy} dy="0.35em" font-size="12" font-weight="600">
 								<tspan fill={colors[0]}>{format(v0)}</tspan>
 								<tspan fill="#888"> / </tspan>
 								<tspan fill={colors[1]}>{format(v1)}</tspan>
@@ -200,7 +203,7 @@
 							y={8}
 							dy="0.71em"
 							text-anchor="middle"
-							font-size="10"
+							font-size="12"
 							fill="#888"
 						>{format(tick)}</text>
 					{/each}
@@ -218,7 +221,7 @@
 						{@const bx = legendItemW.slice(0, i).reduce((s, w) => s + w, 0)}
 						{@const w = legendItemW[i]}
 						<rect x={bx} y={0} width={w} height={LEGEND_ROW_H} fill={colors[i]} shape-rendering="crispEdges" />
-						<text x={bx + 8} y={LEGEND_ROW_H / 2} dy="0.35em" font-size="13" font-weight="600" fill={labelColor(colors[i])} font-family={FONT}>{label}</text>
+						<text x={bx + 8} y={LEGEND_ROW_H / 2} dy="0.35em" font-size="12" font-weight="600" fill={labelColor(colors[i])} font-family={FONT}>{label}</text>
 					{/each}
 					<!-- Separators between items -->
 					{#each seriesLabels.slice(0, -1) as _, i}

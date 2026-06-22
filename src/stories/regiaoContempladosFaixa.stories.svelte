@@ -35,7 +35,7 @@ Regiões com maior participação nas faixas mais altas (acima de R$50 mil) tend
 <Story name="Contemplados por faixa de valor — por região">
   {#snippet template()}
     <div style="padding: 16px;">
-      <HorizontalStackedBarChartCustom
+      <HorizontalStackedBarChartCustom width={600}
         data={regiaoContempladosFaixaData}
         keys={[...UF_BAND_KEYS]}
         labels={UF_BAND_LABELS}

@@ -2,6 +2,7 @@
 	type DataRow = Record<string, string | number>;
 
 	let {
+		width = undefined,
 		data = [] as DataRow[],
 		keys = [] as string[],
 		categoryKey = 'label',
@@ -11,6 +12,7 @@
 		height: chartHeight = 420,
 		normalize = true,
 	}: {
+		width?: number;
 		data?: DataRow[];
 		keys?: string[];
 		categoryKey?: string;
@@ -21,9 +23,10 @@
 		normalize?: boolean;
 	} = $props();
 
-	let containerWidth = $state(0);
+	let measuredWidth = $state(0);
+	const containerWidth = $derived(width ?? measuredWidth);
 
-	const FONT_FAMILY = "'Space Grotesk', system-ui, sans-serif";
+	const FONT_FAMILY = "'Rawline', system-ui, sans-serif";
 	const MARGIN = { top: 16, right: 24, bottom: 80, left: 50 };
 
 	const innerW = $derived(Math.max(0, containerWidth - MARGIN.left - MARGIN.right));
@@ -97,7 +100,7 @@
 	const legendY = $derived(innerH + 48);
 </script>
 
-<div bind:clientWidth={containerWidth} style="width: 100%;">
+<div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
 	{#if containerWidth > 0}
 		<svg
 			width={containerWidth}
@@ -114,7 +117,7 @@
 					<line
 						x1={0} y1={tick.y}
 						x2={innerW} y2={tick.y}
-						stroke="var(--chart-grid, #e2e8f0)"
+						stroke="#e2e8f0"
 						stroke-width="1"
 						stroke-dasharray="3,3"
 					/>
@@ -141,7 +144,7 @@
 									y={barY + barH / 2}
 									dy="0.35em"
 									text-anchor="middle"
-									font-size="11"
+									font-size="12"
 									font-weight="600"
 									fill={labelColor(seg.color)}
 									pointer-events="none"
@@ -156,8 +159,8 @@
 						y={innerH + 12}
 						dy="0.9em"
 						text-anchor="middle"
-						font-size="10"
-						fill="var(--chart-fg, #64748b)"
+						font-size="12"
+						fill="#64748b"
 					>{row.label}</text>
 				{/each}
 
@@ -168,8 +171,8 @@
 						y={tick.y}
 						dy="0.35em"
 						text-anchor="end"
-						font-size="10"
-						fill="var(--chart-fg, #64748b)"
+						font-size="12"
+						fill="#64748b"
 					>{normalize ? `${tick.v.toFixed(0)}%` : String(tick.v)}</text>
 				{/each}
 
@@ -188,7 +191,7 @@
 							x={legendBoxX(ki) + 10}
 							y={15}
 							dy="0.35em"
-							font-size="11"
+							font-size="12"
 							font-weight="600"
 							fill={labelColor(colors[ki] ?? '#999')}
 						>{labels[key] ?? key}</text>
@@ -197,14 +200,14 @@
 						<line
 							x1={legendBoxX(ki + 1)} y1={0}
 							x2={legendBoxX(ki + 1)} y2={30}
-							stroke="var(--chart-fg-strong, #000)"
+							stroke="#000000"
 							stroke-width="0.5"
 							shape-rendering="crispEdges"
 						/>
 					{/each}
 					<rect
 						fill="none"
-						stroke="var(--chart-fg-strong, #000)"
+						stroke="#000000"
 						shape-rendering="crispEdges"
 						x={0} y={0}
 						width={legendTotalW}

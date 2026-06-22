@@ -31,7 +31,7 @@ Compara, para cada UF e região, o percentual de contemplados pela PNAB com vín
 
 <Story name="Grafico 24 — Distribuicao por UF PNAB vs RAIS">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={ufComparisonGroupedData}
       seriesLabels={['Contemplados PNAB', 'Vínculos RAIS 2024']}
       colors={[colorScales.yellow[2], colorScales.blue[2]]}
@@ -50,7 +50,7 @@ Compara, para cada UF e região, o percentual de contemplados pela PNAB com vín
 
 <Story name="Grafico 24 variante — Diferenca PNAB menos RAIS por UF">
   {#snippet template()}
-    <HorizontalDiffBarChart
+    <HorizontalDiffBarChart width={600}
       data={ufDiffData}
       colorPositive={colorScales.yellow[2]}
       colorNegative={colorScales.blue[2]}
@@ -62,7 +62,7 @@ Compara, para cada UF e região, o percentual de contemplados pela PNAB com vín
 
 <Story name="Grafico 24 variante dot plot — PNAB vs RAIS por UF">
   {#snippet template()}
-    <ConnectedDotPlot
+    <ConnectedDotPlot width={600}
       data={ufComparisonGroupedData}
       seriesLabels={['Contemplados PNAB', 'Vínculos RAIS 2024']}
       colors={[colorScales.yellow[2], colorScales.blue[2]]}
@@ -76,7 +76,7 @@ Compara, para cada UF e região, o percentual de contemplados pela PNAB com vín
 
 <Story name="Por regiao — PNAB vs RAIS">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={regionComparisonGroupedData}
       seriesLabels={['Contemplados PNAB', 'Vínculos RAIS 2024']}
       colors={[colorScales.yellow[2], colorScales.blue[2]]}

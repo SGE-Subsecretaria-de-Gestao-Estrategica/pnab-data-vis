@@ -14,7 +14,7 @@
   const TOTAL_H = TREEMAP_H + TREEMAP_LEG_SEP + fomentoDomainsRows.length * TREEMAP_LEG_ROW_H + 8;
   const LEG_VAL_X = TW - 150;
   const LEG_PCT_X = TW - 4;
-  const FONT = "'Space Grotesk', system-ui, sans-serif";
+  const FONT = "'Rawline', system-ui, sans-serif";
 
   // @ts-ignore
   const formatBRL = (v) =>

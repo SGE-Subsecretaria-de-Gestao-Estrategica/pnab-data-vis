@@ -19,7 +19,7 @@
   const LEG_NAME_MAX_X = LEG_X + 240;
   const LEG_VAL_X = LEG_X + LEG_W - 60;
   const LEG_PCT_X = LEG_X + LEG_W;
-  const FONT = "'Space Grotesk', system-ui, sans-serif";
+  const FONT = "'Rawline', system-ui, sans-serif";
 
   // @ts-ignore
   const formatBRL = (v) =>

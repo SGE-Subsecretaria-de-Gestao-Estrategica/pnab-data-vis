@@ -30,7 +30,7 @@ Estados do Centro-Oeste e do Sudeste concentraram os maiores valores médios por
 
 <Story name="Ticket Médio por Estado">
   {#snippet template()}
-    <div style="font-family: 'Space Grotesk', system-ui, sans-serif;">
+    <div style="font-family: 'Rawline', system-ui, sans-serif;">
       <ExecutedValueByStateMap
         states={mediaValorByState}
         metric="media_aparada_1pct_valor"

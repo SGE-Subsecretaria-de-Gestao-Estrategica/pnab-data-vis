@@ -44,7 +44,7 @@ Síntese dos principais indicadores de execução financeira comparando os dois 
   {#snippet template()}
     <div style="overflow-x: auto;">
       <svg width={700} height={220}>
-        <DataTable {columns} {rows} headerColor="#a44c7f" />
+        <DataTable {columns} {rows} headerColor="#4271b5" />
       </svg>
     </div>
   {/snippet}

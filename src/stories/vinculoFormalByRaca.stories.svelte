@@ -11,7 +11,7 @@
   // @ts-ignore
   const formatN = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
-  const FONT  = "'Space Grotesk', system-ui, sans-serif";
+  const FONT  = "'Rawline', system-ui, sans-serif";
   const TM_W  = 728;
   const TM_H  = 380;
 

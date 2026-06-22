@@ -32,7 +32,7 @@ Permite identificar rapidamente quais UFs apresentam maior ou menor sub-represen
       data={sexoUfComparisonData}
       colorMasc={colorScales.blue[2]}
       colorFem={colorScales.yellow[2]}
-      barHeight={22}
+      barHeight={28}
       pairGap={4}
       groupGap={14}
       margin={{ top: 24, right: 20, bottom: 64, left: 130 }}

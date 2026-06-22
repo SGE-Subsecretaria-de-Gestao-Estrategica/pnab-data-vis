@@ -36,7 +36,6 @@
 	const groupH = $derived(barHeight * 2 + pairGap);
 	const rowStep = $derived(groupH + groupGap);
 	const totalContentH = $derived(data.length * rowStep - groupGap);
-	const svgHeight = $derived(margin.top + totalContentH + margin.bottom);
 
 	const scaleX = (v: number) => (v / 100) * innerW;
 
@@ -51,9 +50,11 @@
 		return L > 0.45 ? '#1a1a1a' : '#fffffe';
 	}
 
-	// Legend layout
+	// Legend layout — 2 colunas × N linhas, alinhado à esquerda
 	const LEGEND_BLOCK_H = 28;
-	const LEGEND_Y = $derived(margin.top + totalContentH + 28);
+	const LEGEND_ROW_GAP = 4;
+	const LEGEND_COLS = 2;
+	const X_AXIS_H = 28; // espaço para os rótulos de % abaixo das barras
 	const legendItems = $derived([
 		{ label: 'Masculino – contemplados', color: colorMasc, opacity: 1   },
 		{ label: 'Feminino – contempladas',  color: colorFem,  opacity: 1   },
@@ -62,7 +63,13 @@
 	]);
 	const legX = $derived(margin.left - 78);
 	const legW = $derived(containerWidth - margin.right - legX);
-	const legItemW = $derived(legW / legendItems.length);
+	const legItemW = $derived(legW / LEGEND_COLS);
+	const legendRowCount = $derived(Math.ceil(legendItems.length / LEGEND_COLS));
+	const LEGEND_Y = $derived(margin.top + totalContentH + X_AXIS_H);
+	const legendTotalH = $derived(
+		legendRowCount * LEGEND_BLOCK_H + Math.max(0, legendRowCount - 1) * LEGEND_ROW_GAP
+	);
+	const svgHeight = $derived(LEGEND_Y + legendTotalH + 8);
 </script>
 
 <div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
@@ -151,16 +158,21 @@
 				{/if}
 			{/each}
 
-			<!-- legend: 4 itens iguais em linha, alinhado com labels de UF -->
+			<!-- legend: 2 colunas × 2 linhas, texto alinhado à esquerda -->
 			{#each legendItems as item, ci}
-				{@const bx = legX + ci * legItemW}
-				<rect x={bx} y={LEGEND_Y} width={legItemW} height={LEGEND_BLOCK_H} fill={item.color} opacity={item.opacity} shape-rendering="crispEdges" />
-				<text x={bx + legItemW / 2} y={LEGEND_Y + LEGEND_BLOCK_H / 2} dy="0.35em" text-anchor="middle" font-size="12" font-weight="600" fill={textColor(item.color, item.opacity)}>{item.label}</text>
-				{#if ci < legendItems.length - 1}
-					<line x1={bx + legItemW} y1={LEGEND_Y} x2={bx + legItemW} y2={LEGEND_Y + LEGEND_BLOCK_H} stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" />
-				{/if}
+				{@const col = ci % LEGEND_COLS}
+				{@const rowIdx = Math.floor(ci / LEGEND_COLS)}
+				{@const bx = legX + col * legItemW}
+				{@const by = LEGEND_Y + rowIdx * (LEGEND_BLOCK_H + LEGEND_ROW_GAP)}
+				<rect x={bx} y={by} width={legItemW} height={LEGEND_BLOCK_H} fill={item.color} opacity={item.opacity} shape-rendering="crispEdges" />
+				<text x={bx + 10} y={by + LEGEND_BLOCK_H / 2} dy="0.35em" text-anchor="start" font-size="12" font-weight="600" fill={textColor(item.color, item.opacity)}>{item.label}</text>
 			{/each}
-			<rect fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" x={legX} y={LEGEND_Y} width={legW} height={LEGEND_BLOCK_H} />
+			<!-- divisória entre colunas + borda por linha -->
+			{#each Array(legendRowCount) as _, r}
+				{@const by = LEGEND_Y + r * (LEGEND_BLOCK_H + LEGEND_ROW_GAP)}
+				<line x1={legX + legItemW} y1={by} x2={legX + legItemW} y2={by + LEGEND_BLOCK_H} stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" />
+				<rect fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="0.5" shape-rendering="crispEdges" x={legX} y={by} width={legW} height={LEGEND_BLOCK_H} />
+			{/each}
 
 		</svg>
 	{/if}

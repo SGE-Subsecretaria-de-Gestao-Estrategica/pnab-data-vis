@@ -18,7 +18,7 @@
   const ROW_H = 36;
   const HEADER_H = 32;
   const SVG_H = HEADER_H + operacionalizacaoSubData.length * ROW_H + 4;
-  const FONT = "'Space Grotesk', system-ui, sans-serif";
+  const FONT = "'Rawline', system-ui, sans-serif";
 
   const { Story } = defineMeta({
     title: 'Section 6/Tabela 6',

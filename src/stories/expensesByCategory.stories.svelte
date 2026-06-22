@@ -25,7 +25,7 @@
   const LEG_VAL_X    = CHART_W - 150;
   const LEG_PCT_X    = CHART_W - 4;
 
-  const FONT = "'Space Grotesk', system-ui, sans-serif";
+  const FONT = "'Rawline', system-ui, sans-serif";
 
   const LARGE_LABEL_KEYS = new Set(['fomento', 'cultura_viva', 'obras', 'subsidio']);
 

@@ -22,9 +22,55 @@
 
   let container: HTMLDivElement | undefined = $state();
 
-  function exportSvg() {
+  // ── Rawline embedding ──────────────────────────────────────────────────────
+  // Exported SVGs are opened in apps (InDesign, etc.) that don't have Rawline
+  // installed, so the font-family chain falls back to system-ui/sans-serif
+  // (often rendered as Helvetica). We embed the Rawline weights as base64
+  // @font-face rules inside the SVG so the type travels with the file.
+  const RAWLINE_WEIGHTS = [400, 500, 600, 700];
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  let fontStyleCss: string | null = null;
+
+  async function fetchFontBase64(weight: number): Promise<string> {
+    const res = await fetch(`/fonts/rawline-${weight}.ttf`);
+    const buf = await res.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  }
+
+  async function buildFontStyleCss(): Promise<string> {
+    if (fontStyleCss) return fontStyleCss;
+    const faces = await Promise.all(
+      RAWLINE_WEIGHTS.map(async (w) => {
+        const b64 = await fetchFontBase64(w);
+        return `@font-face{font-family:'Rawline';font-style:normal;font-weight:${w};src:url(data:font/ttf;base64,${b64}) format('truetype');}`;
+      }),
+    );
+    fontStyleCss = faces.join('');
+    return fontStyleCss;
+  }
+
+  async function exportSvg() {
     const svg = container?.querySelector('svg');
-    if (svg) downloadSvg(svg as SVGSVGElement, filename);
+    if (!svg) return;
+    let styleEl: SVGStyleElement | null = null;
+    try {
+      const css = await buildFontStyleCss();
+      styleEl = document.createElementNS(SVG_NS, 'style') as SVGStyleElement;
+      styleEl.textContent = css;
+      svg.insertBefore(styleEl, svg.firstChild);
+      downloadSvg(svg as SVGSVGElement, filename);
+    } catch (err) {
+      console.error('Falha ao embutir Rawline no SVG; exportando sem fonte embutida.', err);
+      if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
+      styleEl = null;
+      downloadSvg(svg as SVGSVGElement, filename);
+    } finally {
+      if (styleEl && styleEl.parentNode) styleEl.parentNode.removeChild(styleEl);
+    }
   }
 
   function emitVisibilityChanged() {

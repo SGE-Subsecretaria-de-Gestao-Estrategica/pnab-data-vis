@@ -147,7 +147,7 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
 
 <Story name="Grafico 3">
   {#snippet template()}
-    <svg width={TM_W_PORTE} height={TM_TOTAL_H_PORTE} font-family="'Space Grotesk', system-ui, sans-serif" font-size="12" style="display:block">
+    <svg width={TM_W_PORTE} height={TM_TOTAL_H_PORTE} font-family="'Rawline', system-ui, sans-serif" font-size="12" style="display:block">
       {#each porteLeaves as leaf}
         {@const w        = leaf.x1 - leaf.x0}
         {@const h        = leaf.y1 - leaf.y0}

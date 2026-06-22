@@ -20,7 +20,7 @@
 
 <Story name="Recurso Executado por Estado">
   {#snippet template()}
-    <div style="font-family: 'Space Grotesk', system-ui, sans-serif;">
+    <div style="font-family: 'Rawline', system-ui, sans-serif;">
       <ChoroplethMapLabeled
         {states}
         metric="valor_executado_rs"

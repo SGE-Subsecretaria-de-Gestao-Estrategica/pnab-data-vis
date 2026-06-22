@@ -7,6 +7,7 @@ import csvStateRaw         from '../../../data/section_2/aggregate_execution_by_
 import csvUfRaw            from '../../../data/section_2/aggregate_execution_by_person_type_uf.csv?raw';
 import csvMunRaw           from '../../../data/section_2/aggregate_execution_by_person_type_municipality.csv?raw';
 import csvRangeRaw         from '../../../data/section_2/values_range_by_brazil.csv?raw';
+import csvRangeV2Raw       from '../../../data/section_2/values_range_by_brazil_v2.csv?raw';
 import csvPorteRaw         from '../../../data/section_1/values_by_population_size.csv?raw';
 import csvSpecialTerritRaw from '../../../data/section_1/values_by_special_territory_uf.csv?raw';
 import csvFaixaUfRaw       from '../../../data/section_2/aggregate_faixa_valor_ju_wide_by_uf.csv?raw';
@@ -35,6 +36,7 @@ const s2StateRows = parseCSV(csvStateRaw);
 const ufRows      = parseCSV(csvUfRaw);
 const munRows     = parseCSV(csvMunRaw);
 const rangeRows   = parseCSV(csvRangeRaw);
+const rangeRowsV2 = parseCSV(csvRangeV2Raw);
 
 function byType(rows: Record<string, string>[], tipo: string) {
 	return rows.find((r) => r.tipo_documento === tipo)!;
@@ -113,14 +115,6 @@ export const faixaDistData = rangeRows
 	}));
 
 // ── 3b. HorizontalGroupedBarChart — contemplados e recursos por faixa (5 tiers)
-const recursoPercByBand: Record<string, number> = {
-	'Até 2 mil':         2.2,
-	'2 a 10 mil':       13.1,
-	'10 a 50 mil':      31.5,
-	'50 a 200 mil':     28.1,
-	'Acima de 200 mil': 25.2,
-};
-
 export const faixaValorPercData = [
 	{ label: 'Até 2 mil',         value: 2.2  },
 	{ label: '2 a 10 mil',        value: 13.1 },
@@ -131,23 +125,17 @@ export const faixaValorPercData = [
 
 export const faixaGroupedData = (() => {
 	const pagMap: Record<string, number> = {};
-	for (const r of rangeRows) {
+	const recMap: Record<string, number> = {};
+	for (const r of rangeRowsV2) {
 		const faixa = normalizeFaixa(r.faixa_vlr_pago_ju_bbagil);
 		if (!faixa) continue;
-		const v = +r['% de contemplados'] * 100;
-		const key =
-			faixa === '200 a 500 mil' ||
-			faixa === '500 mil a 1 milhão' ||
-			faixa === '1 milhão a 10 milhões' ||
-			faixa === 'Acima de 10 milhões'
-				? 'Acima de 200 mil'
-				: faixa;
-		pagMap[key] = (pagMap[key] ?? 0) + v;
+		pagMap[faixa] = (pagMap[faixa] ?? 0) + +r['% de contemplados'] * 100;
+		recMap[faixa] = (recMap[faixa] ?? 0) + +r['% do valor total'] * 100;
 	}
 	return ['Até 2 mil', '2 a 10 mil', '10 a 50 mil', '50 a 200 mil', 'Acima de 200 mil'].map(
 		(label) => ({
 			label,
-			values: [pagMap[label] ?? 0, recursoPercByBand[label]],
+			values: [pagMap[label] ?? 0, recMap[label] ?? 0],
 		})
 	);
 })();

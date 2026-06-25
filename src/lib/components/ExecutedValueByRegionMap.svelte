@@ -1,10 +1,10 @@
 <script lang="ts">
   import { geoMercator, geoPath } from 'd3-geo';
   import {
-    loadBrazilGeoJSON,
     categorical5,
     getContrastColor,
   } from 'sniic-design-system';
+  import { loadBrazilGeoJSON } from '$lib/geo';
 
   const FONT_FAMILY = "'Rawline', system-ui, sans-serif";
 

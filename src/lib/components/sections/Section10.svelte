@@ -56,17 +56,21 @@
 	// ── Treemap — Domínios de Fomento Cultural ────────────────────────────────
 	const TW = 728;
 	const TREEMAP_H = 480;
-	const LEG_SEP = 28;
-	const LEG_ROW_H = 44;
-	const TOTAL_H = TREEMAP_H + LEG_SEP + fomentoDomainsRows.length * LEG_ROW_H + 8;
-	const LEG_VAL_X = TW - 150;
-	const LEG_PCT_X = TW - 4;
 
 	const palette15 = [
 		...categorical8,
 		'#7ba0d4', '#f0956b', '#62a898', '#f9d878', '#c280a5', '#a8c860', '#de7872',
 	];
 	const domainColorMap = new Map(fomentoDomainsRows.map((r, i) => [r.name, palette15[i]]));
+
+	interface LegendRow extends TableRow { color: string }
+	const fomentoLegendRows: LegendRow[] = fomentoDomainsRows.map((r, i) => ({
+		color: palette15[i],
+		label: r.name,
+		valor: formatBRL(r.value),
+		pct: fmtPct(r.pct),
+		ic: `${formatBRL(r.p025)} – ${formatBRL(r.p975)}`,
+	}));
 
 	function contrastColor(hex: string) {
 		const r = parseInt(hex.slice(1, 3), 16);
@@ -110,6 +114,33 @@
 	</div>
 {/snippet}
 
+{#snippet legendTable(rows: LegendRow[])}
+	<div class="table-wrap">
+		<table>
+			<thead>
+				<tr>
+					<th class="t-label">Domínio</th>
+					<th class="t-num">Valor estimado</th>
+					<th class="t-num">% do total</th>
+					<th class="t-ic">IC 95%</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each rows as row}
+					<tr>
+						<td class="t-label">
+							<span class="swatch" style="background:{row.color}"></span>{row.label}
+						</td>
+						<td class="t-num t-strong">{row.valor}</td>
+						<td class="t-num t-pct">{row.pct}</td>
+						<td class="t-ic">{row.ic}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+{/snippet}
+
 <section class="section">
 	<header class="sec-header">
 		<p class="eyebrow">Capítulo 6</p>
@@ -132,10 +163,10 @@
 		<h3 class="block-title">Domínios de Fomento Cultural</h3>
 		<div class="chart-card">
 			<svg
-				viewBox={`0 0 ${TW} ${TOTAL_H}`}
+				viewBox={`0 0 ${TW} ${TREEMAP_H}`}
 				width="100%"
 				font-family="'Rawline', system-ui, sans-serif"
-				font-size="12"
+				font-size="14"
 				style="display:block"
 				role="img"
 				aria-label="Treemap dos domínios de Fomento Cultural"
@@ -156,42 +187,28 @@
 					{@const cx = leaf.x0 + w / 2}
 					{@const cy = leaf.y0 + h / 2}
 					{@const color = domainColorMap.get(leaf.data.name) ?? categorical8[0]}
-					{@const showBoth = w >= 90 && h >= 48}
-					{@const isSmall = w < 45 || h < 20}
+					{@const showBoth = w >= 90 && h >= 54}
+					{@const isSmall = w < 45 || h < 22}
 					<rect x={leaf.x0} y={leaf.y0} width={w} height={h} fill={color} shape-rendering="crispEdges" />
 					<text
-						x={cx} y={showBoth ? cy - 7 : cy}
+						x={cx} y={showBoth ? cy - 9 : cy}
 						text-anchor="middle" dominant-baseline="middle"
-						fill={contrastColor(color)} font-size={isSmall ? 8 : 12} font-weight="700"
+						fill={contrastColor(color)} font-size={isSmall ? 11 : 17} font-weight="700"
 						pointer-events="none" clip-path={isSmall ? undefined : `url(#s10-tm-${i})`}
 					>{fmtPct(leaf.data.pct)}</text>
 					{#if showBoth}
 						<text
-							x={cx} y={cy + 10}
+							x={cx} y={cy + 13}
 							text-anchor="middle" dominant-baseline="middle"
-							fill={contrastColor(color)} font-size="9"
+							fill={contrastColor(color)} font-size="12"
 							pointer-events="none" clip-path="url(#s10-tm-{i})"
 						>{leaf.data.name}</text>
 					{/if}
 				{/each}
-
-				<line x1={0} y1={TREEMAP_H + 12} x2={TW} y2={TREEMAP_H + 12} stroke="#e0e0e0" />
-				<text x={LEG_VAL_X} y={TREEMAP_H + 24} text-anchor="end" fill="#666" font-size="10">Valor estimado (IC95%)</text>
-				<text x={LEG_PCT_X} y={TREEMAP_H + 24} text-anchor="end" fill="#666" font-size="10">% do total</text>
-
-				{#each fomentoDomainsRows as row, i}
-					{@const ry = TREEMAP_H + LEG_SEP + 16 + i * LEG_ROW_H}
-					{@const color = palette15[i]}
-					{#if i > 0}
-						<line x1={0} y1={ry - 6} x2={TW} y2={ry - 6} stroke="#e0e0e0" />
-					{/if}
-					<rect x={0} y={ry + 1} width={10} height={10} rx="2" fill={color} />
-					<text x={18} y={ry + 6} dy="0.35em" fill="#1a1a1a">{row.name}</text>
-					<text x={LEG_VAL_X} y={ry} dy="0.85em" text-anchor="end" fill="#111" font-weight="600">{formatBRL(row.value)}</text>
-					<text x={LEG_VAL_X} y={ry + 16} dy="0.85em" text-anchor="end" fill="#666" font-size="10">IC95%: {formatBRL(row.p025)} – {formatBRL(row.p975)}</text>
-					<text x={LEG_PCT_X} y={ry + 6} dy="0.35em" text-anchor="end" fill={color} font-size="13" font-weight="700">{fmtPct(row.pct)}</text>
-				{/each}
 			</svg>
+		</div>
+		<div class="treemap-legend">
+			{@render legendTable(fomentoLegendRows)}
 		</div>
 	</div>
 
@@ -380,6 +397,20 @@
 
 	.t-label {
 		text-align: left;
+	}
+
+	.treemap-legend {
+		margin-top: 0.75rem;
+	}
+
+	.swatch {
+		display: inline-block;
+		width: 0.7rem;
+		height: 0.7rem;
+		border-radius: 2px;
+		margin-right: 0.55rem;
+		vertical-align: -0.05rem;
+		flex: none;
 	}
 
 	@media (max-width: 720px) {

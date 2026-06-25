@@ -165,8 +165,14 @@
 		stroke-width: 1.2;
 	}
 
+	.state:focus {
+		outline: none;
+	}
+
 	.state:focus-visible {
-		outline: 2px solid #1351B4;
+		outline: none;
+		stroke: #1351B4;
+		stroke-width: 2;
 	}
 
 	.tooltip {

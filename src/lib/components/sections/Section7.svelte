@@ -2,7 +2,8 @@
 	import DashboardFilterBar from '$lib/components/DashboardFilterBar.svelte';
 	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
 	import { createDashboardFilters, VISAO_LABELS } from '$lib/stores/dashboardFilters.svelte';
-	import { BigNumber, colorScales } from 'sniic-design-system';
+	import { colorScales } from 'sniic-design-system';
+	import BigNumberStat from '$lib/components/BigNumberStat.svelte';
 	import {
 		docByVisao,
 		stackedData,
@@ -54,15 +55,15 @@
 
 	<!-- ── Big numbers ─────────────────────────────────────────────────────── -->
 	<div class="bn-grid">
-		<div class="bn">
-			<BigNumber value={fmtNum(data.totalContemplados)} label="contemplados" fontSize={44} shadowDepth={4} width={360} />
+		<div class="stat">
+			<BigNumberStat value={fmtNum(data.totalContemplados)} label="contemplados" fontSize={44} shadowDepth={4} width={360} />
 			<span class="bn-split">
 				<span style:color={cpfCnpjColors[0]}>CPF {fmtNum(data.cpf.contemplados)}</span>
 				<span style:color={cpfCnpjColors[1]}>CNPJ {fmtNum(data.cnpj.contemplados)}</span>
 			</span>
 		</div>
-		<div class="bn">
-			<BigNumber value={fmtBRL(data.totalValor)} label="valor executado" fontSize={44} shadowDepth={4} width={360} />
+		<div class="stat">
+			<BigNumberStat value={fmtBRL(data.totalValor)} label="valor executado" fontSize={44} shadowDepth={4} width={360} />
 			<span class="bn-split">
 				<span style:color={cpfCnpjColors[0]}>CPF {fmtBRL(data.cpf.valor)}</span>
 				<span style:color={cpfCnpjColors[1]}>CNPJ {fmtBRL(data.cnpj.valor)}</span>
@@ -79,7 +80,6 @@
 			colors={cpfCnpjColors}
 			format={fmtPct}
 			marginLeft={150}
-			rowHeight={56}
 			legendAlign="left"
 		/>
 	</div>
@@ -139,21 +139,11 @@
 		margin-bottom: 1.5rem;
 	}
 
-	.bn {
+	.stat {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 0.2rem;
-		padding: 1.1rem 1.25rem;
-		border: 1px solid rgba(0, 0, 0, 0.1);
-		border-radius: 0.75rem;
-		background: rgba(255, 255, 255, 0.45);
-	}
-
-	.bn :global(svg) {
-		width: 100%;
-		height: auto;
-		display: block;
 	}
 
 	.bn-split {

@@ -1,4 +1,8 @@
 <script lang="ts">
+	import { base } from '$app/paths';
+	import { siglaToName } from '$lib/data/dashboard';
+	import { CHART_ROW_HEIGHT, BAR_FILL, FLAG_RATIO, FLAG_GAP, isState, truncateToWidth } from '$lib/chartStandards';
+
 	export interface BarDatum {
 		label: string;
 		value: number;
@@ -10,9 +14,12 @@
 		color = '#4271b5',
 		format = (v: number) => String(v),
 		xLabel = '',
-		rowHeight = 32,
+		rowHeight = CHART_ROW_HEIGHT,
 		nTicks = 5,
 		margin = { top: 20, right: 40, bottom: 40, left: 120 },
+		showFlags = false,
+		flagSize = 22,
+		flagBasePath = `${base}/flags/states`,
 	}: {
 		width?: number;
 		data?: BarDatum[];
@@ -22,6 +29,9 @@
 		rowHeight?: number;
 		nTicks?: number;
 		margin?: { top: number; right: number; bottom: number; left: number };
+		showFlags?: boolean;
+		flagSize?: number;
+		flagBasePath?: string;
 	} = $props();
 
 	const FONT = "'Rawline', system-ui, sans-serif";
@@ -34,36 +44,62 @@
 	const containerWidth = $derived(width ?? measuredWidth);
 
 	const sorted = $derived([...data].sort((a, b) => b.value - a.value));
-	const innerW = $derived(Math.max(0, containerWidth - margin.left - margin.right));
+
+	// ── Responsive left column ──────────────────────────────────────────────
+	// Always fill the device width: cap the label column to a fraction of the
+	// container so a fixed `margin.left` never starves the bars on mobile.
+	const MIN_LABEL = 40;
+	const MAX_LEFT_FRAC = 0.34;
+	const flagW = $derived(flagSize * FLAG_RATIO);
+	const flagSpace = $derived(showFlags ? flagW + FLAG_GAP : 0);
+	// Snug the column to the widest label (short for siglas, wider for names),
+	// bounded by the requested margin and a fraction of the device width.
+	const longestLabelPx = $derived(
+		sorted.reduce((m, d) => Math.max(m, String(d.label).length), 0) * LABEL_FS * 0.6 + 12,
+	);
+	const labelColW = $derived(
+		Math.min(margin.left, longestLabelPx, Math.max(MIN_LABEL, containerWidth * MAX_LEFT_FRAC)),
+	);
+	const effLeft = $derived(labelColW + flagSpace);
+	const labelAvail = $derived(labelColW - 8);
+
+	const innerW = $derived(Math.max(0, containerWidth - effLeft - margin.right));
 	const innerH = $derived(sorted.length * rowHeight);
 	const svgHeight = $derived(margin.top + innerH + margin.bottom);
 
 	const maxVal = $derived(Math.max(...sorted.map((d) => d.value), 1));
-	// nice ceiling: round up to a "nice" number (1, 2, 2.5, 5 × 10^n)
-	function niceCeil(x: number): number {
-		if (x <= 0) return 1;
-		const exp = Math.floor(Math.log10(x));
+
+	// nice step: round a raw interval to a "nice" number (1, 2, 2.5, 5 × 10^n)
+	function niceStep(range: number, count: number): number {
+		if (range <= 0) return 1;
+		const raw = range / count;
+		const exp = Math.floor(Math.log10(raw));
 		const base = Math.pow(10, exp);
-		const f = x / base;
+		const f = raw / base;
 		const nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10;
 		return nf * base;
 	}
-	const niceMax = $derived(niceCeil(maxVal));
 
-	const xScale = $derived((v: number) => (v / niceMax) * innerW);
+	// Domain ends exactly at the largest value so the longest (first) bar fills
+	// the full available width. Gridlines/legend ticks sit at nice round steps
+	// within [0, maxVal], so the axis adapts to whatever the visão filter selects.
+	const xScale = $derived((v: number) => (v / maxVal) * innerW);
 
-	const tickValues = $derived(
-		Array.from({ length: nTicks + 1 }, (_, i) => (niceMax / nTicks) * i),
-	);
+	const tickValues = $derived.by(() => {
+		const step = niceStep(maxVal, nTicks);
+		const ticks: number[] = [];
+		for (let t = 0; t <= maxVal + step * 1e-6; t += step) ticks.push(t);
+		return ticks;
+	});
 
-	const barH = $derived(Math.max(4, rowHeight * 0.65));
+	const barH = $derived(Math.max(4, rowHeight * BAR_FILL));
 	const barOffset = $derived((rowHeight - barH) / 2);
 </script>
 
 <div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
 	{#if containerWidth > 0}
 		<svg width={containerWidth} height={svgHeight} role="img" font-family={FONT}>
-			<g transform="translate({margin.left},{margin.top})">
+			<g transform="translate({effLeft},{margin.top})">
 				<!-- Vertical grid lines -->
 				{#each tickValues as tick}
 					{@const tx = xScale(tick)}
@@ -140,18 +176,30 @@
 				</g>
 			</g>
 
-			<!-- Y-axis labels (left margin) -->
+			<!-- Y-axis labels (+ state flags) in the left column -->
 			{#each sorted as d, i}
 				{@const ty = margin.top + i * rowHeight + rowHeight / 2}
+				{#if showFlags && isState(d.label)}
+					<image
+						href="{flagBasePath}/{d.label.toUpperCase()}.svg"
+						x={2}
+						y={ty - flagSize / 2}
+						width={flagW}
+						height={flagSize}
+						preserveAspectRatio="xMidYMid meet"
+					>
+						<title>{siglaToName[d.label.toUpperCase()] ?? d.label}</title>
+					</image>
+				{/if}
 				<text
-					x={margin.left - 8}
+					x={effLeft - 8}
 					y={ty}
 					dy="0.35em"
 					text-anchor="end"
 					font-size="12"
 					font-family={FONT}
 					fill="#64748b"
-				>{d.label}</text>
+				>{truncateToWidth(d.label, labelAvail, 12)}</text>
 			{/each}
 		</svg>
 	{/if}

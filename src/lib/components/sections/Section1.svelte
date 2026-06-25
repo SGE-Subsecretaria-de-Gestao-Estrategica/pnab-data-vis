@@ -1,7 +1,7 @@
 <script lang="ts">
 	import BrazilChoropleth from '$lib/components/BrazilChoropleth.svelte';
 	import DashboardFilterBar from '$lib/components/DashboardFilterBar.svelte';
-	import { BigNumber } from 'sniic-design-system';
+	import BigNumberStat from '$lib/components/BigNumberStat.svelte';
 	import { createDashboardFilters, VISAO_LABELS } from '$lib/stores/dashboardFilters.svelte';
 	import {
 		siglaToName,
@@ -118,38 +118,33 @@
 			<div class="scope-tag">{scopeLabel} · {VISAO_LABELS[filters.visao]}</div>
 
 			<!-- Headline: entes -->
-			<div class="bn bn-hero">
-				<BigNumber
-					value={entes.value}
-					label="entes contemplados"
-					subtitle={entes.sub}
-					fontSize={60}
-					shadowDepth={6}
-					width={460}
-					color="#ffffff"
-					shadowColor="#0d3a82"
-					labelColor="#ffffff"
-					subtitleColor="rgba(255, 255, 255, 0.72)"
-				/>
-			</div>
+			<BigNumberStat
+				value={entes.value}
+				label="entes contemplados"
+				subtitle={entes.sub}
+				fontSize={60}
+				shadowDepth={6}
+				width={460}
+			/>
 
 			<!-- Trio: recebido / executado / % nacional -->
-			<div class="bn-trio">
-				<div class="bn">
-					<BigNumber value={fmtBRL(scoped.valor)} label="Valor executado" fontSize={36} shadowDepth={4} width={300} />
+			<div class="metric-trio">
+				<div class="metric">
+					<span class="metric-value">{fmtBRL(scoped.valor)}</span>
+					<span class="metric-label">Valor executado</span>
 				</div>
-				<div class="bn">
-					<BigNumber value={fmtPct(shareNacional)} label="do total nacional" fontSize={36} shadowDepth={4} width={300} />
+				<div class="metric">
+					<span class="metric-value">{fmtPct(shareNacional)}</span>
+					<span class="metric-label">do total nacional</span>
 				</div>
-				<div class="bn">
-					<BigNumber value={fmtBRLfull(perCapita)} label="per capita" fontSize={36} shadowDepth={4} width={300} />
+				<div class="metric">
+					<span class="metric-value">{fmtBRLfull(perCapita)}</span>
+					<span class="metric-label">per capita</span>
 				</div>
 			</div>
 
 			<!-- Contemplados -->
-			<div class="bn bn-wide">
-				<BigNumber value={fmtNum(scoped.contemplados)} label="contemplados (agentes / projetos)" fontSize={50} shadowDepth={5} width={460} />
-			</div>
+			<BigNumberStat value={fmtNum(scoped.contemplados)} label="contemplados (agentes / projetos)" fontSize={50} shadowDepth={5} width={460} />
 		</div>
 
 		<div class="map-wrap">
@@ -227,34 +222,34 @@
 		border-radius: 999px;
 	}
 
-	.bn {
+	/* ── Plain metrics (trio) ── */
+	.metric {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.15rem;
-		padding: 1.1rem 1.25rem;
-		border: 1px solid rgba(0, 0, 0, 0.1);
-		border-radius: 0.75rem;
-		background: rgba(255, 255, 255, 0.45);
+		text-align: center;
+		gap: 0.1rem;
 	}
 
-	.bn :global(svg) {
-		width: 100%;
-		height: auto;
-		display: block;
+	.metric-value {
+		font-weight: 800;
+		color: #1351B4;
+		line-height: 1.05;
+		font-size: 1.6rem;
+		font-variant-numeric: tabular-nums;
 	}
 
-	.bn-hero {
-		background: #1351B4;
-		border-color: #1351B4;
+	.metric-label {
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: #555;
 	}
 
-	.bn-trio {
+	.metric-trio {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
-		gap: 0.75rem;
+		gap: 1rem 0.75rem;
 	}
-	.bn-trio .bn { padding: 0.9rem 0.85rem; }
 
 	/* ── Map ── */
 	.map-wrap {

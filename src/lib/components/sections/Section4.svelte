@@ -70,8 +70,8 @@
 			labels={{ urbano: 'Urbano', rural: 'Rural' }}
 			colors={[colorScales.teal[2], colorScales.lime[2]]}
 			format={fmtPct}
-			rowHeight={32}
-			marginLeft={72}
+			marginLeft={104}
+			showFlags={filters.visao === 'uf' || filters.visao === 'estados'}
 			hideSegmentLabelsFor={[]}
 		/>
 	</div>

@@ -3,11 +3,11 @@
   import { scaleSequential } from 'd3-scale';
   import { interpolateRgbBasis } from 'd3-interpolate';
   import {
-    loadBrazilGeoJSON,
     colorScales,
     measureTextWidth,
     getContrastColor,
   } from 'sniic-design-system';
+  import { loadBrazilGeoJSON } from '$lib/geo';
 
   const FONT_FAMILY = "'Rawline', system-ui, sans-serif";
   const FONT_SIZE = 11;

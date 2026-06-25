@@ -2,7 +2,8 @@
 	import { geoMercator, geoPath } from 'd3-geo';
 	import { scaleSequential } from 'd3-scale';
 	import { interpolateRgbBasis } from 'd3-interpolate';
-	import { loadBrazilGeoJSON, colorScales, getContrastColor } from 'sniic-design-system';
+	import { colorScales, getContrastColor } from 'sniic-design-system';
+	import { loadBrazilGeoJSON } from '$lib/geo';
 
 	const FONT_FAMILY = "'Rawline', system-ui, sans-serif";
 

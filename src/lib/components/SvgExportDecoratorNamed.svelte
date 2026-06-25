@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { downloadSvg } from 'sniic-design-system';
+  import { base } from '$app/paths';
   import { addons } from 'storybook/preview-api';
 
   let { children, filename = 'chart.svg', storyId = '' }: { children: Snippet; filename?: string; storyId?: string } = $props();
@@ -33,7 +34,7 @@
   let fontStyleCss: string | null = null;
 
   async function fetchFontBase64(weight: number): Promise<string> {
-    const res = await fetch(`/fonts/rawline-${weight}.ttf`);
+    const res = await fetch(`${base}/fonts/rawline-${weight}.ttf`);
     const buf = await res.arrayBuffer();
     const bytes = new Uint8Array(buf);
     let binary = '';

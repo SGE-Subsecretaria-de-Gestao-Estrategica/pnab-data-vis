@@ -7,7 +7,7 @@
   import { ufBandPercData, UF_BAND_KEYS, UF_BAND_LABELS } from '$lib/data/section2';
 
   // @ts-ignore
-  const formatPctFixed = (v) => `${v.toFixed(1)}%`;
+  const formatPctFixed = (v) => `${v.toFixed(1).replace('.', ',')}%`;
 
   const { Story } = defineMeta({
     title: 'Section 2/Grafico 13',
@@ -21,7 +21,7 @@
 
 Cada barra representa uma UF e totaliza 100%, permitindo comparar o **perfil de distribuição das faixas de valor** entre os estados e o Distrito Federal. As UFs estão ordenadas pela proporção de contemplados nas faixas mais altas (acima de R$50 mil).
 
-**Fonte**: \`aggregate_faixa_valor_ju_wide_by_uf.csv\`.
+**Fonte**: \`aggregate_faixa_valor_ju_wide_by_state.csv\`.
           `,
         },
       },

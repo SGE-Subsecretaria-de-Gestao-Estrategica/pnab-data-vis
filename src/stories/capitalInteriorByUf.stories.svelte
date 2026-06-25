@@ -9,7 +9,7 @@
   const colorInterior = '#317a68';      // verde
 
   // @ts-ignore
-  const formatPct = (v) => `${v.toFixed(1)}%`;
+  const formatPct = (v) => `${v.toFixed(1).replace('.', ',')}%`;
 
   const { Story } = defineMeta({
     title: 'Section 1/capitalInteriorByUf',

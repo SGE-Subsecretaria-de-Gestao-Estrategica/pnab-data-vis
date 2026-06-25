@@ -7,10 +7,9 @@
     colorScales,
     measureTextWidth,
     getContrastColor,
-    typography,
   } from 'sniic-design-system';
 
-  const FONT_FAMILY = typography.chartValueFontFamily;
+  const FONT_FAMILY = "'Rawline', system-ui, sans-serif";
   const FONT_SIZE = 11;
   const LINE_SPACING = 13;    // px between label lines
   const FORCE_LEFT     = new Set(['AP', 'DF']);                // labels go left regardless of centroid

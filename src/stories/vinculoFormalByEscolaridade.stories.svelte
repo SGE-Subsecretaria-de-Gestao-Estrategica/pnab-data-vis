@@ -12,7 +12,7 @@
   // @ts-ignore
   const formatN = (v) => v.toLocaleString('pt-BR');
   // @ts-ignore
-  const formatBRL = (v) => `R$${new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 }).format(v)}`;
+  const formatBRL = (v) => `R$ ${new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 }).format(v)}`;
   // @ts-ignore
   const formatPct = (v) => `${v.toFixed(1)}%`;
   // @ts-ignore
@@ -91,7 +91,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
   {#snippet template()}
     <HorizontalGroupedBarChart width={600}
       data={escolaridadeComparisonGroupedData}
-      seriesLabels={['PNAB', 'Total trabalhadores formais']}
+      seriesLabels={['Contemplados', 'Total RAIS']}
       colors={[colorScales.yellow[2], colorScales.blue[2]]}
       format={formatPctN}
       xLabel="% do total"
@@ -112,8 +112,9 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
       color={categorical8[0]}
       format={formatBRL}
       xLabel="Valor médio recebido (R$)"
-      margin={{ top: 20, right: 100, bottom: 40, left: 260 }}
+      margin={{ top: 20, right: 100, bottom: 52, left: 260 }}
       rowHeight={52}
+      nTicks={4}
     />
   {/snippet}
 </Story>

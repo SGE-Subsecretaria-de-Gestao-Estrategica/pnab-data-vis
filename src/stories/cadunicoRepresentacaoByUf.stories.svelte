@@ -32,11 +32,11 @@ Dot laranja à direita do teal indica sobrerrepresentação; à esquerda indica 
     <ConnectedDotPlot width={600}
       data={representacaoUfGroupedData}
       seriesLabels={[
-        '% contemplados PNAB/CadUnico (UF)',
-        '% pessoas CadUnico (UF)',
+        'Agentes Culturais Contemplados no CadÚnico',
+        'Total Cadastrados no CadÚnico',
       ]}
       colors={[colorScales.blue[2], colorScales.purple[2]]}
-      format={(v) => `${v.toFixed(1)}%`}
+      format={(v) => `${v.toFixed(1).replace('.', ',')}%`}
       margin={{ top: 20, right: 56, bottom: 56, left: 44 }}
       rowHeight={28}
       dotRadius={5}

@@ -314,7 +314,7 @@ export const porteBubbleData = porteRaw.map((d) => ({
 	group: d.porte,
 }));
 
-export const porteStackedKeys   = ['grande', 'medio', 'pequeno_i', 'pequeno_ii'];
+export const porteStackedKeys   = ['pequeno_i', 'pequeno_ii', 'medio', 'grande'];
 export const porteStackedLabels = Object.fromEntries(
 	porteRaw.map((d) => [porteKeyMap[d.porte], d.porte])
 );
@@ -324,7 +324,7 @@ export const porteStackedData = [
 		...Object.fromEntries(porteRaw.map((d) => [porteKeyMap[d.porte], d.perc_valor])),
 	},
 	{
-		label: 'Beneficiários (%)',
+		label: 'Agentes Contemplados (%)',
 		...Object.fromEntries(porteRaw.map((d) => [porteKeyMap[d.porte], d.perc_quantidade])),
 	},
 ];
@@ -507,7 +507,8 @@ export const specialExecByUfData = parseCSV(csvSpecialExecUfRaw)
 	.sort((a, b) =>
 		(b.valor_executado_estado + b.valor_executado_municipio) -
 		(a.valor_executado_estado + a.valor_executado_municipio)
-	);
+	)
+	.slice(0, 10);
 
 export const specialExecByUfDotData = specialExecByUfData.map((d) => ({
 	label:  d.label,
@@ -522,6 +523,7 @@ export const porteMeanData = parseCSV(csvPortePopRaw)
 		municipios:      +d.numero_municipios,
 		valor_total:     +d.valor_total_por_porte,
 		valor_medio:     +d.valor_medio_por_porte,
+		valor_medio_municipio: +d.valor_medio_porte_municipios,
 		valor_mediano:   +d.valor_mediano_por_porte,
 		quantidade:      +d.quantidade_contemplados_por_porte,
 		perc_valor:      +d.percentual_valor_por_porte * 100,

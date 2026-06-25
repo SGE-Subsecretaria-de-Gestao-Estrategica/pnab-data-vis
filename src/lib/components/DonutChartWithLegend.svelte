@@ -27,6 +27,8 @@
 	const CHAR_W      = 7;
 	const BOX_PAD     = 32;
 	const LEGEND_GAP  = 16;
+	const LABEL_CHAR_W = 7;     // px/char for the 12px arc labels (% + valor)
+	const LABEL_GAP_FR = 0.06;  // distância do label fora do arco, fração do raio
 
 	let measuredWidth = $state(0);
 	const containerWidth = $derived(width ?? measuredWidth);
@@ -43,9 +45,29 @@
 	const legendW     = $derived(Math.max(120, Math.max(...data.map((d) => d.label.length * CHAR_W)) + BOX_PAD));
 	const legendItemH = $derived(height / data.length);
 
+	// Largest arc label (% ou valor absoluto) em px — reserva espaço lateral p/ não cortar
+	const maxLabelW = $derived((() => {
+		const t = data.reduce((s, d) => s + d.value, 0);
+		let chars = 0;
+		for (const d of data) {
+			const perc = t > 0 ? `${((d.value / t) * 100).toFixed(1)}%` : '';
+			chars = Math.max(chars, perc.length, format(d.value).length);
+		}
+		return chars * LABEL_CHAR_W;
+	})());
+
 	// Donut area = capped at height * 1.5 so the donut doesn't float in a huge empty space
 	const donutAreaW  = $derived(Math.min(containerWidth - legendW - LEGEND_GAP, height * 1.5));
-	const outerRadius = $derived(Math.min(donutAreaW / 2, height / 2) * 0.78);
+	// Raio máximo que cabe reservando os labels nas laterais (h) e topo/base (v)
+	const outerRadius = $derived(
+		Math.max(
+			40,
+			Math.min(
+				(donutAreaW / 2 - maxLabelW) / (1 + LABEL_GAP_FR),
+				(height / 2 - 26) / (1 + LABEL_GAP_FR)
+			)
+		)
+	);
 	const innerRadius = $derived(outerRadius * innerRadiusFraction);
 	const cx          = $derived(donutAreaW / 2);
 	const cy          = $derived(height / 2);
@@ -69,8 +91,8 @@
 	// Arc used only for centroid — placed just outside the slice
 	const labelArcFn = $derived(
 		arc<ReturnType<typeof pieFn>[number]>()
-			.innerRadius(outerRadius * 1.15)
-			.outerRadius(outerRadius * 1.15)
+			.innerRadius(outerRadius * (1 + LABEL_GAP_FR))
+			.outerRadius(outerRadius * (1 + LABEL_GAP_FR))
 	);
 
 	const arcs  = $derived(pieFn(data));

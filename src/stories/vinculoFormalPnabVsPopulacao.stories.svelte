@@ -33,7 +33,7 @@ Compara, para cada UF e região, o percentual de contemplados pela PNAB com vín
   {#snippet template()}
     <HorizontalGroupedBarChart width={600}
       data={ufComparisonGroupedData}
-      seriesLabels={['Contemplados PNAB', 'Vínculos RAIS 2024']}
+      seriesLabels={['Contemplados', 'Total RAIS']}
       colors={[colorScales.yellow[2], colorScales.blue[2]]}
       format={formatPctN}
       xLabel="% do total"
@@ -64,7 +64,7 @@ Compara, para cada UF e região, o percentual de contemplados pela PNAB com vín
   {#snippet template()}
     <ConnectedDotPlot width={600}
       data={ufComparisonGroupedData}
-      seriesLabels={['Contemplados PNAB', 'Vínculos RAIS 2024']}
+      seriesLabels={['Contemplados', 'Total RAIS']}
       colors={[colorScales.yellow[2], colorScales.blue[2]]}
       format={formatPctN}
       margin={{ top: 20, right: 56, bottom: 56, left: 44 }}

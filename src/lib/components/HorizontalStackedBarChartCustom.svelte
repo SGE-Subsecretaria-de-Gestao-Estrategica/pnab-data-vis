@@ -15,6 +15,7 @@
 		legendAlign = 'left' as 'left' | 'center' | 'right',
 		labelsAbove = false,
 		yAxisFontSize = 12,
+		hideSegmentLabelsFor = [] as string[],
 	}: {
 		width?: number;
 		data?: DataRow[];
@@ -29,6 +30,7 @@
 		legendAlign?: 'left' | 'center' | 'right';
 		labelsAbove?: boolean;
 		yAxisFontSize?: number;
+		hideSegmentLabelsFor?: string[];
 	} = $props();
 
 	let measuredWidth = $state(0);
@@ -151,7 +153,8 @@
 					/>
 				{/each}
 
-				<!-- Bars + labels -->
+				<!-- Bars + labels (all rects first, then all labels on top so
+				     a label overflowing into the next segment isn't painted over) -->
 				{#each rows as row}
 					{#each row.segments as seg}
 						{#if seg.w > 0}
@@ -163,18 +166,20 @@
 								fill={seg.color}
 								shape-rendering="crispEdges"
 							/>
-							{#if seg.w > 28}
-								<text
-									x={seg.x + 6}
-									y={row.midY}
-									dy="0.35em"
-									font-size="12"
-									font-weight="700"
-									fill={labelColor(seg.color)}
-									text-anchor="start"
-									pointer-events="none"
-								>{format(seg.value)}</text>
-							{/if}
+						{/if}
+					{/each}
+					{#each row.segments as seg}
+						{#if seg.w > 28 && !hideSegmentLabelsFor.includes(row.label)}
+							<text
+								x={seg.x + 6}
+								y={row.midY}
+								dy="0.35em"
+								font-size="12"
+								font-weight="700"
+								fill={labelColor(seg.color)}
+								text-anchor="start"
+								pointer-events="none"
+							>{format(seg.value)}</text>
 						{/if}
 					{/each}
 

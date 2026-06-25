@@ -250,7 +250,7 @@ export const boxPlotData = [
 ];
 
 // ── 7. VerticalStackedBarChart — faixa de valor pago × UF ─────────────────────
-// Fonte: aggregate_faixa_valor_ju_wide_by_uf.csv (todos os executores por UF).
+// Fonte: aggregate_faixa_valor_ju_wide_by_state.csv (execução estadual por UF).
 // Ordenado pela % de beneficiários nas faixas mais altas (≥ R$50k) — decrescente.
 export const UF_BAND_KEYS  = ['ate2k', 'de2a10k', 'de10a50k', 'de50a200k', 'acima200k'] as const;
 export const UF_BAND_LABELS: Record<string, string> = {
@@ -327,7 +327,7 @@ export const specialTerritoryBarData = parseCSV(csvSpecialTerritRaw)
 const faixaUfRows    = parseCSV(csvFaixaUfRaw);
 export const faixaStateRows = parseCSV(csvFaixaStateRaw);
 
-export const ufBandPercData = faixaUfRows
+export const ufBandPercData = faixaStateRows
 	.map((row) => {
 		const highValuePct = +row.perc_qtd_de_50_a_200_mil + +row.perc_qtd_acima_de_200_mil;
 		return {

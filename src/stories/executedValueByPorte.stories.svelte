@@ -2,6 +2,27 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import { DataTable } from 'sniic-design-system';
+  import { porteMeanData } from '$lib/data/section1';
+
+  // @ts-ignore
+  const formatBRL = (v) =>
+    new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(v);
+
+  // @ts-ignore
+  const formatInt = (v) => new Intl.NumberFormat('pt-BR').format(v);
+
+  const porteLabels = {
+    'Pequeno I':  'Pequeno Porte I',
+    'Pequeno II': 'Pequeno Porte II',
+    'Médio':      'Médio Porte',
+    'Grande':     'Grande Porte',
+  };
+  const porteOrder = ['Pequeno I', 'Pequeno II', 'Médio', 'Grande'];
 
   const columns = [
     { key: 'porte', label: 'Porte de Município', align: 'left', width: 200 },
@@ -10,12 +31,15 @@
     { key: 'media_recurso', label: 'Média de Recurso Executado por Município', align: 'right', width: 300 },
   ];
 
-  const rows = [
-    { porte: 'Pequeno Porte I',  n_municipios: '3.401', recurso_total: 'R$ 266.445.332,42', media_recurso: 'R$ 78.343,23'    },
-    { porte: 'Pequeno Porte II', n_municipios: '1.030', recurso_total: 'R$ 234.896.275,23', media_recurso: 'R$ 228.054,63'   },
-    { porte: 'Médio Porte',      n_municipios: '334',   recurso_total: 'R$ 161.197.608,53', media_recurso: 'R$ 482.627,57'   },
-    { porte: 'Grande Porte',     n_municipios: '332',   recurso_total: 'R$ 732.942.051,71', media_recurso: 'R$ 2.207.656,78' },
-  ];
+  const rows = [...porteMeanData]
+    .sort((a, b) => porteOrder.indexOf(a.label) - porteOrder.indexOf(b.label))
+    .map((d) => ({
+      // @ts-ignore
+      porte:         porteLabels[d.label] ?? d.label,
+      n_municipios:  formatInt(d.municipios),
+      recurso_total: formatBRL(d.valor_total),
+      media_recurso: formatBRL(d.valor_medio_municipio),
+    }));
 
   const { Story } = defineMeta({
     title: 'Section 1/Tabela 2',

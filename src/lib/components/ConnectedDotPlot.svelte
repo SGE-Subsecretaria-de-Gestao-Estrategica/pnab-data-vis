@@ -80,8 +80,8 @@
 	);
 
 	const LEGEND_ROW_H = 34;
-	const LEGEND_CHAR_W = 8;
-	const LEGEND_BOX_PAD = 20;
+	const LEGEND_CHAR_W = 7;
+	const LEGEND_BOX_PAD = 16;
 
 	const legendItemW = $derived(
 		seriesLabels.map((label) => Math.max(60, label.length * LEGEND_CHAR_W + LEGEND_BOX_PAD))
@@ -214,7 +214,7 @@
 			{#if seriesLabels.length >= 2}
 				{@const rowTotalW = legendItemW.reduce((s, w) => s + w, 0)}
 				{@const legendY = margin.top + totalInnerH + margin.bottom + LEGEND_GAP_TOP}
-				{@const legendX = margin.left + (innerW - rowTotalW) / 2}
+				{@const legendX = Math.max(2, (containerWidth - rowTotalW) / 2)}
 
 				<g transform="translate({legendX},{legendY})">
 					{#each seriesLabels as label, i}

@@ -11,6 +11,7 @@
 		format = (v: number) => String(v),
 		xLabel = '',
 		rowHeight = 32,
+		nTicks = 5,
 		margin = { top: 20, right: 40, bottom: 40, left: 120 },
 	}: {
 		width?: number;
@@ -19,6 +20,7 @@
 		format?: (v: number) => string;
 		xLabel?: string;
 		rowHeight?: number;
+		nTicks?: number;
 		margin?: { top: number; right: number; bottom: number; left: number };
 	} = $props();
 
@@ -37,14 +39,21 @@
 	const svgHeight = $derived(margin.top + innerH + margin.bottom);
 
 	const maxVal = $derived(Math.max(...sorted.map((d) => d.value), 1));
-	// nice ceiling: round up to a "nice" number
-	const niceMax = $derived(Math.ceil(maxVal / 10) * 10);
+	// nice ceiling: round up to a "nice" number (1, 2, 2.5, 5 × 10^n)
+	function niceCeil(x: number): number {
+		if (x <= 0) return 1;
+		const exp = Math.floor(Math.log10(x));
+		const base = Math.pow(10, exp);
+		const f = x / base;
+		const nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10;
+		return nf * base;
+	}
+	const niceMax = $derived(niceCeil(maxVal));
 
 	const xScale = $derived((v: number) => (v / niceMax) * innerW);
 
-	const N_TICKS = 5;
 	const tickValues = $derived(
-		Array.from({ length: N_TICKS + 1 }, (_, i) => (niceMax / N_TICKS) * i),
+		Array.from({ length: nTicks + 1 }, (_, i) => (niceMax / nTicks) * i),
 	);
 
 	const barH = $derived(Math.max(4, rowHeight * 0.65));
@@ -121,7 +130,7 @@
 					{#if xLabel}
 						<text
 							x={innerW / 2}
-							y={28}
+							y={38}
 							text-anchor="middle"
 							font-size="12"
 							fill="#888"

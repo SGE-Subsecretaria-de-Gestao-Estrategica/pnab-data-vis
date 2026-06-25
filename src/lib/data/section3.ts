@@ -72,6 +72,12 @@ export const pyramidData = ageGroupSexoRows.map((r) => ({
 	right: +r.quantidade_contemplados_feminino,
 }));
 
+export const pyramidValueData = ageGroupSexoRows.map((r) => ({
+	label: r.faixa_etaria,
+	left: +r.valor_recebido_masculino,
+	right: +r.valor_recebido_feminino,
+}));
+
 export const pyramidPercentData = ageGroupSexoRows.map((r) => ({
 	label: r.faixa_etaria,
 	left: +r.perc_quantidade_masculino_na_faixa * 100,

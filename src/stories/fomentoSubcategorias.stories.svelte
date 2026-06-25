@@ -43,6 +43,7 @@ Distribuição dos recursos dentro da categoria Fomento Cultural, mostrando valo
         color={colorScales.blue[2]}
         format={formatBRL}
         xLabel="Valor estimado (R$)"
+        nTicks={4}
         margin={{ top: 20, right: 80, bottom: 40, left: 240 }}
         rowHeight={48}
       />

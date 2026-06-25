@@ -57,6 +57,7 @@ Distribuicao do valor executado em territorios especiais (favelas, comunidades u
       format={formatBRL}
       marginLeft={50}
       showTotalLabel={true}
+      hideSegmentLabelsFor={['RJ', 'MG', 'AP']}
     />
   {/snippet}
 </Story>

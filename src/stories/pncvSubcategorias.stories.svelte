@@ -18,7 +18,7 @@
   const chartData = pncvSubData.map((d) => ({ label: d.label, value: d.valor }));
 
   const { Story } = defineMeta({
-    title: 'Section 6/pncvSubcategorias',
+    title: 'Section 6/Grafico 39',
     component: HorizontalBarChartCustom,
     tags: ['autodocs'],
     parameters: {

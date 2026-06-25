@@ -60,14 +60,14 @@ Em números absolutos, o Nordeste também lidera em beneficiários com vínculo 
 
 <Story name="Grafico 23 — Distribuicao por regiao PNAB vs RAIS">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={regionComparisonGroupedData}
       seriesLabels={['Contemplados PNAB', 'Vínculos RAIS 2024']}
-      colors={[categorical8[0], '#cb4034']}
+      colors={[colorScales.yellow[2], colorScales.blue[2]]}
       format={formatPctN}
       xLabel="% do total"
       margin={{ top: 20, right: 80, bottom: 40, left: 120 }}
-      barHeight={20}
+      barHeight={34}
       groupPad={24}
       rx={0}
       crispEdges

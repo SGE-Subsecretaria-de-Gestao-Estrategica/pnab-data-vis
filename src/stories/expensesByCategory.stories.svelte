@@ -25,7 +25,9 @@
   const LEG_VAL_X    = CHART_W - 150;
   const LEG_PCT_X    = CHART_W - 4;
 
-  const FONT = "'Space Grotesk', system-ui, sans-serif";
+  const FONT = "'Rawline', system-ui, sans-serif";
+
+  const LARGE_LABEL_KEYS = new Set(['fomento', 'cultura_viva', 'obras', 'subsidio']);
 
   // @ts-ignore
   const formatBRL = (v) =>
@@ -82,7 +84,7 @@
   }
 
   const { Story } = defineMeta({
-    title: 'Section 6/expensesByCategory',
+    title: 'Section 6/Grafico 34',
     component: {},
     tags: ['autodocs'],
     parameters: {
@@ -127,7 +129,7 @@ Os demais investimentos somam aproximadamente **R$ 154,6M**, distribuídos entre
             text-anchor="middle"
             dominant-baseline="middle"
             fill={contrastColor(seg.color)}
-            font-size="10"
+            font-size={LARGE_LABEL_KEYS.has(seg.key) ? "13" : "10"}
             pointer-events="none"
           >{seg.label}</text>
         {/if}

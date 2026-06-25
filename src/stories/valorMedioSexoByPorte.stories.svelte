@@ -2,7 +2,7 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   // @ts-ignore
-  import { colorPairs } from 'sniic-design-system';
+  import { colorScales } from 'sniic-design-system';
   import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
   // @ts-ignore
   import { valorMedioSexoPorteData, valorMedioSexoSeriesLabels } from '$lib/data/section3';
@@ -16,10 +16,10 @@
       maximumFractionDigits: 1,
     }).format(v);
 
-  const sexColors = [colorPairs.tealYellow[1], colorPairs.tealYellow[0]];
+  const sexColors = [colorScales.blue[2], colorScales.yellow[2]];
 
   const { Story } = defineMeta({
-    title: 'Section 3/valorMedioSexoByPorte',
+    title: 'Section 3/Grafico 20',
     component: HorizontalGroupedBarChart,
     tags: ['autodocs'],
     parameters: {
@@ -40,7 +40,7 @@ Nos **Entes Estatais** os valores médios são os mais elevados, refletindo o pe
 
 <Story name="Barras horizontais agrupadas — Valor médio por sexo e porte municipal">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={valorMedioSexoPorteData}
       seriesLabels={valorMedioSexoSeriesLabels}
       colors={sexColors}

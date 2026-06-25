@@ -1,16 +1,20 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart, colorScales } from 'sniic-design-system';
+  import { colorScales } from 'sniic-design-system';
+  import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
+  import ConnectedDotPlot from '$lib/components/ConnectedDotPlot.svelte';
   // @ts-ignore
-  import { specialExecByUfData } from '$lib/data/section1';
+  import { specialExecByUfData, specialExecByUfDotData } from '$lib/data/section1';
 
   // @ts-ignore
   const formatBRL = (v) => `R$ ${(v / 1e6).toFixed(1)}M`;
+  // @ts-ignore
+  const formatBRLDot = (v) => `R$${(v / 1e6).toFixed(0)}M`;
 
   const { Story } = defineMeta({
-    title: 'Section 1/specialTerritoryExecByUf',
-    component: HorizontalStackedBarChart,
+    title: 'Section 1/Grafico 7',
+    component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {
       docs: {
@@ -28,16 +32,32 @@ Distribuicao do valor executado em territorios especiais (favelas, comunidades u
   });
 </script>
 
-<Story name="Valor executado em territorios especiais por UF">
+<Story name="Valor executado em territorios especiais por UF — dot plot">
   {#snippet template()}
-    <HorizontalStackedBarChart
+    <ConnectedDotPlot width={600}
+      data={specialExecByUfDotData}
+      seriesLabels={['Governo Estadual', 'Governo Municipal']}
+      colors={[colorScales.blue[2], colorScales.orange[2]]}
+      format={formatBRLDot}
+      margin={{ top: 20, right: 56, bottom: 56, left: 44 }}
+      rowHeight={28}
+      dotRadius={5}
+    />
+  {/snippet}
+</Story>
+
+<Story name="Grafico 7">
+  {#snippet template()}
+    <HorizontalStackedBarChartCustom width={600}
       data={specialExecByUfData}
       keys={['valor_executado_estado', 'valor_executado_municipio']}
       categoryKey="label"
       labels={{ valor_executado_estado: 'Governo Estadual', valor_executado_municipio: 'Governo Municipal' }}
-      colors={[colorScales.blue[2], colorScales.red[2]]}
+      colors={[colorScales.blue[2], colorScales.orange[2]]}
       format={formatBRL}
+      marginLeft={50}
       showTotalLabel={true}
+      hideSegmentLabelsFor={['RJ', 'MG', 'AP']}
     />
   {/snippet}
 </Story>

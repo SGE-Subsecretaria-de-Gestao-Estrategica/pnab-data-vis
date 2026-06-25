@@ -7,7 +7,7 @@
   import { valorGroupedData } from '$lib/data/section5';
 
   const { Story } = defineMeta({
-    title: 'Section 5/cadunicoValorGrouped',
+    title: 'Section 5/Grafico 33',
     component: HorizontalGroupedBarChart,
     tags: ['autodocs'],
     parameters: {
@@ -28,13 +28,13 @@ Compara o percentual de contemplados por faixa de valor recebido entre os cadast
 
 <Story name="HorizontalGroupedBarChart — faixa de valor CadÚnico vs PNAB">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={valorGroupedData}
-      seriesLabels={['% contemplados PNAB/CadÚnico', '% contemplados PNAB']}
-      colors={[colorScales.orange[2], colorScales.teal[2]]}
+      seriesLabels={['Agentes Culturais Contemplados no CadUnico', 'Agentes Culturais Contemplados']}
+      colors={[colorScales.purple[2], colorScales.blue[2]]}
       format={(v) => `${v.toFixed(1)}%`}
       margin={{ top: 28, right: 20, bottom: 40, left: 160 }}
-      barHeight={22}
+      barHeight={34}
       barPad={4}
       groupPad={12}
       legendBottom={true}

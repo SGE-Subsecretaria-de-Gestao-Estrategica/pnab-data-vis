@@ -145,9 +145,9 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
   });
 </script>
 
-<Story name="Treemap — Distribuição de Valores por Porte">
+<Story name="Grafico 3">
   {#snippet template()}
-    <svg width={TM_W_PORTE} height={TM_TOTAL_H_PORTE} font-family="'Space Grotesk', system-ui, sans-serif" font-size="12" style="display:block">
+    <svg width={TM_W_PORTE} height={TM_TOTAL_H_PORTE} font-family="'Rawline', system-ui, sans-serif" font-size="12" style="display:block">
       {#each porteLeaves as leaf}
         {@const w        = leaf.x1 - leaf.x0}
         {@const h        = leaf.y1 - leaf.y0}
@@ -224,9 +224,9 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
   {/snippet}
 </Story>
 
-<Story name="Stacked Bars — Equidade: Valor Investido vs Beneficiários">
+<Story name="Grafico 4">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={porteStackedData}
       keys={porteStackedKeys}
       labels={porteStackedLabels}
@@ -242,7 +242,7 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
 <!-- DISABLED: resumo_por_porte_populacional.csv faltante em section_1/
 <Story name="Bars — Métricas por Porte">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={pmStackedData}
       keys={pmKeys}
       categoryKey="cat"
@@ -266,7 +266,7 @@ O gráfico de bolhas complementa esse retrato: municípios pequenos são muitos,
 
 <Story name="Stacked — Recurso e Contemplados por Porte">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={pmPercStackedData}
       keys={pmKeys}
       categoryKey="cat"

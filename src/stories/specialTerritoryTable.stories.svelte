@@ -61,7 +61,7 @@
   ];
 
   const { Story } = defineMeta({
-    title: 'Section 1/specialTerritoryTable',
+    title: 'Section 1/Tabela 3',
     component: DataTable,
     tags: ['autodocs'],
     parameters: {

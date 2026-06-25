@@ -34,9 +34,9 @@ Dois donuts mostram as distribuições: por faixa de renda per capita (5 categor
   });
 </script>
 
-<Story name="DonutChart — faixa de renda per capita">
+<Story name="Grafico 31.1">
   {#snippet template()}
-    <DonutChartWithLegend
+    <DonutChartWithLegend width={600}
       data={rendaDonutData}
       colors={categorical8}
       centerLabel="pessoas"
@@ -47,9 +47,9 @@ Dois donuts mostram as distribuições: por faixa de renda per capita (5 categor
   {/snippet}
 </Story>
 
-<Story name="DonutChart — situação de renda">
+<Story name="Grafico 31.2">
   {#snippet template()}
-    <DonutChartWithLegend
+    <DonutChartWithLegend width={600}
       data={situacaoRendaDonutData}
       colors={categorical8.slice(0, 3)}
       centerLabel="pessoas"

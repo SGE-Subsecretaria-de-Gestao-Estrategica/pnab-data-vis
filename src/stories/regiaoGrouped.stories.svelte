@@ -2,19 +2,19 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
-  import { colorPairs } from 'sniic-design-system';
+  import { colorScales } from 'sniic-design-system';
   // @ts-ignore
   import { regiaoGroupedData } from '$lib/data/section2';
 
   const seriesLabels = ['% agentes contemplados', '% população'];
-  const colors = [colorPairs.purpleYellow[0], colorPairs.purpleYellow[1]];
+  const colors = [colorScales.blue[2], colorScales.purple[2]];
 
   // @ts-ignore
   const formatPct = (v) =>
     v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
   const { Story } = defineMeta({
-    title: 'Section 2/regiaoGrouped',
+    title: 'Section 2/Grafico 9',
     component: HorizontalGroupedBarChart,
     tags: ['autodocs'],
     parameters: {
@@ -33,7 +33,7 @@ O Nordeste concentra **47,6%** dos contemplados, bem acima de sua participação
 
 <Story name="Barras horizontais agrupadas — Contemplados vs. população por região">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={regiaoGroupedData}
       seriesLabels={seriesLabels}
       colors={colors}

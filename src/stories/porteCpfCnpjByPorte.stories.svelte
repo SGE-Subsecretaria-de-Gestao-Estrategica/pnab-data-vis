@@ -12,10 +12,10 @@
   // @ts-ignore
   const formatPerc = (v) => `${v.toFixed(1)}%`;
 
-  const cpfCnpjColors = [colorScales.teal[2], colorScales.yellow[2]];
+  const cpfCnpjColors = [colorScales.blue[2], colorScales.yellow[2]];
 
   const { Story } = defineMeta({
-    title: 'Section 3/porteCpfCnpjByPorte',
+    title: 'Section 3/Grafico 17',
     component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {
@@ -34,7 +34,7 @@ A distribuição entre Pessoa Física (CPF) e Pessoa Jurídica (CNPJ) varia conf
 
 <Story name="Stacked — CPF vs CNPJ por Porte Populacional">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={porteCpfCnpjStackedData}
       keys={porteCpfCnpjKeys}
       categoryKey="label"

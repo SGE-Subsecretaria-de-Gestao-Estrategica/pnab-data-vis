@@ -7,6 +7,7 @@
 	}
 
 	let {
+		width = undefined,
 		data = [] as VerticalGroupedBarRow[],
 		seriesLabels = [] as string[],
 		colors = ['#cb4034', '#a44c7f', '#ea662f', '#ab4723'] as string[],
@@ -17,6 +18,7 @@
 		margin = { top: 20, right: 20, bottom: 10, left: 44 },
 		yTicks = 5,
 	}: {
+		width?: number;
 		data: VerticalGroupedBarRow[];
 		seriesLabels?: string[];
 		colors?: string[];
@@ -28,10 +30,11 @@
 		yTicks?: number;
 	} = $props();
 
-	let containerWidth = $state(0);
+	let measuredWidth = $state(0);
+	const containerWidth = $derived(width ?? measuredWidth);
 
-	const FONT = "'Space Grotesk', system-ui, sans-serif";
-	const LABEL_FS = 10;
+	const FONT = "'Rawline', system-ui, sans-serif";
+	const LABEL_FS = 12;
 	const LABEL_LH = 13;
 	const LEGEND_CHAR_W = 6.5;
 	const LEGEND_PAD_X = 16;
@@ -119,7 +122,7 @@
 	const legendStartY = $derived(margin.top + innerH + labelAreaH + 8);
 </script>
 
-<div bind:clientWidth={containerWidth} style="width:100%;">
+<div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
 	{#if containerWidth > 0}
 		<svg width={containerWidth} height={svgHeight} role="img" font-family={FONT}>
 			<!-- Legend (block style, bottom) -->
@@ -159,7 +162,7 @@
 						y={ty}
 						dy="0.35em"
 						text-anchor="end"
-						font-size="9"
+						font-size="12"
 						fill="#888"
 					>{format(tick)}</text>
 				{/if}
@@ -182,7 +185,7 @@
 						x={bx + barWidth / 2}
 						y={by - 3}
 						text-anchor="middle"
-						font-size="10"
+						font-size="12"
 						fill="#444"
 					>{format(val)}</text>
 				{/each}

@@ -1,29 +1,17 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HorizontalStackedBarChart } from 'sniic-design-system';
+  import { colorScales } from 'sniic-design-system';
+  import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
   import { percapitaData } from '$lib/data/section1';
-
-  const flagModules = import.meta.glob(
-    '/node_modules/sniic-design-system/dist/flags/states/*.svg',
-    { query: '?url', import: 'default', eager: true }
-  );
-
-  // @ts-ignore
-  const icons = Object.fromEntries(
-    Object.entries(flagModules).map(([path, url]) => {
-      const uf = path.split('/').pop().replace('.svg', '');
-      return [uf, url];
-    })
-  );
 
   // @ts-ignore
   const format = (v) =>
     `R$ ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const { Story } = defineMeta({
-    title: 'Section 1/valuePerCaptaByState',
-    component: HorizontalStackedBarChart,
+    title: 'Section 1/Grafico 2',
+    component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {
       docs: {
@@ -45,29 +33,16 @@ São Paulo, que lidera em valor total, cai para uma posição intermediária qua
   });
 </script>
 
-<Story name="Valor per capita por UF (abreviação)">
+<Story name="Grafico 2">
   {#snippet template()}
-    <HorizontalStackedBarChart
+    <HorizontalStackedBarChartCustom width={600}
       data={percapitaData}
       keys={['valor_percapita_uf']}
       categoryKey="uf"
       labels={{ valor_percapita_uf: 'Valor per capita (R$)' }}
+      colors={[colorScales.blue[2]]}
       {format}
-      showTotalLabel={false}
-    />
-  {/snippet}
-</Story>
-
-<Story name="Valor per capita por UF (bandeiras)">
-  {#snippet template()}
-    <HorizontalStackedBarChart
-      data={percapitaData}
-      keys={['valor_percapita_uf']}
-      categoryKey="uf"
-      labels={{ valor_percapita_uf: 'Valor per capita (R$)' }}
-      {format}
-      {icons}
-      iconSize={24}
+      marginLeft={50}
       showTotalLabel={false}
     />
   {/snippet}

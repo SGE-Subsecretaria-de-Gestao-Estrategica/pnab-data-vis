@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { HeatMap, colorScales, categorical8 } from 'sniic-design-system';
+  import { HeatMap, colorScales } from 'sniic-design-system';
   import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
   // @ts-ignore
   import { racaCorSexoHeatmapData, racaCorSexoComparisonData } from '$lib/data/section4';
@@ -65,14 +65,14 @@ O cruzamento de raça/cor com sexo revela que **homens pardos** formam o maior g
 
 <Story name="Grafico 27 — Raca/cor por sexo PNAB">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={racaCorSexoComparisonData}
       seriesLabels={['Masculino', 'Feminino']}
-      colors={[categorical8[0], '#cb4034']}
+      colors={[colorScales.yellow[2], colorScales.blue[2]]}
       format={formatPctN}
       xLabel="% do total de beneficiários com vínculo formal"
       margin={{ top: 20, right: 80, bottom: 40, left: 120 }}
-      barHeight={20}
+      barHeight={34}
       rx={0}
       crispEdges
       labelsInside

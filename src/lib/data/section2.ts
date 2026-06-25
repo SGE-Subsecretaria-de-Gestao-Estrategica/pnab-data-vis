@@ -1,12 +1,13 @@
 // All Section 2 data, parsed from CSVs at build time.
 // Narrativa: CPF (pessoas físicas) vs CNPJ (entidades) — quem recebe o quê.
 
-import { stateRows, siglaToName } from '$lib/data/section1';
+import { stateRows, siglaToName, regionUfRows } from '$lib/data/section1';
 
 import csvStateRaw         from '../../../data/section_2/aggregate_execution_by_person_type_state.csv?raw';
 import csvUfRaw            from '../../../data/section_2/aggregate_execution_by_person_type_uf.csv?raw';
 import csvMunRaw           from '../../../data/section_2/aggregate_execution_by_person_type_municipality.csv?raw';
 import csvRangeRaw         from '../../../data/section_2/values_range_by_brazil.csv?raw';
+import csvRangeV2Raw       from '../../../data/section_2/values_range_by_brazil_v2.csv?raw';
 import csvPorteRaw         from '../../../data/section_1/values_by_population_size.csv?raw';
 import csvSpecialTerritRaw from '../../../data/section_1/values_by_special_territory_uf.csv?raw';
 import csvFaixaUfRaw       from '../../../data/section_2/aggregate_faixa_valor_ju_wide_by_uf.csv?raw';
@@ -35,6 +36,7 @@ const s2StateRows = parseCSV(csvStateRaw);
 const ufRows      = parseCSV(csvUfRaw);
 const munRows     = parseCSV(csvMunRaw);
 const rangeRows   = parseCSV(csvRangeRaw);
+const rangeRowsV2 = parseCSV(csvRangeV2Raw);
 
 function byType(rows: Record<string, string>[], tipo: string) {
 	return rows.find((r) => r.tipo_documento === tipo)!;
@@ -113,14 +115,6 @@ export const faixaDistData = rangeRows
 	}));
 
 // ── 3b. HorizontalGroupedBarChart — contemplados e recursos por faixa (5 tiers)
-const recursoPercByBand: Record<string, number> = {
-	'Até 2 mil':         2.2,
-	'2 a 10 mil':       13.1,
-	'10 a 50 mil':      31.5,
-	'50 a 200 mil':     28.1,
-	'Acima de 200 mil': 25.2,
-};
-
 export const faixaValorPercData = [
 	{ label: 'Até 2 mil',         value: 2.2  },
 	{ label: '2 a 10 mil',        value: 13.1 },
@@ -131,44 +125,37 @@ export const faixaValorPercData = [
 
 export const faixaGroupedData = (() => {
 	const pagMap: Record<string, number> = {};
-	for (const r of rangeRows) {
+	const recMap: Record<string, number> = {};
+	for (const r of rangeRowsV2) {
 		const faixa = normalizeFaixa(r.faixa_vlr_pago_ju_bbagil);
 		if (!faixa) continue;
-		const v = +r['% de contemplados'] * 100;
-		const key =
-			faixa === '200 a 500 mil' ||
-			faixa === '500 mil a 1 milhão' ||
-			faixa === '1 milhão a 10 milhões' ||
-			faixa === 'Acima de 10 milhões'
-				? 'Acima de 200 mil'
-				: faixa;
-		pagMap[key] = (pagMap[key] ?? 0) + v;
+		pagMap[faixa] = (pagMap[faixa] ?? 0) + +r['% de contemplados'] * 100;
+		recMap[faixa] = (recMap[faixa] ?? 0) + +r['% do valor total'] * 100;
 	}
 	return ['Até 2 mil', '2 a 10 mil', '10 a 50 mil', '50 a 200 mil', 'Acima de 200 mil'].map(
 		(label) => ({
 			label,
-			values: [pagMap[label] ?? 0, recursoPercByBand[label]],
+			values: [pagMap[label] ?? 0, recMap[label] ?? 0],
 		})
 	);
 })();
 
 // ── 3c. HorizontalBarChart — agentes culturais por região ─────────────────────
-export const regiaoDistData = [
-	{ label: 'Nordeste',     value: 47.7, count: 79446 },
-	{ label: 'Sudeste',      value: 27.4, count: 45655 },
-	{ label: 'Sul',          value: 10.8, count: 17946 },
-	{ label: 'Norte',        value: 8.7,  count: 14504 },
-	{ label: 'Centro-Oeste', value: 5.4,  count: 9018  },
-];
+export const regiaoDistData = [...regionUfRows]
+	.sort((a, b) => +b.perc_qtde_contemplados - +a.perc_qtde_contemplados)
+	.map((r) => ({
+		label: r.regiao,
+		value: +r.perc_qtde_contemplados * 100,
+		count: +r.qtde_contemplados,
+	}));
 
 // ── 3d. HorizontalGroupedBarChart — agentes culturais vs população por região ──
-export const regiaoGroupedData = [
-	{ label: 'Nordeste',     values: [47.6, 26.9] },
-	{ label: 'Sudeste',      values: [27.4, 41.7] },
-	{ label: 'Sul',          values: [10.8, 14.6] },
-	{ label: 'Norte',        values: [8.7,  8.8]  },
-	{ label: 'Centro-Oeste', values: [5.6,  8.0]  },
-];
+export const regiaoGroupedData = [...regionUfRows]
+	.sort((a, b) => +b.perc_qtde_contemplados - +a.perc_qtde_contemplados)
+	.map((r) => ({
+		label: r.regiao,
+		values: [+r.perc_qtde_contemplados * 100, +r.perc_populacao * 100],
+	}));
 
 // ── 4. HorizontalStackedBarChart — faixas por tipo CPF vs CNPJ ───────────────
 export const BAND_LABELS: Record<string, string> = {
@@ -263,7 +250,7 @@ export const boxPlotData = [
 ];
 
 // ── 7. VerticalStackedBarChart — faixa de valor pago × UF ─────────────────────
-// Fonte: aggregate_faixa_valor_ju_wide_by_uf.csv (todos os executores por UF).
+// Fonte: aggregate_faixa_valor_ju_wide_by_state.csv (execução estadual por UF).
 // Ordenado pela % de beneficiários nas faixas mais altas (≥ R$50k) — decrescente.
 export const UF_BAND_KEYS  = ['ate2k', 'de2a10k', 'de10a50k', 'de50a200k', 'acima200k'] as const;
 export const UF_BAND_LABELS: Record<string, string> = {
@@ -340,7 +327,7 @@ export const specialTerritoryBarData = parseCSV(csvSpecialTerritRaw)
 const faixaUfRows    = parseCSV(csvFaixaUfRaw);
 export const faixaStateRows = parseCSV(csvFaixaStateRaw);
 
-export const ufBandPercData = faixaUfRows
+export const ufBandPercData = faixaStateRows
 	.map((row) => {
 		const highValuePct = +row.perc_qtd_de_50_a_200_mil + +row.perc_qtd_acima_de_200_mil;
 		return {

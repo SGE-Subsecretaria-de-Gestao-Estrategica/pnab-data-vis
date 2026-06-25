@@ -4,10 +4,9 @@
     loadBrazilGeoJSON,
     categorical5,
     getContrastColor,
-    typography,
   } from 'sniic-design-system';
 
-  const FONT_FAMILY = typography.chartValueFontFamily;
+  const FONT_FAMILY = "'Rawline', system-ui, sans-serif";
 
   const STATE_TO_REGION: Record<string, string> = {
     AC: 'Norte', AM: 'Norte', AP: 'Norte', PA: 'Norte', RO: 'Norte', RR: 'Norte', TO: 'Norte',

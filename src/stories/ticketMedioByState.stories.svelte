@@ -9,7 +9,7 @@
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
 
   const { Story } = defineMeta({
-    title: 'Section 2/ticketMedioByState',
+    title: 'Section 2/Grafico 12',
     component: ExecutedValueByStateMap,
     tags: ['autodocs'],
     parameters: {
@@ -30,13 +30,15 @@ Estados do Centro-Oeste e do Sudeste concentraram os maiores valores médios por
 
 <Story name="Ticket Médio por Estado">
   {#snippet template()}
-    <div style="font-family: 'Space Grotesk', system-ui, sans-serif;">
+    <div style="font-family: 'Rawline', system-ui, sans-serif;">
       <ExecutedValueByStateMap
         states={mediaValorByState}
         metric="media_aparada_1pct_valor"
         label="Ticket médio (R$) pago por unidade federativa"
         format={formatBRL}
         showSideLegend={true}
+        legCols={2}
+        mapFrac={0.72}
       />
     </div>
   {/snippet}

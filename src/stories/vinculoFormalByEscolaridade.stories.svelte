@@ -12,7 +12,7 @@
   // @ts-ignore
   const formatN = (v) => v.toLocaleString('pt-BR');
   // @ts-ignore
-  const formatBRL = (v) => `R$${new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 }).format(v)}`;
+  const formatBRL = (v) => `R$ ${new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 }).format(v)}`;
   // @ts-ignore
   const formatPct = (v) => `${v.toFixed(1)}%`;
   // @ts-ignore
@@ -52,7 +52,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
 
 <Story name="Barras — Beneficiários com vínculo formal por escolaridade">
   {#snippet template()}
-    <HorizontalBarChartCustom
+    <HorizontalBarChartCustom width={600}
       data={escolaridadeProporcionalData}
       color={colorScales.lime[2]}
       format={formatPct}
@@ -64,7 +64,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
 
 <Story name="Barras horizontais — Valor médio por escolaridade">
   {#snippet template()}
-    <HorizontalBarChartCustom
+    <HorizontalBarChartCustom width={600}
       data={escolaridadeValorMedioData}
       color={colorScales.lime[2]}
       format={formatBRL}
@@ -76,7 +76,7 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
 
 <Story name="Barras verticais — Participacao proporcional por escolaridade">
   {#snippet template()}
-    <VerticalBarChartCustom
+    <VerticalBarChartCustom width={600}
       data={escolaridadeProporcionalVertData}
       color={colorScales.lime[2]}
       format={formatPct}
@@ -89,14 +89,14 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
 
 <Story name="Grafico 28 — Escolaridade PNAB vs RAIS">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={escolaridadeComparisonGroupedData}
-      seriesLabels={['PNAB', 'Total trabalhadores formais']}
-      colors={[categorical8[0], '#cb4034']}
+      seriesLabels={['Contemplados', 'Total RAIS']}
+      colors={[colorScales.yellow[2], colorScales.blue[2]]}
       format={formatPctN}
       xLabel="% do total"
       margin={{ top: 20, right: 80, bottom: 40, left: 260 }}
-      barHeight={20}
+      barHeight={34}
       rx={0}
       crispEdges
       labelsInside
@@ -107,12 +107,14 @@ Entre os beneficiários com vínculo formal, o perfil educacional é elevado: **
 
 <Story name="Grafico 29 — Valor medio por escolaridade">
   {#snippet template()}
-    <HorizontalBarChartCustom
+    <HorizontalBarChartCustom width={600}
       data={escolaridadeValorMedioNewData}
       color={categorical8[0]}
       format={formatBRL}
       xLabel="Valor médio recebido (R$)"
-      margin={{ top: 20, right: 100, bottom: 40, left: 260 }}
+      margin={{ top: 20, right: 100, bottom: 52, left: 260 }}
+      rowHeight={52}
+      nTicks={4}
     />
   {/snippet}
 </Story>

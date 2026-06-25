@@ -5,28 +5,33 @@
 	}
 
 	let {
+		width = undefined,
 		data = [] as BarDatum[],
 		color = '#4271b5',
 		format = (v: number) => String(v),
 		xLabel = '',
 		rowHeight = 32,
+		nTicks = 5,
 		margin = { top: 20, right: 40, bottom: 40, left: 120 },
 	}: {
+		width?: number;
 		data?: BarDatum[];
 		color?: string;
 		format?: (v: number) => string;
 		xLabel?: string;
 		rowHeight?: number;
+		nTicks?: number;
 		margin?: { top: number; right: number; bottom: number; left: number };
 	} = $props();
 
-	const FONT = "'Space Grotesk', system-ui, sans-serif";
+	const FONT = "'Rawline', system-ui, sans-serif";
 	const LABEL_PAD = 6;
-	const LABEL_FS = 10;
+	const LABEL_FS = 12;
 	// Minimum bar pixel width needed to fit a label inside
 	const MIN_INSIDE_PX = 44;
 
-	let containerWidth = $state(0);
+	let measuredWidth = $state(0);
+	const containerWidth = $derived(width ?? measuredWidth);
 
 	const sorted = $derived([...data].sort((a, b) => b.value - a.value));
 	const innerW = $derived(Math.max(0, containerWidth - margin.left - margin.right));
@@ -34,21 +39,28 @@
 	const svgHeight = $derived(margin.top + innerH + margin.bottom);
 
 	const maxVal = $derived(Math.max(...sorted.map((d) => d.value), 1));
-	// nice ceiling: round up to a "nice" number
-	const niceMax = $derived(Math.ceil(maxVal / 10) * 10);
+	// nice ceiling: round up to a "nice" number (1, 2, 2.5, 5 × 10^n)
+	function niceCeil(x: number): number {
+		if (x <= 0) return 1;
+		const exp = Math.floor(Math.log10(x));
+		const base = Math.pow(10, exp);
+		const f = x / base;
+		const nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10;
+		return nf * base;
+	}
+	const niceMax = $derived(niceCeil(maxVal));
 
 	const xScale = $derived((v: number) => (v / niceMax) * innerW);
 
-	const N_TICKS = 5;
 	const tickValues = $derived(
-		Array.from({ length: N_TICKS + 1 }, (_, i) => (niceMax / N_TICKS) * i),
+		Array.from({ length: nTicks + 1 }, (_, i) => (niceMax / nTicks) * i),
 	);
 
 	const barH = $derived(Math.max(4, rowHeight * 0.65));
 	const barOffset = $derived((rowHeight - barH) / 2);
 </script>
 
-<div bind:clientWidth={containerWidth} style="width:100%;">
+<div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
 	{#if containerWidth > 0}
 		<svg width={containerWidth} height={svgHeight} role="img" font-family={FONT}>
 			<g transform="translate({margin.left},{margin.top})">
@@ -95,7 +107,7 @@
 							font-size={LABEL_FS}
 							font-weight="500"
 							font-family={FONT}
-							fill="var(--chart-fg-strong, #334155)"
+							fill="#334155"
 						>{formatted}</text>
 					{/if}
 				{/each}
@@ -110,7 +122,7 @@
 							y={8}
 							dy="0.71em"
 							text-anchor="middle"
-							font-size="9"
+							font-size="12"
 							fill="#888"
 							font-family={FONT}
 						>{format(tick)}</text>
@@ -118,9 +130,9 @@
 					{#if xLabel}
 						<text
 							x={innerW / 2}
-							y={28}
+							y={38}
 							text-anchor="middle"
-							font-size="10"
+							font-size="12"
 							fill="#888"
 							font-family={FONT}
 						>{xLabel}</text>
@@ -136,9 +148,9 @@
 					y={ty}
 					dy="0.35em"
 					text-anchor="end"
-					font-size="11"
+					font-size="12"
 					font-family={FONT}
-					fill="var(--chart-fg, #64748b)"
+					fill="#64748b"
 				>{d.label}</text>
 			{/each}
 		</svg>

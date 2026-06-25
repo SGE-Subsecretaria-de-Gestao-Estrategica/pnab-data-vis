@@ -72,6 +72,12 @@ export const pyramidData = ageGroupSexoRows.map((r) => ({
 	right: +r.quantidade_contemplados_feminino,
 }));
 
+export const pyramidValueData = ageGroupSexoRows.map((r) => ({
+	label: r.faixa_etaria,
+	left: +r.valor_recebido_masculino,
+	right: +r.valor_recebido_feminino,
+}));
+
 export const pyramidPercentData = ageGroupSexoRows.map((r) => ({
 	label: r.faixa_etaria,
 	left: +r.perc_quantidade_masculino_na_faixa * 100,
@@ -191,7 +197,7 @@ export const top20CboData = parseCSV(csvCboRaw)
 export const naturezaJuridicaData = parseCSV(csvNaturezaJuridicaRaw)
 	.map((r) => ({
 		label: r.natureza_juridica,
-		value: +r.perc_valor_contemplados * 100,
+		value: +r.perc_quantidade_contemplados * 100,
 	}))
 	.sort((a, b) => b.value - a.value);
 

@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { DivergingBarChart, colorPairs, categorical8 } from 'sniic-design-system';
+  import { DivergingBarChart, colorPairs, colorScales } from 'sniic-design-system';
   import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
   // @ts-ignore
   import { sexoDivergingData, sexoComparisonStackedData, sexoComparisonStackedKeys, sexoComparisonStackedLabels } from '$lib/data/section4';
@@ -42,12 +42,13 @@ Entre as mulheres beneficiárias, **60,1%** não possuem vínculo formal — pro
 
 <Story name="Grafico 25 — Sexo PNAB vs RAIS">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={sexoComparisonStackedData}
       keys={[...sexoComparisonStackedKeys]}
       labels={sexoComparisonStackedLabels}
-      colors={[categorical8[0], '#cb4034']}
+      colors={[colorScales.yellow[2], colorScales.blue[2]]}
       format={formatPctN}
+      rowHeight={48}
       labelsAbove
     />
   {/snippet}

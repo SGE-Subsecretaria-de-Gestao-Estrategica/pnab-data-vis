@@ -1,14 +1,14 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
+  import ConnectedDotPlot from '$lib/components/ConnectedDotPlot.svelte';
   import { colorScales } from 'sniic-design-system';
   // @ts-ignore
   import { representacaoUfGroupedData } from '$lib/data/section5';
 
   const { Story } = defineMeta({
-    title: 'Section 5/cadunicoRepresentacaoByUf',
-    component: HorizontalGroupedBarChart,
+    title: 'Section 5/Grafico 32',
+    component: ConnectedDotPlot,
     tags: ['autodocs'],
     parameters: {
       docs: {
@@ -17,7 +17,7 @@
 **Comparativo entre Distribuição de Agentes Culturais PF Contemplados na Aldir Blanc com CadÚnico por UF x Distribuição de Pessoas com CadÚnico por UF**
 
 Compara o peso de cada UF no total de contemplados na Aldir Blanc que estão no CadÚnico com o peso de cada UF na população total inscrita no CadÚnico.
-Estados com barra laranja maior que a teal apresentam sobrerrepresentação; o inverso indica sub-representação.
+Dot laranja à direita do teal indica sobrerrepresentação; à esquerda indica sub-representação.
 
 **Fonte**: \`aggregate_cadunico_representacao_by_uf.csv\`, colunas \`perc_qtd_contemplados_cadunico\` e \`perc_qtd_cadunico_brasil\`.
           `,
@@ -29,20 +29,17 @@ Estados com barra laranja maior que a teal apresentam sobrerrepresentação; o i
 
 <Story name="Distribuição CadÚnico — Contemplados PNAB vs Pessoas CadÚnico por UF">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <ConnectedDotPlot width={600}
       data={representacaoUfGroupedData}
       seriesLabels={[
-        '% contemplados PNAB/CadÚnico (UF)',
-        '% pessoas CadÚnico (UF)',
+        'Agentes Culturais Contemplados no CadÚnico',
+        'Total Cadastrados no CadÚnico',
       ]}
-      colors={[colorScales.orange[2], colorScales.teal[2]]}
-      format={(v) => `${v.toFixed(1)}%`}
-      margin={{ top: 28, right: 20, bottom: 40, left: 50 }}
-      barHeight={22}
-      barPad={4}
-      groupPad={12}
-      legendBottom={true}
-      labelsInside={true}
+      colors={[colorScales.blue[2], colorScales.purple[2]]}
+      format={(v) => `${v.toFixed(1).replace('.', ',')}%`}
+      margin={{ top: 20, right: 56, bottom: 56, left: 44 }}
+      rowHeight={28}
+      dotRadius={5}
     />
   {/snippet}
 </Story>

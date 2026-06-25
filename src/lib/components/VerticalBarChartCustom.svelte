@@ -5,6 +5,7 @@
 	}
 
 	let {
+		width = undefined,
 		data = [] as BarDatum[],
 		color = '#cb4034',
 		format = (v: number) => v.toFixed(1) + '%',
@@ -14,6 +15,7 @@
 		yTicks = 5,
 		insideLabelMinH = 30,
 	}: {
+		width?: number;
 		data?: BarDatum[];
 		color?: string;
 		format?: (v: number) => string;
@@ -24,11 +26,12 @@
 		insideLabelMinH?: number;
 	} = $props();
 
-	const FONT = "'Space Grotesk', system-ui, sans-serif";
-	const LABEL_FS = 10;
+	const FONT = "'Rawline', system-ui, sans-serif";
+	const LABEL_FS = 12;
 	const LABEL_LH = 13;
 
-	let containerWidth = $state(0);
+	let measuredWidth = $state(0);
+	const containerWidth = $derived(width ?? measuredWidth);
 
 	const innerW = $derived(Math.max(0, containerWidth - margin.left - margin.right));
 	const innerH = $derived(Math.max(0, height - margin.top - margin.bottom));
@@ -70,7 +73,7 @@
 	const tickValues = $derived(Array.from({ length: yTicks + 1 }, (_, i) => i * tickStep));
 </script>
 
-<div bind:clientWidth={containerWidth} style="width:100%;">
+<div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
 	{#if containerWidth > 0}
 		<svg width={containerWidth} height={svgHeight} role="img" font-family={FONT}>
 			<!-- Y-axis label -->
@@ -79,7 +82,7 @@
 					x={-(margin.top + innerH / 2)}
 					y={14}
 					text-anchor="middle"
-					font-size="10"
+					font-size="12"
 					fill="#888"
 					transform="rotate(-90)"
 				>{yLabel}</text>
@@ -103,7 +106,7 @@
 						y={ty}
 						dy="0.35em"
 						text-anchor="end"
-						font-size="9"
+						font-size="12"
 						fill="#888"
 					>{format(tick)}</text>
 				{/if}
@@ -126,7 +129,7 @@
 						y={by + barH / 2}
 						text-anchor="middle"
 						dominant-baseline="middle"
-						font-size="11"
+						font-size="12"
 						font-weight="600"
 						fill="#fffffe"
 					>{format(d.value)}</text>
@@ -135,7 +138,7 @@
 						x={cx}
 						y={by - 4}
 						text-anchor="middle"
-						font-size="10"
+						font-size="12"
 						fill="#444"
 					>{format(d.value)}</text>
 				{/if}

@@ -15,7 +15,7 @@
     v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
   const { Story } = defineMeta({
-    title: 'Section 6/pncvNatJuridica',
+    title: 'Section 6/Grafico 40',
     component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {
@@ -39,30 +39,34 @@ Participação percentual entre **CNPJ** e **CPF** dentro de cada modalidade da 
 
 <Story name="HorizontalStackedBarChart — PNCV por Modalidade e Natureza Jurídica (blue e orange)">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
-      data={pncvNatJuridicaData}
-      keys={[...pncvNatJuridicaKeys]}
-      labels={pncvNatJuridicaLabels}
-      colors={colorPairs.bluePurple}
-      format={formatPct}
-      showTotalLabel={false}
-      marginLeft={160}
-      legendAlign="left"
-    />
+    <div style="max-width: 560px;">
+      <HorizontalStackedBarChartCustom width={600}
+        data={pncvNatJuridicaData}
+        keys={[...pncvNatJuridicaKeys]}
+        labels={pncvNatJuridicaLabels}
+        colors={colorPairs.bluePurple}
+        format={formatPct}
+        showTotalLabel={false}
+        marginLeft={120}
+        legendAlign="left"
+      />
+    </div>
   {/snippet}
 </Story>
 
 <Story name="HorizontalStackedBarChart — PNCV por Modalidade e Natureza Jurídica (teal e orange)">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
-      data={pncvNatJuridicaData}
-      keys={[...pncvNatJuridicaKeys]}
-      labels={pncvNatJuridicaLabels}
-      colors={colorPairs.bluePurple}
-      format={formatPct}
-      showTotalLabel={false}
-      marginLeft={160}
-      legendAlign="left"
-    />
+    <div style="max-width: 560px;">
+      <HorizontalStackedBarChartCustom width={600}
+        data={pncvNatJuridicaData}
+        keys={[...pncvNatJuridicaKeys]}
+        labels={pncvNatJuridicaLabels}
+        colors={colorPairs.bluePurple}
+        format={formatPct}
+        showTotalLabel={false}
+        marginLeft={120}
+        legendAlign="left"
+      />
+    </div>
   {/snippet}
 </Story>

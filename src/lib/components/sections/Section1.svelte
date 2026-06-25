@@ -1,405 +1,283 @@
 <script lang="ts">
-	import DashboardFilters from '$lib/components/DashboardFilters.svelte';
-	import DashboardCard from '$lib/components/DashboardCard.svelte';
-	import ExecutedValueByStateMap from '$lib/components/ExecutedValueByStateMap.svelte';
-	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
-	import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
-	import { createFilters } from '$lib/stores/filters.svelte';
-	import type { Visao, Regiao } from '$lib/stores/filters.svelte';
+	import BrazilChoropleth from '$lib/components/BrazilChoropleth.svelte';
+	import DashboardFilterBar from '$lib/components/DashboardFilterBar.svelte';
+	import { BigNumber } from 'sniic-design-system';
+	import { createDashboardFilters, VISAO_LABELS } from '$lib/stores/dashboardFilters.svelte';
 	import {
-		BigNumber,
-		TreemapChart,
-		HorizontalBarChart,
-		HorizontalStackedBarChart,
-		colorScales,
-		colorPairs,
-		categorical8,
-	} from 'sniic-design-system';
-	import {
-		siglaToName, regionMap,
-		valorExecEstados, valorExecMunicipios, valorExecTotal,
-		percExecEstados, percExecMunicipios,
-		stateRows,
-		states,
-		percapitaData,
-		porteTreemapData, porteRaw,
-		capitalInteriorStackedData, capitalInteriorByUfData,
-		specialTerritoriesMetrics,
-		zoneData,
-		percRuralQtde,
-	} from '$lib/data/section1';
-	import {
-		percBenefCPF, percBenefCNPJ,
-		percValorCPF, percValorCNPJ,
-		totalBenefCPF, totalBenefCNPJ,
-		benefVsValorData,
-		faixaGroupedData,
-		regiaoGroupedData,
-		UF_BAND_KEYS, UF_BAND_LABELS,
-		ufBandPercData, ufValorBandPercData,
-	} from '$lib/data/section2';
+		siglaToName,
+		regionMap,
+		regionAgg,
+		rowsByVisao,
+		nationalTotals,
+		NUM_ESTADOS,
+		NUM_MUNICIPIOS,
+	} from '$lib/data/dashboard';
 
-	const filters = createFilters();
+	const filters = createDashboardFilters();
 
-	function handleFilterChange(key: 'visao' | 'regiao' | 'uf', value: string) {
-		if (key === 'visao') filters.visao = value as Visao;
-		else if (key === 'regiao') filters.regiao = value as Regiao;
-		else if (key === 'uf') filters.uf = value;
-	}
-
-	// Format helpers
+	// ── Formatters ────────────────────────────────────────────────────────────
 	const fmtBRL = (v: number) =>
 		new Intl.NumberFormat('pt-BR', {
 			style: 'currency', currency: 'BRL',
 			notation: 'compact', maximumFractionDigits: 1,
 		}).format(v);
-
+	const fmtBRLfull = (v: number) =>
+		new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
 	const fmtNum = (v: number) => v.toLocaleString('pt-BR');
 	const fmtPct = (v: number) => v.toFixed(1).replace('.', ',') + '%';
 
-	// ── Derived filtered data ───────────────────────────────────────────────────
+	// ── Current rows for the active visão ───────────────────────────────────────
+	const rows = $derived(rowsByVisao[filters.visao]);
 
-	// Map data filtered by region/UF
-	const filteredMapData = $derived(() => {
-		const filtered = stateRows.filter((d) => filters.filteredUFs.includes(d.uf));
-		return Object.fromEntries(
-			filtered.map((d) => [siglaToName[d.uf], d])
-		);
+	// ── Map values (keyed by sigla) ─────────────────────────────────────────────
+	const mapValues = $derived.by(() => {
+		const out: Record<string, number> = {};
+		if (filters.visao === 'regioes') {
+			for (const sigla of Object.keys(siglaToName)) {
+				out[sigla] = regionAgg[regionMap[sigla]]?.valor ?? 0;
+			}
+		} else {
+			for (const [sigla, row] of Object.entries(rows)) out[sigla] = row.valor;
+		}
+		return out;
 	});
 
-	const filteredMapMetric = $derived(() => {
-		if (filters.visao === 'estados') return 'valor_executado_rs';
-		if (filters.visao === 'municipios') return 'valor_executado_rs';
-		return 'valor_executado_rs';
+	// UFs in scope (for dimming). null = all in scope.
+	const inScope = $derived.by(() => {
+		const hasFilter = filters.uf !== 'Todas' || filters.regiao !== 'Todas';
+		return hasFilter ? new Set(filters.filteredUFs) : null;
 	});
 
-	// BigNumbers filtered
-	const filteredTotals = $derived(() => {
-		const filtered = stateRows.filter((d) => filters.filteredUFs.includes(d.uf));
-		const totalVal = filtered.reduce((s, d) => s + d.valor_executado_rs, 0);
-		const totalPop = filtered.reduce((s, d) => s + d.sum_populacao, 0);
-		const totalContemp = filtered.reduce((s, d) => s + d.qtde_contemplados, 0);
-		return { totalVal, totalPop, totalContemp, perCapita: totalPop > 0 ? totalVal / totalPop : 0 };
+	// ── Aggregated panel metrics over the scoped UFs ──────────────────────────────
+	const scoped = $derived.by(() => {
+		const ufs = filters.filteredUFs;
+		let valor = 0, contemplados = 0, populacao = 0;
+		for (const uf of ufs) {
+			const r = rows[uf];
+			if (!r) continue;
+			valor += r.valor;
+			contemplados += r.contemplados;
+			populacao += r.populacao;
+		}
+		return { valor, contemplados, populacao };
 	});
 
-	// Per capita ranking filtered
-	const filteredPercapita = $derived(
-		percapitaData.filter((d) => filters.filteredUFs.includes(d.uf))
-	);
+	const totalValor = $derived(nationalTotals[filters.visao].valor);
+	const shareNacional = $derived(totalValor > 0 ? (scoped.valor / totalValor) * 100 : 0);
+	const perCapita = $derived(scoped.populacao > 0 ? scoped.valor / scoped.populacao : 0);
 
-	// Capital/Interior filtered
-	const filteredCapitalInterior = $derived(
-		capitalInteriorByUfData.filter((d) => filters.filteredUFs.includes(d.label))
-	);
+	// Is the current scope the whole country?
+	const isNacional = $derived(filters.uf === 'Todas' && filters.regiao === 'Todas');
 
-	// Faixa valor por UF filtered
-	const filteredFaixaUf = $derived(
-		ufBandPercData.filter((d) => filters.filteredUFs.includes(d.label))
-	);
+	// ── "Número de entes" — exact where data allows, "—" otherwise ───────────────
+	const entes = $derived.by((): { value: string; sub: string } => {
+		const nUf = filters.filteredUFs.length;
+		switch (filters.visao) {
+			case 'estados':
+				return { value: fmtNum(nUf), sub: nUf === 1 ? 'estado' : 'estados' };
+			case 'regioes': {
+				const n = filters.regiao === 'Todas' ? 5 : 1;
+				return { value: fmtNum(n), sub: n === 1 ? 'região' : 'regiões' };
+			}
+			case 'municipios':
+				return isNacional
+					? { value: fmtNum(NUM_MUNICIPIOS), sub: 'municípios' }
+					: { value: '—', sub: 'municípios (indisp. por recorte)' };
+			case 'uf':
+			default:
+				return isNacional
+					? { value: fmtNum(NUM_ESTADOS + NUM_MUNICIPIOS), sub: `${NUM_ESTADOS} estados + ${fmtNum(NUM_MUNICIPIOS)} municípios` }
+					: { value: fmtNum(nUf), sub: `${nUf} ${nUf === 1 ? 'estado' : 'estados'} + municípios` };
+		}
+	});
 
-	const filteredFaixaValorUf = $derived(
-		ufValorBandPercData.filter((d) => filters.filteredUFs.includes(d.label))
-	);
-
-	// Zone data filtered
-	const filteredZoneData = $derived(
-		zoneData.filter((d) => filters.filteredUFs.includes(d.label))
-	);
-
-	// Map tab
-	let mapMetricTab = $state(0);
-	const MAP_METRICS = ['valor_executado_rs', 'qtde_contemplados', 'sum_populacao'] as const;
-	const MAP_LABELS = ['Valor executado', 'Contemplados', 'População'];
-	const MAP_FORMATS: ((v: number) => string)[] = [fmtBRL, fmtNum, fmtNum];
-
-	// Faixa tab
-	let faixaTab = $state(0);
-
-	// Capital/Interior tab
-	let capitalTab = $state(0);
+	// ── Scope label ───────────────────────────────────────────────────────────
+	const scopeLabel = $derived.by(() => {
+		if (filters.uf !== 'Todas') return siglaToName[filters.uf] ?? filters.uf;
+		if (filters.regiao !== 'Todas') return `Região ${filters.regiao}`;
+		return 'Brasil';
+	});
 </script>
 
-<section id="section-1-intro" class="dashboard">
-	<div class="dashboard-header">
-		<h2>Distribuição Territorial dos Recursos</h2>
-		<p class="lead">Como os R$ {fmtBRL(valorExecTotal)} da PNAB foram distribuídos pelo território brasileiro?</p>
+<section class="dashboard">
+	<header class="dash-header">
+		<p class="eyebrow">PNAB · Painel de Dados</p>
+		<h1>Valores gerais da pesquisa</h1>
+		<p class="lead">
+			Distribuição dos recursos da Política Nacional Aldir Blanc pelo território brasileiro.
+			Use os filtros para alternar a visão e clique em um estado no mapa para detalhar.
+		</p>
+	</header>
+
+	<!-- ── Filter bar ───────────────────────────────────────────────────────── -->
+	<DashboardFilterBar {filters} />
+
+	<!-- ── Main grid: metrics left, map right ───────────────────────────────── -->
+	<div class="grid">
+		<div class="panel">
+			<div class="scope-tag">{scopeLabel} · {VISAO_LABELS[filters.visao]}</div>
+
+			<!-- Headline: entes -->
+			<div class="bn bn-hero">
+				<BigNumber
+					value={entes.value}
+					label="entes contemplados"
+					subtitle={entes.sub}
+					fontSize={60}
+					shadowDepth={6}
+					width={460}
+					color="#ffffff"
+					shadowColor="#0d3a82"
+					labelColor="#ffffff"
+					subtitleColor="rgba(255, 255, 255, 0.72)"
+				/>
+			</div>
+
+			<!-- Trio: recebido / executado / % nacional -->
+			<div class="bn-trio">
+				<div class="bn">
+					<BigNumber value={fmtBRL(scoped.valor)} label="Valor executado" fontSize={36} shadowDepth={4} width={300} />
+				</div>
+				<div class="bn">
+					<BigNumber value={fmtPct(shareNacional)} label="do total nacional" fontSize={36} shadowDepth={4} width={300} />
+				</div>
+				<div class="bn">
+					<BigNumber value={fmtBRLfull(perCapita)} label="per capita" fontSize={36} shadowDepth={4} width={300} />
+				</div>
+			</div>
+
+			<!-- Contemplados -->
+			<div class="bn bn-wide">
+				<BigNumber value={fmtNum(scoped.contemplados)} label="contemplados (agentes / projetos)" fontSize={50} shadowDepth={5} width={460} />
+			</div>
+		</div>
+
+		<div class="map-wrap">
+			<BrazilChoropleth
+				values={mapValues}
+				format={fmtBRL}
+				metricLabel="Valor executado"
+				selected={filters.visao === 'regioes' ? 'Todas' : filters.uf}
+				inScope={inScope}
+				onselect={(sigla) => filters.selectUf(sigla)}
+			/>
+			<p class="map-caption">Cor proporcional ao valor executado. Clique para detalhar.</p>
+		</div>
 	</div>
-
-	<!-- Map — full width -->
-	<DashboardCard
-		title="Mapa de distribuição por UF"
-		subtitle="Valor total executado por estado (estado + municípios)"
-		tabs={MAP_LABELS}
-		activeTab={mapMetricTab}
-		ontabchange={(i) => (mapMetricTab = i)}
-	>
-		<ExecutedValueByStateMap
-			states={filteredMapData()}
-			metric={MAP_METRICS[mapMetricTab]}
-			label={MAP_LABELS[mapMetricTab]}
-			format={MAP_FORMATS[mapMetricTab]}
-			formatLine2={mapMetricTab === 0 ? (row) => fmtPct(row.valor_executado_perc * 100) : undefined}
-			showSideLegend={true}
-		/>
-	</DashboardCard>
-
-	<!-- Per capita — full width -->
-	<DashboardCard title="Valor per capita por UF" subtitle="Valor executado dividido pela população da UF">
-		<HorizontalBarChart
-			data={filteredPercapita.map((d) => ({ label: d.uf, value: d.valor_percapita_uf }))}
-			format={fmtBRL}
-			color={colorScales.blue[2]}
-			height={Math.max(300, filteredPercapita.length * 22)}
-		/>
-	</DashboardCard>
-
-	<!-- Faixa de valor — full width -->
-	<DashboardCard
-		title="Distribuição por faixa de valor"
-		subtitle="Percentual de contemplados e recursos por faixa de pagamento, por UF"
-		tabs={['% de contemplados', '% do valor']}
-		activeTab={faixaTab}
-		ontabchange={(i) => (faixaTab = i)}
-	>
-		{#if faixaTab === 0}
-			<HorizontalStackedBarChartCustom
-				data={filteredFaixaUf}
-				keys={[...UF_BAND_KEYS]}
-				labels={UF_BAND_LABELS}
-				colors={[colorScales.blue[0], colorScales.blue[1], colorScales.blue[2], colorScales.blue[3], colorScales.blue[4]]}
-				height={Math.max(300, filteredFaixaUf.length * 24)}
-			/>
-		{:else}
-			<HorizontalStackedBarChartCustom
-				data={filteredFaixaValorUf}
-				keys={[...UF_BAND_KEYS]}
-				labels={UF_BAND_LABELS}
-				colors={[colorScales.blue[0], colorScales.blue[1], colorScales.blue[2], colorScales.blue[3], colorScales.blue[4]]}
-				height={Math.max(300, filteredFaixaValorUf.length * 24)}
-			/>
-		{/if}
-	</DashboardCard>
-
-	<!-- Capital / Interior — full width -->
-	<DashboardCard
-		title="Capital, Metropolitana e Interior"
-		subtitle="Distribuição de recursos e contemplados por localização"
-		tabs={['Visão Brasil', 'Por UF']}
-		activeTab={capitalTab}
-		ontabchange={(i) => (capitalTab = i)}
-	>
-		{#if capitalTab === 0}
-			<HorizontalStackedBarChartCustom
-				data={capitalInteriorStackedData}
-				keys={['capital', 'metropolitana', 'interior']}
-				labels={{ capital: 'Capital', metropolitana: 'Metropolitana', interior: 'Interior' }}
-				colors={[colorScales.orange[2], colorScales.teal[2], colorScales.lime[2]]}
-				height={140}
-			/>
-		{:else}
-			<HorizontalStackedBarChartCustom
-				data={filteredCapitalInterior}
-				keys={['capital', 'metropolitana', 'interior']}
-				labels={{ capital: 'Capital', metropolitana: 'Metropolitana', interior: 'Interior' }}
-				colors={[colorScales.orange[2], colorScales.teal[2], colorScales.lime[2]]}
-				height={Math.max(200, filteredCapitalInterior.length * 24)}
-			/>
-		{/if}
-	</DashboardCard>
-
-	<!-- Porte municipal treemap — full width -->
-	<DashboardCard title="Distribuição por porte municipal" subtitle="Valor total executado por tamanho do município">
-		<TreemapChart data={porteTreemapData} height={360} />
-	</DashboardCard>
-
-	<!-- Urbano vs Rural — full width -->
-	<DashboardCard title="Urbano vs Rural" subtitle="Distribuição por zona de residência dos contemplados">
-		<div class="rural-highlight">
-			<BigNumber value={fmtPct(percRuralQtde)} label="dos contemplados vivem em zona rural" />
-		</div>
-		<HorizontalStackedBarChart
-			data={filteredZoneData.map((d) => ({
-				label: d.label,
-				urbano: d.valor_urbano / (d.valor_urbano + d.valor_rural) * 100,
-				rural: d.valor_rural / (d.valor_urbano + d.valor_rural) * 100,
-			}))}
-			keys={['urbano', 'rural']}
-			labels={{ urbano: 'Urbano', rural: 'Rural' }}
-			colors={[colorScales.teal[2], colorScales.lime[2]]}
-			height={Math.max(200, filteredZoneData.length * 22)}
-		/>
-	</DashboardCard>
-
-	<!-- CPF vs CNPJ — full width -->
-	<DashboardCard title="Pessoa Física vs Jurídica" subtitle="Distribuição de beneficiários e recursos por tipo de documento">
-		<div class="cpf-cnpj-grid">
-			<div class="mini-metric">
-				<span class="mini-value">{fmtPct(percBenefCPF)}</span>
-				<span class="mini-label">Beneficiários CPF</span>
-			</div>
-			<div class="mini-metric">
-				<span class="mini-value">{fmtPct(percBenefCNPJ)}</span>
-				<span class="mini-label">Beneficiários CNPJ</span>
-			</div>
-			<div class="mini-metric">
-				<span class="mini-value">{fmtPct(percValorCPF)}</span>
-				<span class="mini-label">Valor para CPF</span>
-			</div>
-			<div class="mini-metric">
-				<span class="mini-value">{fmtPct(percValorCNPJ)}</span>
-				<span class="mini-label">Valor para CNPJ</span>
-			</div>
-		</div>
-		<HorizontalStackedBarChartCustom
-			data={benefVsValorData}
-			keys={['cpf', 'cnpj']}
-			labels={{ cpf: 'CPF (Pessoa Física)', cnpj: 'CNPJ (Pessoa Jurídica)' }}
-			colors={[colorScales.blue[2], colorScales.orange[2]]}
-			height={120}
-		/>
-	</DashboardCard>
-
-	<!-- Territórios especiais — full width -->
-	<DashboardCard title="Territórios especiais" subtitle="Participação dos territórios especiais na distribuição de recursos">
-		<div class="special-table">
-			<table>
-				<thead>
-					<tr>
-						<th>Território</th>
-						<th>% Recurso</th>
-						<th>% Agentes</th>
-						<th>% Pop.</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each specialTerritoriesMetrics as t}
-						<tr>
-							<td>{t.shortLabel}</td>
-							<td>{fmtPct(t.perc_recurso)}</td>
-							<td>{fmtPct(t.perc_agentes)}</td>
-							<td>{fmtPct(t.perc_populacao)}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
-	</DashboardCard>
-
-	<!-- Agentes por região — full width -->
-	<DashboardCard title="Agentes culturais vs população por região" subtitle="Comparação entre a distribuição de agentes contemplados e a distribuição da população">
-		<HorizontalGroupedBarChart
-			data={regiaoGroupedData}
-			seriesLabels={['% agentes contemplados', '% população']}
-			colors={[colorPairs.purpleYellow[0], colorPairs.purpleYellow[1]]}
-			format={(v: number) => fmtPct(v)}
-			margin={{ top: 30, right: 90, bottom: 60, left: 140 }}
-			barHeight={22}
-			barPad={6}
-			rx={0}
-			legendBottom={true}
-			labelsInside={true}
-		/>
-	</DashboardCard>
 </section>
+
 <style>
 	.dashboard {
 		max-width: 1200px;
 		margin: 0 auto;
-		padding: 3rem 2rem;
+		padding: 3rem 2rem 5rem;
 	}
 
-	.dashboard-header {
+	.dash-header {
 		margin-bottom: 2rem;
 	}
 
-	.dashboard-header h2 {
-		font-size: 1.75rem;
-		font-weight: 800;
-		color: #1B1B1B;
+	.eyebrow {
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: #1351B4;
 		margin: 0 0 0.5rem;
 	}
 
+	.dash-header h1 {
+		font-size: 2rem;
+		font-weight: 800;
+		color: #1B1B1B;
+		margin: 0 0 0.5rem;
+		line-height: 1.15;
+	}
+
 	.lead {
-		font-size: 1.05rem;
+		font-size: 1rem;
 		color: #555;
 		margin: 0;
 		line-height: 1.5;
+		max-width: 60ch;
 	}
 
-	.metrics-row {
+	/* ── Grid ── */
+	.grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+		grid-template-columns: 1fr 1.05fr;
+		gap: 2rem;
+		align-items: start;
+	}
+
+	.panel {
+		display: flex;
+		flex-direction: column;
 		gap: 1rem;
-		margin-bottom: 1.5rem;
 	}
 
-	.metric {
-		background: transparent;
-		border-radius: 0.75rem;
-		padding: 1rem 1.25rem;
-		border: 1px solid rgba(0, 0, 0, 0.09);
+	.scope-tag {
+		display: inline-block;
+		align-self: flex-start;
+		font-size: 0.74rem;
+		font-weight: 600;
+		color: #1351B4;
+		background: rgba(19, 81, 180, 0.08);
+		padding: 0.3rem 0.7rem;
+		border-radius: 999px;
 	}
 
-
-
-	.cpf-cnpj-grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.75rem;
-		margin-bottom: 1rem;
-	}
-
-	.mini-metric {
+	.bn {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		padding: 0.5rem;
-		background: transparent;
-		border-radius: 0.5rem;
-		border: 1px solid rgba(0, 0, 0, 0.07);
+		gap: 0.15rem;
+		padding: 1.1rem 1.25rem;
+		border: 1px solid rgba(0, 0, 0, 0.1);
+		border-radius: 0.75rem;
+		background: rgba(255, 255, 255, 0.45);
 	}
 
-	.mini-value {
-		font-size: 1.3rem;
-		font-weight: 700;
-		color: #1351B4;
-	}
-
-	.mini-label {
-		font-size: 0.72rem;
-		color: #666;
-		text-align: center;
-	}
-
-	.special-table table {
+	.bn :global(svg) {
 		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.82rem;
+		height: auto;
+		display: block;
 	}
 
-	.special-table th {
-		text-align: left;
-		font-weight: 600;
-		color: #666;
-		font-size: 0.72rem;
-		text-transform: uppercase;
-		padding: 0.5rem 0.75rem;
-		border-bottom: 2px solid #e0e0e0;
+	.bn-hero {
+		background: #1351B4;
+		border-color: #1351B4;
 	}
 
-	.special-table td {
-		padding: 0.4rem 0.75rem;
-		border-bottom: 1px solid #f0f0f0;
-		color: #333;
+	.bn-trio {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.75rem;
+	}
+	.bn-trio .bn { padding: 0.9rem 0.85rem; }
+
+	/* ── Map ── */
+	.map-wrap {
+		position: sticky;
+		top: 1rem;
 	}
 
-	.special-table tr:hover {
-		background: #f8f8f8;
-	}
-
-	.rural-highlight {
-		margin-bottom: 1rem;
+	.map-caption {
 		text-align: center;
+		font-size: 0.74rem;
+		color: #888;
+		margin: 0.5rem 0 0;
 	}
 
+	/* ── Responsive ── */
+	@media (max-width: 860px) {
+		.grid {
+			grid-template-columns: 1fr;
+		}
+		.map-wrap {
+			position: static;
+			order: -1;
+		}
+		.dash-header h1 { font-size: 1.6rem; }
+	}
 </style>

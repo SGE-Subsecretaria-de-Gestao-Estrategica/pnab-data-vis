@@ -91,7 +91,7 @@
 	}
 
 	select {
-		font-family: 'Rawline', 'Raleway', system-ui, sans-serif;
+		font-family: 'Rawline', system-ui, sans-serif;
 		font-size: 0.85rem;
 		padding: 0.4rem 2rem 0.4rem 0.6rem;
 		border: 1px solid #ccc;

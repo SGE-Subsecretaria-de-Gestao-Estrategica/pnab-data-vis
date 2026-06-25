@@ -54,7 +54,7 @@
 	:global(.scroll-section h4),
 	:global(.scroll-section p),
 	:global(.scroll-section li) {
-		font-family: 'Rawline', 'Raleway', system-ui, sans-serif;
+		font-family: 'Rawline', system-ui, sans-serif;
 	}
 
 	.scroll-section.visible {

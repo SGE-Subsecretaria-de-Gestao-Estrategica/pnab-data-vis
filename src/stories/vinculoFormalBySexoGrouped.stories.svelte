@@ -30,7 +30,7 @@ Entre os contemplados pelo PNAB com vínculo formal, **58,3%** são homens e **4
 
 <Story name="Vínculo formal por sexo — PNAB vs. Brasil">
   {#snippet template()}
-    <VerticalGroupedBarChart
+    <VerticalGroupedBarChart width={600}
       data={sexoVinculoFormalGroupedData}
       seriesLabels={seriesLabels}
       colors={colors}

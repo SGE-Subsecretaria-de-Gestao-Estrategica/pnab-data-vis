@@ -12,7 +12,7 @@
   const formatPercFix = (v) => `${v.toFixed(1)}%`;
 
   const { Story } = defineMeta({
-    title: 'Section 1/executedValueByState',
+    title: 'Section 1/Grafico 1',
     component: ChoroplethMapLabeled,
     tags: ['autodocs'],
   });
@@ -20,7 +20,7 @@
 
 <Story name="Recurso Executado por Estado">
   {#snippet template()}
-    <div style="font-family: 'Space Grotesk', system-ui, sans-serif;">
+    <div style="font-family: 'Rawline', system-ui, sans-serif;">
       <ChoroplethMapLabeled
         {states}
         metric="valor_executado_rs"
@@ -28,6 +28,8 @@
         format={formatBRL}
         formatLine2={(row) => formatPercFix(row.valor_executado_perc * 100)}
         showSideLegend={true}
+        legCols={2}
+        mapFrac={0.72}
       />
     </div>
   {/snippet}

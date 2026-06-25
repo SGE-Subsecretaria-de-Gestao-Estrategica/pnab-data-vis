@@ -3,7 +3,7 @@
 
 	const teal = '#265c4f';
 	const orange = '#ea662f';
-	const chartValueFontFamily = "'Space Grotesk', system-ui, sans-serif";
+	const chartValueFontFamily = "'Rawline', system-ui, sans-serif";
 
 	interface Annotation {
 		side: 'left' | 'right';

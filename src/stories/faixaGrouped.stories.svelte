@@ -2,19 +2,19 @@
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
   import HorizontalGroupedBarChart from '$lib/components/HorizontalGroupedBarChart.svelte';
-  import { colorPairs } from 'sniic-design-system';
+  import { colorScales } from 'sniic-design-system';
   // @ts-ignore
   import { faixaGroupedData } from '$lib/data/section2';
 
   const seriesLabels = ['Número de Contemplados', 'Recurso Executado'];
-  const colors = [colorPairs.purpleYellow[0], colorPairs.purpleYellow[1]];
+  const colors = [colorScales.blue[2], colorScales.purple[2]];
 
   // @ts-ignore
   const formatPct = (v) =>
     v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
   const { Story } = defineMeta({
-    title: 'Section 2/faixaGrouped',
+    title: 'Section 2/Grafico 8',
     component: HorizontalGroupedBarChart,
     tags: ['autodocs'],
     parameters: {
@@ -33,7 +33,7 @@ A maioria dos contemplados (**71,6%**) recebeu valores até R$ 10 mil, mas esse 
 
 <Story name="Barras horizontais agrupadas — Faixa de valor nacional">
   {#snippet template()}
-    <HorizontalGroupedBarChart
+    <HorizontalGroupedBarChart width={600}
       data={faixaGroupedData}
       seriesLabels={seriesLabels}
       colors={colors}

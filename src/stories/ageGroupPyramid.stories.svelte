@@ -1,7 +1,7 @@
 <script module>
   // @ts-ignore
   import { defineMeta } from '@storybook/addon-svelte-csf';
-  import { colorPairs } from 'sniic-design-system';
+  import { colorScales } from 'sniic-design-system';
   import PyramidChartCustom from '$lib/components/PyramidChartCustom.svelte';
   // @ts-ignore
   import { pyramidData } from '$lib/data/section3';
@@ -33,11 +33,11 @@ Um detalhe relevante: nas faixas de **55 a 64 anos** e **65 anos ou mais**, as m
 
 <Story name="Pirâmide etária por sexo">
   {#snippet template()}
-    <PyramidChartCustom
+    <PyramidChartCustom width={600}
       data={pyramidData}
       leftLabel="Masculino"
       rightLabel="Feminino"
-      colors={colorPairs.tealYellow}
+      colors={[colorScales.yellow[2], colorScales.blue[2]]}
       format={formatNum}
       height={400}
       centerGap={96}

@@ -80,18 +80,34 @@ const RENDA_LABEL_MAP: Record<string, string> = {
 	'De meio salário mínimo a um salário mínimo': '½–1 Salário mínimo',
 	'Superior a um salário mínimo':              'Acima de 1 Salário mínimo',
 };
+const RENDA_ORDER = [
+	'Acima de 1 Salário mínimo',
+	'½–1 Salário mínimo',
+	'R$218–½ Salário mínimo',
+	'R$109–218',
+	'Até R$109',
+];
 const rendaRows = parseCSV(csvRendaRaw);
-export const rendaDonutData = rendaRows.map((r) => ({
-	label: RENDA_LABEL_MAP[r.fxRendaPerCapita_desc_cadunico] ?? r.fxRendaPerCapita_desc_cadunico,
-	value: +r.soma_quantidade,
-}));
+export const rendaDonutData = rendaRows
+	.map((r) => ({
+		label: RENDA_LABEL_MAP[r.fxRendaPerCapita_desc_cadunico] ?? r.fxRendaPerCapita_desc_cadunico,
+		value: +r.soma_quantidade,
+	}))
+	.sort((a, b) => RENDA_ORDER.indexOf(a.label) - RENDA_ORDER.indexOf(b.label));
 
 // ── Situação de renda (DonutChart) ─────────────────────────────────────────────
+const SITUACAO_RENDA_ORDER = [
+	'Acima de 1/2 salário mínimo',
+	'Baixa renda',
+	'Pobreza',
+];
 const situacaoRendaRows = parseCSV(csvSituacaoRendaRaw);
-export const situacaoRendaDonutData = situacaoRendaRows.map((r) => ({
-	label: r.situacao_renda_cadunico,
-	value: +r.soma_quantidade,
-}));
+export const situacaoRendaDonutData = situacaoRendaRows
+	.map((r) => ({
+		label: r.situacao_renda_cadunico,
+		value: +r.soma_quantidade,
+	}))
+	.sort((a, b) => SITUACAO_RENDA_ORDER.indexOf(a.label) - SITUACAO_RENDA_ORDER.indexOf(b.label));
 
 // ── Situação de domicílio ──────────────────────────────────────────────────────
 const domicilioRows = parseCSV(csvDomicilioRaw);

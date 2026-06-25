@@ -15,7 +15,7 @@
     }).format(v);
 
   const { Story } = defineMeta({
-    title: 'Section 2/stateBoxPlot',
+    title: 'Section 2/Grafico 14',
     component: BoxPlotChart,
     tags: ['autodocs'],
     parameters: {

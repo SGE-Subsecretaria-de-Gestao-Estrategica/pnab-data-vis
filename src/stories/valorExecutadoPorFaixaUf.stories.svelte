@@ -12,7 +12,7 @@
     v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 
   const { Story } = defineMeta({
-    title: 'Section 2/valorExecutadoPorFaixaUf',
+    title: 'Section 2/Grafico 11',
     component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {
@@ -35,7 +35,7 @@ UFs estão ordenadas pela proporção de recursos nas faixas mais altas (≥ R$5
 
 <Story name="Distribuição dos Recursos por Faixa de Valor — por UF">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={ufValorBandPercData}
       keys={[...UF_BAND_KEYS]}
       labels={UF_BAND_LABELS}

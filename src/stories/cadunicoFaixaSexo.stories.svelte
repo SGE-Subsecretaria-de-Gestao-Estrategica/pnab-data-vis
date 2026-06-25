@@ -7,7 +7,7 @@
   import { faixaEtariaSexoData, FAIXA_SEXO_KEYS, FAIXA_SEXO_LABELS } from '$lib/data/section5';
 
   const { Story } = defineMeta({
-    title: 'Section 5/cadunicoFaixaSexo',
+    title: 'Section 5/Grafico 30',
     component: HorizontalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {
@@ -28,12 +28,13 @@ Nas faixas de **25 a 64 anos** as mulheres são maioria entre os contemplados in
 
 <Story name="HorizontalStackedBarChart — faixa etaria por sexo (bluePurple)">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={faixaEtariaSexoData}
       keys={[...FAIXA_SEXO_KEYS]}
       labels={FAIXA_SEXO_LABELS}
-      colors={[colorPairs.orangeTeal[1], colorPairs.orangeTeal[0]]}
+      colors={[colorPairs.bluePurple[0], colorPairs.bluePurple[1]]}
       format={(v) => `${v.toFixed(1)}%`}
+      rowHeight={44}
       showTotalLabel={false}
       marginLeft={110}
     />
@@ -42,12 +43,13 @@ Nas faixas de **25 a 64 anos** as mulheres são maioria entre os contemplados in
 
 <Story name="HorizontalStackedBarChart — faixa etaria por sexo (blueOrange)">
   {#snippet template()}
-    <HorizontalStackedBarChartCustom
+    <HorizontalStackedBarChartCustom width={600}
       data={faixaEtariaSexoData}
       keys={[...FAIXA_SEXO_KEYS]}
       labels={FAIXA_SEXO_LABELS}
-      colors={[colorPairs.orangeTeal[1], colorPairs.orangeTeal[0]]}
+      colors={[colorPairs.bluePurple[0], colorPairs.bluePurple[1]]}
       format={(v) => `${v.toFixed(1)}%`}
+      rowHeight={44}
       showTotalLabel={false}
       marginLeft={110}
     />

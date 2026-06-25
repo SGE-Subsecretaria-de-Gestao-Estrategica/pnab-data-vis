@@ -451,6 +451,25 @@ export const ufComparisonGroupedData = _ufRegionOrder.flatMap((regiao) => {
 	];
 });
 
+// ── Gráfico 24 variante — Diferença PNAB − RAIS por UF ───────────────────────
+export const ufDiffData = _ufRegionOrder.flatMap((regiao) => {
+	const ufs = [...ufIbgeRows]
+		.filter((r) => _ibgeRegionForUF[r.uf] === regiao)
+		.sort((a, b) =>
+			(+b.percentual_numero_contemplados_com_vinculo_no_total_geral - +b.percentual_vinculos_rais_no_total_brasil) -
+			(+a.percentual_numero_contemplados_com_vinculo_no_total_geral - +a.percentual_vinculos_rais_no_total_brasil)
+		);
+	return [
+		{ label: regiao, isSeparator: true as const },
+		...ufs.map((r) => ({
+			label: r.uf,
+			diff:
+				+r.percentual_numero_contemplados_com_vinculo_no_total_geral * 100 -
+				+r.percentual_vinculos_rais_no_total_brasil * 100,
+		})),
+	];
+});
+
 // ── Gráfico 25 — Sexo: PNAB vs RAIS (stacked) ───────────────────────────────
 const _sexoFem = sexoRows.find((r) => r.Sexo === 'Feminino')!;
 const _sexoMasc = sexoRows.find((r) => r.Sexo === 'Masculino')!;

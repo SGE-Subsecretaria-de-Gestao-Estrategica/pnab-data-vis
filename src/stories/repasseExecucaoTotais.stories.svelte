@@ -32,7 +32,7 @@
   ];
 
   const { Story } = defineMeta({
-    title: 'Section 1/repasseExecucaoTotais',
+    title: 'Section 1/Tabela 1',
     component: DataTable,
     tags: ['autodocs'],
     parameters: {

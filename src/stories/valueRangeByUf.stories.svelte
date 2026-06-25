@@ -34,7 +34,7 @@ A visualização conecta a narrativa CPF/CNPJ ao território: estados onde o CNP
 <Story name="Faixa de valor pago por UF - pct dentro de cada estado">
   {#snippet template()}
     <div style="padding: 16px;">
-      <HorizontalStackedBarChartCustom
+      <HorizontalStackedBarChartCustom width={600}
         data={ufBandPercData}
         keys={[...UF_BAND_KEYS]}
         labels={UF_BAND_LABELS}

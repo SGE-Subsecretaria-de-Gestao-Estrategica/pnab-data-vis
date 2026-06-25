@@ -1,320 +1,133 @@
 <script lang="ts">
-	import DashboardCard from '$lib/components/DashboardCard.svelte';
 	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
-	import {
-		TreemapChart,
-		HorizontalBarChart,
-		BigNumber,
-		colorScales,
-	} from 'sniic-design-system';
-	import {
-		expensesGrandTotal,
-		expensesLegendItems,
-		fomentoDomainsTreemap, fomentoDomainsRows,
-		fomentoSubData,
-		pncvSubData,
-		pncvOuOutrosData, pncvOuOutrosKeys, pncvOuOutrosLabels,
-		tipoExecRegiaoData, tipoExecRegiaoKeys, tipoExecRegiaoLabels,
-		pncvNatJuridicaData, pncvNatJuridicaKeys, pncvNatJuridicaLabels,
-		modalidadeObrasData,
-		operacionalizacaoSubData,
-	} from '$lib/data/section6';
+	import DashboardFilterBar from '$lib/components/DashboardFilterBar.svelte';
+	import { createDashboardFilters, VISAO_LABELS } from '$lib/stores/dashboardFilters.svelte';
+	import { colorScales } from 'sniic-design-system';
+	import { rowsByVisao, regionAgg, REGIOES } from '$lib/data/dashboard';
 
-	const fmtBRL = (v: number) =>
-		new Intl.NumberFormat('pt-BR', {
-			style: 'currency', currency: 'BRL',
-			notation: 'compact', maximumFractionDigits: 1,
-		}).format(v);
-	const fmtPct = (v: number) => v.toFixed(1).replace('.', ',') + '%';
+	const filters = createDashboardFilters();
 
-	const CAT_COLORS: Record<string, string> = {
-		fomento: '#1351B4',
-		cultura_viva: '#168821',
-		subsidio: '#E5A000',
-		obras: '#D94B2C',
-		operacionalizacao: '#8B5CF6',
-		vazio: '#9CA3AF',
-		outros_cat: '#6B7280',
-	};
+	const fmtPct = (v: number) => `${Math.round(v)}%`;
 
-	function getCatColor(key: string): string {
-		return CAT_COLORS[key] ?? '#999';
+	type ZonaRow = { label: string; urbano: number; rural: number };
+
+	function toPct(urbano: number, rural: number, label: string): ZonaRow {
+		const total = urbano + rural || 1;
+		return { label, urbano: (urbano / total) * 100, rural: (rural / total) * 100 };
 	}
 
-	let catTab = $state(0);
-	let detailTab = $state(0);
+	// ── Urbano × Rural por entidade (% do valor), com linha Brasil ──────────────
+	const data = $derived.by((): ZonaRow[] => {
+		// "regioes" agrega a partir do nível uf (combinado).
+		const source = filters.visao === 'regioes' ? rowsByVisao.uf : rowsByVisao[filters.visao];
+
+		// Brasil = soma de todas as UFs da visão atual.
+		let bu = 0, br = 0;
+		for (const r of Object.values(source)) { bu += r.valorUrbano; br += r.valorRural; }
+		const brasil = toPct(bu, br, 'Brasil');
+
+		let entities: ZonaRow[];
+		if (filters.visao === 'regioes') {
+			const regs = filters.regiao === 'Todas' ? REGIOES : [filters.regiao];
+			entities = regs.map((rg) => toPct(regionAgg[rg].valorUrbano, regionAgg[rg].valorRural, rg));
+		} else {
+			entities = filters.filteredUFs
+				.map((uf) => source[uf])
+				.filter((r): r is NonNullable<typeof r> => !!r)
+				.map((r) => toPct(r.valorUrbano, r.valorRural, r.uf));
+		}
+		// Mais rural no topo (depois do Brasil).
+		entities.sort((a, b) => b.rural - a.rural);
+		return [brasil, ...entities];
+	});
+
+	const scopeLabel = $derived(
+		filters.uf !== 'Todas'
+			? filters.uf
+			: filters.regiao !== 'Todas'
+				? `Região ${filters.regiao}`
+				: 'Brasil'
+	);
 </script>
 
-<section id="section-4" class="dashboard">
-	<div class="dashboard-header">
-		<h2>Classificação das Despesas</h2>
-		<p class="lead">Como os recursos da PNAB foram utilizados? Estimativas com intervalos de confiança de 95%.</p>
+<section class="section">
+	<header class="sec-header">
+		<p class="eyebrow">Gráfico 4</p>
+		<h2>Território urbano × rural por estado</h2>
+		<p class="lead">
+			Participação das zonas urbana e rural no valor executado, por ente federativo,
+			com o Brasil como referência. Use o filtro para alternar a visão.
+		</p>
+	</header>
+
+	<DashboardFilterBar {filters} />
+
+	<div class="chart-card">
+		<div class="scope-tag">{scopeLabel} · {VISAO_LABELS[filters.visao]}</div>
+		<HorizontalStackedBarChartCustom
+			data={data}
+			keys={['urbano', 'rural']}
+			labels={{ urbano: 'Urbano', rural: 'Rural' }}
+			colors={[colorScales.teal[2], colorScales.lime[2]]}
+			format={fmtPct}
+			rowHeight={32}
+			marginLeft={72}
+			hideSegmentLabelsFor={[]}
+		/>
 	</div>
-
-	<!-- Categorias de despesa -->
-	<DashboardCard title="Categorias de despesa" subtitle="Valor estimado por categoria (com intervalo de confiança de 95%)">
-		<div class="expense-table">
-			<table>
-				<thead>
-					<tr>
-						<th>Categoria</th>
-						<th class="col-val">Valor estimado</th>
-						<th class="col-ci">IC 95%</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each expensesLegendItems as item}
-						<tr>
-							<td>
-								<span class="cat-dot" style:background={getCatColor(item.key)}></span>
-								{item.label}
-							</td>
-							<td class="col-val">{item.value}</td>
-							<td class="col-ci ref">{item.ci}</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
-	</DashboardCard>
-
-	<!-- Domínios de Fomento Cultural -->
-	<DashboardCard title="Domínios de Fomento Cultural" subtitle="Treemap dos domínios culturais financiados">
-		<TreemapChart data={fomentoDomainsTreemap} height={350} />
-	</DashboardCard>
-
-	<!-- Subcategorias -->
-	<DashboardCard
-		title="Detalhamento por categoria"
-		subtitle="Subcategorias de despesa"
-		tabs={['Fomento Cultural', 'Cultura Viva (PNCV)']}
-		activeTab={catTab}
-		ontabchange={(i) => (catTab = i)}
-	>
-		{#if catTab === 0}
-			<div class="sub-table">
-				<table>
-					<thead>
-						<tr>
-							<th>Subcategoria</th>
-							<th class="col-val">Valor</th>
-							<th class="col-pct">%</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each fomentoSubData as row}
-							<tr>
-								<td>{row.label}</td>
-								<td class="col-val">{row.valorFormatted}</td>
-								<td class="col-pct">{fmtPct(row.pct)}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{:else}
-			<div class="sub-table">
-				<table>
-					<thead>
-						<tr>
-							<th>Subcategoria</th>
-							<th class="col-val">Valor</th>
-							<th class="col-pct">%</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each pncvSubData as row}
-							<tr>
-								<td>{row.label}</td>
-								<td class="col-val">{row.valorFormatted}</td>
-								<td class="col-pct">{fmtPct(row.pct)}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{/if}
-	</DashboardCard>
-
-	<!-- PNCV vs Outros -->
-	<DashboardCard title="PNCV vs Outros investimentos" subtitle="Proporção por faixa de repasse municipal">
-		<HorizontalStackedBarChartCustom
-			data={pncvOuOutrosData}
-			keys={[...pncvOuOutrosKeys]}
-			labels={pncvOuOutrosLabels}
-			colors={[colorScales.blue[2], colorScales.teal[2]]}
-			height={160}
-		/>
-	</DashboardCard>
-
-	<!-- Tipo de execução por região -->
-	<DashboardCard title="Tipo de execução por região" subtitle="Ação Cultural, Bolsa e Premiação">
-		<HorizontalStackedBarChartCustom
-			data={tipoExecRegiaoData}
-			keys={[...tipoExecRegiaoKeys]}
-			labels={tipoExecRegiaoLabels}
-			colors={[colorScales.blue[2], colorScales.orange[2], colorScales.lime[2]]}
-			height={240}
-		/>
-	</DashboardCard>
-
-	<!-- PNCV por natureza jurídica -->
-	<DashboardCard title="PNCV por natureza do beneficiário" subtitle="Participação de CPF vs CNPJ nas modalidades PNCV">
-		<HorizontalStackedBarChartCustom
-			data={pncvNatJuridicaData}
-			keys={[...pncvNatJuridicaKeys]}
-			labels={pncvNatJuridicaLabels}
-			colors={[colorScales.blue[2], colorScales.orange[2]]}
-			height={120}
-		/>
-	</DashboardCard>
-
-	<!-- Detalhamento adicional -->
-	<DashboardCard
-		title="Detalhamento adicional"
-		subtitle="Obras e Operacionalização"
-		tabs={['Obras e Reformas', 'Operacionalização']}
-		activeTab={detailTab}
-		ontabchange={(i) => (detailTab = i)}
-	>
-		{#if detailTab === 0}
-			<div class="sub-table">
-				<table>
-					<thead>
-						<tr>
-							<th>Modalidade</th>
-							<th class="col-val">Valor</th>
-							<th class="col-pct">%</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each modalidadeObrasData as row}
-							<tr>
-								<td>{row.label}</td>
-								<td class="col-val">{fmtBRL(row.valor)}</td>
-								<td class="col-pct">{fmtPct(row.pct)}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{:else}
-			<div class="sub-table">
-				<table>
-					<thead>
-						<tr>
-							<th>Subcategoria</th>
-							<th class="col-val">Valor</th>
-							<th class="col-pct">%</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each operacionalizacaoSubData as row}
-							<tr>
-								<td>{row.label}</td>
-								<td class="col-val">{fmtBRL(row.valor)}</td>
-								<td class="col-pct">{fmtPct(row.pct)}</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{/if}
-	</DashboardCard>
 </section>
 
-
 <style>
-	.dashboard {
+	.section {
 		max-width: 1200px;
 		margin: 0 auto;
-		padding: 3rem 2rem;
+		padding: 1rem 2rem 5rem;
 	}
 
-	.dashboard-header {
-		margin-bottom: 2rem;
+	.sec-header {
+		margin-bottom: 1.5rem;
 	}
 
-	.dashboard-header h2 {
-		font-size: 1.75rem;
+	.eyebrow {
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: #1351B4;
+		margin: 0 0 0.4rem;
+	}
+
+	.sec-header h2 {
+		font-size: 1.6rem;
 		font-weight: 800;
 		color: #1B1B1B;
-		margin: 0 0 0.5rem;
+		margin: 0 0 0.4rem;
+		line-height: 1.15;
 	}
 
 	.lead {
-		font-size: 1.05rem;
+		font-size: 0.98rem;
 		color: #555;
 		margin: 0;
 		line-height: 1.5;
+		max-width: 64ch;
 	}
 
-	.metrics-row {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-		gap: 1rem;
-		margin-bottom: 1.5rem;
-	}
-
-	.metric {
-		background: transparent;
+	.chart-card {
+		border: 1px solid rgba(0, 0, 0, 0.1);
 		border-radius: 0.75rem;
-		padding: 1rem 1.25rem;
-		border: 1px solid rgba(0, 0, 0, 0.09);
+		padding: 1.25rem 1.5rem 1rem;
+		background: rgba(255, 255, 255, 0.45);
 	}
 
-	.grid-2col {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 1.5rem;
-		margin-bottom: 1.5rem;
-	}
-
-	@media (max-width: 900px) {
-		.grid-2col { grid-template-columns: 1fr; }
-	}
-
-	.expense-table table,
-	.sub-table table {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.82rem;
-	}
-
-	.expense-table th,
-	.sub-table th {
-		text-align: left;
-		font-weight: 600;
-		color: #666;
-		font-size: 0.72rem;
-		text-transform: uppercase;
-		padding: 0.5rem 0.5rem;
-		border-bottom: 2px solid #e0e0e0;
-	}
-
-	.expense-table td,
-	.sub-table td {
-		padding: 0.4rem 0.5rem;
-		border-bottom: 1px solid #f0f0f0;
-		color: #333;
-	}
-
-	.expense-table tr:hover,
-	.sub-table tr:hover {
-		background: #f8f8f8;
-	}
-
-	.cat-dot {
+	.scope-tag {
 		display: inline-block;
-		width: 10px;
-		height: 10px;
-		border-radius: 50%;
-		margin-right: 0.5rem;
-		vertical-align: middle;
+		font-size: 0.74rem;
+		font-weight: 600;
+		color: #1351B4;
+		background: rgba(19, 81, 180, 0.08);
+		padding: 0.3rem 0.7rem;
+		border-radius: 999px;
+		margin-bottom: 1rem;
 	}
-
-	.col-val { text-align: right; width: 7rem; }
-	.col-pct { text-align: right; width: 4rem; }
-	.col-ci { text-align: right; width: 10rem; }
-	.ref { color: #999; }
 </style>

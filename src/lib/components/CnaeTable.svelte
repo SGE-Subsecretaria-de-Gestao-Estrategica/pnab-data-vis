@@ -25,8 +25,8 @@
 	const BAR_TW    = 210;
 	const PCT_X     = 646;  // text-anchor="start", 6px after bar end (640)
 	const PAD_Y     = 10;
-	const FS        = 13;
-	const FS_HDR    = 10;
+	const FS        = 12;
+	const FS_HDR    = 12;
 	const LH        = FS * 1.4;
 	const CW        = FS * 0.55;
 	const MIN_H_POD = 54;
@@ -46,17 +46,17 @@
 	// ── Medal palette (uses sniic yellow / lavender / orange) ─────────────────
 	type Medal = { body: string; ring: string; textFill: string; accent: string; bgTint: string; qtdFill: string; valFill: string };
 	const MEDALS: Record<number, Medal> = {
-		1: { body: '#f6c341', ring: '#bf8e2b', textFill: '#5c3908', accent: '#bf8e2b', bgTint: 'rgba(246,195,65,0.10)',  qtdFill: '#bf8e2b', valFill: '#5c3908' },
-		2: { body: '#c9b6c5', ring: '#958191', textFill: '#1a1a1a', accent: '#958191', bgTint: 'rgba(201,182,197,0.12)', qtdFill: '#958191', valFill: '#3d2a3a' },
-		3: { body: '#ea662f', ring: '#ab4723', textFill: '#fff',    accent: '#ab4723', bgTint: 'rgba(234,102,47,0.08)',  qtdFill: '#ab4723', valFill: '#431609' },
+		1: { body: '#f6c341', ring: '#bf8e2b', textFill: '#5c3908', accent: '#bf8e2b', bgTint: '#fef9ec',  qtdFill: '#bf8e2b', valFill: '#5c3908' },
+		2: { body: '#c9b6c5', ring: '#958191', textFill: '#1a1a1a', accent: '#958191', bgTint: '#f9f6f8', qtdFill: '#958191', valFill: '#3d2a3a' },
+		3: { body: '#ea662f', ring: '#ab4723', textFill: '#fff',    accent: '#ab4723', bgTint: '#fdf3ee',  qtdFill: '#ab4723', valFill: '#431609' },
 	};
 	const DEF_QTD   = '#317a68'; // teal[2]
 	const DEF_VAL   = '#4271b5'; // blue[2]
-	const TRACK_CLR = 'rgba(0,0,0,0.07)';
+	const TRACK_CLR = '#ededed';
 	const HDR_CLR   = '#255c4f'; // teal[3]
-	const SEP_CLR   = 'rgba(0,0,0,0.09)';
-	const TXT_CLR   = 'var(--chart-fg-strong, #1a1a1a)';
-	const FONT      = "'Inter', system-ui, sans-serif";
+	const SEP_CLR   = '#e8e8e8';
+	const TXT_CLR   = '#1a1a1a';
+	const FONT      = "'Rawline', system-ui, sans-serif";
 
 	// ── Derived from metric ───────────────────────────────────────────────────
 	const isQtd      = $derived(metric === 'quantidade');
@@ -133,7 +133,7 @@
 			<rect x={0} y={ry} width={width} height={rh} fill={row.medal.bgTint} />
 			<rect x={0} y={ry} width={3} height={rh} fill={row.medal.accent} />
 		{:else if i % 2 === 1}
-			<rect x={0} y={ry} width={width} height={rh} fill="rgba(0,0,0,0.02)" />
+			<rect x={0} y={ry} width={width} height={rh} fill="#fafafa" />
 		{/if}
 
 		<!-- ── Medal / rank badge ── -->
@@ -142,15 +142,15 @@
 				<circle r={MEDAL_R + 3} fill={row.medal.body} opacity={0.18} />
 				<circle r={MEDAL_R} fill={row.medal.body} />
 				<ellipse cx={-4} cy={-4.5} rx={MEDAL_R * 0.48} ry={MEDAL_R * 0.4}
-					fill="rgba(255,255,255,0.32)" />
+					fill="#ffffff" opacity={0.32} />
 				<circle r={MEDAL_R - 3.5} fill="none" stroke={row.medal.ring}
 					stroke-width={1.2} opacity={0.55} />
 				<text text-anchor="middle" dominant-baseline="central"
-					font-size={13} font-weight="800" fill={row.medal.textFill}>{row.posicao}</text>
+					font-size={12} font-weight="800" fill={row.medal.textFill}>{row.posicao}</text>
 			{:else}
-				<circle r={BADGE_R} fill="rgba(0,0,0,0.05)" stroke="rgba(0,0,0,0.12)" stroke-width={0.8} />
+				<circle r={BADGE_R} fill="#f2f2f2" stroke="#e0e0e0" stroke-width={0.8} />
 				<text text-anchor="middle" dominant-baseline="central"
-					font-size={11} font-weight="600" fill={TXT_CLR} opacity={0.6}>{row.posicao}</text>
+					font-size={12} font-weight="600" fill={TXT_CLR} opacity={0.6}>{row.posicao}</text>
 			{/if}
 		</g>
 

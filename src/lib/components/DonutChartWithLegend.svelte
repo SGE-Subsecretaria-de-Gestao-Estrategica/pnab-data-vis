@@ -2,6 +2,7 @@
 	import { pie, arc } from 'd3-shape';
 
 	let {
+		width = undefined,
 		data = [] as { label: string; value: number }[],
 		colors = [] as string[],
 		centerLabel = '',
@@ -11,6 +12,7 @@
 		radiusFraction = 0.42,
 		innerRadiusFraction = 0.6,
 	}: {
+		width?: number;
 		data?: { label: string; value: number }[];
 		colors?: string[];
 		centerLabel?: string;
@@ -21,13 +23,15 @@
 		innerRadiusFraction?: number;
 	} = $props();
 
-	const FONT_FAMILY = "'Space Grotesk', system-ui, sans-serif";
-	const LEGEND_H    = 34;
-	const LEGEND_GAP  = 12;
+	const FONT_FAMILY = "'Rawline', system-ui, sans-serif";
 	const CHAR_W      = 7;
-	const BOX_PAD     = 24;
+	const BOX_PAD     = 32;
+	const LEGEND_GAP  = 16;
+	const LABEL_CHAR_W = 7;     // px/char for the 12px arc labels (% + valor)
+	const LABEL_GAP_FR = 0.06;  // distância do label fora do arco, fração do raio
 
-	let containerWidth = $state(0);
+	let measuredWidth = $state(0);
+	const containerWidth = $derived(width ?? measuredWidth);
 
 	function labelColor(hex: string): string {
 		const r = parseInt(hex.slice(1, 3), 16) / 255;
@@ -37,19 +41,39 @@
 		return luminance > 0.65 ? '#1a1a1a' : '#fffffe';
 	}
 
-	// Legend sizing (content-width, not stretched)
-	const legendBoxWs = $derived(
-		data.map((d) => Math.max(80, d.label.length * CHAR_W + BOX_PAD))
-	);
-	const legendTotalW = $derived(legendBoxWs.reduce((s, w) => s + w, 0));
-	const legendBoxX   = $derived((i: number) => legendBoxWs.slice(0, i).reduce((s, w) => s + w, 0));
+	// Legend: vertical box to the right, same height as chart
+	const legendW     = $derived(Math.max(120, Math.max(...data.map((d) => d.label.length * CHAR_W)) + BOX_PAD));
+	const legendItemH = $derived(height / data.length);
 
-	// Chart geometry — shrink available area to leave room for outside labels (~15%)
-	const chartHeight = $derived(height - LEGEND_H - LEGEND_GAP);
-	const outerRadius = $derived(Math.min(containerWidth * 0.7, chartHeight * 0.7) * radiusFraction);
+	// Largest arc label (% ou valor absoluto) em px — reserva espaço lateral p/ não cortar
+	const maxLabelW = $derived((() => {
+		const t = data.reduce((s, d) => s + d.value, 0);
+		let chars = 0;
+		for (const d of data) {
+			const perc = t > 0 ? `${((d.value / t) * 100).toFixed(1)}%` : '';
+			chars = Math.max(chars, perc.length, format(d.value).length);
+		}
+		return chars * LABEL_CHAR_W;
+	})());
+
+	// Donut area = capped at height * 1.5 so the donut doesn't float in a huge empty space
+	const donutAreaW  = $derived(Math.min(containerWidth - legendW - LEGEND_GAP, height * 1.5));
+	// Raio máximo que cabe reservando os labels nas laterais (h) e topo/base (v)
+	const outerRadius = $derived(
+		Math.max(
+			40,
+			Math.min(
+				(donutAreaW / 2 - maxLabelW) / (1 + LABEL_GAP_FR),
+				(height / 2 - 26) / (1 + LABEL_GAP_FR)
+			)
+		)
+	);
 	const innerRadius = $derived(outerRadius * innerRadiusFraction);
-	const cx          = $derived(containerWidth / 2);
-	const cy          = $derived(chartHeight / 2);
+	const cx          = $derived(donutAreaW / 2);
+	const cy          = $derived(height / 2);
+
+	// SVG width = actual content, not full container
+	const svgWidth    = $derived(donutAreaW + LEGEND_GAP + legendW);
 
 	// Pie arcs
 	const pieFn = pie<{ label: string; value: number }>()
@@ -67,23 +91,21 @@
 	// Arc used only for centroid — placed just outside the slice
 	const labelArcFn = $derived(
 		arc<ReturnType<typeof pieFn>[number]>()
-			.innerRadius(outerRadius * 1.15)
-			.outerRadius(outerRadius * 1.15)
+			.innerRadius(outerRadius * (1 + LABEL_GAP_FR))
+			.outerRadius(outerRadius * (1 + LABEL_GAP_FR))
 	);
 
-	const arcs   = $derived(pieFn(data));
-	const total  = $derived(data.reduce((s, d) => s + d.value, 0));
+	const arcs  = $derived(pieFn(data));
+	const total = $derived(data.reduce((s, d) => s + d.value, 0));
 
-	const legendX = $derived(cx - legendTotalW / 2);
-	const legendY = $derived(chartHeight + LEGEND_GAP);
-	const totalSvgH = $derived(height);
+	const legendX = $derived(donutAreaW + LEGEND_GAP);
 </script>
 
-<div bind:clientWidth={containerWidth} style="width:100%;">
+<div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
 	{#if containerWidth > 0}
 		<svg
-			width={containerWidth}
-			height={totalSvgH}
+			width={svgWidth}
+			height={height}
 			role="img"
 			aria-label="Donut chart"
 			font-family={FONT_FAMILY}
@@ -103,17 +125,17 @@
 						x={lx}
 						y={ly}
 						text-anchor={anchor}
-						font-size="13"
+						font-size="12"
 						font-weight="700"
-						fill="var(--chart-fg-strong, #1e293b)"
+						fill="#1e293b"
 					>{perc.toFixed(1)}%</text>
 					<text
 						x={lx}
 						y={ly}
 						dy="1.3em"
 						text-anchor={anchor}
-						font-size="11"
-						fill="var(--chart-fg, #64748b)"
+						font-size="12"
+						fill="#64748b"
 					>{format(d.data.value)}</text>
 				{/each}
 
@@ -122,35 +144,35 @@
 					<text
 						text-anchor="middle"
 						dy="-0.3em"
-						font-size="18"
+						font-size="12"
 						font-weight="700"
-						fill="var(--chart-fg-strong, #1e293b)"
+						fill="#1e293b"
 					>{centerValue}</text>
 				{/if}
 				{#if centerLabel}
 					<text
 						text-anchor="middle"
 						dy="1.1em"
-						font-size="9"
-						fill="var(--chart-fg, #64748b)"
+						font-size="12"
+						fill="#64748b"
 					>{centerLabel}</text>
 				{/if}
 			</g>
 
-			<!-- Legend (SVG, centered, content-width) -->
-			<g transform="translate({legendX},{legendY})">
+			<!-- Legend — vertical box to the right, height = chart height -->
+			<g transform="translate({legendX},0)">
 				{#each data as item, i}
 					<rect
-						x={legendBoxX(i)}
-						y={0}
-						width={legendBoxWs[i]}
-						height={LEGEND_H}
+						x={0}
+						y={legendItemH * i}
+						width={legendW}
+						height={legendItemH}
 						fill={colors[i] ?? '#999'}
 						shape-rendering="crispEdges"
 					/>
 					<text
-						x={legendBoxX(i) + legendBoxWs[i] / 2}
-						y={LEGEND_H / 2}
+						x={legendW / 2}
+						y={legendItemH * i + legendItemH / 2}
 						dy="0.35em"
 						text-anchor="middle"
 						font-size="12"
@@ -162,9 +184,9 @@
 				<!-- Dividers between items -->
 				{#each data.slice(0, data.length - 1) as _, i}
 					<line
-						x1={legendBoxX(i + 1)} y1={0}
-						x2={legendBoxX(i + 1)} y2={LEGEND_H}
-						stroke="var(--chart-fg-strong, #000000)"
+						x1={0}          y1={legendItemH * (i + 1)}
+						x2={legendW}    y2={legendItemH * (i + 1)}
+						stroke="#000000"
 						stroke-width="0.5"
 						shape-rendering="crispEdges"
 					/>
@@ -173,10 +195,10 @@
 				<!-- Border -->
 				<rect
 					x={0} y={0}
-					width={legendTotalW}
-					height={LEGEND_H}
+					width={legendW}
+					height={height}
 					fill="none"
-					stroke="var(--chart-fg-strong, #000000)"
+					stroke="#000000"
 					stroke-width="0.5"
 					shape-rendering="crispEdges"
 				/>

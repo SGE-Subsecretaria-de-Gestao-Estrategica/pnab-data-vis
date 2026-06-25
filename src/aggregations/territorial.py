@@ -1415,329 +1415,6 @@ def aggregate_execution_by_porte_with_estado(
 
     return df_porte
 
-def aggregate_special_territories_by(
-    df_cubo: pd.DataFrame,
-    categories: list[str],
-    by_filter: str = "MUNICIPIO",
-) -> pd.DataFrame:
-    """
-    Agrega valor executado e quantidade de contemplados por tipo de território especial.
-
-    A variável de referência é cod_tipo_nome.
-
-    Também acrescenta, por tipo_documento:
-    - quantidade;
-    - valor total;
-    - valor mínimo;
-    - mediana;
-    - valor máximo;
-    - média.
-
-    Parâmetros
-    ----------
-    df_cubo : pd.DataFrame
-        Base principal.
-
-    by_filter : str
-        Recorte territorial usado na agregação.
-
-        Opções:
-        - "MUNICIPIO": considera apenas registros municipais.
-        - "ESTADO": considera apenas registros estaduais.
-        - "UF": considera ESTADO + MUNICIPIO.
-
-    categories : list[str]
-        Lista de categorias que devem aparecer no resultado final,
-        mesmo quando não houver registros.
-
-    Retorna
-    -------
-    pd.DataFrame
-        Tabela agregada por cod_tipo_nome, com valor, quantidade,
-        percentuais e indicadores por tipo_documento.
-    """
-
-    by_filter = by_filter.upper()
-
-    df = df_cubo.copy()
-
-    df["tipo_ente_norm"] = (
-        df["tipo_ente"]
-        .astype(str)
-        .str.upper()
-        .str.strip()
-        .str.normalize("NFKD")
-        .str.encode("ascii", errors="ignore")
-        .str.decode("utf-8")
-    )
-
-    if by_filter == "MUNICIPIO":
-        df = df[df["tipo_ente_norm"].eq("MUNICIPIO")].copy()
-
-    elif by_filter == "ESTADO":
-        df = df[df["tipo_ente_norm"].eq("ESTADO")].copy()
-
-    elif by_filter == "UF":
-        df = df[df["tipo_ente_norm"].isin(["ESTADO", "MUNICIPIO"])].copy()
-
-    else:
-        raise ValueError("by_filter deve ser 'MUNICIPIO', 'ESTADO' ou 'UF'.")
-
-    df["cod_tipo_nome_tratado"] = (
-        df["cod_tipo_nome"]
-        .fillna("Não informado")
-    )
-
-    df["tipo_documento_tratado"] = (
-        df["tipo_documento"]
-        .fillna("Não informado")
-        .astype(str)
-    )
-
-    # ------------------------------------------------------------
-    # Agregação principal por território
-    # ------------------------------------------------------------
-
-    df_agg = (
-        df
-        .groupby("cod_tipo_nome_tratado", dropna=False, as_index=False)
-        .agg(
-            valor_transacao=("valor_transacao", "sum"),
-            quantidade_contemplados=("quantidade", "sum")
-        )
-    )
-
-    df_agg = (
-        df_agg
-        .set_index("cod_tipo_nome_tratado")
-        .reindex(categories, fill_value=0)
-        .reset_index()
-    )
-
-    # ------------------------------------------------------------
-    # Função auxiliar para pivot por tipo_documento
-    # ------------------------------------------------------------
-
-    def pivot_tipo_documento_por_territorio(
-        df_base: pd.DataFrame,
-        values: str,
-        aggfunc: str,
-        prefixo_coluna: str
-    ) -> pd.DataFrame:
-        if df_base.empty:
-            return pd.DataFrame({"cod_tipo_nome_tratado": categories})
-
-        df_pivot = (
-            df_base
-            .pivot_table(
-                index="cod_tipo_nome_tratado",
-                columns="tipo_documento_tratado",
-                values=values,
-                aggfunc=aggfunc,
-                fill_value=0
-            )
-            .reset_index()
-        )
-
-        df_pivot = (
-            df_pivot
-            .set_index("cod_tipo_nome_tratado")
-            .reindex(categories, fill_value=0)
-            .reset_index()
-        )
-
-        df_pivot = df_pivot.rename(
-            columns={
-                col: f"{prefixo_coluna}_tipo_documento_{col}"
-                for col in df_pivot.columns
-                if col != "cod_tipo_nome_tratado"
-            }
-        )
-
-        return df_pivot
-
-    # ------------------------------------------------------------
-    # Tipo_documento
-    # ------------------------------------------------------------
-
-    df_qtd_tipo_documento = pivot_tipo_documento_por_territorio(
-        df_base=df,
-        values="quantidade",
-        aggfunc="sum",
-        prefixo_coluna="qtd"
-    )
-
-    df_valor_tipo_documento = pivot_tipo_documento_por_territorio(
-        df_base=df,
-        values="valor_transacao",
-        aggfunc="sum",
-        prefixo_coluna="valor"
-    )
-
-    df_min_valor_tipo_documento = pivot_tipo_documento_por_territorio(
-        df_base=df,
-        values="valor_transacao",
-        aggfunc="min",
-        prefixo_coluna="min_valor"
-    )
-
-    df_mediana_valor_tipo_documento = pivot_tipo_documento_por_territorio(
-        df_base=df,
-        values="valor_transacao",
-        aggfunc="median",
-        prefixo_coluna="mediana_valor"
-    )
-
-    df_max_valor_tipo_documento = pivot_tipo_documento_por_territorio(
-        df_base=df,
-        values="valor_transacao",
-        aggfunc="max",
-        prefixo_coluna="max_valor"
-    )
-
-    df_media_valor_tipo_documento = pivot_tipo_documento_por_territorio(
-        df_base=df,
-        values="valor_transacao",
-        aggfunc="mean",
-        prefixo_coluna="media_valor"
-    )
-
-    # ------------------------------------------------------------
-    # Juntar agregação principal + tipo_documento
-    # ------------------------------------------------------------
-
-    df_agg = (
-        df_agg
-        .merge(df_qtd_tipo_documento, on="cod_tipo_nome_tratado", how="left")
-        .merge(df_valor_tipo_documento, on="cod_tipo_nome_tratado", how="left")
-        .merge(df_min_valor_tipo_documento, on="cod_tipo_nome_tratado", how="left")
-        .merge(df_mediana_valor_tipo_documento, on="cod_tipo_nome_tratado", how="left")
-        .merge(df_max_valor_tipo_documento, on="cod_tipo_nome_tratado", how="left")
-        .merge(df_media_valor_tipo_documento, on="cod_tipo_nome_tratado", how="left")
-    )
-
-    # ------------------------------------------------------------
-    # Percentuais
-    # ------------------------------------------------------------
-
-    valor_total = df_agg["valor_transacao"].sum()
-    quantidade_total = df_agg["quantidade_contemplados"].sum()
-
-    df_agg["perc_valor_transacao"] = np.where(
-        valor_total > 0,
-        df_agg["valor_transacao"] / valor_total,
-        0
-    )
-
-    df_agg["perc_quantidade_contemplados"] = np.where(
-        quantidade_total > 0,
-        df_agg["quantidade_contemplados"] / quantidade_total,
-        0
-    )
-
-    # ------------------------------------------------------------
-    # Identificar colunas por tipo
-    # ------------------------------------------------------------
-
-    colunas_qtd_tipo_documento = [
-        col for col in df_agg.columns
-        if col.startswith("qtd_tipo_documento_")
-    ]
-
-    colunas_valor_tipo_documento = [
-        col for col in df_agg.columns
-        if col.startswith("valor_tipo_documento_")
-    ]
-
-    colunas_min_valor_tipo_documento = [
-        col for col in df_agg.columns
-        if col.startswith("min_valor_tipo_documento_")
-    ]
-
-    colunas_mediana_valor_tipo_documento = [
-        col for col in df_agg.columns
-        if col.startswith("mediana_valor_tipo_documento_")
-    ]
-
-    colunas_max_valor_tipo_documento = [
-        col for col in df_agg.columns
-        if col.startswith("max_valor_tipo_documento_")
-    ]
-
-    colunas_media_valor_tipo_documento = [
-        col for col in df_agg.columns
-        if col.startswith("media_valor_tipo_documento_")
-    ]
-
-    colunas_valor = (
-        ["valor_transacao"]
-        + colunas_valor_tipo_documento
-        + colunas_min_valor_tipo_documento
-        + colunas_mediana_valor_tipo_documento
-        + colunas_max_valor_tipo_documento
-        + colunas_media_valor_tipo_documento
-    )
-
-    colunas_quantidade = (
-        ["quantidade_contemplados"]
-        + colunas_qtd_tipo_documento
-    )
-
-    # ------------------------------------------------------------
-    # Formatação
-    # ------------------------------------------------------------
-
-    df_agg[colunas_valor] = (
-        np.ceil(df_agg[colunas_valor])
-        .fillna(0)
-        .astype(float)
-    )
-
-    df_agg[colunas_quantidade] = (
-        df_agg[colunas_quantidade]
-        .fillna(0)
-        .astype("Int64")
-    )
-
-    df_agg[[
-        "perc_valor_transacao",
-        "perc_quantidade_contemplados"
-    ]] = (
-        df_agg[[
-            "perc_valor_transacao",
-            "perc_quantidade_contemplados"
-        ]]
-        .round(4)
-    )
-
-    # ------------------------------------------------------------
-    # Renomear e ordenar colunas
-    # ------------------------------------------------------------
-
-    df_agg = df_agg.rename(
-        columns={"cod_tipo_nome_tratado": "cod_tipo_nome"}
-    )
-
-    colunas_finais = [
-        "cod_tipo_nome",
-        "valor_transacao",
-        "perc_valor_transacao",
-        "quantidade_contemplados",
-        "perc_quantidade_contemplados",
-    ] + (
-        colunas_qtd_tipo_documento
-        + colunas_valor_tipo_documento
-        + colunas_min_valor_tipo_documento
-        + colunas_mediana_valor_tipo_documento
-        + colunas_max_valor_tipo_documento
-        + colunas_media_valor_tipo_documento
-    )
-
-    df_agg = df_agg[colunas_finais]
-
-    df_agg = df_agg[df_agg['cod_tipo_nome'].isin(["Favela e Comunidade Urbana","Agrupamento quilombola","Agrupamento indígena"])]
-
-    return df_agg
 
 def generate_special_territories_brazil_view(
     df_cubo: pd.DataFrame
@@ -6716,3 +6393,372 @@ def aggregate_execution_by_porte_municipios(
     )
 
     return df_porte
+
+def aggregate_special_territories_by(
+    df_cubo: pd.DataFrame,
+    categories: list[str],
+    by_filter: str = "MUNICIPIO",
+) -> pd.DataFrame:
+    """
+    Agrega valor executado e quantidade de contemplados por tipo de território especial.
+
+    A variável de referência é cod_tipo_nome.
+
+    Também acrescenta, por tipo_documento:
+    - quantidade;
+    - valor total;
+    - valor mínimo;
+    - mediana;
+    - valor máximo;
+    - média.
+
+    Acrescenta também:
+    - perc_populacao_brasil: percentual fixo da população brasileira
+      associado a cada território especial.
+
+    Parâmetros
+    ----------
+    df_cubo : pd.DataFrame
+        Base principal.
+
+    by_filter : str
+        Recorte territorial usado na agregação.
+
+        Opções:
+        - "MUNICIPIO": considera apenas registros municipais.
+        - "ESTADO": considera apenas registros estaduais.
+        - "UF": considera ESTADO + MUNICIPIO.
+
+    categories : list[str]
+        Lista de categorias que devem aparecer no resultado final,
+        mesmo quando não houver registros.
+
+    Retorna
+    -------
+    pd.DataFrame
+        Tabela agregada por cod_tipo_nome, com valor, quantidade,
+        percentuais, percentual da população brasileira e indicadores
+        por tipo_documento.
+    """
+
+    by_filter = by_filter.upper()
+
+    df = df_cubo.copy()
+
+    df["tipo_ente_norm"] = (
+        df["tipo_ente"]
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    if by_filter == "MUNICIPIO":
+        df = df[df["tipo_ente_norm"].eq("MUNICIPIO")].copy()
+
+    elif by_filter == "ESTADO":
+        df = df[df["tipo_ente_norm"].eq("ESTADO")].copy()
+
+    elif by_filter == "UF":
+        df = df[df["tipo_ente_norm"].isin(["ESTADO", "MUNICIPIO"])].copy()
+
+    else:
+        raise ValueError("by_filter deve ser 'MUNICIPIO', 'ESTADO' ou 'UF'.")
+
+    df["cod_tipo_nome_tratado"] = (
+        df["cod_tipo_nome"]
+        .fillna("Não informado")
+    )
+
+    df["tipo_documento_tratado"] = (
+        df["tipo_documento"]
+        .fillna("Não informado")
+        .astype(str)
+    )
+
+    df["valor_transacao"] = pd.to_numeric(
+        df["valor_transacao"],
+        errors="coerce"
+    )
+
+    df["quantidade"] = pd.to_numeric(
+        df["quantidade"],
+        errors="coerce"
+    ).fillna(0)
+
+    # ------------------------------------------------------------
+    # Agregação principal por território
+    # ------------------------------------------------------------
+
+    df_agg = (
+        df
+        .groupby("cod_tipo_nome_tratado", dropna=False, as_index=False)
+        .agg(
+            valor_transacao=("valor_transacao", "sum"),
+            quantidade_contemplados=("quantidade", "sum")
+        )
+    )
+
+    df_agg = (
+        df_agg
+        .set_index("cod_tipo_nome_tratado")
+        .reindex(categories, fill_value=0)
+        .reset_index()
+    )
+
+    # ------------------------------------------------------------
+    # Função auxiliar para pivot por tipo_documento
+    # ------------------------------------------------------------
+
+    def pivot_tipo_documento_por_territorio(
+        df_base: pd.DataFrame,
+        values: str,
+        aggfunc: str,
+        prefixo_coluna: str
+    ) -> pd.DataFrame:
+
+        if df_base.empty:
+            return pd.DataFrame({"cod_tipo_nome_tratado": categories})
+
+        df_pivot = (
+            df_base
+            .pivot_table(
+                index="cod_tipo_nome_tratado",
+                columns="tipo_documento_tratado",
+                values=values,
+                aggfunc=aggfunc,
+                fill_value=0
+            )
+            .reset_index()
+        )
+
+        df_pivot = (
+            df_pivot
+            .set_index("cod_tipo_nome_tratado")
+            .reindex(categories, fill_value=0)
+            .reset_index()
+        )
+
+        df_pivot = df_pivot.rename(
+            columns={
+                col: f"{prefixo_coluna}_tipo_documento_{col}"
+                for col in df_pivot.columns
+                if col != "cod_tipo_nome_tratado"
+            }
+        )
+
+        return df_pivot
+
+    # ------------------------------------------------------------
+    # Tipo_documento
+    # ------------------------------------------------------------
+
+    df_qtd_tipo_documento = pivot_tipo_documento_por_territorio(
+        df_base=df,
+        values="quantidade",
+        aggfunc="sum",
+        prefixo_coluna="qtd"
+    )
+
+    df_valor_tipo_documento = pivot_tipo_documento_por_territorio(
+        df_base=df,
+        values="valor_transacao",
+        aggfunc="sum",
+        prefixo_coluna="valor"
+    )
+
+    df_min_valor_tipo_documento = pivot_tipo_documento_por_territorio(
+        df_base=df,
+        values="valor_transacao",
+        aggfunc="min",
+        prefixo_coluna="min_valor"
+    )
+
+    df_mediana_valor_tipo_documento = pivot_tipo_documento_por_territorio(
+        df_base=df,
+        values="valor_transacao",
+        aggfunc="median",
+        prefixo_coluna="mediana_valor"
+    )
+
+    df_max_valor_tipo_documento = pivot_tipo_documento_por_territorio(
+        df_base=df,
+        values="valor_transacao",
+        aggfunc="max",
+        prefixo_coluna="max_valor"
+    )
+
+    df_media_valor_tipo_documento = pivot_tipo_documento_por_territorio(
+        df_base=df,
+        values="valor_transacao",
+        aggfunc="mean",
+        prefixo_coluna="media_valor"
+    )
+
+    # ------------------------------------------------------------
+    # Juntar agregação principal + tipo_documento
+    # ------------------------------------------------------------
+
+    df_agg = (
+        df_agg
+        .merge(df_qtd_tipo_documento, on="cod_tipo_nome_tratado", how="left")
+        .merge(df_valor_tipo_documento, on="cod_tipo_nome_tratado", how="left")
+        .merge(df_min_valor_tipo_documento, on="cod_tipo_nome_tratado", how="left")
+        .merge(df_mediana_valor_tipo_documento, on="cod_tipo_nome_tratado", how="left")
+        .merge(df_max_valor_tipo_documento, on="cod_tipo_nome_tratado", how="left")
+        .merge(df_media_valor_tipo_documento, on="cod_tipo_nome_tratado", how="left")
+    )
+
+    # ------------------------------------------------------------
+    # Percentuais
+    # ------------------------------------------------------------
+
+    valor_total = df_agg["valor_transacao"].sum()
+    quantidade_total = df_agg["quantidade_contemplados"].sum()
+
+    df_agg["perc_valor_transacao"] = np.where(
+        valor_total > 0,
+        df_agg["valor_transacao"] / valor_total,
+        0
+    )
+
+    df_agg["perc_quantidade_contemplados"] = np.where(
+        quantidade_total > 0,
+        df_agg["quantidade_contemplados"] / quantidade_total,
+        0
+    )
+
+    # ------------------------------------------------------------
+    # Identificar colunas por tipo
+    # ------------------------------------------------------------
+
+    colunas_qtd_tipo_documento = [
+        col for col in df_agg.columns
+        if col.startswith("qtd_tipo_documento_")
+    ]
+
+    colunas_valor_tipo_documento = [
+        col for col in df_agg.columns
+        if col.startswith("valor_tipo_documento_")
+    ]
+
+    colunas_min_valor_tipo_documento = [
+        col for col in df_agg.columns
+        if col.startswith("min_valor_tipo_documento_")
+    ]
+
+    colunas_mediana_valor_tipo_documento = [
+        col for col in df_agg.columns
+        if col.startswith("mediana_valor_tipo_documento_")
+    ]
+
+    colunas_max_valor_tipo_documento = [
+        col for col in df_agg.columns
+        if col.startswith("max_valor_tipo_documento_")
+    ]
+
+    colunas_media_valor_tipo_documento = [
+        col for col in df_agg.columns
+        if col.startswith("media_valor_tipo_documento_")
+    ]
+
+    colunas_valor = (
+        ["valor_transacao"]
+        + colunas_valor_tipo_documento
+        + colunas_min_valor_tipo_documento
+        + colunas_mediana_valor_tipo_documento
+        + colunas_max_valor_tipo_documento
+        + colunas_media_valor_tipo_documento
+    )
+
+    colunas_quantidade = (
+        ["quantidade_contemplados"]
+        + colunas_qtd_tipo_documento
+    )
+
+    # ------------------------------------------------------------
+    # Formatação corrigida
+    # Não usa np.ceil(), para preservar centavos
+    # ------------------------------------------------------------
+
+    df_agg[colunas_valor] = (
+        df_agg[colunas_valor]
+        .fillna(0)
+        .round(2)
+        .astype(float)
+    )
+
+    df_agg[colunas_quantidade] = (
+        df_agg[colunas_quantidade]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_agg[[
+        "perc_valor_transacao",
+        "perc_quantidade_contemplados"
+    ]] = (
+        df_agg[[
+            "perc_valor_transacao",
+            "perc_quantidade_contemplados"
+        ]]
+        .round(4)
+    )
+
+    # ------------------------------------------------------------
+    # Renomear coluna principal
+    # ------------------------------------------------------------
+
+    df_agg = df_agg.rename(
+        columns={"cod_tipo_nome_tratado": "cod_tipo_nome"}
+    )
+
+    # ------------------------------------------------------------
+    # Percentual da população brasileira por território especial
+    # ------------------------------------------------------------
+
+    mapa_populacao = {
+        "Favela e Comunidade Urbana": 0.08,
+        "Agrupamento quilombola": 0.007,
+        "Agrupamento indígena": 0.003,
+    }
+
+    df_agg["perc_populacao_brasil"] = (
+        df_agg["cod_tipo_nome"]
+        .map(mapa_populacao)
+        .fillna(0)
+    )
+
+    # ------------------------------------------------------------
+    # Ordenar colunas
+    # ------------------------------------------------------------
+
+    colunas_finais = [
+        "cod_tipo_nome",
+        "perc_populacao_brasil",
+        "valor_transacao",
+        "perc_valor_transacao",
+        "quantidade_contemplados",
+        "perc_quantidade_contemplados",
+    ] + (
+        colunas_qtd_tipo_documento
+        + colunas_valor_tipo_documento
+        + colunas_min_valor_tipo_documento
+        + colunas_mediana_valor_tipo_documento
+        + colunas_max_valor_tipo_documento
+        + colunas_media_valor_tipo_documento
+    )
+
+    df_agg = df_agg[colunas_finais]
+
+    df_agg = df_agg[
+        df_agg["cod_tipo_nome"].isin([
+            "Favela e Comunidade Urbana",
+            "Agrupamento quilombola",
+            "Agrupamento indígena"
+        ])
+    ].reset_index(drop=True)
+
+    return df_agg

@@ -7,7 +7,7 @@
   import { sexoUfComparisonData } from '$lib/data/section3';
 
   const { Story } = defineMeta({
-    title: 'Section 3/sexoUfComparison',
+    title: 'Section 3/Grafico 19',
     component: SexoUfStackedComparison,
     tags: ['autodocs'],
     parameters: {
@@ -28,10 +28,14 @@ Permite identificar rapidamente quais UFs apresentam maior ou menor sub-represen
 
 <Story name="Aldir Blanc vs IBGE por sexo e UF">
   {#snippet template()}
-    <SexoUfStackedComparison
+    <SexoUfStackedComparison width={600}
       data={sexoUfComparisonData}
-      colorMasc={colorScales.teal[2]}
+      colorMasc={colorScales.blue[2]}
       colorFem={colorScales.yellow[2]}
+      barHeight={28}
+      pairGap={4}
+      groupGap={14}
+      margin={{ top: 24, right: 20, bottom: 64, left: 130 }}
     />
   {/snippet}
 </Story>

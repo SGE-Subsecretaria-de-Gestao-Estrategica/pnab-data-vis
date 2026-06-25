@@ -10,7 +10,7 @@
   const formatPct = (v) => `${v.toFixed(1)}%`;
 
   const { Story } = defineMeta({
-    title: 'Section 2/valorPorFaixaByPortePopulacional',
+    title: 'Section 2/Grafico 16',
     component: VerticalStackedBarChartCustom,
     tags: ['autodocs'],
     parameters: {
@@ -33,7 +33,7 @@ Municípios de **grande porte** concentram proporcionalmente mais recursos nas f
 
 <Story name="Valor pago por faixa e porte de município">
   {#snippet template()}
-    <VerticalStackedBarChartCustom
+    <VerticalStackedBarChartCustom width={600}
       data={porteValorPercData}
       keys={[...UF_BAND_KEYS]}
       labels={UF_BAND_LABELS}

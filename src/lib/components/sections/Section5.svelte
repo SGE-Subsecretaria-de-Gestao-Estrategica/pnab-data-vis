@@ -48,8 +48,8 @@
 			labels={RESID_LABELS}
 			colors={[colorScales.orange[2], colorScales.teal[2], colorScales.lime[2]]}
 			format={fmtPct}
-			rowHeight={32}
-			marginLeft={72}
+			marginLeft={104}
+			showFlags={filters.visao === 'estados'}
 		/>
 	</div>
 </section>

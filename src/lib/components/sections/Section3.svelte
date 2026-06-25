@@ -54,6 +54,7 @@
 			entities={entities}
 			faixaLabels={FAIXA_LABELS}
 			colors={FAIXA_COLORS}
+			showFlags={filters.visao === 'uf' || filters.visao === 'estados'}
 		/>
 	</div>
 </section>

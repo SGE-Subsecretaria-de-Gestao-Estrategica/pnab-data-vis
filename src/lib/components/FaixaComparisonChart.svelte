@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { base } from '$app/paths';
+	import { siglaToName } from '$lib/data/dashboard';
+	import { FLAG_RATIO, FLAG_GAP, isState } from '$lib/chartStandards';
 	import type { FaixaEntity } from '$lib/data/faixa';
 
 	interface Props {
@@ -6,21 +9,36 @@
 		faixaLabels: string[];
 		colors: string[];
 		width?: number;
+		showFlags?: boolean;
+		flagSize?: number;
+		flagBasePath?: string;
 	}
 
-	let { entities, faixaLabels, colors, width = undefined }: Props = $props();
+	let {
+		entities,
+		faixaLabels,
+		colors,
+		width = undefined,
+		showFlags = false,
+		flagSize = 20,
+		flagBasePath = `${base}/flags/states`,
+	}: Props = $props();
 
 	const FONT = "'Rawline', system-ui, sans-serif";
 
 	// Layout constants
-	const LBL_W = 48;        // entity (UF / região) label column
+	const SIGLA_W = 30;      // sigla text column
 	const SUB_W = 50;        // "valor" / "pgto." sub-label column
 	const MR = 12;           // right margin
-	const BAR_H = 15;        // height of each stacked bar
-	const BAR_GAP = 3;       // gap between the two bars of one entity
+	const BAR_H = 30;        // height of each stacked bar
+	const BAR_GAP = 5;       // gap between the two bars of one entity
 	const BLOCK_GAP = 16;    // gap between entities
 	const MT = 8;            // top margin
 	const LEGEND_H = 40;     // legend area height
+
+	const flagW = flagSize * FLAG_RATIO;
+	// Entity label column: sigla text, plus a flag column when showing flags.
+	const LBL_W = showFlags ? SIGLA_W + flagW + FLAG_GAP : 48;
 
 	const BLOCK_H = BAR_H * 2 + BAR_GAP;
 
@@ -64,6 +82,20 @@
 				{@const valSegs = segments(entity.valor)}
 				{@const qtdSegs = segments(entity.qtd)}
 
+				<!-- State flag (when the entity is a UF) -->
+				{#if showFlags && isState(entity.label)}
+					<image
+						href="{flagBasePath}/{entity.label.toUpperCase()}.svg"
+						x={2}
+						y={y + BLOCK_H / 2 - flagSize / 2}
+						width={flagW}
+						height={flagSize}
+						preserveAspectRatio="xMidYMid meet"
+					>
+						<title>{siglaToName[entity.label.toUpperCase()] ?? entity.label}</title>
+					</image>
+				{/if}
+
 				<!-- Entity label, vertically centered on the block -->
 				<text
 					x={LBL_W - 8}
@@ -76,16 +108,16 @@
 				>{entity.label}</text>
 
 				<!-- Sub-labels -->
-				<text x={LBL_W + SUB_W - 8} y={y + BAR_H / 2} dy="0.35em" text-anchor="end" font-size="9.5" fill="#94a3b8">valor</text>
-				<text x={LBL_W + SUB_W - 8} y={y + BAR_H + BAR_GAP + BAR_H / 2} dy="0.35em" text-anchor="end" font-size="9.5" fill="#94a3b8">pgto.</text>
+				<text x={LBL_W + SUB_W - 8} y={y + BAR_H / 2} dy="0.35em" text-anchor="end" font-size="11" fill="#94a3b8">valor</text>
+				<text x={LBL_W + SUB_W - 8} y={y + BAR_H + BAR_GAP + BAR_H / 2} dy="0.35em" text-anchor="end" font-size="11" fill="#94a3b8">pgto.</text>
 
 				<!-- Valor bar (top) -->
 				<g transform={`translate(${LBL_W + SUB_W}, ${y})`}>
 					{#each valSegs as s}
 						{#if s.w > 0}
 							<rect x={s.x} y={0} width={s.w} height={BAR_H} fill={s.color} shape-rendering="crispEdges" />
-							{#if s.w > 26}
-								<text x={s.x + s.w / 2} y={BAR_H / 2} dy="0.35em" text-anchor="middle" font-size="9.5" font-weight="600" fill={labelColor(s.color)} pointer-events="none">{Math.round(s.pct)}%</text>
+							{#if s.w > 30}
+								<text x={s.x + s.w / 2} y={BAR_H / 2} dy="0.35em" text-anchor="middle" font-size="12" font-weight="700" fill={labelColor(s.color)} pointer-events="none">{Math.round(s.pct)}%</text>
 							{/if}
 						{/if}
 					{/each}
@@ -96,8 +128,8 @@
 					{#each qtdSegs as s}
 						{#if s.w > 0}
 							<rect x={s.x} y={0} width={s.w} height={BAR_H} fill={s.color} shape-rendering="crispEdges" />
-							{#if s.w > 26}
-								<text x={s.x + s.w / 2} y={BAR_H / 2} dy="0.35em" text-anchor="middle" font-size="9.5" font-weight="600" fill={labelColor(s.color)} pointer-events="none">{Math.round(s.pct)}%</text>
+							{#if s.w > 30}
+								<text x={s.x + s.w / 2} y={BAR_H / 2} dy="0.35em" text-anchor="middle" font-size="12" font-weight="700" fill={labelColor(s.color)} pointer-events="none">{Math.round(s.pct)}%</text>
 							{/if}
 						{/if}
 					{/each}

@@ -1,4 +1,8 @@
 <script lang="ts">
+	import { base } from '$app/paths';
+	import { siglaToName } from '$lib/data/dashboard';
+	import { CHART_ROW_HEIGHT, BAR_FILL, FLAG_RATIO, FLAG_GAP, isState, truncateToWidth } from '$lib/chartStandards';
+
 	type DataRow = Record<string, string | number>;
 
 	let {
@@ -9,13 +13,16 @@
 		labels = {} as Record<string, string>,
 		colors = [] as string[],
 		format = (v: number) => v.toLocaleString(),
-		rowHeight = 48,
+		rowHeight = CHART_ROW_HEIGHT,
 		showTotalLabel = false,
 		marginLeft = 180,
 		legendAlign = 'left' as 'left' | 'center' | 'right',
 		labelsAbove = false,
 		yAxisFontSize = 12,
 		hideSegmentLabelsFor = [] as string[],
+		showFlags = false,
+		flagSize = 22,
+		flagBasePath = `${base}/flags/states`,
 	}: {
 		width?: number;
 		data?: DataRow[];
@@ -31,6 +38,9 @@
 		labelsAbove?: boolean;
 		yAxisFontSize?: number;
 		hideSegmentLabelsFor?: string[];
+		showFlags?: boolean;
+		flagSize?: number;
+		flagBasePath?: string;
 	} = $props();
 
 	let measuredWidth = $state(0);
@@ -50,11 +60,30 @@
 	const MT = 16, MR = 28, ML_ABOVE = 8;
 	const LABEL_ABOVE_H = 20; // extra height per row when labelsAbove
 	const XAXIS_H = 28; // space for x-axis tick labels below bars
-	const effectiveMarginLeft = $derived(labelsAbove ? ML_ABOVE : marginLeft);
+
+	// ── Responsive left column ──────────────────────────────────────────────
+	// Cap the label column to a fraction of the container so a fixed
+	// `marginLeft` never starves the bars on mobile — charts always fill width.
+	const MIN_LABEL = 40;
+	const MAX_LEFT_FRAC = 0.34;
+	const flagW = $derived(flagSize * FLAG_RATIO);
+	const flagSpace = $derived(showFlags && !labelsAbove ? flagW + FLAG_GAP : 0);
+	// Snug the column to the widest label (short for siglas, wider for names),
+	// bounded by the requested margin and a fraction of the device width.
+	const longestLabelPx = $derived(
+		data.reduce((m, row) => Math.max(m, String(row[categoryKey] ?? '').length), 0) * yAxisFontSize * 0.6 + 12,
+	);
+	const labelColW = $derived(
+		labelsAbove
+			? ML_ABOVE
+			: Math.min(marginLeft, longestLabelPx, Math.max(MIN_LABEL, containerWidth * MAX_LEFT_FRAC)),
+	);
+	const effectiveMarginLeft = $derived(labelColW + flagSpace);
+	const labelAvail = $derived(labelColW - 8);
 	const innerWidth  = $derived(Math.max(0, containerWidth - effectiveMarginLeft - MR));
 
-	// d3 scaleBand equivalent: padding(0.28) sets paddingInner = paddingOuter = 0.28
-	const PAD = 0.15;
+	// paddingInner = 1 - BAR_FILL keeps bar thickness identical to the single-bar chart.
+	const PAD = 1 - BAR_FILL;
 	const effectiveRowHeight = $derived(labelsAbove ? rowHeight + LABEL_ABOVE_H : rowHeight);
 	const n = $derived(data.length);
 	const innerHeight = $derived(n * effectiveRowHeight);
@@ -183,7 +212,7 @@
 						{/if}
 					{/each}
 
-					<!-- Category label -->
+					<!-- Category label (+ state flag) -->
 					{#if labelsAbove}
 						<text
 							x={0}
@@ -193,6 +222,18 @@
 							fill="#333333"
 						>{row.label}</text>
 					{:else}
+						{#if showFlags && isState(row.label)}
+							<image
+								href="{flagBasePath}/{row.label.toUpperCase()}.svg"
+								x={-effectiveMarginLeft + 2}
+								y={row.midY - flagSize / 2}
+								width={flagW}
+								height={flagSize}
+								preserveAspectRatio="xMidYMid meet"
+							>
+								<title>{siglaToName[row.label.toUpperCase()] ?? row.label}</title>
+							</image>
+						{/if}
 						<text
 							x={-8}
 							y={row.midY}
@@ -201,7 +242,7 @@
 							dominant-baseline="middle"
 							font-size={yAxisFontSize}
 							fill="#64748b"
-						>{row.label}</text>
+						>{truncateToWidth(row.label, labelAvail, yAxisFontSize)}</text>
 					{/if}
 
 					{#if showTotalLabel}

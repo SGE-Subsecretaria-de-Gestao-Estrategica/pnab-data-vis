@@ -51,8 +51,8 @@
 			color={colorScales.blue[2]}
 			format={fmtBRL}
 			xLabel="Valor per capita (R$)"
-			rowHeight={30}
-			margin={{ top: 20, right: 56, bottom: 48, left: 110 }}
+			margin={{ top: 20, right: 56, bottom: 48, left: 96 }}
+			showFlags={filters.visao === 'uf' || filters.visao === 'estados'}
 		/>
 	</div>
 </section>

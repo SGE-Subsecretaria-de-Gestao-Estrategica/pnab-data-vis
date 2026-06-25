@@ -43,7 +43,6 @@
 				color={colorScales.blue[2]}
 				format={fmtNum}
 				xLabel="Contemplados"
-				rowHeight={40}
 				margin={{ top: 20, right: 70, bottom: 40, left: 220 }}
 			/>
 		</div>

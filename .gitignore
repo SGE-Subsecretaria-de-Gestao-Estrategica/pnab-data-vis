@@ -10,7 +10,6 @@ vite.config.ts.timestamp-*
 cria_csv.ipynb
 
 src/stories/assets
-static/
 *.ipynb
 src/_temp_data
 storybook-static/

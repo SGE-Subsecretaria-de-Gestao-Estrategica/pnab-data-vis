@@ -17,7 +17,10 @@ const config = {
 		},
 		prerender: {
 			handleHttpError: ({ path, message }) => {
-				if (path.startsWith('/fonts/')) return;
+				// Font preloads 404 in the prerender crawler (it can't fetch the
+				// binary static assets), but they resolve fine at runtime. The path
+				// is base-prefixed (e.g. /pnab-data-vis/fonts/...), so match anywhere.
+				if (path.includes('/fonts/')) return;
 				throw new Error(message);
 			}
 		}

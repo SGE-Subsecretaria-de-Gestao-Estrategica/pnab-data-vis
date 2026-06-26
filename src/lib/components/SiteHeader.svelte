@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { blue } from 'sniic-design-system';
+	import { base } from '$app/paths';
 
 	type Topic = { key: string; label: string; children: { id: string; label: string }[] };
 
@@ -55,7 +56,7 @@
 			<h1 class="brand-title">
 				<img
 					class="brand-logo"
-					src="/logos/pnab-logo.svg"
+					src="{base}/logos/pnab-logo.svg"
 					alt="Política Nacional Aldir Blanc"
 				/>
 			</h1>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { blue } from 'sniic-design-system';
+	import { base } from '$app/paths';
 
 	// Tópicos do menu — cada um aponta para o id da seção correspondente.
 	const sections = [
@@ -29,7 +30,7 @@
 			<h1 class="brand-title">
 				<img
 					class="brand-logo"
-					src="/logos/logo-pnab-simples.svg"
+					src="{base}/logos/logo-pnab-simples.svg"
 					alt="Política Nacional Aldir Blanc"
 				/>
 			</h1>

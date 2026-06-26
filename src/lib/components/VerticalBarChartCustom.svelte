@@ -120,7 +120,7 @@
 				{@const by = baseline - barH}
 				{@const insideLabel = barH >= insideLabelMinH}
 
-				<rect x={bx} y={by} width={barW} height={barH} fill={color} rx="2" />
+				<rect x={bx} y={by} width={barW} height={barH} fill={color} rx="0" />
 
 				<!-- Value label: inside bar (rotated) if tall enough, else above -->
 				{#if insideLabel}

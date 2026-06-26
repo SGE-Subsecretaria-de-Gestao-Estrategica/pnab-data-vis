@@ -178,9 +178,9 @@
 	<!-- Masculino inner — upper right (blue) -->
 	<line x1={innerMascPx} y1={innerMascPy} x2={mi_c.tx} y2={mi_c.ty} stroke="black" stroke-width="1" opacity="0.55" />
 	<circle cx={innerMascPx} cy={innerMascPy} r="3.5" fill="black" opacity="0.55" />
-	<rect x={RIGHT_BOX_X} y={BOX_Y_UPPER} width={BOX_W} height={BOX_H} rx="3"
+	<rect x={RIGHT_BOX_X} y={BOX_Y_UPPER} width={BOX_W} height={BOX_H} rx="0"
 		fill="white" stroke={colorMasc} stroke-width="1.5" />
-	<rect x={RIGHT_BOX_X} y={BOX_Y_UPPER} width="4" height={BOX_H} rx="2" fill={colorMasc} />
+	<rect x={RIGHT_BOX_X} y={BOX_Y_UPPER} width="4" height={BOX_H} rx="0" fill={colorMasc} />
 	<text x={RIGHT_BOX_X + 12} y={BOX_Y_UPPER + 21}
 		font-size="12" font-weight="700" fill={colorMasc}>{innerMascPercStr}</text>
 	<text x={RIGHT_BOX_X + 12} y={BOX_Y_UPPER + 38}
@@ -189,9 +189,9 @@
 	<!-- Masculino outer — lower right (blue) -->
 	<line x1={outerMascPx} y1={outerMascPy} x2={mo_c.tx} y2={mo_c.ty} stroke="black" stroke-width="1" opacity="0.55" />
 	<circle cx={outerMascPx} cy={outerMascPy} r="3.5" fill="black" opacity="0.55" />
-	<rect x={RIGHT_BOX_X} y={BOX_Y_LOWER} width={BOX_W} height={BOX_H} rx="3"
+	<rect x={RIGHT_BOX_X} y={BOX_Y_LOWER} width={BOX_W} height={BOX_H} rx="0"
 		fill="white" stroke={colorMasc} stroke-width="1.5" />
-	<rect x={RIGHT_BOX_X} y={BOX_Y_LOWER} width="4" height={BOX_H} rx="2" fill={colorMasc} />
+	<rect x={RIGHT_BOX_X} y={BOX_Y_LOWER} width="4" height={BOX_H} rx="0" fill={colorMasc} />
 	<text x={RIGHT_BOX_X + 12} y={BOX_Y_LOWER + 21}
 		font-size="12" font-weight="700" fill={colorMasc}>{outerMascPercStr}</text>
 	<text x={RIGHT_BOX_X + 12} y={BOX_Y_LOWER + 38}
@@ -200,9 +200,9 @@
 	<!-- Feminino inner — upper left (pink) -->
 	<line x1={innerFemPx} y1={innerFemPy} x2={fi_c.tx} y2={fi_c.ty} stroke="black" stroke-width="1" opacity="0.55" />
 	<circle cx={innerFemPx} cy={innerFemPy} r="3.5" fill="black" opacity="0.55" />
-	<rect x={LEFT_BOX_X} y={BOX_Y_UPPER} width={BOX_W} height={BOX_H} rx="3"
+	<rect x={LEFT_BOX_X} y={BOX_Y_UPPER} width={BOX_W} height={BOX_H} rx="0"
 		fill="white" stroke={colorFem} stroke-width="1.5" />
-	<rect x={LEFT_BOX_X} y={BOX_Y_UPPER} width="4" height={BOX_H} rx="2" fill={colorFem} />
+	<rect x={LEFT_BOX_X} y={BOX_Y_UPPER} width="4" height={BOX_H} rx="0" fill={colorFem} />
 	<text x={LEFT_BOX_X + 12} y={BOX_Y_UPPER + 21}
 		font-size="12" font-weight="700" fill={colorFem}>{innerFemPercStr}</text>
 	<text x={LEFT_BOX_X + 12} y={BOX_Y_UPPER + 38}
@@ -211,17 +211,17 @@
 	<!-- Feminino outer — lower left (pink) -->
 	<line x1={outerFemPx} y1={outerFemPy} x2={fo_c.tx} y2={fo_c.ty} stroke="black" stroke-width="1" opacity="0.55" />
 	<circle cx={outerFemPx} cy={outerFemPy} r="3.5" fill="black" opacity="0.55" />
-	<rect x={LEFT_BOX_X} y={BOX_Y_LOWER} width={BOX_W} height={BOX_H} rx="3"
+	<rect x={LEFT_BOX_X} y={BOX_Y_LOWER} width={BOX_W} height={BOX_H} rx="0"
 		fill="white" stroke={colorFem} stroke-width="1.5" />
-	<rect x={LEFT_BOX_X} y={BOX_Y_LOWER} width="4" height={BOX_H} rx="2" fill={colorFem} />
+	<rect x={LEFT_BOX_X} y={BOX_Y_LOWER} width="4" height={BOX_H} rx="0" fill={colorFem} />
 	<text x={LEFT_BOX_X + 12} y={BOX_Y_LOWER + 21}
 		font-size="12" font-weight="700" fill={colorFem}>{outerFemPercStr}</text>
 	<text x={LEFT_BOX_X + 12} y={BOX_Y_LOWER + 38}
 		font-size="12" fill="currentColor" opacity="0.6">valor repassado</text>
 
 	<!-- ── Legend ────────────────────────────────────────────────────────────── -->
-	<rect x={lx1} y={LG_Y - 6} width={12} height={12} rx="2" fill={colorFem} />
+	<rect x={lx1} y={LG_Y - 6} width={12} height={12} rx="0" fill={colorFem} />
 	<text x={lx1 + 16} y={LG_Y + 1} font-size="12" fill="currentColor" dominant-baseline="central">Feminino</text>
-	<rect x={lx2} y={LG_Y - 6} width={12} height={12} rx="2" fill={colorMasc} />
+	<rect x={lx2} y={LG_Y - 6} width={12} height={12} rx="0" fill={colorMasc} />
 	<text x={lx2 + 16} y={LG_Y + 1} font-size="12" fill="currentColor" dominant-baseline="central">Masculino</text>
 </svg>

@@ -185,7 +185,7 @@
 		padding: 0.5rem 0.75rem;
 		background: rgba(27, 27, 27, 0.92);
 		color: white;
-		border-radius: 0.5rem;
+		border-radius: 0;
 		font-family: 'Rawline', system-ui, sans-serif;
 		pointer-events: none;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);

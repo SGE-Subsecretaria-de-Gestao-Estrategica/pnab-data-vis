@@ -158,9 +158,9 @@
 
 		<!-- ── Bar track + fill ── -->
 		<rect x={BAR_X} y={cy - bh / 2} width={BAR_TW} height={bh}
-			rx={bh / 2} fill={TRACK_CLR} />
+			rx={0} fill={TRACK_CLR} />
 		<rect x={BAR_X} y={cy - bh / 2} width={bw} height={bh}
-			rx={bh / 2} fill={bFill} />
+			rx={0} fill={bFill} />
 
 		<!-- ── Percentage label ── -->
 		<text

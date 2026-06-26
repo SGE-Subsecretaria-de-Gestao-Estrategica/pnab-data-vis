@@ -269,7 +269,7 @@
           {@const row = Math.floor(i / legCols)}
           {@const lx  = mapW + LEG_GAP + col * legColW}
           {@const ly  = legStartY + (label ? 22 : 0) + row * legRowH}
-          <rect x={lx} y={ly} width={10} height={10} rx="2" fill={item.fill} />
+          <rect x={lx} y={ly} width={10} height={10} rx="0" fill={item.fill} />
           <text x={lx + 14} y={ly + 5} dy="0.35em" fill="#374151" font-size="11" font-family={FONT_FAMILY}>
             <tspan font-weight="700">{item.sigla}</tspan>
             <tspan dx="4">{format(item.val)}</tspan>
@@ -425,7 +425,7 @@
     flex-shrink: 0;
     width: 12px;
     height: 12px;
-    border-radius: 2px;
+    border-radius: 0;
   }
 
   .legend-sigla {

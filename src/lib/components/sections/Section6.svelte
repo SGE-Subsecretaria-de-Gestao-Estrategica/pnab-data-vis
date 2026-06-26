@@ -30,36 +30,43 @@
 		return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55 ? '#1a1a1a' : '#ffffff';
 	}
 
-	// ── Treemap layout (coordenadas internas; o SVG escala via viewBox) ───────────
-	const TM_W = 900;
-	const TM_H = 460;
+	// ── Treemap layout — responsivo ao container ─────────────────────────────────
+	// O SVG renderiza 1:1 (1 unidade do viewBox = 1px da tela), então os rótulos
+	// usam tamanhos em px legíveis em qualquer largura. No mobile o layout fica
+	// mais alto (retrato) para os blocos não achatarem e caberem os rótulos.
+	let measuredWidth = $state(0);
+	const isMobile = $derived(measuredWidth > 0 && measuredWidth < 560);
+	const TM_W = $derived(Math.max(1, measuredWidth));
+	const TM_H = $derived(isMobile ? TM_W * 1.25 : TM_W * 0.5);
 
-	const root = hierarchy({ children: porteTreemapData.children })
-		.sum((d: { value?: number }) => d.value ?? 0)
-		.sort((a: { value?: number }, b: { value?: number }) => (b.value ?? 0) - (a.value ?? 0));
-	d3treemap().size([TM_W, TM_H]).padding(3).paddingOuter(4)(root);
-	const leaves = root.leaves() as Array<{
-		x0: number;
-		x1: number;
-		y0: number;
-		y1: number;
+	type Leaf = {
+		x0: number; x1: number; y0: number; y1: number;
 		data: { name: string; value: number };
-	}>;
+	};
+	const leaves = $derived.by(() => {
+		const root = hierarchy({ children: porteTreemapData.children })
+			.sum((d: { value?: number }) => d.value ?? 0)
+			.sort((a: { value?: number }, b: { value?: number }) => (b.value ?? 0) - (a.value ?? 0));
+		d3treemap().size([TM_W, TM_H]).padding(3).paddingOuter(4)(root);
+		return root.leaves() as Leaf[];
+	});
 
 	const colorOf = (name: string) => PORTE_NAME_COLORS[name] ?? categorical8[0];
 
 	// ── Legenda / dados auxiliares ────────────────────────────────────────────────
 	const porteByName = new Map(porteRaw.map((d) => [d.porte, d]));
-	const legendRows = leaves.map((l) => {
-		const raw = porteByName.get(l.data.name);
-		return {
-			name: l.data.name,
-			color: colorOf(l.data.name),
-			value: raw?.valor_total ?? l.data.value,
-			perc: raw?.perc_valor ?? 0,
-			municipios: raw?.municipios ?? 0,
-		};
-	});
+	const legendRows = $derived(
+		leaves.map((l) => {
+			const raw = porteByName.get(l.data.name);
+			return {
+				name: l.data.name,
+				color: colorOf(l.data.name),
+				value: raw?.valor_total ?? l.data.value,
+				perc: raw?.perc_valor ?? 0,
+				municipios: raw?.municipios ?? 0,
+			};
+		})
+	);
 
 	// Destaques para o texto introdutório (derivados dos dados, sem hard-code).
 	const maior = [...porteRaw].sort((a, b) => b.perc_valor - a.perc_valor)[0];
@@ -81,6 +88,8 @@
 	</header>
 
 	<div class="chart-card">
+		<div class="tm-wrap" bind:clientWidth={measuredWidth}>
+		{#if measuredWidth > 0}
 		<svg
 			viewBox={`0 0 ${TM_W} ${TM_H}`}
 			width="100%"
@@ -163,6 +172,8 @@
 				{/if}
 			{/each}
 		</svg>
+		{/if}
+		</div>
 
 		<ul class="legend">
 			{#each legendRows as item}
@@ -182,7 +193,7 @@
 	.section {
 		max-width: 1200px;
 		margin: 0 auto;
-		padding: 1rem 2rem 5rem;
+		padding: 4rem 2rem 5rem;
 	}
 
 	.sec-header {
@@ -215,10 +226,12 @@
 	}
 
 	.chart-card {
-		border: 1px solid rgba(0, 0, 0, 0.1);
-		border-radius: 0.75rem;
+		border-radius: 0;
 		padding: 1.25rem 1.5rem 1rem;
-		background: rgba(255, 255, 255, 0.45);
+	}
+
+	.tm-wrap {
+		width: 100%;
 	}
 
 	.legend {
@@ -244,7 +257,7 @@
 	.swatch {
 		width: 11px;
 		height: 11px;
-		border-radius: 2px;
+		border-radius: 0;
 	}
 
 	.leg-name {
@@ -269,5 +282,37 @@
 		font-weight: 700;
 		text-align: right;
 		min-width: 4.5ch;
+	}
+
+	/* No mobile, as 5 colunas estouram a largura — empilhamos em 2 linhas por item:
+	   nome + % na primeira, nº de municípios + valor na segunda. */
+	@media (max-width: 560px) {
+		.legend li {
+			grid-template-columns: 14px 1fr auto;
+			column-gap: 0.6rem;
+			row-gap: 0.15rem;
+			font-size: 0.84rem;
+		}
+		.swatch {
+			grid-column: 1;
+			grid-row: 1;
+		}
+		.leg-name {
+			grid-column: 2;
+			grid-row: 1;
+		}
+		.leg-pct {
+			grid-column: 3;
+			grid-row: 1;
+		}
+		.leg-mun {
+			grid-column: 2;
+			grid-row: 2;
+			text-align: left;
+		}
+		.leg-val {
+			grid-column: 3;
+			grid-row: 2;
+		}
 	}
 </style>

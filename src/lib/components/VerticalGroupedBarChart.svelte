@@ -180,7 +180,7 @@
 					{@const by = baseline - barH}
 					{@const barColor = row.colors?.[si] ?? colors[si % colors.length]}
 
-					<rect x={bx} y={by} width={barWidth} height={barH} fill={barColor} rx="2" />
+					<rect x={bx} y={by} width={barWidth} height={barH} fill={barColor} rx="0" />
 					<text
 						x={bx + barWidth / 2}
 						y={by - 3}

@@ -95,7 +95,7 @@
 		font-size: 0.85rem;
 		padding: 0.4rem 2rem 0.4rem 0.6rem;
 		border: 1px solid #ccc;
-		border-radius: 0.4rem;
+		border-radius: 0;
 		background: white;
 		color: #333;
 		cursor: pointer;

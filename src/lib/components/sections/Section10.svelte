@@ -53,9 +53,14 @@
 	const obrasRows = modalidadeObrasData.map(toDetailRow);
 	const operacRows = operacionalizacaoSubData.map(toDetailRow);
 
-	// ── Treemap — Domínios de Fomento Cultural ────────────────────────────────
-	const TW = 728;
-	const TREEMAP_H = 480;
+	// ── Treemap — Domínios de Fomento Cultural (responsivo ao container) ───────
+	// Renderiza 1:1 (1 unidade do viewBox = 1px da tela), então os rótulos ficam
+	// legíveis em qualquer largura; no mobile o layout fica mais alto (retrato)
+	// para os 15 domínios não achatarem.
+	let tmWidth = $state(0);
+	const tmIsMobile = $derived(tmWidth > 0 && tmWidth < 560);
+	const TW = $derived(Math.max(1, tmWidth));
+	const TREEMAP_H = $derived(tmIsMobile ? TW * 1.5 : TW * 0.66);
 
 	const palette15 = [
 		...categorical8,
@@ -79,14 +84,17 @@
 		return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55 ? '#1a1a1a' : '#ffffff';
 	}
 
-	const tmRoot = hierarchy({ children: fomentoDomainsRows })
-		.sum((d: { value?: number }) => d.value ?? 0)
-		.sort((a: { value?: number }, b: { value?: number }) => (b.value ?? 0) - (a.value ?? 0));
-	d3treemap().size([TW, TREEMAP_H]).padding(2).paddingOuter(4)(tmRoot);
-	const tmLeaves = tmRoot.leaves() as Array<{
+	type TmLeaf = {
 		x0: number; x1: number; y0: number; y1: number;
 		data: { name: string; value: number; pct: number };
-	}>;
+	};
+	const tmLeaves = $derived.by(() => {
+		const root = hierarchy({ children: fomentoDomainsRows })
+			.sum((d: { value?: number }) => d.value ?? 0)
+			.sort((a: { value?: number }, b: { value?: number }) => (b.value ?? 0) - (a.value ?? 0));
+		d3treemap().size([TW, TREEMAP_H]).padding(2).paddingOuter(4)(root);
+		return root.leaves() as TmLeaf[];
+	});
 </script>
 
 {#snippet dataTable(rows: TableRow[])}
@@ -162,6 +170,8 @@
 	<div class="block">
 		<h3 class="block-title">Domínios de Fomento Cultural</h3>
 		<div class="chart-card">
+			<div class="tm-wrap" bind:clientWidth={tmWidth}>
+			{#if tmWidth > 0}
 			<svg
 				viewBox={`0 0 ${TW} ${TREEMAP_H}`}
 				width="100%"
@@ -206,6 +216,8 @@
 					{/if}
 				{/each}
 			</svg>
+			{/if}
+			</div>
 		</div>
 		<div class="treemap-legend">
 			{@render legendTable(fomentoLegendRows)}
@@ -239,34 +251,40 @@
 	</div>
 
 	<!-- 5 · PNCV vs outros investimentos -->
-	<div class="block">
-		<h3 class="block-title">PNCV vs. outros investimentos — por faixa de repasse municipal</h3>
-		<div class="chart-card">
-			<HorizontalStackedBarChartCustom
-				data={pncvOuOutrosData}
-				keys={[...pncvOuOutrosKeys]}
-				labels={pncvOuOutrosLabels}
-				colors={[...colorPairs.bluePurple]}
-				format={fmtPct}
-				marginLeft={280}
-				legendAlign="left"
-			/>
+	<div class="block block--yellow">
+		<div class="block-inner">
+			<h3 class="block-title">PNCV vs. outros investimentos — por faixa de repasse municipal</h3>
+			<div class="chart-card">
+				<HorizontalStackedBarChartCustom
+					data={pncvOuOutrosData}
+					keys={[...pncvOuOutrosKeys]}
+					labels={pncvOuOutrosLabels}
+					colors={[...colorPairs.bluePurple]}
+					format={fmtPct}
+					marginLeft={280}
+					legendAlign="left"
+					axisColor="#000000"
+				/>
+			</div>
 		</div>
 	</div>
 
 	<!-- 6 · PNCV por natureza do beneficiário -->
-	<div class="block">
-		<h3 class="block-title">PNCV por natureza do beneficiário (CNPJ vs. CPF)</h3>
-		<div class="chart-card">
-			<HorizontalStackedBarChartCustom
-				data={pncvNatJuridicaData}
-				keys={[...pncvNatJuridicaKeys]}
-				labels={pncvNatJuridicaLabels}
-				colors={[...colorPairs.bluePurple]}
-				format={fmtPct}
-				marginLeft={120}
-				legendAlign="left"
-			/>
+	<div class="block block--yellow">
+		<div class="block-inner">
+			<h3 class="block-title">PNCV por natureza do beneficiário (CNPJ vs. CPF)</h3>
+			<div class="chart-card">
+				<HorizontalStackedBarChartCustom
+					data={pncvNatJuridicaData}
+					keys={[...pncvNatJuridicaKeys]}
+					labels={pncvNatJuridicaLabels}
+					colors={[...colorPairs.bluePurple]}
+					format={fmtPct}
+					marginLeft={120}
+					legendAlign="left"
+					axisColor="#000000"
+				/>
+			</div>
 		</div>
 	</div>
 
@@ -285,7 +303,7 @@
 	.section {
 		max-width: 1200px;
 		margin: 0 auto;
-		padding: 1rem 2rem 5rem;
+		padding: 4rem 2rem 5rem;
 	}
 
 	.sec-header {
@@ -321,6 +339,27 @@
 		margin-top: 2.25rem;
 	}
 
+	/* Blocos amarelos consecutivos se tocam (sem espaço entre eles). */
+	.block--yellow + .block--yellow {
+		margin-top: 0;
+	}
+
+	.block--yellow {
+		background: #f6c341;
+		/* Full-bleed: escapa do container central de 1200px e ocupa toda a largura. */
+		width: 100vw;
+		position: relative;
+		left: 50%;
+		margin-left: -50vw;
+		padding: 2.5rem 0;
+	}
+
+	.block--yellow .block-inner {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 2rem;
+	}
+
 	.block-title {
 		margin: 0 0 0.75rem;
 		font-size: 1.05rem;
@@ -329,16 +368,18 @@
 	}
 
 	.chart-card {
-		border: 1px solid rgba(0, 0, 0, 0.1);
-		border-radius: 0.75rem;
+		border-radius: 0;
 		padding: 1.25rem 1.5rem 1rem;
-		background: rgba(255, 255, 255, 0.45);
+	}
+
+	.tm-wrap {
+		width: 100%;
 	}
 
 	/* ── Tables ── */
 	.table-wrap {
 		border: 1px solid rgba(0, 0, 0, 0.1);
-		border-radius: 0.75rem;
+		border-radius: 0;
 		overflow: hidden;
 		background: rgba(255, 255, 255, 0.45);
 	}
@@ -407,7 +448,7 @@
 		display: inline-block;
 		width: 0.7rem;
 		height: 0.7rem;
-		border-radius: 2px;
+		border-radius: 0;
 		margin-right: 0.55rem;
 		vertical-align: -0.05rem;
 		flex: none;

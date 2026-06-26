@@ -21,14 +21,17 @@
 
 	const scopeLabel = $derived(
 		filters.uf !== 'Todas'
-			? filters.uf
+			? filters.uf2 !== 'Todas'
+				? `${filters.uf} vs ${filters.uf2}`
+				: filters.uf
 			: filters.regiao !== 'Todas'
 				? `Região ${filters.regiao}`
 				: 'Brasil'
 	);
 </script>
 
-<section class="section">
+<section class="section-band">
+	<div class="section">
 	<header class="sec-header">
 		<p class="eyebrow">Gráfico 5</p>
 		<h2>Distribuição de recursos: capital, metropolitana e interior</h2>
@@ -38,7 +41,7 @@
 		</p>
 	</header>
 
-	<DashboardFilterBar {filters} visoes={[...VISOES]} />
+	<DashboardFilterBar {filters} visoes={[...VISOES]} showCompare />
 
 	<div class="chart-card">
 		<div class="scope-tag">{scopeLabel} · {VISAO_LABELS[filters.visao]}</div>
@@ -46,19 +49,25 @@
 			data={data}
 			keys={[...RESID_KEYS]}
 			labels={RESID_LABELS}
-			colors={[colorScales.orange[2], colorScales.teal[2], colorScales.lime[2]]}
+			colors={[colorScales.blue[2], colorScales.orange[2], colorScales.purple[2]]}
 			format={fmtPct}
 			marginLeft={104}
 			showFlags={filters.visao === 'estados'}
+			axisColor="#000000"
 		/>
+	</div>
 	</div>
 </section>
 
 <style>
+	.section-band {
+		background: #ffffff;
+	}
+
 	.section {
 		max-width: 1200px;
 		margin: 0 auto;
-		padding: 1rem 2rem 5rem;
+		padding: 4rem 2rem 5rem;
 	}
 
 	.sec-header {
@@ -91,10 +100,8 @@
 	}
 
 	.chart-card {
-		border: 1px solid rgba(0, 0, 0, 0.1);
-		border-radius: 0.75rem;
+		border-radius: 0;
 		padding: 1.25rem 1.5rem 1rem;
-		background: rgba(255, 255, 255, 0.45);
 	}
 
 	.scope-tag {
@@ -104,7 +111,7 @@
 		color: #1351B4;
 		background: rgba(19, 81, 180, 0.08);
 		padding: 0.3rem 0.7rem;
-		border-radius: 999px;
+		border-radius: 0;
 		margin-bottom: 1rem;
 	}
 </style>

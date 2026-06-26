@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { siglaToName } from '$lib/data/dashboard';
-	import { CHART_ROW_HEIGHT, BAR_FILL, FLAG_RATIO, FLAG_GAP, isState, truncateToWidth } from '$lib/chartStandards';
+	import { CHART_ROW_HEIGHT, BAR_FILL, FLAG_RATIO, FLAG_GAP, FLAG_BORDER_COLOR, FLAG_BORDER_WIDTH, hasFlag, flagId, flagTitle, flagAwareLabel, truncateToWidth } from '$lib/chartStandards';
 
 	export interface BarDatum {
 		label: string;
@@ -19,7 +18,11 @@
 		margin = { top: 20, right: 40, bottom: 40, left: 120 },
 		showFlags = false,
 		flagSize = 22,
+		flagBorder = true,
 		flagBasePath = `${base}/flags/states`,
+		labelColor = '#64748b',
+		axisColor = '#888',
+		outsideValueColor = '#334155',
 	}: {
 		width?: number;
 		data?: BarDatum[];
@@ -31,7 +34,14 @@
 		margin?: { top: number; right: number; bottom: number; left: number };
 		showFlags?: boolean;
 		flagSize?: number;
+		flagBorder?: boolean;
 		flagBasePath?: string;
+		/** Cor dos rótulos de categoria (eixo Y). */
+		labelColor?: string;
+		/** Cor dos textos do eixo X (ticks + xLabel). */
+		axisColor?: string;
+		/** Cor dos rótulos de valor exibidos fora da barra (barras curtas). */
+		outsideValueColor?: string;
 	} = $props();
 
 	const FONT = "'Rawline', system-ui, sans-serif";
@@ -121,7 +131,7 @@
 					{@const labelInside = bw >= MIN_INSIDE_PX}
 					{@const formatted = format(d.value)}
 
-					<rect x={0} y={by} width={bw} height={barH} fill={color} rx="1" />
+					<rect x={0} y={by} width={bw} height={barH} fill={color} rx="0" />
 
 					{#if labelInside}
 						<text
@@ -143,13 +153,13 @@
 							font-size={LABEL_FS}
 							font-weight="500"
 							font-family={FONT}
-							fill="#334155"
+							fill={outsideValueColor}
 						>{formatted}</text>
 					{/if}
 				{/each}
 
 				<!-- X-axis ticks + labels -->
-				<g transform="translate(0,{innerH})">
+				<g class="x-axis" transform="translate(0,{innerH})">
 					{#each tickValues as tick}
 						{@const tx = xScale(tick)}
 						<line x1={tx} y1={0} x2={tx} y2={4} stroke="#aaa" stroke-width="0.75" />
@@ -159,7 +169,7 @@
 							dy="0.71em"
 							text-anchor="middle"
 							font-size="12"
-							fill="#888"
+							fill={axisColor}
 							font-family={FONT}
 						>{format(tick)}</text>
 					{/each}
@@ -169,7 +179,7 @@
 							y={38}
 							text-anchor="middle"
 							font-size="12"
-							fill="#888"
+							fill={axisColor}
 							font-family={FONT}
 						>{xLabel}</text>
 					{/if}
@@ -179,17 +189,28 @@
 			<!-- Y-axis labels (+ state flags) in the left column -->
 			{#each sorted as d, i}
 				{@const ty = margin.top + i * rowHeight + rowHeight / 2}
-				{#if showFlags && isState(d.label)}
+				{#if showFlags && hasFlag(d.label)}
 					<image
-						href="{flagBasePath}/{d.label.toUpperCase()}.svg"
+						href="{flagBasePath}/{flagId(d.label)}.svg"
 						x={2}
 						y={ty - flagSize / 2}
 						width={flagW}
 						height={flagSize}
 						preserveAspectRatio="xMidYMid meet"
 					>
-						<title>{siglaToName[d.label.toUpperCase()] ?? d.label}</title>
+						<title>{flagTitle(d.label)}</title>
 					</image>
+					{#if flagBorder}
+						<rect
+							x={2}
+							y={ty - flagSize / 2}
+							width={flagW}
+							height={flagSize}
+							fill="none"
+							stroke={FLAG_BORDER_COLOR}
+							stroke-width={FLAG_BORDER_WIDTH}
+						/>
+					{/if}
 				{/if}
 				<text
 					x={effLeft - 8}
@@ -198,9 +219,18 @@
 					text-anchor="end"
 					font-size="12"
 					font-family={FONT}
-					fill="#64748b"
-				>{truncateToWidth(d.label, labelAvail, 12)}</text>
+					fill={labelColor}
+				>{truncateToWidth(flagAwareLabel(d.label, showFlags), labelAvail, 12)}</text>
 			{/each}
 		</svg>
 	{/if}
 </div>
+
+<style>
+	/* No mobile, os rótulos do eixo X se sobrepõem e ficam ilegíveis — ocultamos. */
+	@media (max-width: 720px) {
+		.x-axis {
+			display: none;
+		}
+	}
+</style>

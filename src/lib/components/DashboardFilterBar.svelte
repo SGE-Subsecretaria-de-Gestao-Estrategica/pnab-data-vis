@@ -12,9 +12,16 @@
 		showRegiao?: boolean;
 		/** Show the UF scoping dropdown (default true). */
 		showUf?: boolean;
+		/** Show the "comparar com" second-state dropdown (default false). */
+		showCompare?: boolean;
+		/** Cor dos rótulos dos filtros (ex.: claro sobre fundo escuro). */
+		labelColor?: string;
 	}
 
-	let { filters, visoes, showRegiao = true, showUf = true }: Props = $props();
+	let { filters, visoes, showRegiao = true, showUf = true, showCompare = false, labelColor = '#666' }: Props = $props();
+
+	// Opções para o segundo estado: as UFs do escopo, exceto a já selecionada.
+	const compareOptions = $derived(filters.ufsForRegiao.filter((u) => u !== filters.uf));
 
 	const visaoOptions = $derived(
 		(visoes ?? (Object.keys(VISAO_LABELS) as Visao[])).map((v) => [v, VISAO_LABELS[v]] as const)
@@ -23,7 +30,7 @@
 	const hasSelection = $derived(filters.uf !== 'Todas' || filters.regiao !== 'Todas');
 </script>
 
-<div class="filter-bar">
+<div class="filter-bar" style="--filter-label-color: {labelColor};">
 	<div class="filter-group">
 		<span class="filter-label">Visão</span>
 		<select aria-label="Visão" value={filters.visao} onchange={(e) => (filters.visao = e.currentTarget.value as Visao)}>
@@ -61,6 +68,22 @@
 		</div>
 	{/if}
 
+	{#if showCompare && filters.uf !== 'Todas' && filters.visao !== 'regioes'}
+		<div class="filter-group">
+			<span class="filter-label">Comparar com</span>
+			<select
+				aria-label="Comparar com outro estado"
+				value={filters.uf2}
+				onchange={(e) => (filters.uf2 = e.currentTarget.value)}
+			>
+				<option value="Todas">— nenhum —</option>
+				{#each compareOptions as u}
+					<option value={u}>{u} — {siglaToName[u]}</option>
+				{/each}
+			</select>
+		</div>
+	{/if}
+
 	{#if hasSelection}
 		<button class="clear-btn" onclick={() => filters.reset()}>Limpar filtros ✕</button>
 	{/if}
@@ -73,8 +96,6 @@
 		gap: 1rem;
 		align-items: flex-end;
 		padding: 1rem 1.25rem;
-		background: rgba(19, 81, 180, 0.04);
-		border: 1px solid rgba(19, 81, 180, 0.12);
 		border-radius: 0;
 		margin-bottom: 1.75rem;
 	}
@@ -94,7 +115,7 @@
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: #666;
+		color: var(--filter-label-color, #666);
 	}
 
 	select {

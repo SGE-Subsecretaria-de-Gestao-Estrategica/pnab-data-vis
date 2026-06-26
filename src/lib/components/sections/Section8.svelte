@@ -97,7 +97,7 @@
 	.section {
 		max-width: 1200px;
 		margin: 0 auto;
-		padding: 1rem 2rem 5rem;
+		padding: 4rem 2rem 5rem;
 	}
 
 	.sec-header {
@@ -134,8 +134,6 @@
 		align-items: center;
 		gap: 0.85rem;
 		padding: 1rem 1.25rem;
-		background: rgba(19, 81, 180, 0.04);
-		border: 1px solid rgba(19, 81, 180, 0.12);
 		border-radius: 0;
 		margin-bottom: 1.75rem;
 	}
@@ -189,10 +187,11 @@
 	}
 
 	.chart-card {
-		border: 1px solid rgba(0, 0, 0, 0.1);
 		border-radius: 0;
 		padding: 1.25rem 1.5rem 1rem;
-		background: rgba(255, 255, 255, 0.45);
+		/* Impede que rótulos da pirâmide (svg overflow: visible) vazem além do
+		   card e gerem scroll horizontal no mobile. */
+		overflow: hidden;
 	}
 
 	.chart-title {
@@ -208,6 +207,16 @@
 		}
 		.sec-header h2 {
 			font-size: 1.4rem;
+		}
+		/* Evita estouro horizontal: barra de filtro quebra e os botões dividem a largura. */
+		.filter-bar {
+			flex-wrap: wrap;
+		}
+		.seg {
+			flex: 1 1 100%;
+		}
+		.seg-btn {
+			flex: 1 1 0;
 		}
 	}
 </style>

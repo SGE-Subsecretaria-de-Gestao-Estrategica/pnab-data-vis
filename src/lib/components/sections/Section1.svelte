@@ -100,7 +100,8 @@
 	});
 </script>
 
-<section class="dashboard">
+<section class="dashboard-band">
+	<div class="dashboard">
 	<header class="dash-header">
 		<p class="eyebrow">PNAB · Painel de Dados</p>
 		<h1>Valores gerais da pesquisa</h1>
@@ -118,15 +119,24 @@
 		<div class="panel">
 			<div class="scope-tag">{scopeLabel} · {VISAO_LABELS[filters.visao]}</div>
 
-			<!-- Headline: entes (rótulo acompanha a seleção do filtro) -->
-			<BigNumberStat
-				value={entes.value}
-				label="{entes.noun} {entes.adj}"
-				subtitle={entes.sub}
-				fontSize={60}
-				shadowDepth={6}
-				width={460}
-			/>
+			<!-- Headline: entes (rótulo acompanha a seleção do filtro) + texto -->
+			<div class="stat-row">
+				<BigNumberStat
+					value={entes.value}
+					label="{entes.noun} {entes.adj}"
+					subtitle={entes.sub}
+					fontSize={60}
+					shadowDepth={6}
+					width={340}
+				/>
+				<aside class="panel-text">
+					<p>
+						Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
+						tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+						veniam, quis nostrud exercitation ullamco laboris.
+					</p>
+				</aside>
+			</div>
 
 			<!-- Trio: recebido / executado / % nacional -->
 			<div class="metric-trio">
@@ -144,8 +154,17 @@
 				</div>
 			</div>
 
-			<!-- Contemplados -->
-			<BigNumberStat value={fmtNum(scoped.contemplados)} label="contemplados (agentes / projetos)" fontSize={50} shadowDepth={5} width={460} />
+			<!-- Contemplados + texto -->
+			<div class="stat-row">
+				<BigNumberStat value={fmtNum(scoped.contemplados)} label="contemplados (agentes / projetos)" fontSize={50} shadowDepth={5} width={340} />
+				<aside class="panel-text">
+					<p>
+						Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
+						dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+						proident, sunt in culpa qui officia deserunt mollit.
+					</p>
+				</aside>
+			</div>
 		</div>
 
 		<div class="map-wrap">
@@ -160,9 +179,15 @@
 			<p class="map-caption">Cor proporcional ao valor executado. Clique para detalhar.</p>
 		</div>
 	</div>
+	</div>
 </section>
 
 <style>
+	/* Faixa full-bleed com o amarelo principal do SNIIC. */
+	.dashboard-band {
+		background: #f6c341;
+	}
+
 	.dashboard {
 		max-width: 1200px;
 		margin: 0 auto;
@@ -201,7 +226,7 @@
 	/* ── Grid ── */
 	.grid {
 		display: grid;
-		grid-template-columns: 1fr 1.05fr;
+		grid-template-columns: 1.35fr 1fr;
 		gap: 2rem;
 		align-items: start;
 	}
@@ -210,6 +235,30 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+		min-width: 0;
+	}
+
+	/* ── Linha: big number + texto descritivo ── */
+	.stat-row {
+		display: grid;
+		grid-template-columns: minmax(0, auto) 1fr;
+		gap: 1.5rem;
+		align-items: center;
+	}
+
+	.panel-text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.85rem;
+	}
+
+	.panel-text p {
+		margin: 0;
+		font-size: 0.92rem;
+		line-height: 1.6;
+		color: #1B1B1B;
+		font-weight: 400;
+		text-align: justify;
 	}
 
 	.scope-tag {
@@ -230,6 +279,7 @@
 		align-items: center;
 		text-align: center;
 		gap: 0.1rem;
+		min-width: 0;
 	}
 
 	.metric-value {
@@ -238,6 +288,7 @@
 		line-height: 1.05;
 		font-size: 1.6rem;
 		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
 	}
 
 	.metric-label {
@@ -270,10 +321,26 @@
 		.grid {
 			grid-template-columns: 1fr;
 		}
+		.stat-row {
+			grid-template-columns: 1fr;
+			gap: 0.5rem;
+		}
 		.map-wrap {
 			position: static;
 			order: -1;
 		}
 		.dash-header h1 { font-size: 1.6rem; }
+	}
+
+	/* Telas estreitas (ex.: 320px): reduz o respiro lateral e empilha o trio para
+	   que cada valor ocupe a largura máxima e não seja cortado. */
+	@media (max-width: 520px) {
+		.dashboard {
+			padding: 2rem 1rem 3rem;
+		}
+		.metric-trio {
+			grid-template-columns: 1fr;
+			gap: 0.85rem;
+		}
 	}
 </style>

@@ -24,26 +24,18 @@
 	} = $props();
 
 	const FONT_FAMILY = "'Rawline', system-ui, sans-serif";
-	const CHAR_W      = 7;
-	const BOX_PAD     = 32;
-	const LEGEND_GAP  = 16;
 	const LABEL_CHAR_W = 7;     // px/char for the 12px arc labels (% + valor)
 	const LABEL_GAP_FR = 0.06;  // distância do label fora do arco, fração do raio
 
+	// Legend (horizontal row, centered below the donut)
+	const LEGEND_H      = 40;   // vertical space reserved below the donut
+	const SWATCH        = 13;   // legend color square size
+	const SWATCH_GAP    = 7;    // gap between swatch and its label
+	const ITEM_GAP      = 22;   // gap between legend items
+	const LEGEND_CHAR_W = 7.2;  // px/char for the 12px legend labels
+
 	let measuredWidth = $state(0);
 	const containerWidth = $derived(width ?? measuredWidth);
-
-	function labelColor(hex: string): string {
-		const r = parseInt(hex.slice(1, 3), 16) / 255;
-		const g = parseInt(hex.slice(3, 5), 16) / 255;
-		const b = parseInt(hex.slice(5, 7), 16) / 255;
-		const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-		return luminance > 0.65 ? '#1a1a1a' : '#fffffe';
-	}
-
-	// Legend: vertical box to the right, same height as chart
-	const legendW     = $derived(Math.max(120, Math.max(...data.map((d) => d.label.length * CHAR_W)) + BOX_PAD));
-	const legendItemH = $derived(height / data.length);
 
 	// Largest arc label (% ou valor absoluto) em px — reserva espaço lateral p/ não cortar
 	const maxLabelW = $derived((() => {
@@ -56,8 +48,9 @@
 		return chars * LABEL_CHAR_W;
 	})());
 
-	// Donut area = capped at height * 1.5 so the donut doesn't float in a huge empty space
-	const donutAreaW  = $derived(Math.min(containerWidth - legendW - LEGEND_GAP, height * 1.5));
+	// Donut area = full container width (capped so it doesn't float in a huge
+	// empty space), centered. Legend goes below, so no lateral reservation.
+	const donutAreaW = $derived(Math.min(containerWidth, height * 1.5));
 	// Raio máximo que cabe reservando os labels nas laterais (h) e topo/base (v)
 	const outerRadius = $derived(
 		Math.max(
@@ -69,11 +62,11 @@
 		)
 	);
 	const innerRadius = $derived(outerRadius * innerRadiusFraction);
-	const cx          = $derived(donutAreaW / 2);
+	const cx          = $derived(containerWidth / 2);
 	const cy          = $derived(height / 2);
 
-	// SVG width = actual content, not full container
-	const svgWidth    = $derived(donutAreaW + LEGEND_GAP + legendW);
+	const svgWidth  = $derived(containerWidth);
+	const svgHeight = $derived(height + LEGEND_H);
 
 	// Pie arcs
 	const pieFn = pie<{ label: string; value: number }>()
@@ -98,14 +91,28 @@
 	const arcs  = $derived(pieFn(data));
 	const total = $derived(data.reduce((s, d) => s + d.value, 0));
 
-	const legendX = $derived(donutAreaW + LEGEND_GAP);
+	// Legend layout: items laid out left→right, whole row centered horizontally
+	const legendItems = $derived.by(() => {
+		const items = data.map((d: { label: string; value: number }, i: number) => {
+			const w = SWATCH + SWATCH_GAP + d.label.length * LEGEND_CHAR_W;
+			return { label: d.label, color: colors[i] ?? '#999', w };
+		});
+		const totalW = items.reduce((s, it) => s + it.w, 0) + Math.max(0, items.length - 1) * ITEM_GAP;
+		let cursor = (containerWidth - totalW) / 2;
+		return items.map((it) => {
+			const x = cursor;
+			cursor += it.w + ITEM_GAP;
+			return { ...it, x };
+		});
+	});
+	const legendY = $derived(height + LEGEND_H / 2);
 </script>
 
 <div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
 	{#if containerWidth > 0}
 		<svg
 			width={svgWidth}
-			height={height}
+			height={svgHeight}
 			role="img"
 			aria-label="Donut chart"
 			font-family={FONT_FAMILY}
@@ -159,49 +166,26 @@
 				{/if}
 			</g>
 
-			<!-- Legend — vertical box to the right, height = chart height -->
-			<g transform="translate({legendX},0)">
-				{#each data as item, i}
+			<!-- Legend — horizontal row, centered below the donut -->
+			<g transform="translate(0,{legendY})">
+				{#each legendItems as item}
 					<rect
-						x={0}
-						y={legendItemH * i}
-						width={legendW}
-						height={legendItemH}
-						fill={colors[i] ?? '#999'}
+						x={item.x}
+						y={-SWATCH / 2}
+						width={SWATCH}
+						height={SWATCH}
+						fill={item.color}
 						shape-rendering="crispEdges"
 					/>
 					<text
-						x={legendW / 2}
-						y={legendItemH * i + legendItemH / 2}
+						x={item.x + SWATCH + SWATCH_GAP}
+						y={0}
 						dy="0.35em"
-						text-anchor="middle"
 						font-size="12"
 						font-weight="600"
-						fill={labelColor(colors[i] ?? '#999')}
+						fill="#1e293b"
 					>{item.label}</text>
 				{/each}
-
-				<!-- Dividers between items -->
-				{#each data.slice(0, data.length - 1) as _, i}
-					<line
-						x1={0}          y1={legendItemH * (i + 1)}
-						x2={legendW}    y2={legendItemH * (i + 1)}
-						stroke="#000000"
-						stroke-width="0.5"
-						shape-rendering="crispEdges"
-					/>
-				{/each}
-
-				<!-- Border -->
-				<rect
-					x={0} y={0}
-					width={legendW}
-					height={height}
-					fill="none"
-					stroke="#000000"
-					stroke-width="0.5"
-					shape-rendering="crispEdges"
-				/>
 			</g>
 		</svg>
 	{/if}

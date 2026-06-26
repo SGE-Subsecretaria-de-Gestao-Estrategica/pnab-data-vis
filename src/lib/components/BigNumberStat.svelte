@@ -11,6 +11,8 @@
 		fontSize = 44,
 		width = 360,
 		shadowDepth = 4,
+		labelColor = '#555555',
+		subtitleColor = '#888888',
 	}: {
 		value: string;
 		label: string;
@@ -18,6 +20,8 @@
 		fontSize?: number;
 		width?: number;
 		shadowDepth?: number;
+		labelColor?: string;
+		subtitleColor?: string;
 	} = $props();
 </script>
 
@@ -31,8 +35,8 @@
 		{shadowDepth}
 		color="#ffffff"
 		shadowColor="#1351B4"
-		labelColor="#555555"
-		subtitleColor="#888888"
+		{labelColor}
+		{subtitleColor}
 	/>
 </div>
 

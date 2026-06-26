@@ -53,6 +53,9 @@
 			xLabel="Valor per capita (R$)"
 			margin={{ top: 20, right: 56, bottom: 48, left: 96 }}
 			showFlags={filters.visao === 'uf' || filters.visao === 'estados'}
+			labelColor="#000000"
+			axisColor="#000000"
+			outsideValueColor="#000000"
 		/>
 	</div>
 </section>
@@ -61,7 +64,7 @@
 	.section {
 		max-width: 1200px;
 		margin: 0 auto;
-		padding: 1rem 2rem 5rem;
+		padding: 4rem 2rem 5rem;
 	}
 
 	.sec-header {
@@ -94,10 +97,8 @@
 	}
 
 	.chart-card {
-		border: 1px solid rgba(0, 0, 0, 0.1);
 		border-radius: 0;
 		padding: 1.25rem 1.5rem 1rem;
-		background: rgba(255, 255, 255, 0.45);
 	}
 
 	.scope-tag {

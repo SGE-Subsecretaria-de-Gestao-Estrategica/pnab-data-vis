@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { siglaToName } from '$lib/data/dashboard';
-	import { FLAG_RATIO, FLAG_GAP, isState } from '$lib/chartStandards';
+	import { FLAG_RATIO, FLAG_GAP, FLAG_BORDER_COLOR, FLAG_BORDER_WIDTH, hasFlag, flagId, flagTitle, flagAwareLabel, truncateToWidth } from '$lib/chartStandards';
 	import type { FaixaEntity } from '$lib/data/faixa';
 
 	interface Props {
@@ -11,7 +10,10 @@
 		width?: number;
 		showFlags?: boolean;
 		flagSize?: number;
+		flagBorder?: boolean;
 		flagBasePath?: string;
+		/** Sobrescreve a cor dos rótulos textuais (entidades, sub-rótulos, legenda). */
+		axisColor?: string;
 	}
 
 	let {
@@ -21,7 +23,9 @@
 		width = undefined,
 		showFlags = false,
 		flagSize = 20,
+		flagBorder = true,
 		flagBasePath = `${base}/flags/states`,
+		axisColor = undefined,
 	}: Props = $props();
 
 	const FONT = "'Rawline', system-ui, sans-serif";
@@ -34,7 +38,14 @@
 	const BAR_GAP = 5;       // gap between the two bars of one entity
 	const BLOCK_GAP = 16;    // gap between entities
 	const MT = 8;            // top margin
-	const LEGEND_H = 40;     // legend area height
+
+	// Legenda no padrão dos gráficos 4/5: caixas coloridas contíguas com o rótulo
+	// dentro de cada caixa (texto em contraste automático).
+	const LEG_CHAR_W = 8;    // largura estimada por caractere
+	const LEG_BOX_PAD = 20;  // padding horizontal interno da caixa
+	const LEG_ROW_H = 28;    // altura de cada linha da legenda
+	const LEG_GAP = 2;       // espaço entre linhas da legenda
+	const LEG_TOP = 12;      // espaço acima da legenda
 
 	const flagW = flagSize * FLAG_RATIO;
 	// Entity label column: sigla text, plus a flag column when showing flags.
@@ -49,8 +60,6 @@
 	const blocks = $derived(
 		entities.map((e, i) => ({ entity: e, y: MT + i * (BLOCK_H + BLOCK_GAP) }))
 	);
-
-	const chartH = $derived(MT + entities.length * (BLOCK_H + BLOCK_GAP) + LEGEND_H);
 
 	function labelColor(hex: string): string {
 		const r = parseInt(hex.slice(1, 3), 16) / 255;
@@ -70,9 +79,40 @@
 		});
 	}
 
-	const legendBoxW = $derived(
-		Math.min(150, Math.max(72, barAreaW / Math.max(1, faixaLabels.length)))
+	// Caixas dimensionadas ao próprio rótulo (mín. 60px), nunca mais largas que a
+	// área de barras, quebrando em múltiplas linhas quando não couber tudo numa só.
+	const legendBoxWs = $derived(
+		faixaLabels.map((lbl) => {
+			const natural = Math.max(60, lbl.length * LEG_CHAR_W + LEG_BOX_PAD);
+			return barAreaW > 0 ? Math.min(natural, barAreaW) : natural;
+		})
 	);
+
+	type LegendItem = { i: number; w: number; x: number };
+	const legendRows = $derived.by(() => {
+		const rows: LegendItem[][] = [];
+		let cur: LegendItem[] = [];
+		let rowW = 0;
+		for (let i = 0; i < faixaLabels.length; i++) {
+			const w = legendBoxWs[i];
+			if (barAreaW > 0 && rowW + w > barAreaW && cur.length > 0) {
+				rows.push(cur);
+				cur = [];
+				rowW = 0;
+			}
+			cur.push({ i, w, x: rowW });
+			rowW += w;
+		}
+		if (cur.length > 0) rows.push(cur);
+		return rows;
+	});
+
+	const legendTotalH = $derived(
+		legendRows.length * LEG_ROW_H + Math.max(0, legendRows.length - 1) * LEG_GAP
+	);
+
+	const legendTop = $derived(MT + entities.length * (BLOCK_H + BLOCK_GAP) + LEG_TOP);
+	const chartH = $derived(legendTop + legendTotalH + 4);
 </script>
 
 <div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
@@ -83,17 +123,28 @@
 				{@const qtdSegs = segments(entity.qtd)}
 
 				<!-- State flag (when the entity is a UF) -->
-				{#if showFlags && isState(entity.label)}
+				{#if showFlags && hasFlag(entity.label)}
 					<image
-						href="{flagBasePath}/{entity.label.toUpperCase()}.svg"
+						href="{flagBasePath}/{flagId(entity.label)}.svg"
 						x={2}
 						y={y + BLOCK_H / 2 - flagSize / 2}
 						width={flagW}
 						height={flagSize}
 						preserveAspectRatio="xMidYMid meet"
 					>
-						<title>{siglaToName[entity.label.toUpperCase()] ?? entity.label}</title>
+						<title>{flagTitle(entity.label)}</title>
 					</image>
+					{#if flagBorder}
+						<rect
+							x={2}
+							y={y + BLOCK_H / 2 - flagSize / 2}
+							width={flagW}
+							height={flagSize}
+							fill="none"
+							stroke={FLAG_BORDER_COLOR}
+							stroke-width={FLAG_BORDER_WIDTH}
+						/>
+					{/if}
 				{/if}
 
 				<!-- Entity label, vertically centered on the block -->
@@ -104,12 +155,12 @@
 					text-anchor="end"
 					font-size="12"
 					font-weight={entity.isBrasil ? 700 : 600}
-					fill={entity.isBrasil ? '#1351B4' : '#334155'}
-				>{entity.label}</text>
+					fill={entity.isBrasil ? '#1351B4' : (axisColor ?? '#334155')}
+				>{flagAwareLabel(entity.label, showFlags)}</text>
 
 				<!-- Sub-labels -->
-				<text x={LBL_W + SUB_W - 8} y={y + BAR_H / 2} dy="0.35em" text-anchor="end" font-size="11" fill="#94a3b8">valor</text>
-				<text x={LBL_W + SUB_W - 8} y={y + BAR_H + BAR_GAP + BAR_H / 2} dy="0.35em" text-anchor="end" font-size="11" fill="#94a3b8">pgto.</text>
+				<text x={LBL_W + SUB_W - 8} y={y + BAR_H / 2} dy="0.35em" text-anchor="end" font-size="11" fill={axisColor ?? '#94a3b8'}>valor</text>
+				<text x={LBL_W + SUB_W - 8} y={y + BAR_H + BAR_GAP + BAR_H / 2} dy="0.35em" text-anchor="end" font-size="11" fill={axisColor ?? '#94a3b8'}>pgto.</text>
 
 				<!-- Valor bar (top) -->
 				<g transform={`translate(${LBL_W + SUB_W}, ${y})`}>
@@ -140,14 +191,30 @@
 				{/if}
 			{/each}
 
-			<!-- Legend -->
-			<g transform={`translate(${LBL_W + SUB_W}, ${MT + entities.length * (BLOCK_H + BLOCK_GAP) + 6})`}>
-				{#each faixaLabels as lbl, i}
-					{@const lx = i * legendBoxW}
-					<rect x={lx} y={4} width={12} height={12} rx={0} fill={colors[i] ?? '#999'} />
-					<text x={lx + 17} y={10} dy="0.35em" font-size="11" fill="#475569">{lbl}</text>
-				{/each}
-			</g>
+			<!-- Legend: caixas coloridas contíguas com rótulo dentro (padrão gráficos 4/5) -->
+			{#each legendRows as row, ri}
+				<g transform={`translate(${LBL_W + SUB_W}, ${legendTop + ri * (LEG_ROW_H + LEG_GAP)})`}>
+					{#each row as item}
+						<rect
+							x={item.x}
+							y={0}
+							width={item.w}
+							height={LEG_ROW_H}
+							fill={colors[item.i] ?? '#999'}
+							shape-rendering="crispEdges"
+						/>
+						<text
+							x={item.x + 8}
+							y={LEG_ROW_H / 2}
+							dy="0.35em"
+							font-size="12"
+							font-weight="600"
+							fill={labelColor(colors[item.i] ?? '#999')}
+							pointer-events="none"
+						>{truncateToWidth(faixaLabels[item.i], item.w - 16, 12)}</text>
+					{/each}
+				</g>
+			{/each}
 		</svg>
 	{/if}
 </div>

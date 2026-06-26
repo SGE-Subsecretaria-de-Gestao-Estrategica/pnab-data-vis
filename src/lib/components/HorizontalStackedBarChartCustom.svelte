@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { siglaToName } from '$lib/data/dashboard';
-	import { CHART_ROW_HEIGHT, BAR_FILL, FLAG_RATIO, FLAG_GAP, isState, truncateToWidth } from '$lib/chartStandards';
+	import { CHART_ROW_HEIGHT, BAR_FILL, FLAG_RATIO, FLAG_GAP, FLAG_BORDER_COLOR, FLAG_BORDER_WIDTH, hasFlag, flagId, flagTitle, flagAwareLabel, truncateToWidth } from '$lib/chartStandards';
 
 	type DataRow = Record<string, string | number>;
 
@@ -22,7 +21,9 @@
 		hideSegmentLabelsFor = [] as string[],
 		showFlags = false,
 		flagSize = 22,
+		flagBorder = true,
 		flagBasePath = `${base}/flags/states`,
+		axisColor = '#64748b',
 	}: {
 		width?: number;
 		data?: DataRow[];
@@ -40,7 +41,10 @@
 		hideSegmentLabelsFor?: string[];
 		showFlags?: boolean;
 		flagSize?: number;
+		flagBorder?: boolean;
 		flagBasePath?: string;
+		/** Cor dos rótulos de eixo (categorias Y, ticks X e total). */
+		axisColor?: string;
 	} = $props();
 
 	let measuredWidth = $state(0);
@@ -130,8 +134,17 @@
 	const LEGEND_ROW_H = 34;
 	const LEGEND_GAP   = 2;
 
+	// The legend spans the full component width (not just the bars' span), so it
+	// has the most room on narrow screens and aligns with the y-axis labels.
+	const legendW = $derived(Math.max(0, containerWidth - MR));
+
+	// Box fits its label, but never wider than the available legend area, so a
+	// long label (ex.: "Região metropolitana") can't overflow on narrow screens.
 	const legendBoxWs = $derived(
-		keys.map((key) => Math.max(60, (labels[key] ?? key).length * CHAR_W + BOX_PAD))
+		keys.map((key) => {
+			const natural = Math.max(60, (labels[key] ?? key).length * CHAR_W + BOX_PAD);
+			return legendW > 0 ? Math.min(natural, legendW) : natural;
+		})
 	);
 
 	type LegendItem = { key: string; ki: number; w: number; x: number };
@@ -141,7 +154,7 @@
 		let rowW = 0;
 		for (let ki = 0; ki < keys.length; ki++) {
 			const w = legendBoxWs[ki];
-			if (innerWidth > 0 && rowW + w > innerWidth && cur.length > 0) {
+			if (legendW > 0 && rowW + w > legendW && cur.length > 0) {
 				result.push(cur);
 				cur = [];
 				rowW = 0;
@@ -153,7 +166,6 @@
 		return result;
 	});
 
-	const legendAvailW    = $derived(containerWidth - effectiveMarginLeft - MR);
 	const legendY         = $derived(MT + innerHeight + XAXIS_H);
 	const legendTotalH    = $derived(legendRows.length * LEGEND_ROW_H + Math.max(0, legendRows.length - 1) * LEGEND_GAP);
 	const totalHeight     = $derived(MT + innerHeight + XAXIS_H + legendTotalH + 16);
@@ -222,17 +234,28 @@
 							fill="#333333"
 						>{row.label}</text>
 					{:else}
-						{#if showFlags && isState(row.label)}
+						{#if showFlags && hasFlag(row.label)}
 							<image
-								href="{flagBasePath}/{row.label.toUpperCase()}.svg"
+								href="{flagBasePath}/{flagId(row.label)}.svg"
 								x={-effectiveMarginLeft + 2}
 								y={row.midY - flagSize / 2}
 								width={flagW}
 								height={flagSize}
 								preserveAspectRatio="xMidYMid meet"
 							>
-								<title>{siglaToName[row.label.toUpperCase()] ?? row.label}</title>
+								<title>{flagTitle(row.label)}</title>
 							</image>
+							{#if flagBorder}
+								<rect
+									x={-effectiveMarginLeft + 2}
+									y={row.midY - flagSize / 2}
+									width={flagW}
+									height={flagSize}
+									fill="none"
+									stroke={FLAG_BORDER_COLOR}
+									stroke-width={FLAG_BORDER_WIDTH}
+								/>
+							{/if}
 						{/if}
 						<text
 							x={-8}
@@ -241,8 +264,8 @@
 							text-anchor="end"
 							dominant-baseline="middle"
 							font-size={yAxisFontSize}
-							fill="#64748b"
-						>{truncateToWidth(row.label, labelAvail, yAxisFontSize)}</text>
+							fill={axisColor}
+						>{truncateToWidth(flagAwareLabel(row.label, showFlags), labelAvail, yAxisFontSize)}</text>
 					{/if}
 
 					{#if showTotalLabel}
@@ -252,13 +275,13 @@
 							dy="0.35em"
 							dominant-baseline="middle"
 							font-size="12"
-							fill="#64748b"
+							fill={axisColor}
 						>{format(row.total)}</text>
 					{/if}
 				{/each}
 
 				<!-- X-axis tick labels -->
-				<g transform="translate(0,{innerHeight})">
+				<g class="x-axis" transform="translate(0,{innerHeight})">
 					{#each ticks as tick, ti}
 						<text
 							x={tick.x}
@@ -266,7 +289,7 @@
 							dy="1.2em"
 							text-anchor={ti === 0 ? 'start' : ti === ticks.length - 1 ? 'end' : 'middle'}
 							font-size="12"
-							fill="#64748b"
+							fill={axisColor}
 						>{format(tick.v)}</text>
 					{/each}
 				</g>
@@ -278,10 +301,10 @@
 				{@const rowY = legendY + ri * (LEGEND_ROW_H + LEGEND_GAP)}
 				{@const rowTotalW = row.reduce((s, item) => s + item.w, 0)}
 				{@const legendOffsetX = legendAlign === 'right'
-					? effectiveMarginLeft + innerWidth - rowTotalW
+					? Math.max(0, legendW - rowTotalW)
 					: legendAlign === 'left'
-					? effectiveMarginLeft
-					: effectiveMarginLeft + Math.max(0, (innerWidth - rowTotalW) / 2)}
+					? 0
+					: Math.max(0, (legendW - rowTotalW) / 2)}
 				<g transform="translate({legendOffsetX},{rowY})">
 					{#each row as item}
 						<rect
@@ -299,28 +322,19 @@
 							font-size="12"
 							font-weight="600"
 							fill={labelColor(colors[item.ki] ?? '#999')}
-						>{labels[item.key] ?? item.key}</text>
+						>{truncateToWidth(labels[item.key] ?? item.key, item.w - 16, 12)}</text>
 					{/each}
-					{#each row.slice(0, row.length - 1) as item}
-						<line
-							x1={item.x + item.w} y1={0}
-							x2={item.x + item.w} y2={LEGEND_ROW_H}
-							stroke="#000000"
-							stroke-width="0.5"
-							shape-rendering="crispEdges"
-						/>
-					{/each}
-					<rect
-						fill="none"
-						stroke="#000000"
-						shape-rendering="crispEdges"
-						x={0} y={0}
-						width={rowTotalW}
-						height={LEGEND_ROW_H}
-						stroke-width="0.5"
-					/>
 				</g>
 			{/each}
 		</svg>
 	{/if}
 </div>
+
+<style>
+	/* No mobile, os rótulos do eixo X se sobrepõem e ficam ilegíveis — ocultamos. */
+	@media (max-width: 720px) {
+		.x-axis {
+			display: none;
+		}
+	}
+</style>

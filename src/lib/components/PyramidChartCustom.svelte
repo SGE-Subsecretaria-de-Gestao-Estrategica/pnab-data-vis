@@ -30,7 +30,16 @@
 
 	const margin = { top: 16, right: 16, bottom: 68, left: 16 };
 	const FONT_PAD = 4;
-	const PLOT_BOTTOM_RESERVE = 52;
+	const PLOT_BOTTOM_RESERVE = 28;
+
+	// Texto dentro da barra: escuro em barras claras (ex.: amarelo), claro em escuras.
+	function labelColor(hex: string): string {
+		const r = parseInt(hex.slice(1, 3), 16) / 255;
+		const g = parseInt(hex.slice(3, 5), 16) / 255;
+		const b = parseInt(hex.slice(5, 7), 16) / 255;
+		const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+		return luminance > 0.6 ? '#1a1a1a' : '#ffffff';
+	}
 
 	const iw = $derived(containerWidth - margin.left - margin.right);
 	const ih = $derived(height - margin.top - margin.bottom);
@@ -60,7 +69,6 @@
 		})
 	);
 
-	const legendY = $derived(plotH + 38);
 	const axisLabelY = $derived(plotH + 20);
 </script>
 
@@ -82,19 +90,17 @@
 							width={row.lw}
 							height={bw}
 							fill={colors[0]}
-							stroke="#000000"
-							stroke-width="0.5"
 							shape-rendering="crispEdges"
 						/>
 						{#if row.leftFits}
 							<text
-								x={row.lx + FONT_PAD}
+								x={row.lx + row.lw / 2}
 								y={row.midY}
 								dy="0.35em"
 								font-size={row.fs}
 								font-weight="700"
-								fill="white"
-								text-anchor="start"
+								fill={labelColor(colors[0])}
+								text-anchor="middle"
 								pointer-events="none"
 							>{row.lt}</text>
 						{:else if row.lw > 0}
@@ -119,19 +125,17 @@
 							width={row.rw}
 							height={bw}
 							fill={colors[1]}
-							stroke="#000000"
-							stroke-width="0.5"
 							shape-rendering="crispEdges"
 						/>
 						{#if row.rightFits}
 							<text
-								x={row.rx + row.rw - FONT_PAD}
+								x={row.rx + row.rw / 2}
 								y={row.midY}
 								dy="0.35em"
 								font-size={row.fs}
 								font-weight="700"
-								fill="white"
-								text-anchor="end"
+								fill={labelColor(colors[1])}
+								text-anchor="middle"
 								pointer-events="none"
 							>{row.rt}</text>
 						{:else if row.rw > 0}
@@ -175,16 +179,6 @@
 					text-anchor="end"
 					fill="#000000"
 				>{rightLabel} →</text>
-
-				<!-- Legend -->
-				<g transform="translate({cx}, {legendY})">
-					<rect x={-80} y={-8} width={14} height={14} fill={colors[0]} />
-					<text x={-62} y={-1} dy="0.35em" font-size="12" text-anchor="start"
-						fill="#000000">{leftLabel}</text>
-					<rect x={20} y={-8} width={14} height={14} fill={colors[1]} />
-					<text x={38} y={-1} dy="0.35em" font-size="12" text-anchor="start"
-						fill="#000000">{rightLabel}</text>
-				</g>
 			</g>
 		</svg>
 	{/if}

@@ -30,7 +30,8 @@
 	const cpfCnpjColors = [colorScales.blue[2], colorScales.yellow[2]]; // cpf, cnpj
 </script>
 
-<section class="section">
+<section class="section-band">
+	<div class="section">
 	<header class="sec-header">
 		<p class="eyebrow">Gráfico 7</p>
 		<h2>Beneficiários e recursos por tipo de documento</h2>
@@ -49,6 +50,7 @@
 		visoes={['uf', 'estados', 'municipios']}
 		showRegiao={false}
 		showUf={false}
+		labelColor="#f0d8ec"
 	/>
 
 	<div class="scope-tag">{VISAO_LABELS[filters.visao]}</div>
@@ -56,18 +58,10 @@
 	<!-- ── Big numbers ─────────────────────────────────────────────────────── -->
 	<div class="bn-grid">
 		<div class="stat">
-			<BigNumberStat value={fmtNum(data.totalContemplados)} label="contemplados" fontSize={44} shadowDepth={4} width={360} />
-			<span class="bn-split">
-				<span style:color={cpfCnpjColors[0]}>CPF {fmtNum(data.cpf.contemplados)}</span>
-				<span style:color={cpfCnpjColors[1]}>CNPJ {fmtNum(data.cnpj.contemplados)}</span>
-			</span>
+			<BigNumberStat value={fmtNum(data.totalContemplados)} label="contemplados" fontSize={44} shadowDepth={4} width={360} labelColor="#f0d8ec" />
 		</div>
 		<div class="stat">
-			<BigNumberStat value={fmtBRL(data.totalValor)} label="valor executado" fontSize={44} shadowDepth={4} width={360} />
-			<span class="bn-split">
-				<span style:color={cpfCnpjColors[0]}>CPF {fmtBRL(data.cpf.valor)}</span>
-				<span style:color={cpfCnpjColors[1]}>CNPJ {fmtBRL(data.cnpj.valor)}</span>
-			</span>
+			<BigNumberStat value={fmtBRL(data.totalValor)} label="valor executado" fontSize={44} shadowDepth={4} width={360} labelColor="#f0d8ec" />
 		</div>
 	</div>
 
@@ -81,15 +75,21 @@
 			format={fmtPct}
 			marginLeft={150}
 			legendAlign="left"
+			axisColor="#f0d8ec"
 		/>
+	</div>
 	</div>
 </section>
 
 <style>
+	.section-band {
+		background: #a44c7f;
+	}
+
 	.section {
 		max-width: 1200px;
 		margin: 0 auto;
-		padding: 1rem 2rem 5rem;
+		padding: 4rem 2rem 5rem;
 	}
 
 	.sec-header {
@@ -101,21 +101,21 @@
 		font-weight: 700;
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
-		color: #1351b4;
+		color: #f0d8ec;
 		margin: 0 0 0.4rem;
 	}
 
 	.sec-header h2 {
 		font-size: 1.6rem;
 		font-weight: 800;
-		color: #1b1b1b;
+		color: #ffffff;
 		margin: 0 0 0.4rem;
 		line-height: 1.15;
 	}
 
 	.lead {
 		font-size: 0.98rem;
-		color: #555;
+		color: #f0d8ec;
 		margin: 0;
 		line-height: 1.5;
 		max-width: 70ch;
@@ -125,8 +125,8 @@
 		display: inline-block;
 		font-size: 0.74rem;
 		font-weight: 600;
-		color: #1351b4;
-		background: rgba(19, 81, 180, 0.08);
+		color: #f0d8ec;
+		background: rgba(255, 255, 255, 0.14);
 		padding: 0.3rem 0.7rem;
 		border-radius: 0;
 		margin-bottom: 1rem;
@@ -146,20 +146,9 @@
 		gap: 0.2rem;
 	}
 
-	.bn-split {
-		display: flex;
-		gap: 1rem;
-		margin-top: 0.35rem;
-		font-size: 0.78rem;
-		font-weight: 700;
-		font-variant-numeric: tabular-nums;
-	}
-
 	.chart-card {
-		border: 1px solid rgba(0, 0, 0, 0.1);
 		border-radius: 0;
 		padding: 1.25rem 1.5rem 1rem;
-		background: rgba(255, 255, 255, 0.45);
 	}
 
 	@media (max-width: 720px) {

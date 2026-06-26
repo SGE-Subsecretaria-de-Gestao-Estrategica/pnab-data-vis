@@ -62,11 +62,13 @@ export const UF_LIST = Object.keys(siglaToName).sort();
 export interface UfRow {
 	uf: string;
 	valor: number;        // valor executado (R$)
+	repassado: number;    // valor repassado pelo MinC (R$); 0 = indisponível na fonte
 	contemplados: number;
 	populacao: number;
 	percapita: number;
 	valorUrbano: number;  // valor executado em zona urbana (R$)
 	valorRural: number;   // valor executado em zona rural (R$)
+	numeroMunicipios: number; // nº de municípios contemplados na UF
 }
 
 function rowsFrom(raw: string): Record<string, UfRow> {
@@ -76,11 +78,13 @@ function rowsFrom(raw: string): Record<string, UfRow> {
 		out[d.uf] = {
 			uf: d.uf,
 			valor: +d.valor_executado_rs || 0,
+			repassado: +d.valor_repassado || 0,
 			contemplados: +d.qtde_contemplados || 0,
 			populacao: +d.sum_populacao || 0,
 			percapita: +d.valor_executado_percapita || 0,
 			valorUrbano: +d.valor_urbano || 0,
 			valorRural: +d.valor_rural || 0,
+			numeroMunicipios: +d.numero_municipios || 0,
 		};
 	}
 	return out;
@@ -105,24 +109,28 @@ export const rowsByVisao: Record<Visao, Record<string, UfRow>> = {
 export interface RegionAgg {
 	regiao: Regiao;
 	valor: number;
+	repassado: number;
 	contemplados: number;
 	populacao: number;
 	valorUrbano: number;
 	valorRural: number;
+	numeroMunicipios: number;
 	ufs: string[];
 }
 
 export const regionAgg: Record<Regiao, RegionAgg> = (() => {
 	const acc = {} as Record<Regiao, RegionAgg>;
-	for (const r of REGIOES) acc[r] = { regiao: r, valor: 0, contemplados: 0, populacao: 0, valorUrbano: 0, valorRural: 0, ufs: [] };
+	for (const r of REGIOES) acc[r] = { regiao: r, valor: 0, repassado: 0, contemplados: 0, populacao: 0, valorUrbano: 0, valorRural: 0, numeroMunicipios: 0, ufs: [] };
 	for (const [uf, row] of Object.entries(ufRows)) {
 		const r = regionMap[uf];
 		if (!r) continue;
 		acc[r].valor += row.valor;
+		acc[r].repassado += row.repassado;
 		acc[r].contemplados += row.contemplados;
 		acc[r].populacao += row.populacao;
 		acc[r].valorUrbano += row.valorUrbano;
 		acc[r].valorRural += row.valorRural;
+		acc[r].numeroMunicipios += row.numeroMunicipios;
 		acc[r].ufs.push(uf);
 	}
 	return acc;
@@ -134,16 +142,17 @@ export const NUM_MUNICIPIOS = 5098;
 
 // ── National totals per visão (sum across all 27 UFs) ─────────────────────────
 function totals(rows: Record<string, UfRow>) {
-	let valor = 0, contemplados = 0, populacao = 0;
+	let valor = 0, repassado = 0, contemplados = 0, populacao = 0;
 	for (const r of Object.values(rows)) {
 		valor += r.valor;
+		repassado += r.repassado;
 		contemplados += r.contemplados;
 		populacao += r.populacao;
 	}
-	return { valor, contemplados, populacao };
+	return { valor, repassado, contemplados, populacao };
 }
 
-export const nationalTotals: Record<Visao, { valor: number; contemplados: number; populacao: number }> = {
+export const nationalTotals: Record<Visao, { valor: number; repassado: number; contemplados: number; populacao: number }> = {
 	uf: totals(ufRows),
 	estados: totals(stRows),
 	municipios: totals(munRows),

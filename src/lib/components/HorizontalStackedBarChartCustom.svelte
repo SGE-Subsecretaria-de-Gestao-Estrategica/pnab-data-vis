@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { CHART_ROW_HEIGHT, BAR_FILL, FLAG_RATIO, FLAG_GAP, FLAG_BORDER_COLOR, FLAG_BORDER_WIDTH, hasFlag, flagId, flagTitle, flagAwareLabel, truncateToWidth } from '$lib/chartStandards';
+	import { createMediaQuery } from '$lib/utils/media.svelte';
+
+	// No mobile a legenda é sempre centralizada, independente de `legendAlign`.
+	const isMobile = createMediaQuery('(max-width: 768px)');
 
 	type DataRow = Record<string, string | number>;
 
@@ -24,6 +28,7 @@
 		flagBorder = true,
 		flagBasePath = `${base}/flags/states`,
 		axisColor = '#64748b',
+		gridColor = '#e2e8f0',
 	}: {
 		width?: number;
 		data?: DataRow[];
@@ -45,6 +50,8 @@
 		flagBasePath?: string;
 		/** Cor dos rótulos de eixo (categorias Y, ticks X e total). */
 		axisColor?: string;
+		/** Cor das linhas de grade/referência verticais (tracejadas). */
+		gridColor?: string;
 	} = $props();
 
 	let measuredWidth = $state(0);
@@ -166,9 +173,12 @@
 		return result;
 	});
 
-	const legendY         = $derived(MT + innerHeight + XAXIS_H);
+	const LEGEND_CHART_GAP = 12; // espaço entre a legenda (topo) e o início do gráfico
 	const legendTotalH    = $derived(legendRows.length * LEGEND_ROW_H + Math.max(0, legendRows.length - 1) * LEGEND_GAP);
-	const totalHeight     = $derived(MT + innerHeight + XAXIS_H + legendTotalH + 16);
+	// Legenda no topo; o gráfico começa abaixo dela.
+	const legendY         = $derived(MT);
+	const chartTop        = $derived(MT + legendTotalH + LEGEND_CHART_GAP);
+	const totalHeight     = $derived(chartTop + innerHeight + XAXIS_H + 8);
 </script>
 
 <div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
@@ -181,18 +191,20 @@
 			font-family={FONT_FAMILY}
 			style="overflow: visible;"
 		>
-			<g transform="translate({effectiveMarginLeft},{MT})">
+			<g transform="translate({effectiveMarginLeft},{chartTop})">
 
 				<!-- Vertical grid lines -->
-				{#each ticks as tick}
-					<line
-						x1={tick.x} y1={0}
-						x2={tick.x} y2={innerHeight}
-						stroke="#e2e8f0"
-						stroke-width="1"
-						stroke-dasharray="3,3"
-					/>
-				{/each}
+				{#if !isMobile.matches}
+					{#each ticks as tick}
+						<line
+							x1={tick.x} y1={0}
+							x2={tick.x} y2={innerHeight}
+							stroke={gridColor}
+							stroke-width="1"
+							stroke-dasharray="3,3"
+						/>
+					{/each}
+				{/if}
 
 				<!-- Bars + labels (all rects first, then all labels on top so
 				     a label overflowing into the next segment isn't painted over) -->
@@ -300,7 +312,9 @@
 			{#each legendRows as row, ri}
 				{@const rowY = legendY + ri * (LEGEND_ROW_H + LEGEND_GAP)}
 				{@const rowTotalW = row.reduce((s, item) => s + item.w, 0)}
-				{@const legendOffsetX = legendAlign === 'right'
+				{@const legendOffsetX = isMobile.matches
+					? Math.max(0, (legendW - rowTotalW) / 2)
+					: legendAlign === 'right'
 					? Math.max(0, legendW - rowTotalW)
 					: legendAlign === 'left'
 					? 0
@@ -316,9 +330,10 @@
 							shape-rendering="crispEdges"
 						/>
 						<text
-							x={item.x + 8}
+							x={isMobile.matches ? item.x + item.w / 2 : item.x + 8}
 							y={LEGEND_ROW_H / 2}
 							dy="0.35em"
+							text-anchor={isMobile.matches ? 'middle' : 'start'}
 							font-size="12"
 							font-weight="600"
 							fill={labelColor(colors[item.ki] ?? '#999')}

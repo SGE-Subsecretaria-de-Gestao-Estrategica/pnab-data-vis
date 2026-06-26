@@ -1,28 +1,30 @@
 <script lang="ts">
 	import DashboardFilterBar from '$lib/components/DashboardFilterBar.svelte';
 	import HorizontalBarChartCustom from '$lib/components/HorizontalBarChartCustom.svelte';
-	import { createDashboardFilters, VISAO_LABELS } from '$lib/stores/dashboardFilters.svelte';
+	import { createDashboardFilters } from '$lib/stores/dashboardFilters.svelte';
 	import { colorScales } from 'sniic-design-system';
-	import { orgByRegiao } from '$lib/data/section9';
+	import { orgScope } from '$lib/data/section9';
+	import { siglaToName } from '$lib/data/dashboard';
 
-	// Natureza jurídica só existe em nível nacional + por região, então iniciamos
-	// na visão "Regiões" (única com dados); a quebra vem do seletor de Região.
-	const filters = createDashboardFilters('regioes');
+	const filters = createDashboardFilters();
 
 	const fmtNum = (v: number) => v.toLocaleString('pt-BR');
 	const fmtPct = (v: number) => v.toFixed(1).replace('.', ',') + '%';
 
-	const hasData = $derived(filters.visao === 'regioes');
-	const scope = $derived(orgByRegiao[filters.regiao] ?? orgByRegiao.Todas);
+	const scope = $derived(orgScope(filters.visao, filters.filteredUFs));
+	const hasData = $derived(scope.total > 0);
 
-	const scopeLabel = $derived(filters.regiao === 'Todas' ? 'Brasil' : `Região ${filters.regiao}`);
+	const scopeLabel = $derived.by(() => {
+		if (filters.uf !== 'Todas') return siglaToName[filters.uf] ?? filters.uf;
+		if (filters.regiao !== 'Todas') return `Região ${filters.regiao}`;
+		return 'Brasil';
+	});
 	const topOrg = $derived(scope.bars[0]);
 </script>
 
 <section class="section-band">
 	<div class="section">
 	<header class="sec-header">
-		<p class="eyebrow">Gráfico 9</p>
 		<h2>Contemplados PJ por tipo de organização</h2>
 		<p class="lead">
 			Distribuição das pessoas jurídicas contempladas pela Aldir Blanc por natureza jurídica.
@@ -41,7 +43,7 @@
 		<div class="chart-card">
 			<HorizontalBarChartCustom
 				data={scope.bars}
-				color={colorScales.blue[2]}
+				color={colorScales.teal[2]}
 				format={fmtNum}
 				xLabel="Contemplados"
 				margin={{ top: 20, right: 56, bottom: 40, left: 256 }}
@@ -53,10 +55,8 @@
 	{:else}
 		<div class="empty">
 			<p>
-				A distribuição por natureza jurídica está disponível apenas na visão
-				<strong>Regiões</strong> (e no total Brasil). Selecione <strong>Regiões</strong> no filtro
-				de visão acima — os dados de PJ não têm quebra por
-				<em>{VISAO_LABELS[filters.visao]}</em>.
+				Não há contemplados de pessoa jurídica no recorte
+				<strong>{scopeLabel}</strong> para esta visão. Ajuste os filtros acima.
 			</p>
 		</div>
 	{/if}
@@ -65,7 +65,7 @@
 
 <style>
 	.section-band {
-		background: #ea662f;
+		background: #883a67;
 	}
 
 	.section {
@@ -76,15 +76,6 @@
 
 	.sec-header {
 		margin-bottom: 1.5rem;
-	}
-
-	.eyebrow {
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		color: #fff4e9;
-		margin: 0 0 0.4rem;
 	}
 
 	.sec-header h2 {

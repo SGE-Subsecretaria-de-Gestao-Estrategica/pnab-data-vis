@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { FLAG_RATIO, FLAG_GAP, FLAG_BORDER_COLOR, FLAG_BORDER_WIDTH, hasFlag, flagId, flagTitle, flagAwareLabel, truncateToWidth } from '$lib/chartStandards';
+	import { createMediaQuery } from '$lib/utils/media.svelte';
 	import type { FaixaEntity } from '$lib/data/faixa';
+
+	// No mobile a legenda é centralizada na área de barras.
+	const isMobile = createMediaQuery('(max-width: 768px)');
 
 	interface Props {
 		entities: FaixaEntity[];
@@ -58,7 +62,7 @@
 	const barAreaW = $derived(Math.max(0, containerWidth - LBL_W - SUB_W - MR));
 
 	const blocks = $derived(
-		entities.map((e, i) => ({ entity: e, y: MT + i * (BLOCK_H + BLOCK_GAP) }))
+		entities.map((e, i) => ({ entity: e, y: blocksTop + i * (BLOCK_H + BLOCK_GAP) }))
 	);
 
 	function labelColor(hex: string): string {
@@ -111,8 +115,10 @@
 		legendRows.length * LEG_ROW_H + Math.max(0, legendRows.length - 1) * LEG_GAP
 	);
 
-	const legendTop = $derived(MT + entities.length * (BLOCK_H + BLOCK_GAP) + LEG_TOP);
-	const chartH = $derived(legendTop + legendTotalH + 4);
+	// Legenda no topo; os blocos das entidades começam abaixo dela.
+	const legendTop = MT;
+	const blocksTop = $derived(MT + legendTotalH + LEG_TOP);
+	const chartH = $derived(blocksTop + entities.length * (BLOCK_H + BLOCK_GAP) + 4);
 </script>
 
 <div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
@@ -187,13 +193,15 @@
 				</g>
 
 				{#if entity.isBrasil}
-					<line x1={LBL_W} y1={y + BLOCK_H + BLOCK_GAP / 2} x2={containerWidth - MR} y2={y + BLOCK_H + BLOCK_GAP / 2} stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3 3" />
+					<line x1={LBL_W} y1={y + BLOCK_H + BLOCK_GAP / 2} x2={containerWidth - MR} y2={y + BLOCK_H + BLOCK_GAP / 2} stroke="#000000" stroke-width="1" stroke-dasharray="3 3" />
 				{/if}
 			{/each}
 
 			<!-- Legend: caixas coloridas contíguas com rótulo dentro (padrão gráficos 4/5) -->
 			{#each legendRows as row, ri}
-				<g transform={`translate(${LBL_W + SUB_W}, ${legendTop + ri * (LEG_ROW_H + LEG_GAP)})`}>
+				{@const rowTotalW = row.reduce((s, item) => s + item.w, 0)}
+				{@const legendOffsetX = isMobile.matches ? (containerWidth - rowTotalW) / 2 - (LBL_W + SUB_W) : 0}
+				<g transform={`translate(${LBL_W + SUB_W + legendOffsetX}, ${legendTop + ri * (LEG_ROW_H + LEG_GAP)})`}>
 					{#each row as item}
 						<rect
 							x={item.x}
@@ -204,9 +212,10 @@
 							shape-rendering="crispEdges"
 						/>
 						<text
-							x={item.x + 8}
+							x={isMobile.matches ? item.x + item.w / 2 : item.x + 8}
 							y={LEG_ROW_H / 2}
 							dy="0.35em"
+							text-anchor={isMobile.matches ? 'middle' : 'start'}
 							font-size="12"
 							font-weight="600"
 							fill={labelColor(colors[item.i] ?? '#999')}

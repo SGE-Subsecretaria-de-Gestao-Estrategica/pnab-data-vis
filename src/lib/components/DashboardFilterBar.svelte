@@ -8,6 +8,8 @@
 		filters: DashboardFilters;
 		/** Limit which visão options are offered (default: all). */
 		visoes?: Visao[];
+		/** Show the visão (entity level) dropdown (default true). */
+		showVisao?: boolean;
 		/** Show the región scoping dropdown (default true). */
 		showRegiao?: boolean;
 		/** Show the UF scoping dropdown (default true). */
@@ -18,27 +20,32 @@
 		labelColor?: string;
 	}
 
-	let { filters, visoes, showRegiao = true, showUf = true, showCompare = false, labelColor = '#666' }: Props = $props();
+	let { filters, visoes, showVisao = true, showRegiao = true, showUf = true, showCompare = false, labelColor = '#666' }: Props = $props();
 
 	// Opções para o segundo estado: as UFs do escopo, exceto a já selecionada.
 	const compareOptions = $derived(filters.ufsForRegiao.filter((u) => u !== filters.uf));
 
+	// "regioes" não é mais uma visão selecionável nos filtros.
 	const visaoOptions = $derived(
-		(visoes ?? (Object.keys(VISAO_LABELS) as Visao[])).map((v) => [v, VISAO_LABELS[v]] as const)
+		(visoes ?? (Object.keys(VISAO_LABELS) as Visao[]))
+			.filter((v) => v !== 'regioes')
+			.map((v) => [v, VISAO_LABELS[v]] as const)
 	);
 
 	const hasSelection = $derived(filters.uf !== 'Todas' || filters.regiao !== 'Todas');
 </script>
 
 <div class="filter-bar" style="--filter-label-color: {labelColor};">
-	<div class="filter-group">
-		<span class="filter-label">Visão</span>
-		<select aria-label="Visão" value={filters.visao} onchange={(e) => (filters.visao = e.currentTarget.value as Visao)}>
-			{#each visaoOptions as [key, label]}
-				<option value={key}>{label}</option>
-			{/each}
-		</select>
-	</div>
+	{#if showVisao}
+		<div class="filter-group">
+			<span class="filter-label">Visão</span>
+			<select aria-label="Visão" value={filters.visao} onchange={(e) => (filters.visao = e.currentTarget.value as Visao)}>
+				{#each visaoOptions as [key, label]}
+					<option value={key}>{label}</option>
+				{/each}
+			</select>
+		</div>
+	{/if}
 
 	{#if showRegiao}
 		<div class="filter-group">

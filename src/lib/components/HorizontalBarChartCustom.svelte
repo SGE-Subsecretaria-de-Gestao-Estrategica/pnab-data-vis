@@ -23,6 +23,8 @@
 		labelColor = '#64748b',
 		axisColor = '#888',
 		outsideValueColor = '#334155',
+		gridColor = '#e8e8e8',
+		zeroLineColor = '#d0d0d0',
 	}: {
 		width?: number;
 		data?: BarDatum[];
@@ -42,6 +44,10 @@
 		axisColor?: string;
 		/** Cor dos rótulos de valor exibidos fora da barra (barras curtas). */
 		outsideValueColor?: string;
+		/** Cor das linhas de grade/referência verticais (tracejadas). */
+		gridColor?: string;
+		/** Cor da linha de referência do zero (eixo). */
+		zeroLineColor?: string;
 	} = $props();
 
 	const FONT = "'Rawline', system-ui, sans-serif";
@@ -111,18 +117,20 @@
 		<svg width={containerWidth} height={svgHeight} role="img" font-family={FONT}>
 			<g transform="translate({effLeft},{margin.top})">
 				<!-- Vertical grid lines -->
-				{#each tickValues as tick}
-					{@const tx = xScale(tick)}
-					<line
-						x1={tx}
-						y1={0}
-						x2={tx}
-						y2={innerH}
-						stroke={tick === 0 ? '#d0d0d0' : '#e8e8e8'}
-						stroke-width={tick === 0 ? 1 : 0.75}
-						stroke-dasharray={tick === 0 ? 'none' : '3 3'}
-					/>
-				{/each}
+				<g class="grid-lines">
+					{#each tickValues as tick}
+						{@const tx = xScale(tick)}
+						<line
+							x1={tx}
+							y1={0}
+							x2={tx}
+							y2={innerH}
+							stroke={tick === 0 ? zeroLineColor : gridColor}
+							stroke-width={tick === 0 ? 1 : 0.75}
+							stroke-dasharray={tick === 0 ? 'none' : '3 3'}
+						/>
+					{/each}
+				</g>
 
 				<!-- Bars -->
 				{#each sorted as d, i}
@@ -230,6 +238,9 @@
 	/* No mobile, os rótulos do eixo X se sobrepõem e ficam ilegíveis — ocultamos. */
 	@media (max-width: 720px) {
 		.x-axis {
+			display: none;
+		}
+		.grid-lines {
 			display: none;
 		}
 	}

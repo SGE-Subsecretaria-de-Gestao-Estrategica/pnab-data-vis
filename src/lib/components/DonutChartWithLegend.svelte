@@ -27,8 +27,8 @@
 	const LABEL_CHAR_W = 7;     // px/char for the 12px arc labels (% + valor)
 	const LABEL_GAP_FR = 0.06;  // distância do label fora do arco, fração do raio
 
-	// Legend (horizontal row, centered below the donut)
-	const LEGEND_H      = 40;   // vertical space reserved below the donut
+	// Legend (horizontal row, centered above the donut)
+	const LEGEND_H      = 40;   // vertical space reserved above the donut
 	const SWATCH        = 13;   // legend color square size
 	const SWATCH_GAP    = 7;    // gap between swatch and its label
 	const ITEM_GAP      = 22;   // gap between legend items
@@ -37,7 +37,11 @@
 	let measuredWidth = $state(0);
 	const containerWidth = $derived(width ?? measuredWidth);
 
-	// Largest arc label (% ou valor absoluto) em px — reserva espaço lateral p/ não cortar
+	// Reserva lateral para os rótulos fora do arco (% e valor). É limitada (clamp)
+	// para que rótulos largos — ex.: moeda "R$ 1,2 mi" ao selecionar valor executado —
+	// não encolham o donut no mobile; o excedente desenha sobre o padding do card
+	// (SVG com overflow: visible), em vez de reduzir o raio.
+	const MAX_LABEL_RESERVE = 52; // px
 	const maxLabelW = $derived((() => {
 		const t = data.reduce((s, d) => s + d.value, 0);
 		let chars = 0;
@@ -45,11 +49,11 @@
 			const perc = t > 0 ? `${((d.value / t) * 100).toFixed(1)}%` : '';
 			chars = Math.max(chars, perc.length, format(d.value).length);
 		}
-		return chars * LABEL_CHAR_W;
+		return Math.min(chars * LABEL_CHAR_W, MAX_LABEL_RESERVE);
 	})());
 
 	// Donut area = full container width (capped so it doesn't float in a huge
-	// empty space), centered. Legend goes below, so no lateral reservation.
+	// empty space), centered. Legend goes above, so no lateral reservation.
 	const donutAreaW = $derived(Math.min(containerWidth, height * 1.5));
 	// Raio máximo que cabe reservando os labels nas laterais (h) e topo/base (v)
 	const outerRadius = $derived(
@@ -63,10 +67,11 @@
 	);
 	const innerRadius = $derived(outerRadius * innerRadiusFraction);
 	const cx          = $derived(containerWidth / 2);
-	const cy          = $derived(height / 2);
+	// Legenda no topo: o donut é deslocado para baixo da faixa da legenda.
+	const cy          = $derived(LEGEND_H + height / 2);
 
 	const svgWidth  = $derived(containerWidth);
-	const svgHeight = $derived(height + LEGEND_H);
+	const svgHeight = $derived(LEGEND_H + height);
 
 	// Pie arcs
 	const pieFn = pie<{ label: string; value: number }>()
@@ -105,7 +110,7 @@
 			return { ...it, x };
 		});
 	});
-	const legendY = $derived(height + LEGEND_H / 2);
+	const legendY = $derived(LEGEND_H / 2);
 </script>
 
 <div bind:clientWidth={measuredWidth} style="width:{width ? width + 'px' : '100%'};">
@@ -116,6 +121,7 @@
 			role="img"
 			aria-label="Donut chart"
 			font-family={FONT_FAMILY}
+			style="overflow: visible;"
 		>
 			<!-- Arcs -->
 			<g transform="translate({cx},{cy})">
@@ -166,7 +172,7 @@
 				{/if}
 			</g>
 
-			<!-- Legend — horizontal row, centered below the donut -->
+			<!-- Legend — horizontal row, centered above the donut -->
 			<g transform="translate(0,{legendY})">
 				{#each legendItems as item}
 					<rect

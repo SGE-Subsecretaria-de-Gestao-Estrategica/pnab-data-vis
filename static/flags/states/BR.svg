@@ -10,16 +10,18 @@
 	<rect width="1000" height="700" fill="#009C3B"/>
 	<polygon points="85,350 500,85 915,350 500,615" fill="#FFDF00"/>
 	<circle cx="500" cy="350" r="175" fill="#002776"/>
-	<path d="M120,352 Q500,452 880,352 L880,376 Q500,496 120,376Z" fill="#FFFFFF" clip-path="url(#brglobe)"/>
-	<g clip-path="url(#brglobe)">
-		<use href="#brstar" transform="translate(440,250) scale(13)"/>
-		<use href="#brstar" transform="translate(500,210) scale(15)"/>
-		<use href="#brstar" transform="translate(560,250) scale(13)"/>
-		<use href="#brstar" transform="translate(420,310) scale(11)"/>
-		<use href="#brstar" transform="translate(500,295) scale(12)"/>
-		<use href="#brstar" transform="translate(580,310) scale(11)"/>
-		<use href="#brstar" transform="translate(465,505) scale(12)"/>
-		<use href="#brstar" transform="translate(535,505) scale(10)"/>
-		<use href="#brstar" transform="translate(500,470) scale(9)"/>
+	<g transform="rotate(180 500 350)">
+		<path d="M120,352 Q500,452 880,352 L880,376 Q500,496 120,376Z" fill="#FFFFFF" clip-path="url(#brglobe)"/>
+		<g clip-path="url(#brglobe)">
+			<use href="#brstar" transform="translate(440,250) scale(13)"/>
+			<use href="#brstar" transform="translate(500,210) scale(15)"/>
+			<use href="#brstar" transform="translate(560,250) scale(13)"/>
+			<use href="#brstar" transform="translate(420,310) scale(11)"/>
+			<use href="#brstar" transform="translate(500,295) scale(12)"/>
+			<use href="#brstar" transform="translate(580,310) scale(11)"/>
+			<use href="#brstar" transform="translate(465,505) scale(12)"/>
+			<use href="#brstar" transform="translate(535,505) scale(10)"/>
+			<use href="#brstar" transform="translate(500,470) scale(9)"/>
+		</g>
 	</g>
 </svg>

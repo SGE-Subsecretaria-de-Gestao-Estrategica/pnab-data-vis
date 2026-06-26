@@ -35,14 +35,15 @@
 	const centerValue = $derived(isValor ? fmtBRL(valorTotalPF) : fmtNum(totalPF));
 	const centerLabel = $derived(isValor ? 'valor executado' : 'agentes');
 
-	// Feminino = azul, Masculino = amarelo (mesmo padrão dos demais gráficos de sexo)
-	const donutColors = [colorScales.blue[2], colorScales.yellow[2]]; // [Feminino, Masculino]
-	const pyramidColors: [string, string] = [colorScales.yellow[2], colorScales.blue[2]]; // [Masc, Fem]
+	// Sobre o roxo: teal (frio) e amarelo (quente) se destacam bem do fundo.
+	// Feminino = teal, Masculino = amarelo.
+	const donutColors = [colorScales.teal[2], colorScales.yellow[2]]; // [Feminino, Masculino]
+	const pyramidColors: [string, string] = [colorScales.yellow[2], colorScales.teal[2]]; // [Masc, Fem]
 </script>
 
-<section class="section">
+<section class="section-band">
+	<div class="section">
 	<header class="sec-header">
-		<p class="eyebrow">Gráfico 8</p>
 		<h2>Distribuição por gênero</h2>
 		<p class="lead">
 			Perfil dos agentes culturais pessoa física contemplados pela Aldir Blanc. As mulheres
@@ -91,9 +92,14 @@
 			/>
 		</div>
 	</div>
+	</div>
 </section>
 
 <style>
+	.section-band {
+		background: #883a67;
+	}
+
 	.section {
 		max-width: 1200px;
 		margin: 0 auto;
@@ -104,26 +110,17 @@
 		margin-bottom: 1.5rem;
 	}
 
-	.eyebrow {
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		color: #1351b4;
-		margin: 0 0 0.4rem;
-	}
-
 	.sec-header h2 {
 		font-size: 1.6rem;
 		font-weight: 800;
-		color: #1b1b1b;
+		color: #ffffff;
 		margin: 0 0 0.4rem;
 		line-height: 1.15;
 	}
 
 	.lead {
 		font-size: 0.98rem;
-		color: #555;
+		color: #fff;
 		margin: 0;
 		line-height: 1.5;
 		max-width: 70ch;
@@ -143,7 +140,7 @@
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: #666;
+		color: #fff;
 	}
 
 	.seg {
@@ -194,11 +191,22 @@
 		overflow: hidden;
 	}
 
+	/* Card transparente sobre o roxo: recolorimos para branco apenas os rótulos de
+	   eixo, que têm cor escura fixa no SVG (#000000 na pirâmide; #1e293b/#64748b no
+	   donut). Os rótulos DENTRO das barras já usam cor de contraste do próprio
+	   componente (preto sobre amarelo, branco sobre teal), então ficam intactos.
+	   (Atributo `fill` do SVG é sobreposto pela propriedade CSS `fill`.) */
+	.chart-card :global(text[fill='#000000']),
+	.chart-card :global(text[fill='#1e293b']),
+	.chart-card :global(text[fill='#64748b']) {
+		fill: #ffffff;
+	}
+
 	.chart-title {
 		margin: 0 0 0.75rem;
 		font-size: 1rem;
 		font-weight: 700;
-		color: #1b1b1b;
+		color: #ffffff;
 	}
 
 	@media (max-width: 860px) {

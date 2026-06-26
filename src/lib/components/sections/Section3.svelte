@@ -8,7 +8,7 @@
 	const filters = createDashboardFilters();
 
 	// Municipality-level faixa data doesn't exist — offer only the supported visões.
-	const VISOES = ['uf', 'estados', 'regioes'] as const;
+	const VISOES = ['uf', 'estados'] as const;
 
 	const FAIXA_COLORS = [
 		colorScales.blue[0],
@@ -40,7 +40,6 @@
 <section class="section-band">
 	<div class="section">
 	<header class="sec-header">
-		<p class="eyebrow">Gráfico 3</p>
 		<h2>Distribuição por faixa de valor</h2>
 		<p class="lead">
 			Para cada ente federativo, duas barras: a participação de cada faixa de valor no
@@ -66,7 +65,7 @@
 
 <style>
 	.section-band {
-		background: #ffffff;
+		background: #f6c341;
 	}
 
 	.section {
@@ -77,15 +76,6 @@
 
 	.sec-header {
 		margin-bottom: 1.5rem;
-	}
-
-	.eyebrow {
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		color: #1351B4;
-		margin: 0 0 0.4rem;
 	}
 
 	.sec-header h2 {

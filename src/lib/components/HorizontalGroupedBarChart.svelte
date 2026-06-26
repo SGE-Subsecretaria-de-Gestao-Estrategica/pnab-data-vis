@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { createMediaQuery } from '$lib/utils/media.svelte';
+
 	export interface GroupedBarRow {
 		label: string;
 		values: number[]; // one value per series, same order as seriesLabels
@@ -39,6 +41,9 @@
 		crispEdges?: boolean;
 		labelsInside?: boolean;
 	} = $props();
+
+	// No mobile a legenda inferior é centralizada.
+	const isMobile = createMediaQuery('(max-width: 768px)');
 
 	function labelColor(hex: string): string {
 		const r = parseInt(hex.slice(1, 3), 16) / 255;
@@ -182,14 +187,16 @@
 			<!-- grid lines -->
 			{#each xTicks as tick}
 				{@const x = margin.left + scaleX(tick)}
-				<line
-					x1={x}
-					y1={margin.top - 6}
-					x2={x}
-					y2={margin.top + totalContentH}
-					stroke="#e5e5e5"
-					stroke-width="1"
-				/>
+				{#if !isMobile.matches}
+					<line
+						x1={x}
+						y1={margin.top - 6}
+						x2={x}
+						y2={margin.top + totalContentH}
+						stroke="#e5e5e5"
+						stroke-width="1"
+					/>
+				{/if}
 				<text x={x} y={margin.top + totalContentH + 14} text-anchor="middle" font-size="12" fill="#666"
 					>{format(tick)}</text
 				>
@@ -288,7 +295,7 @@
 					{@const rowY = legendStartY + ri * (LEGEND_BLOCK_H + LEGEND_ROW_GAP)}
 					{@const rowItems = row.map((idx) => ({ item: legendAllItems[idx], w: legendNaturalW[idx] }))}
 					{@const rowTotalW = rowItems.reduce((s, r) => s + r.w, 0)}
-					{@const rowOffsetX = margin.left}
+					{@const rowOffsetX = isMobile.matches ? margin.left + Math.max(0, (innerW - rowTotalW) / 2) : margin.left}
 					{#each rowItems as { item, w }, col}
 						{@const bx = rowOffsetX + rowItems.slice(0, col).reduce((s, r) => s + r.w, 0)}
 						{#if item.secondLabel && item.secondColor}

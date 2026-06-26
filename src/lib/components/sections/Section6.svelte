@@ -7,7 +7,7 @@
 	// ── Fixed porte color palette (mesma usada nos demais gráficos de porte) ──────
 	const PORTE_NAME_COLORS: Record<string, string> = {
 		Grande: categorical8[0], // azul
-		Médio: categorical8[3], // amarelo
+		Médio: categorical8[4], // roxo
 		'Pequeno I': categorical8[1], // laranja
 		'Pequeno II': categorical8[2], // verde
 	};
@@ -75,7 +75,6 @@
 
 <section class="section">
 	<header class="sec-header">
-		<p class="eyebrow">Gráfico 6</p>
 		<h2>Distribuição do recurso por porte municipal</h2>
 		<p class="lead">
 			Valor executado por tamanho de município. Os
@@ -198,15 +197,6 @@
 
 	.sec-header {
 		margin-bottom: 1.5rem;
-	}
-
-	.eyebrow {
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		color: #1351b4;
-		margin: 0 0 0.4rem;
 	}
 
 	.sec-header h2 {

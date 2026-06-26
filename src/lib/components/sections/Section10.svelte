@@ -149,9 +149,15 @@
 	</div>
 {/snippet}
 
-<section class="section">
+<!-- Abertura da Seção 3 (ações apoiadas): título em "big number" sobre o teal,
+     espelhando as heros das seções 1 e 2. -->
+<section class="hero-band">
+	<h1>QUAIS AÇÕES CULTURAIS FORAM APOIADAS COM OS RECURSOS DA ALDIR BLANC?</h1>
+</section>
+
+<section class="section-band">
+	<div class="section">
 	<header class="sec-header">
-		<p class="eyebrow">Capítulo 6</p>
 		<h2>Distribuição de recursos por tipo de despesa</h2>
 		<p class="lead">
 			Para onde foram os <strong>{formatBRL(expensesGrandTotal)}</strong> executados pela Aldir
@@ -169,7 +175,7 @@
 	<!-- 2 · Treemap de domínios de Fomento Cultural -->
 	<div class="block">
 		<h3 class="block-title">Domínios de Fomento Cultural</h3>
-		<div class="chart-card">
+		<div class="chart-card chart-card--frame">
 			<div class="tm-wrap" bind:clientWidth={tmWidth}>
 			{#if tmWidth > 0}
 			<svg
@@ -242,10 +248,11 @@
 				data={tipoExecRegiaoData}
 				keys={[...tipoExecRegiaoKeys]}
 				labels={tipoExecRegiaoLabels}
-				colors={categorical8.slice(0, 3)}
+				colors={[categorical8[4], categorical8[1], categorical8[3]]}
 				format={fmtPct}
 				marginLeft={120}
 				legendAlign="left"
+				axisColor="#ffffff"
 			/>
 		</div>
 	</div>
@@ -259,11 +266,11 @@
 					data={pncvOuOutrosData}
 					keys={[...pncvOuOutrosKeys]}
 					labels={pncvOuOutrosLabels}
-					colors={[...colorPairs.bluePurple]}
+					colors={[...colorPairs.purpleYellow].reverse()}
 					format={fmtPct}
 					marginLeft={280}
 					legendAlign="left"
-					axisColor="#000000"
+					axisColor="#ffffff"
 				/>
 			</div>
 		</div>
@@ -278,11 +285,11 @@
 					data={pncvNatJuridicaData}
 					keys={[...pncvNatJuridicaKeys]}
 					labels={pncvNatJuridicaLabels}
-					colors={[...colorPairs.bluePurple]}
+					colors={[...colorPairs.purpleYellow].reverse()}
 					format={fmtPct}
 					marginLeft={120}
 					legendAlign="left"
-					axisColor="#000000"
+					axisColor="#ffffff"
 				/>
 			</div>
 		</div>
@@ -297,9 +304,45 @@
 		<h3 class="block-title">Operacionalização da Política</h3>
 		{@render dataTable(operacRows)}
 	</div>
+	</div>
 </section>
 
 <style>
+	/* Hero full-bleed teal: abre a Seção 3 com o título em "big number"
+	   (preenchimento branco + sombra 3D preta), igual às heros anteriores. */
+	.hero-band {
+		background: #317a68;
+		min-height: 40vh;
+		min-height: 40svh;
+		display: flex;
+		align-items: center;
+		padding: 2rem 0;
+		box-sizing: border-box;
+	}
+
+	.hero-band h1 {
+		width: 100%;
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 2rem;
+		box-sizing: border-box;
+		font-size: clamp(1.6rem, 4vw, 3rem);
+		font-weight: 800;
+		line-height: 1.15;
+		text-align: left;
+		color: #ffffff;
+		text-shadow:
+			1px 1px 0 #000,
+			2px 2px 0 #000,
+			3px 3px 0 #000,
+			4px 4px 0 #000;
+	}
+
+	/* Seção 3 inteira sobre o teal (full-bleed). */
+	.section-band {
+		background: #317a68;
+	}
+
 	.section {
 		max-width: 1200px;
 		margin: 0 auto;
@@ -310,26 +353,17 @@
 		margin-bottom: 1.5rem;
 	}
 
-	.eyebrow {
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		color: #1351b4;
-		margin: 0 0 0.4rem;
-	}
-
 	.sec-header h2 {
 		font-size: 1.6rem;
 		font-weight: 800;
-		color: #1b1b1b;
+		color: #ffffff;
 		margin: 0 0 0.4rem;
 		line-height: 1.15;
 	}
 
 	.lead {
 		font-size: 0.98rem;
-		color: #555;
+		color: #ffffff;
 		margin: 0;
 		line-height: 1.5;
 		max-width: 70ch;
@@ -345,7 +379,7 @@
 	}
 
 	.block--yellow {
-		background: #f6c341;
+		background: transparent;
 		/* Full-bleed: escapa do container central de 1200px e ocupa toda a largura. */
 		width: 100vw;
 		position: relative;
@@ -364,12 +398,19 @@
 		margin: 0 0 0.75rem;
 		font-size: 1.05rem;
 		font-weight: 700;
-		color: #1b1b1b;
+		color: #ffffff;
 	}
 
 	.chart-card {
 		border-radius: 0;
 		padding: 1.25rem 1.5rem 1rem;
+	}
+
+	/* Treemap é colorido e sem borda: uma moldura branca (card + padding) o separa
+	   do teal e evita o look "esquisito" de blocos coloridos colados ao fundo. */
+	.chart-card--frame {
+		background: #ffffff;
+		padding: 1.25rem;
 	}
 
 	.tm-wrap {
@@ -380,12 +421,19 @@
 	.table-wrap {
 		border: 1px solid rgba(0, 0, 0, 0.1);
 		border-radius: 0;
-		overflow: hidden;
-		background: rgba(255, 255, 255, 0.45);
+		/* Scroll horizontal interno: no mobile, em vez de cortar/esconder colunas,
+		   a tabela rola lateralmente mantendo todas as colunas visíveis. */
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+		/* Tabelas em card branco sólido para legibilidade sobre o teal. */
+		background: #ffffff;
 	}
 
 	table {
 		width: 100%;
+		/* Largura mínima para que as colunas não fiquem espremidas; abaixo dela
+		   o .table-wrap exibe scroll horizontal. */
+		min-width: 32rem;
 		border-collapse: collapse;
 		font-size: 0.9rem;
 	}
@@ -456,7 +504,6 @@
 
 	@media (max-width: 720px) {
 		.sec-header h2 { font-size: 1.4rem; }
-		.t-ic { display: none; }
-		thead th.t-ic { display: none; }
+		.hero-band h1 { padding: 0 1rem; }
 	}
 </style>

@@ -8,7 +8,7 @@
 	const filters = createDashboardFilters();
 
 	const fmtBRL = (v: number) =>
-		new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
+		new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
 
 	// ── Per capita bars (Gráfico 2), reactive to the visão ──────────────────────
 	const bars = $derived.by(() => {
@@ -34,11 +34,9 @@
 
 <section class="section">
 	<header class="sec-header">
-		<p class="eyebrow">Gráfico 2</p>
 		<h2>Valor per capita por estado</h2>
 		<p class="lead">
-			Valor executado dividido pela população. Use o filtro para alternar a visão
-			(UF, estados, municípios ou regiões).
+			Valor executado (R$) dividido pela população da UF. Use os filtros para alterar a visualização.
 		</p>
 	</header>
 
@@ -56,6 +54,8 @@
 			labelColor="#000000"
 			axisColor="#000000"
 			outsideValueColor="#000000"
+			gridColor="#000000"
+			zeroLineColor="#000000"
 		/>
 	</div>
 </section>
@@ -69,15 +69,6 @@
 
 	.sec-header {
 		margin-bottom: 1.5rem;
-	}
-
-	.eyebrow {
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		color: #1351B4;
-		margin: 0 0 0.4rem;
 	}
 
 	.sec-header h2 {

@@ -1,35 +1,51 @@
 <script lang="ts">
 	import { blue } from 'sniic-design-system';
 
-	// "Big number" 3D look replicado em CSS para permitir uma cor por palavra e
-	// alinhamento à esquerda (o componente BigNumber é monocromático e centralizado).
-	// Uma das 4 principais cores do SNIIC para cada palavra do título.
-	const titleWords = [
-		{ text: 'Política', color: '#4271b5' }, // azul
-		{ text: 'Nacional', color: '#ea662f' }, // laranja
-		{ text: 'Aldir', color: '#317a68' }, // verde
-		{ text: 'Blanc', color: '#a44c7f' }, // roxo
-	];
+	type Topic = { key: string; label: string; children: { id: string; label: string }[] };
 
-	// Tópicos do menu — cada um aponta para o id da seção correspondente.
-	const sections = [
-		{ id: 'sec-1', label: 'Valores gerais' },
-		{ id: 'sec-2', label: 'Per capita' },
-		{ id: 'sec-3', label: 'Faixa de valor' },
-		{ id: 'sec-4', label: 'Urbano e rural' },
-		{ id: 'sec-5', label: 'Capital e interior' },
-		{ id: 'sec-6', label: 'Porte municipal' },
-		{ id: 'sec-7', label: 'Tipo de documento' },
-		{ id: 'sec-8', label: 'Gênero' },
-		{ id: 'sec-9', label: 'Tipo de organização' },
-		{ id: 'sec-10', label: 'Tipo de despesa' },
+	// Três seções da pesquisa (h1); as subseções são as frases dos h2 de cada bloco.
+	const sections: Topic[] = [
+		{
+			key: 'territorios',
+			label: 'COMO OS RECURSOS DA ALDIR BLANC FORAM DISTRIBUÍDOS NOS TERRITÓRIOS?',
+			children: [
+				{ id: 'sec-1', label: 'Valores gerais da pesquisa' },
+				{ id: 'sec-1-percapita', label: 'Valor per capita por estado' },
+				{ id: 'sec-1-faixa', label: 'Distribuição por faixa de valor' },
+				{ id: 'sec-1-urbano-rural', label: 'Território urbano × rural por estado' },
+				{ id: 'sec-1-capital-interior', label: 'Distribuição de recursos: capital, metropolitana e interior' },
+				{ id: 'sec-1-porte', label: 'Distribuição do recurso por porte municipal' }
+			]
+		},
+		{
+			key: 'acesso',
+			label: 'QUEM ACESSOU OS RECURSOS DA POLÍTICA NACIONAL ALDIR BLANC?',
+			children: [
+				{ id: 'sec-2', label: 'Beneficiários e recursos por tipo de documento' },
+				{ id: 'sec-3', label: 'Distribuição por gênero' },
+				{ id: 'sec-4', label: 'Contemplados PJ por tipo de organização' }
+			]
+		},
+		{
+			key: 'acoes',
+			label: 'QUAIS AÇÕES CULTURAIS FORAM APOIADAS COM OS RECURSOS DA ALDIR BLANC?',
+			children: [
+				{ id: 'sec-5', label: 'Distribuição de recursos por tipo de despesa' }
+			]
+		}
 	];
 
 	let menuOpen = $state(false);
+	let openGroup = $state<string | null>(null);
 
 	function go(id: string) {
 		menuOpen = false;
+		openGroup = null;
 		document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+	}
+
+	function toggleGroup(key: string) {
+		openGroup = openGroup === key ? null : key;
 	}
 </script>
 
@@ -37,20 +53,42 @@
 	<div class="inner">
 		<div class="brand">
 			<h1 class="brand-title">
-				{#each titleWords as w}
-					<span style:--c={w.color}>{w.text}</span>
-				{/each}
+				<img
+					class="brand-logo"
+					src="/logos/pnab-logo.svg"
+					alt="Política Nacional Aldir Blanc"
+				/>
 			</h1>
 			<p class="lead">
-				Painel de dados sobre a execução da Política Nacional Aldir Blanc no território
-				brasileiro.
+				O Painel de Dados SNIIC: Avaliação de Resultados da Aldir Blanc — Ciclo 1
+				apresenta os principais resultados da pesquisa “Resultados do Primeiro Ciclo da
+				Política Nacional Aldir Blanc de Fomento à Cultura: recursos distribuídos, agentes
+				contemplados e ações fomentadas”. A ferramenta reúne gráficos interativos sobre a
+				execução da política, permitindo a visualização dos dados por meio da aplicação de
+				filtros pelos usuários.
 			</p>
 		</div>
 
-		<!-- Desktop: tópicos à direita -->
+		<!-- Desktop: seções à direita, submenu abre abaixo do título ao clicar -->
 		<nav class="topics" aria-label="Seções da pesquisa">
 			{#each sections as s}
-				<a href={'#' + s.id} onclick={(e) => { e.preventDefault(); go(s.id); }}>{s.label}</a>
+				<div class="topic-group" class:open={openGroup === s.key}>
+					<button
+						class="topic-parent"
+						aria-expanded={openGroup === s.key}
+						onclick={() => toggleGroup(s.key)}
+					>
+						<span>{s.label}</span>
+						<span class="chev" class:open={openGroup === s.key} aria-hidden="true"></span>
+					</button>
+					{#if openGroup === s.key}
+						<div class="submenu">
+							{#each s.children as c}
+								<a href={'#' + c.id} onclick={(e) => { e.preventDefault(); go(c.id); }}>{c.label}</a>
+							{/each}
+						</div>
+					{/if}
+				</div>
 			{/each}
 		</nav>
 
@@ -66,11 +104,27 @@
 		</button>
 	</div>
 
-	<!-- Mobile: menu abaixo do título -->
+	<!-- Mobile: menu abaixo do título, com subseções expansíveis -->
 	{#if menuOpen}
 		<nav id="mobile-menu" class="mobile-menu" aria-label="Seções da pesquisa">
 			{#each sections as s}
-				<a href={'#' + s.id} onclick={(e) => { e.preventDefault(); go(s.id); }}>{s.label}</a>
+				<div class="m-group">
+					<button
+						class="m-parent"
+						aria-expanded={openGroup === s.key}
+						onclick={() => toggleGroup(s.key)}
+					>
+						<span>{s.label}</span>
+						<span class="chev" class:open={openGroup === s.key} aria-hidden="true"></span>
+					</button>
+					{#if openGroup === s.key}
+						<div class="m-sub">
+							{#each s.children as c}
+								<a href={'#' + c.id} onclick={(e) => { e.preventDefault(); go(c.id); }}>{c.label}</a>
+							{/each}
+						</div>
+					{/if}
+				</div>
 			{/each}
 		</nav>
 	{/if}
@@ -99,28 +153,16 @@
 		max-width: 540px;
 	}
 
-	/* Título estilizado com o look 3D do BigNumber — uma cor por palavra. */
+	/* Logo da PNAB no lugar do título. */
 	.brand-title {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 0.04em;
 		margin: 0 0 1.5rem;
-		font-weight: 800;
-		font-size: clamp(2.2rem, 5vw, 3.6rem);
-		line-height: 1;
-		letter-spacing: -0.01em;
+		line-height: 0;
 	}
 
-	.brand-title span {
-		color: var(--c);
-		paint-order: stroke fill;
-		-webkit-text-stroke: 0.035em #000000;
-		text-shadow:
-			0.016em 0.016em 0 #000000,
-			0.032em 0.032em 0 #000000,
-			0.048em 0.048em 0 #000000,
-			0.064em 0.064em 0 #000000;
+	.brand-logo {
+		display: block;
+		width: clamp(220px, 34vw, 380px);
+		height: auto;
 	}
 
 	.lead {
@@ -131,25 +173,81 @@
 		max-width: 46ch;
 	}
 
-	/* ── Tópicos (desktop) ── */
+	/* ── Seções (desktop) ── */
 	.topics {
 		display: flex;
 		flex-direction: column;
-		align-items: flex-end;
-		gap: 0.7rem;
+		align-items: stretch;
+		gap: 0.5rem;
+		width: 320px;
+		flex-shrink: 0;
 	}
 
-	.topics a {
-		font-size: 1.15rem;
-		font-weight: 600;
+	.topic-group {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.topic-parent {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.6rem;
+		width: 100%;
+		background: none;
+		border: none;
+		padding: 0.5rem 0;
+		text-align: left;
+		cursor: pointer;
+		font-size: 0.9rem;
+		font-weight: 700;
+		line-height: 1.25;
 		color: #000000;
-		text-decoration: none;
-		white-space: nowrap;
 		transition: color 0.15s ease;
 	}
 
-	.topics a:hover {
+	.topic-parent:hover,
+	.topic-group.open .topic-parent {
 		color: var(--accent);
+	}
+
+	/* ── Submenu (abre abaixo, inline) ── */
+	.submenu {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		padding: 0.3rem 0 0.6rem 0.9rem;
+		border-left: 2px solid #e5e9f0;
+		margin-left: 0.2rem;
+	}
+
+	.submenu a {
+		font-size: 0.88rem;
+		font-weight: 500;
+		line-height: 1.3;
+		color: #333;
+		text-decoration: none;
+		transition: color 0.15s ease;
+	}
+
+	.submenu a:hover {
+		color: var(--accent);
+	}
+
+	/* Seta indicadora (gira ao abrir) */
+	.chev {
+		flex-shrink: 0;
+		margin-top: 0.25rem;
+		width: 8px;
+		height: 8px;
+		border-right: 2px solid currentColor;
+		border-bottom: 2px solid currentColor;
+		transform: rotate(45deg);
+		transition: transform 0.15s ease;
+		opacity: 0.6;
+	}
+	.chev.open {
+		transform: rotate(-135deg);
 	}
 
 	/* ── Toggle (mobile) ── */
@@ -198,15 +296,43 @@
 		margin: 0 auto;
 	}
 
-	.mobile-menu a {
+	.m-parent {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.6rem;
+		width: 100%;
 		padding: 0.85rem 0;
+		border: none;
 		border-top: 1px solid #eef1f6;
-		font-size: 1.15rem;
-		font-weight: 600;
-		color: #333;
+		font-size: 1.05rem;
+		font-weight: 700;
+		line-height: 1.25;
+		color: #1B1B1B;
+		background: none;
+		text-align: left;
+		cursor: pointer;
+	}
+	.m-parent:hover {
+		color: var(--accent);
+	}
+
+	.m-sub {
+		display: flex;
+		flex-direction: column;
+		padding: 0 0 0.6rem 1rem;
+		border-left: 2px solid #eef1f6;
+		margin: 0 0 0.4rem 0.2rem;
+	}
+	.m-sub a {
+		padding: 0.55rem 0;
+		font-size: 1rem;
+		font-weight: 500;
+		line-height: 1.3;
+		color: #555;
 		text-decoration: none;
 	}
-	.mobile-menu a:hover {
+	.m-sub a:hover {
 		color: var(--accent);
 	}
 

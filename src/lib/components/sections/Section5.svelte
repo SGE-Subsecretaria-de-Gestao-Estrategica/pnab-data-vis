@@ -5,9 +5,8 @@
 	import { colorScales } from 'sniic-design-system';
 	import { residenciaComparison, RESID_KEYS, RESID_LABELS } from '$lib/data/localResidencia';
 
-	// Capital/metro/interior só existe por execução estadual — visões disponíveis.
+	// Capital/metro/interior só existe por execução estadual — única visão disponível.
 	const filters = createDashboardFilters('estados');
-	const VISOES = ['estados', 'regioes'] as const;
 
 	const fmtPct = (v: number) => `${Math.round(v)}%`;
 
@@ -33,7 +32,6 @@
 <section class="section-band">
 	<div class="section">
 	<header class="sec-header">
-		<p class="eyebrow">Gráfico 5</p>
 		<h2>Distribuição de recursos: capital, metropolitana e interior</h2>
 		<p class="lead">
 			Participação de capital, região metropolitana e interior no valor executado,
@@ -41,7 +39,7 @@
 		</p>
 	</header>
 
-	<DashboardFilterBar {filters} visoes={[...VISOES]} showCompare />
+	<DashboardFilterBar {filters} showVisao={false} showCompare />
 
 	<div class="chart-card">
 		<div class="scope-tag">{scopeLabel} · {VISAO_LABELS[filters.visao]}</div>
@@ -49,11 +47,12 @@
 			data={data}
 			keys={[...RESID_KEYS]}
 			labels={RESID_LABELS}
-			colors={[colorScales.blue[2], colorScales.orange[2], colorScales.purple[2]]}
+			colors={[colorScales.blue[2], colorScales.red[2], colorScales.purple[2]]}
 			format={fmtPct}
 			marginLeft={104}
 			showFlags={filters.visao === 'estados'}
 			axisColor="#000000"
+			gridColor="#000000"
 		/>
 	</div>
 	</div>
@@ -61,7 +60,7 @@
 
 <style>
 	.section-band {
-		background: #ffffff;
+		background: #f6c341;
 	}
 
 	.section {
@@ -72,15 +71,6 @@
 
 	.sec-header {
 		margin-bottom: 1.5rem;
-	}
-
-	.eyebrow {
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		color: #1351B4;
-		margin: 0 0 0.4rem;
 	}
 
 	.sec-header h2 {

@@ -22,7 +22,6 @@
 <section class="section-band">
 	<div class="section">
 	<header class="sec-header">
-		<p class="eyebrow">Gráfico 9</p>
 		<h2>Contemplados PJ por tipo de organização</h2>
 		<p class="lead">
 			Distribuição das pessoas jurídicas contempladas pela Aldir Blanc por natureza jurídica.
@@ -33,7 +32,7 @@
 		</p>
 	</header>
 
-	<DashboardFilterBar {filters} labelColor="#fff4e9" />
+	<DashboardFilterBar {filters} showVisao={false} labelColor="#fff4e9" />
 
 	{#if hasData}
 		<div class="scope-tag">{scopeLabel} · {scope.total.toLocaleString('pt-BR')} contemplados PJ</div>
@@ -41,7 +40,7 @@
 		<div class="chart-card">
 			<HorizontalBarChartCustom
 				data={scope.bars}
-				color={colorScales.blue[2]}
+				color={colorScales.teal[2]}
 				format={fmtNum}
 				xLabel="Contemplados"
 				margin={{ top: 20, right: 56, bottom: 40, left: 256 }}
@@ -65,7 +64,7 @@
 
 <style>
 	.section-band {
-		background: #ea662f;
+		background: #883a67;
 	}
 
 	.section {
@@ -76,15 +75,6 @@
 
 	.sec-header {
 		margin-bottom: 1.5rem;
-	}
-
-	.eyebrow {
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		color: #fff4e9;
-		margin: 0 0 0.4rem;
 	}
 
 	.sec-header h2 {

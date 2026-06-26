@@ -54,7 +54,6 @@
 
 <section class="section">
 	<header class="sec-header">
-		<p class="eyebrow">Gráfico 4</p>
 		<h2>Território urbano × rural por estado</h2>
 		<p class="lead">
 			Participação das zonas urbana e rural no valor executado, por ente federativo,
@@ -70,12 +69,13 @@
 			data={data}
 			keys={['urbano', 'rural']}
 			labels={{ urbano: 'Urbano', rural: 'Rural' }}
-			colors={[colorScales.blue[2], colorScales.orange[2]]}
+			colors={[colorScales.blue[2], colorScales.purple[2]]}
 			format={fmtPct}
 			marginLeft={104}
 			showFlags={filters.visao === 'uf' || filters.visao === 'estados'}
 			hideSegmentLabelsFor={[]}
 			axisColor="#000000"
+			gridColor="#000000"
 		/>
 	</div>
 </section>
@@ -89,15 +89,6 @@
 
 	.sec-header {
 		margin-bottom: 1.5rem;
-	}
-
-	.eyebrow {
-		font-size: 0.72rem;
-		font-weight: 700;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		color: #1351B4;
-		margin: 0 0 0.4rem;
 	}
 
 	.sec-header h2 {

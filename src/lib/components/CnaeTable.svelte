@@ -167,9 +167,9 @@
 
 		<!-- ── Bar ── -->
 		<rect x={BAR_X} y={cy - bh / 2} width={BAR_TW} height={bh}
-			rx={bh / 2} fill={TRACK_CLR} />
+			rx={0} fill={TRACK_CLR} />
 		<rect x={BAR_X} y={cy - bh / 2} width={barW} height={bh}
-			rx={bh / 2} fill={barFill} />
+			rx={0} fill={barFill} />
 		<text
 			x={PCT_X}
 			y={cy + FS * 0.38}

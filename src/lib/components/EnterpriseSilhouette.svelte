@@ -82,7 +82,7 @@
 			fill="var(--window-fill, #b0cfc9)"
 			stroke={strokeColor}
 			stroke-width="0.8"
-			rx="2"
+			rx="0"
 		/>
 	{/each}
 	<line

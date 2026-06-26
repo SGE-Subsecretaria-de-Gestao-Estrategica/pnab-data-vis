@@ -330,7 +330,7 @@
 
 	.chart-card {
 		border: 1px solid rgba(0, 0, 0, 0.1);
-		border-radius: 0.75rem;
+		border-radius: 0;
 		padding: 1.25rem 1.5rem 1rem;
 		background: rgba(255, 255, 255, 0.45);
 	}
@@ -338,7 +338,7 @@
 	/* ── Tables ── */
 	.table-wrap {
 		border: 1px solid rgba(0, 0, 0, 0.1);
-		border-radius: 0.75rem;
+		border-radius: 0;
 		overflow: hidden;
 		background: rgba(255, 255, 255, 0.45);
 	}
@@ -407,7 +407,7 @@
 		display: inline-block;
 		width: 0.7rem;
 		height: 0.7rem;
-		border-radius: 2px;
+		border-radius: 0;
 		margin-right: 0.55rem;
 		vertical-align: -0.05rem;
 		flex: none;

@@ -136,7 +136,7 @@
 		padding: 1rem 1.25rem;
 		background: rgba(19, 81, 180, 0.04);
 		border: 1px solid rgba(19, 81, 180, 0.12);
-		border-radius: 0.75rem;
+		border-radius: 0;
 		margin-bottom: 1.75rem;
 	}
 
@@ -151,7 +151,7 @@
 	.seg {
 		display: inline-flex;
 		border: 1px solid #ccc;
-		border-radius: 0.5rem;
+		border-radius: 0;
 		overflow: hidden;
 		background: white;
 	}
@@ -190,7 +190,7 @@
 
 	.chart-card {
 		border: 1px solid rgba(0, 0, 0, 0.1);
-		border-radius: 0.75rem;
+		border-radius: 0;
 		padding: 1.25rem 1.5rem 1rem;
 		background: rgba(255, 255, 255, 0.45);
 	}

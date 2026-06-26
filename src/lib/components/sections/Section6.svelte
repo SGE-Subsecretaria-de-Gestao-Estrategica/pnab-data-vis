@@ -216,7 +216,7 @@
 
 	.chart-card {
 		border: 1px solid rgba(0, 0, 0, 0.1);
-		border-radius: 0.75rem;
+		border-radius: 0;
 		padding: 1.25rem 1.5rem 1rem;
 		background: rgba(255, 255, 255, 0.45);
 	}
@@ -244,7 +244,7 @@
 	.swatch {
 		width: 11px;
 		height: 11px;
-		border-radius: 2px;
+		border-radius: 0;
 	}
 
 	.leg-name {

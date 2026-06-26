@@ -19,7 +19,7 @@
 		barPad = 4,
 		groupPad: groupPadProp = 6,
 		legendBottom = false,
-		rx = 2,
+		rx = 0,
 		crispEdges = false,
 		labelsInside = false,
 	}: {
@@ -310,7 +310,7 @@
 			{:else}
 				{#each seriesLabels as label, si}
 					{@const lx = margin.left + legendTopOffsets[si]}
-					<rect x={lx} y={6} width={12} height={10} fill={colors[si % colors.length]} rx="2" />
+					<rect x={lx} y={6} width={12} height={10} fill={colors[si % colors.length]} rx="0" />
 					<text x={lx + 16} y={13} font-size="12" fill="#444">{label}</text>
 				{/each}
 			{/if}

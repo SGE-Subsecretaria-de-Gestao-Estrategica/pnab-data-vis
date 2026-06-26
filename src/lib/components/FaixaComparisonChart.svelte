@@ -144,7 +144,7 @@
 			<g transform={`translate(${LBL_W + SUB_W}, ${MT + entities.length * (BLOCK_H + BLOCK_GAP) + 6})`}>
 				{#each faixaLabels as lbl, i}
 					{@const lx = i * legendBoxW}
-					<rect x={lx} y={4} width={12} height={12} rx={2} fill={colors[i] ?? '#999'} />
+					<rect x={lx} y={4} width={12} height={12} rx={0} fill={colors[i] ?? '#999'} />
 					<text x={lx + 17} y={10} dy="0.35em" font-size="11" fill="#475569">{lbl}</text>
 				{/each}
 			</g>

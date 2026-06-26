@@ -70,24 +70,25 @@
 	const isNacional = $derived(filters.uf === 'Todas' && filters.regiao === 'Todas');
 
 	// ── "Número de entes" — exact where data allows, "—" otherwise ───────────────
-	const entes = $derived.by((): { value: string; sub: string } => {
+	// `noun`/`adj` acompanham a seleção do filtro (ex.: "regiões contempladas").
+	const entes = $derived.by((): { value: string; sub: string; noun: string; adj: string } => {
 		const nUf = filters.filteredUFs.length;
 		switch (filters.visao) {
 			case 'estados':
-				return { value: fmtNum(nUf), sub: nUf === 1 ? 'estado' : 'estados' };
+				return { value: fmtNum(nUf), sub: nUf === 1 ? 'estado' : 'estados', noun: 'estados', adj: 'contemplados' };
 			case 'regioes': {
 				const n = filters.regiao === 'Todas' ? 5 : 1;
-				return { value: fmtNum(n), sub: n === 1 ? 'região' : 'regiões' };
+				return { value: fmtNum(n), sub: n === 1 ? 'região' : 'regiões', noun: 'regiões', adj: 'contempladas' };
 			}
 			case 'municipios':
 				return isNacional
-					? { value: fmtNum(NUM_MUNICIPIOS), sub: 'municípios' }
-					: { value: '—', sub: 'municípios (indisp. por recorte)' };
+					? { value: fmtNum(NUM_MUNICIPIOS), sub: 'municípios', noun: 'municípios', adj: 'contemplados' }
+					: { value: '—', sub: 'municípios (indisp. por recorte)', noun: 'municípios', adj: 'contemplados' };
 			case 'uf':
 			default:
 				return isNacional
-					? { value: fmtNum(NUM_ESTADOS + NUM_MUNICIPIOS), sub: `${NUM_ESTADOS} estados + ${fmtNum(NUM_MUNICIPIOS)} municípios` }
-					: { value: fmtNum(nUf), sub: `${nUf} ${nUf === 1 ? 'estado' : 'estados'} + municípios` };
+					? { value: fmtNum(NUM_ESTADOS + NUM_MUNICIPIOS), sub: `${NUM_ESTADOS} estados + ${fmtNum(NUM_MUNICIPIOS)} municípios`, noun: 'entes federativos', adj: 'contemplados' }
+					: { value: fmtNum(nUf), sub: `${nUf} ${nUf === 1 ? 'estado' : 'estados'} + municípios`, noun: 'entes federativos', adj: 'contemplados' };
 		}
 	});
 
@@ -117,10 +118,10 @@
 		<div class="panel">
 			<div class="scope-tag">{scopeLabel} · {VISAO_LABELS[filters.visao]}</div>
 
-			<!-- Headline: entes -->
+			<!-- Headline: entes (rótulo acompanha a seleção do filtro) -->
 			<BigNumberStat
 				value={entes.value}
-				label="entes contemplados"
+				label="{entes.noun} {entes.adj}"
 				subtitle={entes.sub}
 				fontSize={60}
 				shadowDepth={6}
@@ -219,7 +220,7 @@
 		color: #1351B4;
 		background: rgba(19, 81, 180, 0.08);
 		padding: 0.3rem 0.7rem;
-		border-radius: 999px;
+		border-radius: 0;
 	}
 
 	/* ── Plain metrics (trio) ── */

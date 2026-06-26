@@ -121,7 +121,7 @@
 					{@const labelInside = bw >= MIN_INSIDE_PX}
 					{@const formatted = format(d.value)}
 
-					<rect x={0} y={by} width={bw} height={barH} fill={color} rx="1" />
+					<rect x={0} y={by} width={bw} height={barH} fill={color} rx="0" />
 
 					{#if labelInside}
 						<text

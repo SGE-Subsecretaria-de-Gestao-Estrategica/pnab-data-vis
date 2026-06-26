@@ -75,7 +75,7 @@
 		padding: 1rem 1.25rem;
 		background: rgba(19, 81, 180, 0.04);
 		border: 1px solid rgba(19, 81, 180, 0.12);
-		border-radius: 0.75rem;
+		border-radius: 0;
 		margin-bottom: 1.75rem;
 	}
 
@@ -102,7 +102,7 @@
 		font-size: 0.88rem;
 		padding: 0.45rem 2rem 0.45rem 0.7rem;
 		border: 1px solid #ccc;
-		border-radius: 0.5rem;
+		border-radius: 0;
 		background: white;
 		color: #1B1B1B;
 		cursor: pointer;
@@ -124,7 +124,7 @@
 		font-weight: 600;
 		padding: 0.5rem 0.9rem;
 		border: 1px solid rgba(19, 81, 180, 0.3);
-		border-radius: 0.5rem;
+		border-radius: 0;
 		background: white;
 		color: #1351B4;
 		cursor: pointer;

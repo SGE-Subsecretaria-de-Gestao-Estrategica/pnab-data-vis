@@ -92,7 +92,7 @@
 
 	.chart-card {
 		border: 1px solid rgba(0, 0, 0, 0.1);
-		border-radius: 0.75rem;
+		border-radius: 0;
 		padding: 1.25rem 1.5rem 1rem;
 		background: rgba(255, 255, 255, 0.45);
 	}
@@ -104,7 +104,7 @@
 		color: #1351B4;
 		background: rgba(19, 81, 180, 0.08);
 		padding: 0.3rem 0.7rem;
-		border-radius: 999px;
+		border-radius: 0;
 		margin-bottom: 1rem;
 	}
 </style>

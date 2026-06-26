@@ -42,7 +42,7 @@
 <style>
 	.card {
 		background: transparent;
-		border-radius: 0.75rem;
+		border-radius: 0;
 		border: 1px solid rgba(0, 0, 0, 0.09);
 		overflow: hidden;
 	}

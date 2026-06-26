@@ -1661,7 +1661,6 @@ def aggregate_cbo_rais(df_cubo: pd.DataFrame) -> pd.DataFrame:
 
     Filtros aplicados:
     - tipo_documento == "CPF"
-    - flag_join_rais == True
 
     Retorna:
     - CBO_2002_RAIS
@@ -1676,7 +1675,7 @@ def aggregate_cbo_rais(df_cubo: pd.DataFrame) -> pd.DataFrame:
         'cbo_descricao': 'cbo_descricao_rais'
     })
 
-    df_cubo_rais_raw = df_cubo[df_cubo['flag_join_rais'] == True]
+    df_cubo_rais_raw = df_cubo[~(df_cubo['tipo_vinculo_description'].isna())]
 
     df_cubo_rais = df_cubo_rais_raw.merge(
     how='left',
@@ -1690,8 +1689,9 @@ def aggregate_cbo_rais(df_cubo: pd.DataFrame) -> pd.DataFrame:
 
     df_filtrado = df.loc[
         (df["tipo_documento"].eq("CPF"))
-        & (df["flag_join_rais"].eq(True))
     ].copy()
+    
+    df_filtrado = df_filtrado[~(df_filtrado['tipo_vinculo_description'].isna())]
 
     df_resultado = (
         df_filtrado

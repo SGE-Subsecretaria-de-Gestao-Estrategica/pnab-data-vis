@@ -9,8 +9,6 @@
 		regionAgg,
 		rowsByVisao,
 		nationalTotals,
-		NUM_ESTADOS,
-		NUM_MUNICIPIOS,
 	} from '$lib/data/dashboard';
 
 	const filters = createDashboardFilters();
@@ -51,7 +49,7 @@
 	// ── Aggregated panel metrics over the scoped UFs ──────────────────────────────
 	const scoped = $derived.by(() => {
 		const ufs = filters.filteredUFs;
-		let valor = 0, repassado = 0, contemplados = 0, populacao = 0;
+		let valor = 0, repassado = 0, contemplados = 0, populacao = 0, numMunicipios = 0;
 		for (const uf of ufs) {
 			const r = rows[uf];
 			if (!r) continue;
@@ -59,8 +57,9 @@
 			repassado += r.repassado;
 			contemplados += r.contemplados;
 			populacao += r.populacao;
+			numMunicipios += r.numeroMunicipios;
 		}
-		return { valor, repassado, contemplados, populacao };
+		return { valor, repassado, contemplados, populacao, numMunicipios };
 	});
 
 	const totalValor = $derived(nationalTotals[filters.visao].valor);
@@ -85,15 +84,20 @@
 				const n = filters.regiao === 'Todas' ? 5 : 1;
 				return { value: fmtNum(n), sub: n === 1 ? 'região' : 'regiões', noun: 'regiões', adj: 'contempladas' };
 			}
-			case 'municipios':
-				return isNacional
-					? { value: fmtNum(NUM_MUNICIPIOS), sub: 'municípios', noun: 'municípios', adj: 'contemplados' }
-					: { value: '—', sub: 'municípios (indisp. por recorte)', noun: 'municípios', adj: 'contemplados' };
+			case 'municipios': {
+				const nMun = scoped.numMunicipios;
+				return { value: fmtNum(nMun), sub: nMun === 1 ? 'município' : 'municípios', noun: 'municípios', adj: 'contemplados' };
+			}
 			case 'uf':
-			default:
-				return isNacional
-					? { value: fmtNum(NUM_ESTADOS + NUM_MUNICIPIOS), sub: `${NUM_ESTADOS} estados + ${fmtNum(NUM_MUNICIPIOS)} municípios`, noun: 'entes federativos', adj: 'contemplados' }
-					: { value: fmtNum(nUf), sub: `${nUf} ${nUf === 1 ? 'estado' : 'estados'} + municípios`, noun: 'entes federativos', adj: 'contemplados' };
+			default: {
+				const nMun = scoped.numMunicipios;
+				return {
+					value: fmtNum(nUf + nMun),
+					sub: `${nUf} ${nUf === 1 ? 'estado' : 'estados'} + ${fmtNum(nMun)} ${nMun === 1 ? 'município' : 'municípios'}`,
+					noun: 'entes federativos',
+					adj: 'contemplados',
+				};
+			}
 		}
 	});
 

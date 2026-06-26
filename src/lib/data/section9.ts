@@ -1,20 +1,26 @@
 // Section 9 data — Distribuição de contemplados PJ por tipo de organização.
 //
 // Fonte: cruzamento PNAB × Receita Federal (pessoas jurídicas / CNPJ).
-// Os dados existem apenas em nível nacional e por região — não há quebra por
-// UF, estado nem município. O escopo da Seção 9 é, portanto, "Brasil" + as 5
-// regiões; as visões uf/estados/municípios não têm dados de natureza jurídica.
+// Há quebra por UF para cada visão (nível de execução):
+//   • uf         → estado + municípios combinados (…_por_uf.csv)
+//   • estados    → apenas execução estadual         (…_por_state.csv)
+//   • municipios → apenas execução municipal         (…_por_municipio.csv)
+//   • regioes    → mesmo recorte de `uf` (combinado), agregado por região
+// O escopo (Brasil / região / UF) é resolvido somando-se as UFs em foco.
 
-import csvNacionalRaw from '../../../data/section_3/aggregate_cnpj_natureza_juridica.csv?raw';
-import csvRegiaoRaw   from '../../../data/section_3/aggregate_cnpj_natureza_juridica_por_regiao.csv?raw';
+import csvUfRaw    from '../../../data/section_3/aggregate_cnpj_natureza_juridica_por_uf.csv?raw';
+import csvStateRaw from '../../../data/section_3/aggregate_cnpj_natureza_juridica_por_state.csv?raw';
+import csvMunRaw   from '../../../data/section_3/aggregate_cnpj_natureza_juridica_por_municipio.csv?raw';
+
+import type { Visao } from '$lib/data/dashboard';
 
 function parseCSV(text: string): Record<string, string>[] {
 	const [headerLine, ...dataLines] = text.trim().split('\n');
-	const headers = headerLine.split(',');
+	const headers = headerLine.split(',').map((h) => h.trim());
 	return dataLines
 		.filter((l) => l.trim())
 		.map((line) => {
-			const values = line.split(',');
+			const values = line.split(',').map((v) => v.trim());
 			return Object.fromEntries(headers.map((h, i) => [h, values[i] ?? '']));
 		});
 }
@@ -39,40 +45,45 @@ const _NJ_ORDER = [
 	'Entidades Empresariais',
 ];
 
-export const REGIOES_PJ = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul'] as const;
+// ── Per-UF, per-natureza quantities, indexed by [uf][natureza] ────────────────
+type UfNatureza = Record<string, Record<string, number>>;
 
-function toScope(rows: { natureza_juridica: string; quantidade: number }[]): OrgScope {
-	const total = rows.reduce((s, r) => s + r.quantidade, 0);
-	const bars = rows
-		.map((r) => ({
-			label: r.natureza_juridica,
-			value: r.quantidade,
-			perc: total > 0 ? (r.quantidade / total) * 100 : 0,
+function indexByUf(raw: string): UfNatureza {
+	const out: UfNatureza = {};
+	for (const r of parseCSV(raw)) {
+		if (!r.uf || !_NJ_ORDER.includes(r.natureza_juridica)) continue;
+		(out[r.uf] ??= {})[r.natureza_juridica] = +r.quantidade_contemplados || 0;
+	}
+	return out;
+}
+
+const ufTable: Record<Visao, UfNatureza> = {
+	uf: indexByUf(csvUfRaw),
+	estados: indexByUf(csvStateRaw),
+	municipios: indexByUf(csvMunRaw),
+	regioes: indexByUf(csvUfRaw), // região = soma das UFs no nível combinado
+};
+
+/**
+ * Agrega a distribuição por natureza jurídica para a `visao` somando as `ufs`
+ * em foco (Brasil = todas as 27 UFs; região/UF conforme o filtro).
+ */
+export function orgScope(visao: Visao, ufs: string[]): OrgScope {
+	const table = ufTable[visao];
+	const sums: Record<string, number> = {};
+	for (const nj of _NJ_ORDER) sums[nj] = 0;
+	for (const uf of ufs) {
+		const row = table[uf];
+		if (!row) continue;
+		for (const nj of _NJ_ORDER) sums[nj] += row[nj] ?? 0;
+	}
+	const total = _NJ_ORDER.reduce((s, nj) => s + sums[nj], 0);
+	const bars = _NJ_ORDER
+		.map((nj) => ({
+			label: nj,
+			value: sums[nj],
+			perc: total > 0 ? (sums[nj] / total) * 100 : 0,
 		}))
 		.sort((a, b) => b.value - a.value);
 	return { bars, total };
 }
-
-// ── Nacional (escopo "Todas" / Brasil) ────────────────────────────────────────
-const nacionalRows = parseCSV(csvNacionalRaw)
-	.filter((r) => _NJ_ORDER.includes(r.natureza_juridica))
-	.map((r) => ({ natureza_juridica: r.natureza_juridica, quantidade: +r.quantidade_contemplados || 0 }));
-
-const nacionalScope = toScope(nacionalRows);
-
-// ── Por região ────────────────────────────────────────────────────────────────
-const regiaoRows = parseCSV(csvRegiaoRaw);
-
-const regiaoScopes: Record<string, OrgScope> = {};
-for (const regiao of REGIOES_PJ) {
-	const rows = regiaoRows
-		.filter((r) => r.regiao === regiao && _NJ_ORDER.includes(r.natureza_juridica))
-		.map((r) => ({ natureza_juridica: r.natureza_juridica, quantidade: +r.quantidade_contemplados || 0 }));
-	regiaoScopes[regiao] = toScope(rows);
-}
-
-// Map keyed by the dashboard's `regiao` filter value ('Todas' = Brasil).
-export const orgByRegiao: Record<string, OrgScope> = {
-	Todas: nacionalScope,
-	...regiaoScopes,
-};

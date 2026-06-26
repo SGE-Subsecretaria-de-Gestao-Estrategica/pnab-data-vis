@@ -1,21 +1,24 @@
 <script lang="ts">
 	import DashboardFilterBar from '$lib/components/DashboardFilterBar.svelte';
 	import HorizontalBarChartCustom from '$lib/components/HorizontalBarChartCustom.svelte';
-	import { createDashboardFilters, VISAO_LABELS } from '$lib/stores/dashboardFilters.svelte';
+	import { createDashboardFilters } from '$lib/stores/dashboardFilters.svelte';
 	import { colorScales } from 'sniic-design-system';
-	import { orgByRegiao } from '$lib/data/section9';
+	import { orgScope } from '$lib/data/section9';
+	import { siglaToName } from '$lib/data/dashboard';
 
-	// Natureza jurídica só existe em nível nacional + por região, então iniciamos
-	// na visão "Regiões" (única com dados); a quebra vem do seletor de Região.
-	const filters = createDashboardFilters('regioes');
+	const filters = createDashboardFilters();
 
 	const fmtNum = (v: number) => v.toLocaleString('pt-BR');
 	const fmtPct = (v: number) => v.toFixed(1).replace('.', ',') + '%';
 
-	const hasData = $derived(filters.visao === 'regioes');
-	const scope = $derived(orgByRegiao[filters.regiao] ?? orgByRegiao.Todas);
+	const scope = $derived(orgScope(filters.visao, filters.filteredUFs));
+	const hasData = $derived(scope.total > 0);
 
-	const scopeLabel = $derived(filters.regiao === 'Todas' ? 'Brasil' : `Região ${filters.regiao}`);
+	const scopeLabel = $derived.by(() => {
+		if (filters.uf !== 'Todas') return siglaToName[filters.uf] ?? filters.uf;
+		if (filters.regiao !== 'Todas') return `Região ${filters.regiao}`;
+		return 'Brasil';
+	});
 	const topOrg = $derived(scope.bars[0]);
 </script>
 
@@ -32,7 +35,7 @@
 		</p>
 	</header>
 
-	<DashboardFilterBar {filters} showVisao={false} labelColor="#fff4e9" />
+	<DashboardFilterBar {filters} labelColor="#fff4e9" />
 
 	{#if hasData}
 		<div class="scope-tag">{scopeLabel} · {scope.total.toLocaleString('pt-BR')} contemplados PJ</div>
@@ -52,10 +55,8 @@
 	{:else}
 		<div class="empty">
 			<p>
-				A distribuição por natureza jurídica está disponível apenas na visão
-				<strong>Regiões</strong> (e no total Brasil). Selecione <strong>Regiões</strong> no filtro
-				de visão acima — os dados de PJ não têm quebra por
-				<em>{VISAO_LABELS[filters.visao]}</em>.
+				Não há contemplados de pessoa jurídica no recorte
+				<strong>{scopeLabel}</strong> para esta visão. Ajuste os filtros acima.
 			</p>
 		</div>
 	{/if}

@@ -1913,6 +1913,272 @@ def aggregate_cnpj_natureza_juridica_por_regiao(
 
     return df_resultado
 
+def aggregate_cnpj_natureza_juridica_por_uf(
+    df_cubo: pd.DataFrame,
+    by_filter: str = "UF",
+    coluna_uf: str = "uf",
+    coluna_natureza: str = "naturezajuridica_agrupada_receita_cnpj",
+    coluna_valor: str = "valor_transacao",
+    coluna_quantidade: str = "quantidade",
+    coluna_tipo_documento: str = "tipo_documento"
+) -> pd.DataFrame:
+    """
+    Agrega apenas CNPJs por UF e natureza jurídica.
+
+    Para cada UF, mostra quanto cada categoria de natureza jurídica representa
+    em quantidade de contemplados e em valor recebido.
+
+    Parâmetros
+    ----------
+    by_filter : str
+        Recorte territorial utilizado.
+
+        Opções:
+        - "ESTADO": considera apenas registros estaduais.
+        - "MUNICIPIO": considera apenas registros municipais.
+        - "UF": considera ESTADO + MUNICIPIO.
+
+    Percentuais retornam em escala decimal:
+    0.25 = 25%
+    """
+
+    by_filter = by_filter.upper()
+
+    required_columns = [
+        coluna_uf,
+        coluna_natureza,
+        coluna_valor,
+        coluna_quantidade,
+        coluna_tipo_documento,
+    ]
+
+    missing_columns = [
+        col for col in required_columns if col not in df_cubo.columns
+    ]
+
+    if missing_columns:
+        raise ValueError(
+            f"As seguintes colunas não existem no DataFrame: {missing_columns}"
+        )
+
+    ufs = [
+        "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES",
+        "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR",
+        "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC",
+        "SP", "SE", "TO"
+    ]
+
+    categorias_natureza = [
+        "Microempresa-ME",
+        "MEI",
+        "Empresa de Pequeno Porte (EPP)",
+        "Administração Pública",
+        "Entidades sem fins lucrativos",
+        "Entidades Empresariais",
+    ]
+
+    df = df_cubo.copy()
+
+    df["tipo_documento_norm"] = (
+        df[coluna_tipo_documento]
+        .fillna("Não informado")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    df["tipo_ente_norm"] = (
+        df["tipo_ente"]
+        .fillna("Não informado")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+        .str.normalize("NFKD")
+        .str.encode("ascii", errors="ignore")
+        .str.decode("utf-8")
+    )
+
+    # ------------------------------------------------------------
+    # 1. Considera apenas CNPJ
+    # ------------------------------------------------------------
+    df = df[df["tipo_documento_norm"].eq("CNPJ")].copy()
+
+    # ------------------------------------------------------------
+    # 2. Aplica filtro territorial
+    # ------------------------------------------------------------
+    if by_filter == "ESTADO":
+        df = df[df["tipo_ente_norm"].eq("ESTADO")].copy()
+
+    elif by_filter == "MUNICIPIO":
+        df = df[df["tipo_ente_norm"].eq("MUNICIPIO")].copy()
+
+    elif by_filter == "UF":
+        df = df[
+            df["tipo_ente_norm"].isin(["ESTADO", "MUNICIPIO"])
+        ].copy()
+
+    else:
+        raise ValueError(
+            "by_filter deve ser 'ESTADO', 'MUNICIPIO' ou 'UF'."
+        )
+
+    df[coluna_valor] = pd.to_numeric(
+        df[coluna_valor],
+        errors="coerce"
+    ).fillna(0)
+
+    df[coluna_quantidade] = pd.to_numeric(
+        df[coluna_quantidade],
+        errors="coerce"
+    ).fillna(0)
+
+    df[coluna_uf] = (
+        df[coluna_uf]
+        .fillna("Não informado")
+        .astype(str)
+        .str.upper()
+        .str.strip()
+    )
+
+    df[coluna_natureza] = (
+        df[coluna_natureza]
+        .fillna("Não informado")
+        .astype(str)
+        .str.strip()
+    )
+
+    # ------------------------------------------------------------
+    # 3. Mantém apenas UFs e naturezas desejadas
+    # ------------------------------------------------------------
+    df = df[
+        df[coluna_uf].isin(ufs)
+        & df[coluna_natureza].isin(categorias_natureza)
+    ].copy()
+
+    df[coluna_uf] = pd.Categorical(
+        df[coluna_uf],
+        categories=ufs,
+        ordered=True
+    )
+
+    df[coluna_natureza] = pd.Categorical(
+        df[coluna_natureza],
+        categories=categorias_natureza,
+        ordered=True
+    )
+
+    # ------------------------------------------------------------
+    # 4. Agrega por UF e natureza jurídica
+    # ------------------------------------------------------------
+    df_resultado = (
+        df
+        .groupby([coluna_uf, coluna_natureza], observed=False)
+        .agg(
+            quantidade_contemplados=(coluna_quantidade, "sum"),
+            valor_contemplados=(coluna_valor, "sum")
+        )
+        .reset_index()
+        .rename(columns={
+            coluna_uf: "uf",
+            coluna_natureza: "natureza_juridica"
+        })
+    )
+
+    # ------------------------------------------------------------
+    # 5. Totais da UF
+    # ------------------------------------------------------------
+    totais_uf = (
+        df_resultado
+        .groupby("uf", observed=False)
+        .agg(
+            total_quantidade_uf=("quantidade_contemplados", "sum"),
+            total_valor_uf=("valor_contemplados", "sum")
+        )
+        .reset_index()
+    )
+
+    df_resultado = df_resultado.merge(
+        totais_uf,
+        on="uf",
+        how="left"
+    )
+
+    # ------------------------------------------------------------
+    # 6. Percentuais
+    # ------------------------------------------------------------
+    df_resultado["perc_quantidade_contemplados_na_uf"] = np.where(
+        df_resultado["total_quantidade_uf"] > 0,
+        df_resultado["quantidade_contemplados"]
+        / df_resultado["total_quantidade_uf"],
+        np.nan
+    )
+
+    df_resultado["perc_valor_contemplados_na_uf"] = np.where(
+        df_resultado["total_valor_uf"] > 0,
+        df_resultado["valor_contemplados"]
+        / df_resultado["total_valor_uf"],
+        np.nan
+    )
+
+    df_resultado["perc_quantidade_contemplados"] = (
+        df_resultado["perc_quantidade_contemplados_na_uf"]
+    )
+
+    df_resultado["perc_valor_contemplados"] = (
+        df_resultado["perc_valor_contemplados_na_uf"]
+    )
+
+    # ------------------------------------------------------------
+    # 7. Ajuste de tipos
+    # ------------------------------------------------------------
+    df_resultado["quantidade_contemplados"] = (
+        df_resultado["quantidade_contemplados"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    df_resultado["total_quantidade_uf"] = (
+        df_resultado["total_quantidade_uf"]
+        .fillna(0)
+        .astype("Int64")
+    )
+
+    colunas_valor = [
+        "valor_contemplados",
+        "total_valor_uf"
+    ]
+
+    df_resultado[colunas_valor] = (
+        df_resultado[colunas_valor]
+        .fillna(0)
+        .astype("Float64")
+    )
+
+    colunas_percentual = [
+        "perc_quantidade_contemplados_na_uf",
+        "perc_valor_contemplados_na_uf",
+        "perc_quantidade_contemplados",
+        "perc_valor_contemplados",
+    ]
+
+    df_resultado[colunas_percentual] = (
+        df_resultado[colunas_percentual]
+        .astype("Float64")
+    )
+
+    # ------------------------------------------------------------
+    # 8. Ordenação final
+    # ------------------------------------------------------------
+    df_resultado = (
+        df_resultado
+        .sort_values(["uf", "natureza_juridica"])
+        .reset_index(drop=True)
+    )
+
+    return df_resultado
 
 def top_cnaes_cnpj(
     df_cubo: pd.DataFrame,

@@ -46,10 +46,7 @@
 	<header class="sec-header">
 		<h2>Distribuição por gênero</h2>
 		<p class="lead">
-			Perfil dos agentes culturais pessoa física contemplados pela Aldir Blanc. As mulheres
-			representam <strong>{fmtPct(sexoPropFeminino)}</strong> dos contemplados e os homens
-			<strong>{fmtPct(sexoPropMasculino)}</strong>. Alterne entre número de contemplados e valor
-			executado.
+			Distribuição dos recursos executados e dos agentes contemplados por sexo e faixa etária.
 		</p>
 	</header>
 

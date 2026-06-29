@@ -28,10 +28,6 @@
 		<h2>Contemplados PJ por tipo de organização</h2>
 		<p class="lead">
 			Distribuição das pessoas jurídicas contempladas pela Aldir Blanc por natureza jurídica.
-			{#if hasData && topOrg}
-				No escopo <strong>{scopeLabel}</strong>, <strong>{topOrg.label}</strong> lidera com
-				<strong>{fmtNum(topOrg.value)}</strong> contemplados ({fmtPct(topOrg.perc)}).
-			{/if}
 		</p>
 	</header>
 

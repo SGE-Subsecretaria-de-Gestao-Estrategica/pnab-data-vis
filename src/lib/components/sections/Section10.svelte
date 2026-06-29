@@ -160,9 +160,7 @@
 	<header class="sec-header">
 		<h2>Distribuição de recursos por tipo de despesa</h2>
 		<p class="lead">
-			Para onde foram os <strong>{formatBRL(expensesGrandTotal)}</strong> executados pela Aldir
-			Blanc. Três categorias — Fomento Cultural, Política Nacional de Cultura Viva e Subsídio —
-			concentram a maior parte do investimento.
+			Esta seção apresenta a distribuição estimada dos recursos executados pelos municípios segundo o tipo de ação cultural fomentada e seus respectivos detalhamentos. Os resultados foram produzidos por meio de análise inferencial, com base na classificação das despesas registradas pelos municípios no sistema BB Gestão Ágil.
 		</p>
 	</header>
 

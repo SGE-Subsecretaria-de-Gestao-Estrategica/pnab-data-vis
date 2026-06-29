@@ -40,7 +40,7 @@
 		</p>
 	</header>
 
-	<DashboardFilterBar {filters} showUf={false} />
+	<DashboardFilterBar {filters} showUf={false} visoes={['uf', 'estados']} />
 
 	<div class="chart-card">
 		<div class="scope-tag">{scopeLabel} · {VISAO_LABELS[filters.visao]}</div>

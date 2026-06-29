@@ -65,7 +65,6 @@
 
 <style>
 	.section-band {
-		background: #f6c341;
 	}
 
 	.section {

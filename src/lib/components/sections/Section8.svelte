@@ -97,7 +97,6 @@
 
 <style>
 	.section-band {
-		background: #883a67;
 	}
 
 	.section {
@@ -113,14 +112,14 @@
 	.sec-header h2 {
 		font-size: 1.6rem;
 		font-weight: 800;
-		color: #ffffff;
+		color: #1B1B1B;
 		margin: 0 0 0.4rem;
 		line-height: 1.15;
 	}
 
 	.lead {
 		font-size: 0.98rem;
-		color: #fff;
+		color: #555;
 		margin: 0;
 		line-height: 1.5;
 		max-width: 70ch;
@@ -140,7 +139,7 @@
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: #fff;
+		color: #1B1B1B;
 	}
 
 	.seg {
@@ -191,22 +190,11 @@
 		overflow: hidden;
 	}
 
-	/* Card transparente sobre o roxo: recolorimos para branco apenas os rótulos de
-	   eixo, que têm cor escura fixa no SVG (#000000 na pirâmide; #1e293b/#64748b no
-	   donut). Os rótulos DENTRO das barras já usam cor de contraste do próprio
-	   componente (preto sobre amarelo, branco sobre teal), então ficam intactos.
-	   (Atributo `fill` do SVG é sobreposto pela propriedade CSS `fill`.) */
-	.chart-card :global(text[fill='#000000']),
-	.chart-card :global(text[fill='#1e293b']),
-	.chart-card :global(text[fill='#64748b']) {
-		fill: #ffffff;
-	}
-
 	.chart-title {
 		margin: 0 0 0.75rem;
 		font-size: 1rem;
 		font-weight: 700;
-		color: #ffffff;
+		color: #1B1B1B;
 	}
 
 	@media (max-width: 860px) {

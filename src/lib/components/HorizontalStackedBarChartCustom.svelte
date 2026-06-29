@@ -20,6 +20,7 @@
 		showTotalLabel = false,
 		marginLeft = 180,
 		legendAlign = 'left' as 'left' | 'center' | 'right',
+		legendInset = false,
 		labelsAbove = false,
 		yAxisFontSize = 12,
 		hideSegmentLabelsFor = [] as string[],
@@ -41,6 +42,9 @@
 		showTotalLabel?: boolean;
 		marginLeft?: number;
 		legendAlign?: 'left' | 'center' | 'right';
+		/** Alinha a borda esquerda da legenda ao início das barras (área do gráfico),
+		    em vez de à coluna de rótulos do eixo Y. Ignorado no mobile (centralizado). */
+		legendInset?: boolean;
 		labelsAbove?: boolean;
 		yAxisFontSize?: number;
 		hideSegmentLabelsFor?: string[];
@@ -141,9 +145,11 @@
 	const LEGEND_ROW_H = 34;
 	const LEGEND_GAP   = 2;
 
-	// The legend spans the full component width (not just the bars' span), so it
-	// has the most room on narrow screens and aligns with the y-axis labels.
-	const legendW = $derived(Math.max(0, containerWidth - MR));
+	// By default the legend spans the full component width (aligning with the
+	// y-axis labels). With `legendInset` its left edge starts at the bars instead,
+	// so the legend lines up with the chart area. Always full-width on mobile.
+	const legendX0 = $derived(legendInset && !isMobile.matches ? effectiveMarginLeft : 0);
+	const legendW = $derived(Math.max(0, containerWidth - MR - legendX0));
 
 	// Box fits its label, but never wider than the available legend area, so a
 	// long label (ex.: "Região metropolitana") can't overflow on narrow screens.
@@ -319,7 +325,7 @@
 					: legendAlign === 'left'
 					? 0
 					: Math.max(0, (legendW - rowTotalW) / 2)}
-				<g transform="translate({legendOffsetX},{rowY})">
+				<g transform="translate({legendX0 + legendOffsetX},{rowY})">
 					{#each row as item}
 						<rect
 							x={item.x}

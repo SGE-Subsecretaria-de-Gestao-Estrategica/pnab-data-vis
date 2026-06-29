@@ -35,7 +35,7 @@
 		</p>
 	</header>
 
-	<DashboardFilterBar {filters} labelColor="#fff4e9" />
+	<DashboardFilterBar {filters} labelColor="#000000" />
 
 	{#if hasData}
 		<div class="scope-tag">{scopeLabel} · {scope.total.toLocaleString('pt-BR')} contemplados PJ</div>
@@ -47,9 +47,9 @@
 				format={fmtNum}
 				xLabel="Contemplados"
 				margin={{ top: 20, right: 56, bottom: 40, left: 256 }}
-				labelColor="#fff4e9"
-				axisColor="#fff4e9"
-				outsideValueColor="#fff4e9"
+				labelColor="#000000"
+				axisColor="#000000"
+				outsideValueColor="#000000"
 			/>
 		</div>
 	{:else}
@@ -65,7 +65,6 @@
 
 <style>
 	.section-band {
-		background: #883a67;
 	}
 
 	.section {
@@ -81,14 +80,14 @@
 	.sec-header h2 {
 		font-size: 1.6rem;
 		font-weight: 800;
-		color: #ffffff;
+		color: #1B1B1B;
 		margin: 0 0 0.4rem;
 		line-height: 1.15;
 	}
 
 	.lead {
 		font-size: 0.98rem;
-		color: #fff4e9;
+		color: #555;
 		margin: 0;
 		line-height: 1.5;
 		max-width: 70ch;
@@ -98,8 +97,8 @@
 		display: inline-block;
 		font-size: 0.74rem;
 		font-weight: 600;
-		color: #fff4e9;
-		background: rgba(255, 255, 255, 0.14);
+		color: #1B1B1B;
+		background: rgba(0, 0, 0, 0.06);
 		padding: 0.3rem 0.7rem;
 		border-radius: 0;
 		margin-bottom: 1rem;
@@ -120,7 +119,7 @@
 	.empty p {
 		margin: 0;
 		font-size: 0.92rem;
-		color: #fff4e9;
+		color: #555;
 		line-height: 1.5;
 		max-width: 60ch;
 	}

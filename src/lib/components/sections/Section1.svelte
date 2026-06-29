@@ -8,7 +8,6 @@
 		regionMap,
 		regionAgg,
 		rowsByVisao,
-		nationalTotals,
 	} from '$lib/data/dashboard';
 
 	const filters = createDashboardFilters();
@@ -61,9 +60,6 @@
 		}
 		return { valor, repassado, contemplados, populacao, numMunicipios };
 	});
-
-	const totalValor = $derived(nationalTotals[filters.visao].valor);
-	const shareNacional = $derived(totalValor > 0 ? (scoped.valor / totalValor) * 100 : 0);
 
 	// % executado = valor executado / valor repassado pelo MinC.
 	// Repassado pode estar indisponível na fonte (0) → exibe "—".
@@ -134,29 +130,52 @@
 		<div class="panel">
 			<div class="scope-tag">{scopeLabel} · {VISAO_LABELS[filters.visao]}</div>
 
+			<div class="stat-grid">
 			<!-- Headline: contemplados + texto -->
 			<div class="stat-row stat-contemplados">
 				<BigNumberStat value={fmtNum(scoped.contemplados)} label="contemplados (agentes / projetos)" fontSize={60} shadowDepth={6} width={340} shadowColor="#000000" labelColor="#1B1B1B" subtitleColor="#1B1B1B" />
 			</div>
 
-			<!-- Trio: repassado / executado / % executado / % nacional -->
-			<div class="metric-trio">
-				<div class="metric">
-					<span class="metric-value">{hasRepassado ? fmtBRL(scoped.repassado) : '—'}</span>
-					<span class="metric-label">Valor repassado pelo MinC</span>
-				</div>
-				<div class="metric">
-					<span class="metric-value">{fmtBRL(scoped.valor)}</span>
-					<span class="metric-label">Valor executado</span>
-				</div>
-				<div class="metric">
-					<span class="metric-value">{hasRepassado ? fmtPct(pctExecutado) : '—'}</span>
-					<span class="metric-label">executado / repassado</span>
-				</div>
-				<div class="metric">
-					<span class="metric-value">{fmtPct(shareNacional)}</span>
-					<span class="metric-label">do total nacional</span>
-				</div>
+			<!-- Valor executado em destaque (big number) -->
+			<div class="stat-row stat-executado">
+				<BigNumberStat
+					value={fmtBRL(scoped.valor)}
+					label="valor executado"
+					fontSize={50}
+					shadowDepth={5}
+					width={340}
+					shadowColor="#000000"
+					labelColor="#1B1B1B"
+					subtitleColor="#1B1B1B"
+				/>
+			</div>
+
+			<!-- Valor repassado pelo MinC (big number) -->
+			<div class="stat-row stat-repassado">
+				<BigNumberStat
+					value={hasRepassado ? fmtBRL(scoped.repassado) : '—'}
+					label="valor repassado pelo MinC"
+					fontSize={44}
+					shadowDepth={5}
+					width={340}
+					shadowColor="#000000"
+					labelColor="#1B1B1B"
+					subtitleColor="#1B1B1B"
+				/>
+			</div>
+
+			<!-- % executado / repassado (big number) -->
+			<div class="stat-row stat-pct">
+				<BigNumberStat
+					value={hasRepassado ? fmtPct(pctExecutado) : '—'}
+					label="executado / repassado"
+					fontSize={44}
+					shadowDepth={5}
+					width={340}
+					shadowColor="#000000"
+					labelColor="#1B1B1B"
+					subtitleColor="#1B1B1B"
+				/>
 			</div>
 
 			<!-- Entes federativos (rótulo acompanha a seleção do filtro) + texto -->
@@ -172,6 +191,7 @@
 					labelColor="#1B1B1B"
 					subtitleColor="#1B1B1B"
 				/>
+			</div>
 			</div>
 		</div>
 
@@ -193,13 +213,13 @@
 <style>
 	/* Hero full-bleed: a pergunta-título ocupa toda a viewport antes do painel. */
 	.hero-band {
-		background: #f6c341;
 		min-height: 40vh;
 		min-height: 40svh;
 		display: flex;
 		align-items: center;
 		padding: 2rem 0;
 		box-sizing: border-box;
+		background: #1351B4;
 	}
 
 	.hero-band h1 {
@@ -210,20 +230,21 @@
 		box-sizing: border-box;
 		font-size: clamp(1.6rem, 4vw, 3rem);
 		font-weight: 800;
-		line-height: 1.15;
+		line-height: 1.25;
+		letter-spacing: -0.02em;
 		text-align: left;
-		/* BigNumber look: white fill with a layered black 3D shadow */
+		/* Estilo "big number": preenchimento branco + sombra 3D preta extrudada,
+		   replicando o contorno + degraus diagonais do componente BigNumber. */
 		color: #ffffff;
 		text-shadow:
-			1px 1px 0 #000000,
-			2px 2px 0 #000000,
-			3px 3px 0 #000000,
-			4px 4px 0 #000000;
+			-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
+			0 -2px 0 #000, 0 2px 0 #000, -2px 0 0 #000, 2px 0 0 #000,
+			1px 1px 0 #000, 2px 2px 0 #000, 3px 3px 0 #000, 4px 4px 0 #000,
+			5px 5px 0 #000, 6px 6px 0 #000, 7px 7px 0 #000, 8px 8px 0 #000;
 	}
 
 	/* Faixa full-bleed com o amarelo principal do SNIIC. */
 	.dashboard-band {
-		background: #f6c341;
 	}
 
 	.dashboard {
@@ -269,12 +290,21 @@
 		min-width: 0;
 	}
 
-	/* ── Linha: big number + texto descritivo ── */
-	.stat-row {
+	/* ── Big numbers em grid (desktop): headline em destaque + 2×2 abaixo ── */
+	.stat-grid {
 		display: grid;
-		grid-template-columns: minmax(0, auto) 1fr;
-		gap: 1.5rem;
-		align-items: center;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 1.5rem 1.75rem;
+		align-items: start;
+	}
+
+	/* O número de contemplados é a manchete: ocupa as duas colunas. */
+	.stat-contemplados {
+		grid-column: 1 / -1;
+	}
+
+	.stat-row {
+		min-width: 0;
 	}
 
 	.panel-text {
@@ -303,37 +333,6 @@
 		border-radius: 0;
 	}
 
-	/* ── Plain metrics (trio) ── */
-	.metric {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		text-align: center;
-		gap: 0.1rem;
-		min-width: 0;
-	}
-
-	.metric-value {
-		font-weight: 800;
-		color: #1B1B1B;
-		line-height: 1.05;
-		font-size: 1.6rem;
-		font-variant-numeric: tabular-nums;
-		white-space: nowrap;
-	}
-
-	.metric-label {
-		font-size: 0.85rem;
-		font-weight: 600;
-		color: #1B1B1B;
-	}
-
-	.metric-trio {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: 1rem 0.75rem;
-	}
-
 	/* ── Map ── */
 	.map-wrap {
 		position: sticky;
@@ -353,13 +352,10 @@
 			grid-template-columns: 1fr;
 			row-gap: 1rem;
 		}
-		.stat-row {
-			grid-template-columns: 1fr;
-			gap: 0.5rem;
-		}
-		/* Achata o painel na grade para que cada bloco possa ser reordenado
-		   individualmente em relação ao mapa. */
-		.panel {
+		/* Achata painel e grid de big numbers para que cada bloco possa ser
+		   reordenado individualmente em relação ao mapa. */
+		.panel,
+		.stat-grid {
 			display: contents;
 		}
 		.stat-contemplados { order: -2; }
@@ -368,22 +364,19 @@
 			order: -1;
 		}
 		.scope-tag { order: 0; }
-		.metric-trio { order: 1; }
-		.stat-entes { order: 2; }
+		.stat-executado { order: 1; }
+		.stat-repassado { order: 2; }
+		.stat-pct { order: 3; }
+		.stat-entes { order: 4; }
 	}
 
-	/* Telas estreitas (ex.: 320px): reduz o respiro lateral e empilha o trio para
-	   que cada valor ocupe a largura máxima e não seja cortado. */
+	/* Telas estreitas (ex.: 320px): reduz o respiro lateral. */
 	@media (max-width: 520px) {
 		.dashboard {
 			padding: 2rem 1rem 3rem;
 		}
 		.hero-band h1 {
 			padding: 0 1rem;
-		}
-		.metric-trio {
-			grid-template-columns: 1fr;
-			gap: 0.85rem;
 		}
 	}
 </style>

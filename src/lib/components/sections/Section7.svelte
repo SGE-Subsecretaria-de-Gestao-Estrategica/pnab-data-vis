@@ -58,7 +58,7 @@
 		visoes={['uf', 'estados', 'municipios']}
 		showRegiao={false}
 		showUf={false}
-		labelColor="#ffffff"
+		labelColor="#000000"
 	/>
 
 	<div class="scope-tag">{VISAO_LABELS[filters.visao]}</div>
@@ -66,10 +66,10 @@
 	<!-- ── Big numbers ─────────────────────────────────────────────────────── -->
 	<div class="bn-grid">
 		<div class="stat">
-			<BigNumberStat value={fmtNum(data.totalContemplados)} label="contemplados" fontSize={44} shadowDepth={4} width={360} labelColor="#ffffff" shadowColor="#000000" />
+			<BigNumberStat value={fmtNum(data.totalContemplados)} label="contemplados" fontSize={44} shadowDepth={4} width={360} labelColor="#000000" shadowColor="#000000" />
 		</div>
 		<div class="stat">
-			<BigNumberStat value={fmtBRL(data.totalValor)} label="valor executado" fontSize={44} shadowDepth={4} width={360} labelColor="#ffffff" shadowColor="#000000" />
+			<BigNumberStat value={fmtBRL(data.totalValor)} label="valor executado" fontSize={44} shadowDepth={4} width={360} labelColor="#000000" shadowColor="#000000" />
 		</div>
 	</div>
 
@@ -83,7 +83,7 @@
 			format={fmtPct}
 			marginLeft={150}
 			legendAlign="left"
-			axisColor="#ffffff"
+			axisColor="#000000"
 		/>
 	</div>
 	</div>
@@ -93,13 +93,13 @@
 	/* Hero full-bleed roxo: abre a Seção 2 com o título em "big number"
 	   (preenchimento branco + sombra 3D preta, igual aos números da seção). */
 	.hero-band {
-		background: #883a67;
 		min-height: 40vh;
 		min-height: 40svh;
 		display: flex;
 		align-items: center;
 		padding: 2rem 0;
 		box-sizing: border-box;
+		background: #265c4f;
 	}
 
 	.hero-band h1 {
@@ -110,18 +110,20 @@
 		box-sizing: border-box;
 		font-size: clamp(1.6rem, 4vw, 3rem);
 		font-weight: 800;
-		line-height: 1.15;
+		line-height: 1.25;
+		letter-spacing: -0.02em;
 		text-align: left;
+		/* Estilo "big number": preenchimento branco + sombra 3D preta extrudada,
+		   replicando o contorno + degraus diagonais do componente BigNumber. */
 		color: #ffffff;
 		text-shadow:
-			1px 1px 0 #000,
-			2px 2px 0 #000,
-			3px 3px 0 #000,
-			4px 4px 0 #000;
+			-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
+			0 -2px 0 #000, 0 2px 0 #000, -2px 0 0 #000, 2px 0 0 #000,
+			1px 1px 0 #000, 2px 2px 0 #000, 3px 3px 0 #000, 4px 4px 0 #000,
+			5px 5px 0 #000, 6px 6px 0 #000, 7px 7px 0 #000, 8px 8px 0 #000;
 	}
 
 	.section-band {
-		background: #883a67;
 	}
 
 	.section {
@@ -137,14 +139,14 @@
 	.sec-header h2 {
 		font-size: 1.6rem;
 		font-weight: 800;
-		color: #ffffff;
+		color: #1B1B1B;
 		margin: 0 0 0.4rem;
 		line-height: 1.15;
 	}
 
 	.lead {
 		font-size: 0.98rem;
-		color: #ffffff;
+		color: #555;
 		margin: 0;
 		line-height: 1.5;
 		max-width: 70ch;
@@ -154,8 +156,8 @@
 		display: inline-block;
 		font-size: 0.74rem;
 		font-weight: 600;
-		color: #ffffff;
-		background: rgba(255, 255, 255, 0.14);
+		color: #1B1B1B;
+		background: rgba(0, 0, 0, 0.06);
 		padding: 0.3rem 0.7rem;
 		border-radius: 0;
 		margin-bottom: 1rem;

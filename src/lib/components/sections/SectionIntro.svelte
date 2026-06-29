@@ -26,7 +26,6 @@
 <style>
 	.intro-band {
 		width: 100%;
-		background: var(--green);
 		color: black;
 	}
 

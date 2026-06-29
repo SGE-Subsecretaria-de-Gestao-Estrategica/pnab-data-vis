@@ -44,12 +44,7 @@
 	<header class="sec-header">
 		<h2>Beneficiários e recursos por tipo de documento</h2>
 		<p class="lead">
-			Distribuição entre <strong>CPF</strong> (pessoas físicas) e <strong>CNPJ</strong>
-			(pessoas jurídicas). As pessoas jurídicas concentram
-			<strong>{fmtPct(data.cnpj.percValor)}</strong> dos recursos, mas representam apenas
-			<strong>{fmtPct(data.cnpj.percContemplados)}</strong> dos contemplados — enquanto as
-			pessoas físicas são <strong>{fmtPct(data.cpf.percContemplados)}</strong> dos contemplados
-			com <strong>{fmtPct(data.cpf.percValor)}</strong> dos recursos.
+			Participação de pessoas físicas (CPF) e pessoas jurídicas (CNPJ) no total de recursos recebidos e no número total de contemplados.
 		</p>
 	</header>
 

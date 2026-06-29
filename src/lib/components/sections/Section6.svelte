@@ -77,12 +77,7 @@
 	<header class="sec-header">
 		<h2>Distribuição do recurso por porte municipal</h2>
 		<p class="lead">
-			Valor executado por tamanho de município. Os
-			<strong>{maior.municipios.toLocaleString('pt-BR')}</strong> municípios de porte
-			<strong>{maior.porte}</strong> concentraram
-			<strong>{formatPct(maior.perc_valor)}</strong> do total{#if pequenoI}, enquanto os
-				<strong>{pequenoI.municipios.toLocaleString('pt-BR')}</strong> municípios Pequeno I —
-				muito mais numerosos — receberam <strong>{formatPct(pequenoI.perc_valor)}</strong>{/if}.
+			Participação de cada porte populacional municipal no valor total executado por municípios.
 		</p>
 	</header>
 

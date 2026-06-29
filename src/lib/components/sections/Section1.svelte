@@ -133,7 +133,7 @@
 			<div class="stat-grid">
 			<!-- Headline: contemplados + texto -->
 			<div class="stat-row stat-contemplados">
-				<BigNumberStat value={fmtNum(scoped.contemplados)} label="contemplados (agentes / projetos)" fontSize={60} shadowDepth={6} width={340} shadowColor="#000000" labelColor="#1B1B1B" subtitleColor="#1B1B1B" />
+				<BigNumberStat value={fmtNum(scoped.contemplados)} label="contemplados" fontSize={60} shadowDepth={6} width={340} shadowColor="#000000" labelColor="#1B1B1B" subtitleColor="#1B1B1B" />
 			</div>
 
 			<!-- Valor executado em destaque (big number) -->

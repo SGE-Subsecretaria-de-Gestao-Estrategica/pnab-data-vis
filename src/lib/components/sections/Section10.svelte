@@ -252,7 +252,7 @@
 				format={fmtPct}
 				marginLeft={120}
 				legendAlign="left"
-				axisColor="#ffffff"
+				axisColor="#000000"
 			/>
 		</div>
 	</div>
@@ -270,7 +270,7 @@
 					format={fmtPct}
 					marginLeft={280}
 					legendAlign="left"
-					axisColor="#ffffff"
+					axisColor="#000000"
 				/>
 			</div>
 		</div>
@@ -289,7 +289,7 @@
 					format={fmtPct}
 					marginLeft={120}
 					legendAlign="left"
-					axisColor="#ffffff"
+					axisColor="#000000"
 				/>
 			</div>
 		</div>
@@ -311,13 +311,13 @@
 	/* Hero full-bleed teal: abre a Seção 3 com o título em "big number"
 	   (preenchimento branco + sombra 3D preta), igual às heros anteriores. */
 	.hero-band {
-		background: #317a68;
 		min-height: 40vh;
 		min-height: 40svh;
 		display: flex;
 		align-items: center;
 		padding: 2rem 0;
 		box-sizing: border-box;
+		background: #773561;
 	}
 
 	.hero-band h1 {
@@ -328,19 +328,21 @@
 		box-sizing: border-box;
 		font-size: clamp(1.6rem, 4vw, 3rem);
 		font-weight: 800;
-		line-height: 1.15;
+		line-height: 1.25;
+		letter-spacing: -0.02em;
 		text-align: left;
+		/* Estilo "big number": preenchimento branco + sombra 3D preta extrudada,
+		   replicando o contorno + degraus diagonais do componente BigNumber. */
 		color: #ffffff;
 		text-shadow:
-			1px 1px 0 #000,
-			2px 2px 0 #000,
-			3px 3px 0 #000,
-			4px 4px 0 #000;
+			-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000,
+			0 -2px 0 #000, 0 2px 0 #000, -2px 0 0 #000, 2px 0 0 #000,
+			1px 1px 0 #000, 2px 2px 0 #000, 3px 3px 0 #000, 4px 4px 0 #000,
+			5px 5px 0 #000, 6px 6px 0 #000, 7px 7px 0 #000, 8px 8px 0 #000;
 	}
 
 	/* Seção 3 inteira sobre o teal (full-bleed). */
 	.section-band {
-		background: #317a68;
 	}
 
 	.section {
@@ -356,14 +358,14 @@
 	.sec-header h2 {
 		font-size: 1.6rem;
 		font-weight: 800;
-		color: #ffffff;
+		color: #1B1B1B;
 		margin: 0 0 0.4rem;
 		line-height: 1.15;
 	}
 
 	.lead {
 		font-size: 0.98rem;
-		color: #ffffff;
+		color: #555;
 		margin: 0;
 		line-height: 1.5;
 		max-width: 70ch;
@@ -398,7 +400,7 @@
 		margin: 0 0 0.75rem;
 		font-size: 1.05rem;
 		font-weight: 700;
-		color: #ffffff;
+		color: #1B1B1B;
 	}
 
 	.chart-card {

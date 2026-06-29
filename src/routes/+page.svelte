@@ -62,7 +62,6 @@
 
 	/* Seção 1 (blocos Section1→Section6) com o amarelo principal do SNIIC. */
 	.section-group {
-		background: #f6c341;
 	}
 
 	/* Botão temporário para comparar as duas versões de cabeçalho. */

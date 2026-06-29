@@ -45,6 +45,7 @@ Participação percentual do valor estimado por tipo de execução (**Ação Cul
         format={formatPct}
         showTotalLabel={false}
         marginLeft={120}
+        legendInset
       />
     </div>
   {/snippet}

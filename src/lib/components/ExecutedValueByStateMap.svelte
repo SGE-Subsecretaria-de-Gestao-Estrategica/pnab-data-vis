@@ -77,6 +77,28 @@
   const svgH    = $derived(mapH + 20 + TOP_PAD);
   const legColW = $derived(Math.floor((width - mapW - LEG_GAP) / legCols));
 
+  // Available width for the legend title, and its wrapping into lines.
+  const LEG_FONT_SIZE = 14;
+  const LABEL_LINE_H = 18;
+  const legendW = $derived(Math.max(0, width - mapW - LEG_GAP));
+  const labelLines = $derived.by((): string[] => {
+    if (!label) return [];
+    const words = label.toUpperCase().split(' ');
+    const lines: string[] = [];
+    let current = '';
+    for (const w of words) {
+      const test = current ? `${current} ${w}` : w;
+      if (current && measureTextWidth(test, LEG_FONT_SIZE, FONT_FAMILY, 700) > legendW) {
+        lines.push(current);
+        current = w;
+      } else {
+        current = test;
+      }
+    }
+    if (current) lines.push(current);
+    return lines;
+  });
+
   const valueMap = $derived(
     new Map(Object.entries(states).map(([name, d]) => [name, (d[metric] ?? 0) as number]))
   );
@@ -244,10 +266,11 @@
   <div bind:this={containerEl} style="width:100%">
     {#if geojson && pathFn && mapW > 0}
       {@const sortedStates = [...stateEntries].sort((a, b) => b.val - a.val)}
-      {@const legRowH     = formatLine2 ? 28 : 18}
+      {@const legRowH     = formatLine2 ? 34 : 23}
       {@const legRowCount = Math.ceil(sortedStates.length / legCols)}
       {@const legContentH = legRowCount * legRowH}
-      {@const legTotalH   = legContentH + (label ? 24 : 0)}
+      {@const labelH      = labelLines.length ? labelLines.length * LABEL_LINE_H + 10 : 0}
+      {@const legTotalH   = legContentH + labelH}
       {@const legStartY   = Math.max(TOP_PAD, TOP_PAD + Math.round(mapH / 2 - legTotalH / 2))}
       {@const svgTotalH   = Math.max(svgH, legStartY + legTotalH + 8)}
       <svg width={width} height={svgTotalH} font-family={FONT_FAMILY} font-size={FONT_SIZE}>
@@ -261,21 +284,25 @@
             {/if}
           {/each}
         </g>
-        {#if label}
-          <text x={mapW + LEG_GAP} y={legStartY - 8} fill="#6b7280" font-size="11" font-family={FONT_FAMILY}>{label.toUpperCase()}</text>
+        {#if labelLines.length}
+          <text x={mapW + LEG_GAP} y={legStartY + 11} fill="#111827" font-size={LEG_FONT_SIZE} font-weight="700" font-family={FONT_FAMILY}>
+            {#each labelLines as ln, li}
+              <tspan x={mapW + LEG_GAP} dy={li === 0 ? 0 : LABEL_LINE_H}>{ln}</tspan>
+            {/each}
+          </text>
         {/if}
         {#each sortedStates as item, i}
           {@const col = i % legCols}
           {@const row = Math.floor(i / legCols)}
           {@const lx  = mapW + LEG_GAP + col * legColW}
-          {@const ly  = legStartY + (label ? 22 : 0) + row * legRowH}
-          <rect x={lx} y={ly} width={10} height={10} rx="0" fill={item.fill} />
-          <text x={lx + 14} y={ly + 5} dy="0.35em" fill="#374151" font-size="11" font-family={FONT_FAMILY}>
+          {@const ly  = legStartY + labelH + row * legRowH}
+          <rect x={lx} y={ly} width={12} height={12} rx="0" fill={item.fill} />
+          <text x={lx + 17} y={ly + 6} dy="0.35em" fill="#111827" font-size={LEG_FONT_SIZE} font-family={FONT_FAMILY}>
             <tspan font-weight="700">{item.sigla}</tspan>
             <tspan dx="4">{format(item.val)}</tspan>
           </text>
           {#if formatLine2}
-            <text x={lx + 14} y={ly + 18} fill="#9ca3af" font-size="10" font-family={FONT_FAMILY}>{formatLine2(item.row)}</text>
+            <text x={lx + 17} y={ly + 22} fill="#374151" font-size="12" font-family={FONT_FAMILY}>{formatLine2(item.row)}</text>
           {/if}
         {/each}
       </svg>

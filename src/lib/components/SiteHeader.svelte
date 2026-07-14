@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { blue } from 'sniic-design-system';
 	import { base } from '$app/paths';
+	import TopTabs from './TopTabs.svelte';
 
 	type Topic = { key: string; label: string; children: { id: string; label: string }[] };
 
@@ -54,11 +55,7 @@
 	<div class="inner">
 		<div class="brand">
 			<h1 class="brand-title">
-				<img
-					class="brand-logo"
-					src="{base}/logos/pnab-logo.svg"
-					alt="Política Nacional Aldir Blanc"
-				/>
+				Painel de dados da Política Nacional Aldir Blanc de Fomento à Cultura
 			</h1>
 			<p class="lead">
 				O Painel de Dados SNIIC: Avaliação de Resultados da Aldir Blanc — Ciclo 1
@@ -129,7 +126,17 @@
 			{/each}
 		</nav>
 	{/if}
+
+	<div class="brand-logo-wrap">
+		<img
+			class="brand-logo"
+			src="{base}/logos/aldir_horizontal_color.png"
+			alt="Política Nacional Aldir Blanc"
+		/>
+	</div>
 </header>
+
+<TopTabs active="painel" />
 
 <style>
 	.site-header {
@@ -154,15 +161,25 @@
 		max-width: 540px;
 	}
 
-	/* Logo da PNAB no lugar do título. */
 	.brand-title {
 		margin: 0 0 1.5rem;
-		line-height: 0;
+		font-size: clamp(1.5rem, 2.4vw, 2.1rem);
+		font-weight: 700;
+		line-height: 1.25;
+		color: #1B1B1B;
+	}
+
+	.brand-logo-wrap {
+		display: flex;
+		justify-content: center;
+		padding: 0 2rem 3rem;
+		max-width: 1200px;
+		margin: 0 auto;
 	}
 
 	.brand-logo {
 		display: block;
-		width: clamp(220px, 34vw, 380px);
+		width: clamp(280px, 42vw, 480px);
 		height: auto;
 	}
 

@@ -38,7 +38,7 @@ Estados do Centro-Oeste e do Sudeste concentraram os maiores valores médios por
         format={formatBRL}
         showSideLegend={true}
         legCols={2}
-        mapFrac={0.72}
+        mapFrac={0.58}
       />
     </div>
   {/snippet}

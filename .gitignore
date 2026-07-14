@@ -17,4 +17,8 @@ debug-storybook.log
 *.pyc
 /data/input_data/non-public
 
+# Microdados brutos (~122 MB): apenas insumo do build do Parquet
+# (scripts/build_dados_abertos_parquet.py). O app usa static/data/dados_abertos.parquet.
+/data/data_table
+
 /svgs

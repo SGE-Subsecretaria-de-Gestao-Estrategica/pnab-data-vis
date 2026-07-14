@@ -75,14 +75,14 @@
 		const nUf = filters.filteredUFs.length;
 		switch (filters.visao) {
 			case 'estados':
-				return { value: fmtNum(nUf), sub: nUf === 1 ? 'estado' : 'estados', noun: 'estados', adj: 'contemplados' };
+				return { value: fmtNum(nUf), sub: nUf === 1 ? 'estado' : 'estados', noun: 'estados', adj: 'executores' };
 			case 'regioes': {
 				const n = filters.regiao === 'Todas' ? 5 : 1;
-				return { value: fmtNum(n), sub: n === 1 ? 'região' : 'regiões', noun: 'regiões', adj: 'contempladas' };
+				return { value: fmtNum(n), sub: n === 1 ? 'região' : 'regiões', noun: 'regiões', adj: 'executores' };
 			}
 			case 'municipios': {
 				const nMun = scoped.numMunicipios;
-				return { value: fmtNum(nMun), sub: nMun === 1 ? 'município' : 'municípios', noun: 'municípios', adj: 'contemplados' };
+				return { value: fmtNum(nMun), sub: nMun === 1 ? 'município' : 'municípios', noun: 'municípios', adj: 'executores' };
 			}
 			case 'uf':
 			default: {
@@ -91,7 +91,7 @@
 					value: fmtNum(nUf + nMun),
 					sub: `${nUf} ${nUf === 1 ? 'estado' : 'estados'} + ${fmtNum(nMun)} ${nMun === 1 ? 'município' : 'municípios'}`,
 					noun: 'entes federativos',
-					adj: 'contemplados',
+					adj: 'executores',
 				};
 			}
 		}

@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { base } from '$app/paths';
-	import TopTabs from '$lib/components/TopTabs.svelte';
+	import SiteHeaderDados from '$lib/components/SiteHeaderDados.svelte';
 	import DataTable from '$lib/dadosAbertos/DataTable.svelte';
 </script>
 
@@ -9,37 +8,13 @@
 </svelte:head>
 
 <main>
-	<header class="page-head">
-		<div class="brand-bar">
-			<img
-				class="logo"
-				src="{base}/logos/aldir_horizontal_color.png"
-				alt="Política Nacional Aldir Blanc"
-			/>
-		</div>
-	</header>
-
-	<TopTabs active="dados" />
+	<SiteHeaderDados />
 
 	<div class="doc-bg">
 		<div class="aba-dados-abertos">
 			<div class="intro-header">
-				<h2>Dados Abertos - Aldir Blanc (Ciclo I)</h2>
 
 				<div class="context-box">
-					<p>
-						Esta seção de <strong>Dados Abertos</strong> disponibiliza a base consolidada dos agentes
-						culturais contemplados no Ciclo I da Política Nacional Aldir Blanc de Fomento à Cultura
-						(PNAB). Os dados integram o processo de reestruturação do Sistema Nacional de Informações e
-						Indicadores Culturais (SNIIC) e fundamentaram a pesquisa
-						<strong
-							>“Resultados do Primeiro Ciclo da Política Nacional Aldir Blanc de Fomento à Cultura:
-							recursos distribuídos, agentes contemplados e ações fomentadas”</strong
-						>. Sua divulgação em formato aberto assegura a transparência ativa, a reprodutibilidade
-						das análises e a credibilidade dos resultados, permitindo que a sociedade debata a
-						política pública com base em evidências.
-					</p>
-
 					<h3>Sobre a pesquisa</h3>
 					<p>
 						O estudo analisa o primeiro ciclo da PNAB (Lei nº 14.399/2022), implementado entre 2023 e
@@ -79,7 +54,7 @@
 				</div>
 
 				<div class="sections-container">
-					<details class="custom-accordion">
+					<details id="acc-obtencao" class="custom-accordion">
 						<summary>Obtenção e Tratamento dos Dados</summary>
 						<div class="accordion-body">
 							<p>
@@ -169,7 +144,7 @@
 						</div>
 					</details>
 
-					<details class="custom-accordion">
+					<details id="acc-dicionario" class="custom-accordion">
 						<summary>Dicionário de Dados</summary>
 						<div class="accordion-body">
 							<p>
@@ -318,7 +293,7 @@
 						</div>
 					</details>
 
-					<details class="custom-accordion">
+					<details id="acc-citar" class="custom-accordion">
 						<summary>Como citar a utilização dos dados disponibilizados</summary>
 						<div class="accordion-body">
 							<p>
@@ -339,7 +314,7 @@
 						</div>
 					</details>
 
-					<details class="custom-accordion">
+					<details id="acc-ciclo2" class="custom-accordion">
 						<summary>Perspectivas para o Ciclo II da PNAB</summary>
 						<div class="accordion-body">
 							<p>
@@ -397,20 +372,6 @@
 		min-height: 100vh;
 		background: #ffffff;
 	}
-	.page-head {
-		border-bottom: 1px solid #e5e9f0;
-		background: #ffffff;
-	}
-	.brand-bar {
-		max-width: 1000px;
-		margin: 0 auto;
-		padding: 1.25rem 2rem;
-	}
-	.logo {
-		display: block;
-		height: 48px;
-		width: auto;
-	}
 
 	/* ── conteúdo (card sobre fundo claro) ── */
 	.doc-bg {
@@ -419,7 +380,7 @@
 	}
 	.aba-dados-abertos {
 		background-color: #ffffff;
-		max-width: 1000px;
+		max-width: 1200px;
 		margin: 0 auto;
 		padding: 40px;
 		border-radius: 8px;
@@ -428,12 +389,6 @@
 		line-height: 1.6;
 	}
 
-	h2 {
-		color: #111827;
-		font-size: 1.8em;
-		margin-top: 0;
-		margin-bottom: 20px;
-	}
 	h3 {
 		color: #1f2937;
 		margin-top: 25px;
@@ -475,6 +430,7 @@
 		border-radius: 8px;
 		background-color: #fff;
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+		scroll-margin-top: 1rem;
 	}
 	.custom-accordion summary {
 		font-weight: 600;
@@ -578,10 +534,6 @@
 	}
 
 	@media (max-width: 860px) {
-		.brand-bar {
-			padding-left: 1.25rem;
-			padding-right: 1.25rem;
-		}
 		.doc-bg {
 			padding: 20px 10px;
 		}

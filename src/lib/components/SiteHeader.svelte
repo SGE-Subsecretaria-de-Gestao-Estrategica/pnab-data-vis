@@ -55,15 +55,10 @@
 	<div class="inner">
 		<div class="brand">
 			<h1 class="brand-title">
-				Painel de dados da Política Nacional Aldir Blanc de Fomento à Cultura
+				Painel de Dados SNIIC: Avaliação de Resultados da Política Nacional Aldir Blanc de Fomento à Cultura
 			</h1>
 			<p class="lead">
-				O Painel de Dados SNIIC: Avaliação de Resultados da Aldir Blanc — Ciclo 1
-				apresenta os principais resultados da pesquisa “Resultados do Primeiro Ciclo da
-				Política Nacional Aldir Blanc de Fomento à Cultura: recursos distribuídos, agentes
-				contemplados e ações fomentadas”. A ferramenta reúne gráficos interativos sobre a
-				execução da política, permitindo a visualização dos dados por meio da aplicação de
-				filtros pelos usuários.
+				Este Painel de Dados SNIIC disponibiliza os principais números da pesquisa “Resultados do Primeiro Ciclo da Política Nacional Aldir Blanc de Fomento à Cultura: recursos distribuídos, agentes contemplados e ações fomentadas”. Por meio de gráficos interativos e filtros de consulta, a ferramenta possibilita a visualização e a análise dos dados sobre a execução do Ciclo 1 da política em diferentes recortes e perspectivas. Os microdados também estão descritos e disponíveis na aba "Dados abertos".
 			</p>
 		</div>
 

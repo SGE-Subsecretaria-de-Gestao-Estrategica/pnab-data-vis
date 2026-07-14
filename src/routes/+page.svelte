@@ -12,7 +12,6 @@
 	import SectionIntro from '$lib/components/sections/SectionIntro.svelte';
 	import SectionFooter from '$lib/components/sections/SectionFooter.svelte';
 	import SiteHeader from '$lib/components/SiteHeader.svelte';
-	import SiteHeaderAlt from '$lib/components/SiteHeaderAlt.svelte';
 	import { white } from 'sniic-design-system';
 
 	// Alterna entre o cabeçalho padrão (claro) e a versão alternativa (fundo preto).

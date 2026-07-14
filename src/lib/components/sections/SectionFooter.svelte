@@ -4,7 +4,7 @@
 
 <section class="footer-band">
 	<div class="footer">
-		<img class="logo" src="{base}/logos/logo-sniic.png" alt="SNIIC — Sistema Nacional de Informações e Indicadores Culturais" />
+		<!-- <img class="logo" src="{base}/logos/logo-sniic.png" alt="SNIIC — Sistema Nacional de Informações e Indicadores Culturais" /> -->
 		<p class="credit">
 			Pesquisa realizada no <strong>SNIIC — Sistema Nacional de Informações e Indicadores
 			Culturais</strong>.

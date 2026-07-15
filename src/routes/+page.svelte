@@ -12,7 +12,6 @@
 	import SectionIntro from '$lib/components/sections/SectionIntro.svelte';
 	import SectionFooter from '$lib/components/sections/SectionFooter.svelte';
 	import SiteHeader from '$lib/components/SiteHeader.svelte';
-	import SiteHeaderAlt from '$lib/components/SiteHeaderAlt.svelte';
 	import { white } from 'sniic-design-system';
 
 	// Alterna entre o cabeçalho padrão (claro) e a versão alternativa (fundo preto).
@@ -24,7 +23,9 @@
 </svelte:head>
 
 <main style:background={white} style:--chart-bg={white}>
+	<a class="skip-link" href="#conteudo-principal">Pular para o conteúdo</a>
 	<SiteHeader />
+	<div id="conteudo-principal" tabindex="-1">
 	<SectionIntro />
 
 	<!-- Seção 1 — distribuição nos territórios: reúne os 6 blocos (valores gerais
@@ -44,6 +45,7 @@
 	<div id="sec-5" class="anchor"><Section10 /></div>
 
 	<SectionFooter />
+	</div>
 </main>
 
 <style>

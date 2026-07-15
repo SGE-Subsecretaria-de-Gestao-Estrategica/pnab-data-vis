@@ -341,6 +341,22 @@
 				aria-label="Última página">»</button
 			>
 		</div>
+		<section class="footer-band">
+			<div class="footer">
+				<!-- <img class="logo" src="{base}/logos/logo-sniic.png" alt="SNIIC — Sistema Nacional de Informações e Indicadores Culturais" /> -->
+				<p class="credit">
+					Pesquisa realizada no <strong>SNIIC — Sistema Nacional de Informações e Indicadores
+					Culturais</strong>.
+				</p>
+				<p class="open-data">
+					Para acessar os dados desta pesquisa na íntegra, visite o
+					<a
+						href="https://github.com/SGE-Subsecretaria-de-Gestao-Estrategica/dados-abertos-pnab-ciclo1"
+						target="_blank"
+						rel="noopener noreferrer">repositório de dados abertos da SGE/MinC</a>.
+				</p>
+			</div>
+		</section>
 	</div>
 </div>
 
@@ -698,5 +714,28 @@
 	.page-of {
 		padding: 0 0.6rem;
 		white-space: nowrap;
+	}
+	
+	.footer-band {
+		width: 100%;
+		color: #000;
+	}
+
+	.footer {
+		text-align: center;
+	}
+
+	/* On narrow screens the download menu is a right-anchored dropdown that can
+	   spill outside the viewport; pin it to the bottom of the screen instead. */
+	@media (max-width: 560px) {
+		.dl-menu {
+			position: fixed;
+			left: 1rem;
+			right: 1rem;
+			top: auto;
+			bottom: 1rem;
+			width: auto;
+			z-index: 60;
+		}
 	}
 </style>

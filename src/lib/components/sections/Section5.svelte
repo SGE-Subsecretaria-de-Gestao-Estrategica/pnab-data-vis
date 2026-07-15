@@ -2,8 +2,10 @@
 	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
 	import DashboardFilterBar from '$lib/components/DashboardFilterBar.svelte';
 	import { createDashboardFilters, VISAO_LABELS } from '$lib/stores/dashboardFilters.svelte';
+	import ChartDataTable from '$lib/components/ChartDataTable.svelte';
 	import { colorScales } from 'sniic-design-system';
 	import { residenciaComparison, RESID_KEYS, RESID_LABELS } from '$lib/data/localResidencia';
+	import { siglaToName } from '$lib/data/dashboard';
 
 	// Capital/metro/interior só existe por execução estadual — única visão disponível.
 	const filters = createDashboardFilters('estados');
@@ -32,7 +34,7 @@
 <section class="section-band">
 	<div class="section">
 	<header class="sec-header">
-		<h2>Distribuição de recursos: capital, metropolitana e interior</h2>
+		<h3>Distribuição de recursos: capital, metropolitana e interior</h3>
 		<p class="lead">
 			Participação de capital, região metropolitana e interior no valor executado,
 			por ente federativo, com o Brasil como referência.
@@ -54,6 +56,11 @@
 			axisColor="#000000"
 			gridColor="#000000"
 		/>
+		<ChartDataTable
+			caption={`Participação de capital, região metropolitana e interior no valor executado — ${scopeLabel}`}
+			columns={['Ente', ...RESID_KEYS.map((k) => RESID_LABELS[k])]}
+			rows={data.map((d) => [siglaToName[d.label] ?? d.label, ...RESID_KEYS.map((k) => fmtPct(d[k]))])}
+		/>
 	</div>
 	</div>
 </section>
@@ -72,7 +79,7 @@
 		margin-bottom: 1.5rem;
 	}
 
-	.sec-header h2 {
+	.sec-header h3 {
 		font-size: 1.6rem;
 		font-weight: 800;
 		color: #1B1B1B;

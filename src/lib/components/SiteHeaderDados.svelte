@@ -9,7 +9,6 @@
 		{ id: 'acc-obtencao', label: 'Obtenção e Tratamento dos Dados' },
 		{ id: 'acc-dicionario', label: 'Dicionário de Dados' },
 		{ id: 'acc-citar', label: 'Como citar a utilização dos dados disponibilizados' },
-		{ id: 'acc-ciclo2', label: 'Perspectivas para o Ciclo II da PNAB' }
 	];
 
 	let menuOpen = $state(false);

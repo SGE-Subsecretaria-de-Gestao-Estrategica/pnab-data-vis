@@ -64,6 +64,7 @@
 
 		<!-- Desktop: seções à direita, submenu abre abaixo do título ao clicar -->
 		<nav class="topics" aria-label="Seções da pesquisa">
+			<span class="topics-title">Nesta página</span>
 			{#each sections as s}
 				<div class="topic-group" class:open={openGroup === s.key}>
 					<button
@@ -194,6 +195,15 @@
 		gap: 0.5rem;
 		width: 320px;
 		flex-shrink: 0;
+	}
+
+	.topics-title {
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: #8a93a6;
+		margin-bottom: 0.4rem;
 	}
 
 	.topic-group {

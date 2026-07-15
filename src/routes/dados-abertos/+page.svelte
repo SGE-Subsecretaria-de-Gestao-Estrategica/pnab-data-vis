@@ -314,7 +314,7 @@
 						</div>
 					</details>
 
-					<details id="acc-ciclo2" class="custom-accordion">
+					<!-- <details id="acc-ciclo2" class="custom-accordion">
 						<summary>Perspectivas para o Ciclo II da PNAB</summary>
 						<div class="accordion-body">
 							<p>
@@ -349,7 +349,7 @@
 								>.
 							</p>
 						</div>
-					</details>
+					</details> -->
 				</div>
 			</div>
 

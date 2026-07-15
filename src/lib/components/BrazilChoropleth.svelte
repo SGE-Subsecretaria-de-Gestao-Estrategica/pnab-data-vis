@@ -103,6 +103,8 @@
 						onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onselect?.(sigla); } }}
 						onmouseenter={() => (hovered = sigla)}
 						onmouseleave={() => (hovered = null)}
+						onfocus={() => (hovered = sigla)}
+						onblur={() => (hovered = null)}
 					/>
 				{/if}
 			{/each}

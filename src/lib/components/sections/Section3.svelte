@@ -2,10 +2,14 @@
 	import FaixaComparisonChart from '$lib/components/FaixaComparisonChart.svelte';
 	import DashboardFilterBar from '$lib/components/DashboardFilterBar.svelte';
 	import { createDashboardFilters, VISAO_LABELS } from '$lib/stores/dashboardFilters.svelte';
+	import ChartDataTable from '$lib/components/ChartDataTable.svelte';
 	import { colorScales } from 'sniic-design-system';
 	import { faixaComparison, FAIXA_LABELS } from '$lib/data/faixa';
+	import { siglaToName } from '$lib/data/dashboard';
 
 	const filters = createDashboardFilters();
+
+	const fmtPct1 = (v: number) => v.toFixed(1).replace('.', ',') + '%';
 
 	// Municipality-level faixa data doesn't exist — offer only the supported visões.
 	const VISOES = ['uf', 'estados'] as const;
@@ -40,7 +44,7 @@
 <section class="section-band">
 	<div class="section">
 	<header class="sec-header">
-		<h2>Distribuição por faixa de valor</h2>
+		<h3>Distribuição por faixa de valor</h3>
 		<p class="lead">
 			Para cada ente federativo, duas barras: a participação de cada faixa de valor no
 			<strong>valor executado</strong> e no <strong>número de pagamentos</strong>.
@@ -58,6 +62,14 @@
 			colors={FAIXA_COLORS}
 			showFlags={filters.visao === 'uf' || filters.visao === 'estados'}
 			axisColor="#000000"
+		/>
+		<ChartDataTable
+			caption={`Distribuição por faixa de valor (% por ente) — ${scopeLabel}`}
+			columns={['Ente', 'Métrica', ...FAIXA_LABELS]}
+			rows={entities.flatMap((e) => [
+				[siglaToName[e.label] ?? e.label, 'Valor executado', ...e.valor.map(fmtPct1)],
+				[siglaToName[e.label] ?? e.label, 'Nº de pagamentos', ...e.qtd.map(fmtPct1)]
+			])}
 		/>
 	</div>
 	</div>
@@ -77,7 +89,7 @@
 		margin-bottom: 1.5rem;
 	}
 
-	.sec-header h2 {
+	.sec-header h3 {
 		font-size: 1.6rem;
 		font-weight: 800;
 		color: #1B1B1B;

@@ -2,8 +2,9 @@
 	import HorizontalBarChartCustom from '$lib/components/HorizontalBarChartCustom.svelte';
 	import DashboardFilterBar from '$lib/components/DashboardFilterBar.svelte';
 	import { createDashboardFilters, VISAO_LABELS } from '$lib/stores/dashboardFilters.svelte';
+	import ChartDataTable from '$lib/components/ChartDataTable.svelte';
 	import { colorScales } from 'sniic-design-system';
-	import { rowsByVisao, regionAgg, REGIOES } from '$lib/data/dashboard';
+	import { rowsByVisao, regionAgg, REGIOES, siglaToName } from '$lib/data/dashboard';
 
 	const filters = createDashboardFilters();
 
@@ -34,7 +35,7 @@
 
 <section class="section">
 	<header class="sec-header">
-		<h2>Valor per capita por estado</h2>
+		<h3>Valor per capita por estado</h3>
 		<p class="lead">
 			Valor executado (R$) dividido pela população da UF. Use os filtros para alterar a visualização.
 		</p>
@@ -57,6 +58,11 @@
 			gridColor="#000000"
 			zeroLineColor="#000000"
 		/>
+		<ChartDataTable
+			caption={`Valor per capita por ${filters.visao === 'regioes' ? 'região' : 'estado'} — ${scopeLabel}`}
+			columns={['Ente', 'Valor per capita (R$)']}
+			rows={bars.map((b) => [siglaToName[b.label] ?? b.label, fmtBRL(b.value)])}
+		/>
 	</div>
 </section>
 
@@ -71,7 +77,7 @@
 		margin-bottom: 1.5rem;
 	}
 
-	.sec-header h2 {
+	.sec-header h3 {
 		font-size: 1.6rem;
 		font-weight: 800;
 		color: #1B1B1B;

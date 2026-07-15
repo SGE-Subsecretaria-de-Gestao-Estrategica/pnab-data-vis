@@ -43,7 +43,14 @@
 	function go(id: string) {
 		menuOpen = false;
 		openGroup = null;
-		document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+		const el = document.getElementById(id);
+		if (!el) return;
+		const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
+		// Move o foco para a seção-alvo para que leitores de tela e navegação por
+		// teclado acompanhem o salto (senão o foco fica preso no menu).
+		el.setAttribute('tabindex', '-1');
+		el.focus({ preventScroll: true });
 	}
 
 	function toggleGroup(key: string) {

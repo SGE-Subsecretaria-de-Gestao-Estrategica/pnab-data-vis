@@ -4,6 +4,7 @@
 	import { createDashboardFilters, VISAO_LABELS } from '$lib/stores/dashboardFilters.svelte';
 	import { colorScales } from 'sniic-design-system';
 	import BigNumberStat from '$lib/components/BigNumberStat.svelte';
+	import ChartDataTable from '$lib/components/ChartDataTable.svelte';
 	import {
 		docByVisao,
 		stackedData,
@@ -20,6 +21,8 @@
 			style: 'currency', currency: 'BRL',
 			notation: 'compact', maximumFractionDigits: 1,
 		}).format(v);
+	const fmtBRLfull = (v: number) =>
+		new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(v);
 	const fmtNum = (v: number) => v.toLocaleString('pt-BR');
 	const fmtPct = (v: number) => v.toFixed(1).replace('.', ',') + '%';
 
@@ -34,15 +37,15 @@
 <!-- Abertura da Seção 2 (público alcançado): título em "big number" sobre o roxo,
      espelhando a hero da Seção 1. -->
 <section class="hero-band">
-	<h1>
+	<h2>
 		QUEM ACESSOU OS RECURSOS DA POLÍTICA NACIONAL ALDIR BLANC?
-	</h1>
+	</h2>
 </section>
 
 <section class="section-band">
 	<div class="section">
 	<header class="sec-header">
-		<h2>Beneficiários e recursos por tipo de documento</h2>
+		<h3>Beneficiários e recursos por tipo de documento</h3>
 		<p class="lead">
 			Participação de pessoas físicas (CPF) e pessoas jurídicas (CNPJ) no total de recursos recebidos e no número total de contemplados.
 		</p>
@@ -81,6 +84,15 @@
 			axisColor="#000000"
 		/>
 	</div>
+
+	<ChartDataTable
+		caption={`Beneficiários e recursos por tipo de documento — ${VISAO_LABELS[filters.visao]}`}
+		columns={['Tipo de documento', 'Valor executado (R$)', '% do valor', 'Contemplados', '% dos contemplados']}
+		rows={[
+			['CPF (pessoa física)', fmtBRLfull(data.cpf.valor), fmtPct(data.cpf.percValor), fmtNum(data.cpf.contemplados), fmtPct(data.cpf.percContemplados)],
+			['CNPJ (pessoa jurídica)', fmtBRLfull(data.cnpj.valor), fmtPct(data.cnpj.percValor), fmtNum(data.cnpj.contemplados), fmtPct(data.cnpj.percContemplados)]
+		]}
+	/>
 	</div>
 </section>
 
@@ -97,7 +109,7 @@
 		background: #265c4f;
 	}
 
-	.hero-band h1 {
+	.hero-band h2 {
 		width: 100%;
 		max-width: 1200px;
 		margin: 0 auto;
@@ -131,7 +143,7 @@
 		margin-bottom: 1.5rem;
 	}
 
-	.sec-header h2 {
+	.sec-header h3 {
 		font-size: 1.6rem;
 		font-weight: 800;
 		color: #1B1B1B;
@@ -181,10 +193,10 @@
 		.bn-grid {
 			grid-template-columns: 1fr;
 		}
-		.sec-header h2 {
+		.sec-header h3 {
 			font-size: 1.4rem;
 		}
-		.hero-band h1 {
+		.hero-band h2 {
 			padding: 0 1rem;
 		}
 	}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
+	import ChartDataTable from '$lib/components/ChartDataTable.svelte';
 	import { categorical8, colorPairs } from 'sniic-design-system';
 	// @ts-ignore — d3-hierarchy types resolved via design-system deps
 	import { hierarchy, treemap as d3treemap } from 'd3-hierarchy';
@@ -152,13 +153,13 @@
 <!-- Abertura da Seção 3 (ações apoiadas): título em "big number" sobre o teal,
      espelhando as heros das seções 1 e 2. -->
 <section class="hero-band">
-	<h1>QUAIS AÇÕES CULTURAIS FORAM APOIADAS COM OS RECURSOS DA ALDIR BLANC?</h1>
+	<h2>QUAIS AÇÕES CULTURAIS FORAM APOIADAS COM OS RECURSOS DA ALDIR BLANC?</h2>
 </section>
 
 <section class="section-band">
 	<div class="section">
 	<header class="sec-header">
-		<h2>Distribuição de recursos por tipo de despesa</h2>
+		<h3>Distribuição de recursos por tipo de despesa</h3>
 		<p class="lead">
 			Esta seção apresenta a distribuição estimada dos recursos executados pelos municípios segundo o tipo de ação cultural fomentada e seus respectivos detalhamentos. Os resultados foram produzidos por meio de análise inferencial, com base na classificação das despesas registradas pelos municípios no sistema BB Gestão Ágil.
 		</p>
@@ -166,13 +167,13 @@
 
 	<!-- 1 · Tabela de categorias de despesa -->
 	<div class="block">
-		<h3 class="block-title">Categorias de despesa</h3>
+		<h4 class="block-title">Categorias de despesa</h4>
 		{@render dataTable(categoriasRows)}
 	</div>
 
 	<!-- 2 · Treemap de domínios de Fomento Cultural -->
 	<div class="block">
-		<h3 class="block-title">Domínios de Fomento Cultural</h3>
+		<h4 class="block-title">Domínios de Fomento Cultural</h4>
 		<div class="chart-card chart-card--frame">
 			<div class="tm-wrap" bind:clientWidth={tmWidth}>
 			{#if tmWidth > 0}
@@ -230,17 +231,17 @@
 
 	<!-- 3 · Detalhamento por categoria -->
 	<div class="block">
-		<h3 class="block-title">Detalhamento — Fomento Cultural</h3>
+		<h4 class="block-title">Detalhamento — Fomento Cultural</h4>
 		{@render dataTable(fomentoDetailRows)}
 	</div>
 	<div class="block">
-		<h3 class="block-title">Detalhamento — Política Nacional de Cultura Viva</h3>
+		<h4 class="block-title">Detalhamento — Política Nacional de Cultura Viva</h4>
 		{@render dataTable(culturaVivaDetailRows)}
 	</div>
 
 	<!-- 4 · Tipo de execução por região -->
 	<div class="block">
-		<h3 class="block-title">Tipo de execução por região — Fomento Cultural</h3>
+		<h4 class="block-title">Tipo de execução por região — Fomento Cultural</h4>
 		<div class="chart-card">
 			<HorizontalStackedBarChartCustom
 				data={tipoExecRegiaoData}
@@ -252,13 +253,18 @@
 				legendAlign="left"
 				axisColor="#000000"
 			/>
+			<ChartDataTable
+				caption="Tipo de execução por região — Fomento Cultural (% por região)"
+				columns={['Região', ...tipoExecRegiaoKeys.map((k) => tipoExecRegiaoLabels[k])]}
+				rows={tipoExecRegiaoData.map((d) => [d.label, ...tipoExecRegiaoKeys.map((k) => fmtPct((d as any)[k]))])}
+			/>
 		</div>
 	</div>
 
 	<!-- 5 · PNCV vs outros investimentos -->
 	<div class="block block--yellow">
 		<div class="block-inner">
-			<h3 class="block-title">PNCV vs. outros investimentos — por faixa de repasse municipal</h3>
+			<h4 class="block-title">PNCV vs. outros investimentos — por faixa de repasse municipal</h4>
 			<div class="chart-card">
 				<HorizontalStackedBarChartCustom
 					data={pncvOuOutrosData}
@@ -270,6 +276,11 @@
 					legendAlign="left"
 					axisColor="#000000"
 				/>
+				<ChartDataTable
+					caption="PNCV vs. outros investimentos por faixa de repasse municipal (% por faixa)"
+					columns={['Faixa de repasse', ...pncvOuOutrosKeys.map((k) => pncvOuOutrosLabels[k])]}
+					rows={pncvOuOutrosData.map((d) => [d.label, ...pncvOuOutrosKeys.map((k) => fmtPct((d as any)[k]))])}
+				/>
 			</div>
 		</div>
 	</div>
@@ -277,7 +288,7 @@
 	<!-- 6 · PNCV por natureza do beneficiário -->
 	<div class="block block--yellow">
 		<div class="block-inner">
-			<h3 class="block-title">PNCV por natureza do beneficiário (CNPJ vs. CPF)</h3>
+			<h4 class="block-title">PNCV por natureza do beneficiário (CNPJ vs. CPF)</h4>
 			<div class="chart-card">
 				<HorizontalStackedBarChartCustom
 					data={pncvNatJuridicaData}
@@ -289,17 +300,22 @@
 					legendAlign="left"
 					axisColor="#000000"
 				/>
+				<ChartDataTable
+					caption="PNCV por natureza do beneficiário (% por modalidade)"
+					columns={['Modalidade', ...pncvNatJuridicaKeys.map((k) => pncvNatJuridicaLabels[k])]}
+					rows={pncvNatJuridicaData.map((d) => [d.label, ...pncvNatJuridicaKeys.map((k) => fmtPct((d as any)[k]))])}
+				/>
 			</div>
 		</div>
 	</div>
 
 	<!-- 7 · Obras e operacionalização -->
 	<div class="block">
-		<h3 class="block-title">Obras, Reformas e Aquisição de Bens Culturais</h3>
+		<h4 class="block-title">Obras, Reformas e Aquisição de Bens Culturais</h4>
 		{@render dataTable(obrasRows)}
 	</div>
 	<div class="block">
-		<h3 class="block-title">Operacionalização da Política</h3>
+		<h4 class="block-title">Operacionalização da Política</h4>
 		{@render dataTable(operacRows)}
 	</div>
 	</div>
@@ -318,7 +334,7 @@
 		background: #773561;
 	}
 
-	.hero-band h1 {
+	.hero-band h2 {
 		width: 100%;
 		max-width: 1200px;
 		margin: 0 auto;
@@ -353,7 +369,7 @@
 		margin-bottom: 1.5rem;
 	}
 
-	.sec-header h2 {
+	.sec-header h3 {
 		font-size: 1.6rem;
 		font-weight: 800;
 		color: #1B1B1B;
@@ -503,7 +519,7 @@
 	}
 
 	@media (max-width: 720px) {
-		.sec-header h2 { font-size: 1.4rem; }
-		.hero-band h1 { padding: 0 1rem; }
+		.sec-header h3 { font-size: 1.4rem; }
+		.hero-band h2 { padding: 0 1rem; }
 	}
 </style>

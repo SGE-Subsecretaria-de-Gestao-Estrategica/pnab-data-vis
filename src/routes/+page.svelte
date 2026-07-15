@@ -23,7 +23,9 @@
 </svelte:head>
 
 <main style:background={white} style:--chart-bg={white}>
+	<a class="skip-link" href="#conteudo-principal">Pular para o conteúdo</a>
 	<SiteHeader />
+	<div id="conteudo-principal" tabindex="-1">
 	<SectionIntro />
 
 	<!-- Seção 1 — distribuição nos territórios: reúne os 6 blocos (valores gerais
@@ -43,6 +45,7 @@
 	<div id="sec-5" class="anchor"><Section10 /></div>
 
 	<SectionFooter />
+	</div>
 </main>
 
 <style>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import DashboardFilterBar from '$lib/components/DashboardFilterBar.svelte';
 	import HorizontalBarChartCustom from '$lib/components/HorizontalBarChartCustom.svelte';
+	import ChartDataTable from '$lib/components/ChartDataTable.svelte';
 	import { createDashboardFilters } from '$lib/stores/dashboardFilters.svelte';
 	import { colorScales } from 'sniic-design-system';
 	import { orgScope } from '$lib/data/section9';
@@ -25,7 +26,7 @@
 <section class="section-band">
 	<div class="section">
 	<header class="sec-header">
-		<h2>Contemplados PJ por tipo de organização</h2>
+		<h3>Contemplados PJ por tipo de organização</h3>
 		<p class="lead">
 			Distribuição das pessoas jurídicas contempladas pela Aldir Blanc por natureza jurídica.
 		</p>
@@ -46,6 +47,11 @@
 				labelColor="#000000"
 				axisColor="#000000"
 				outsideValueColor="#000000"
+			/>
+			<ChartDataTable
+				caption={`Contemplados PJ por tipo de organização — ${scopeLabel}`}
+				columns={['Tipo de organização', 'Contemplados']}
+				rows={scope.bars.map((b) => [b.label, fmtNum(b.value)])}
 			/>
 		</div>
 	{:else}
@@ -73,7 +79,7 @@
 		margin-bottom: 1.5rem;
 	}
 
-	.sec-header h2 {
+	.sec-header h3 {
 		font-size: 1.6rem;
 		font-weight: 800;
 		color: #1B1B1B;
@@ -121,7 +127,7 @@
 	}
 
 	@media (max-width: 720px) {
-		.sec-header h2 {
+		.sec-header h3 {
 			font-size: 1.4rem;
 		}
 	}

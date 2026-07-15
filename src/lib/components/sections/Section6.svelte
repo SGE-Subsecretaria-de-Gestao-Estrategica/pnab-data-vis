@@ -75,7 +75,7 @@
 
 <section class="section">
 	<header class="sec-header">
-		<h2>Distribuição do recurso por porte municipal</h2>
+		<h3>Distribuição do recurso por porte municipal</h3>
 		<p class="lead">
 			Participação de cada porte populacional municipal no valor total executado por municípios.
 		</p>
@@ -194,7 +194,7 @@
 		margin-bottom: 1.5rem;
 	}
 
-	.sec-header h2 {
+	.sec-header h3 {
 		font-size: 1.6rem;
 		font-weight: 800;
 		color: #1b1b1b;

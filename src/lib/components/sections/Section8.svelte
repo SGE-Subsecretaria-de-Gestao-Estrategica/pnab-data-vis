@@ -1,6 +1,7 @@
 <script lang="ts">
 	import DonutChartWithLegend from '$lib/components/DonutChartWithLegend.svelte';
 	import PyramidChartCustom from '$lib/components/PyramidChartCustom.svelte';
+	import ChartDataTable from '$lib/components/ChartDataTable.svelte';
 	import { colorScales } from 'sniic-design-system';
 	import {
 		totalPF,
@@ -34,6 +35,7 @@
 
 	const centerValue = $derived(isValor ? fmtBRL(valorTotalPF) : fmtNum(totalPF));
 	const centerLabel = $derived(isValor ? 'valor executado' : 'agentes');
+	const metricLabel = $derived(isValor ? 'Valor executado (R$)' : 'Contemplados');
 
 	// Sobre o roxo: teal (frio) e amarelo (quente) se destacam bem do fundo.
 	// Feminino = teal, Masculino = amarelo.
@@ -44,7 +46,7 @@
 <section class="section-band">
 	<div class="section">
 	<header class="sec-header">
-		<h2>Distribuição por gênero</h2>
+		<h3>Distribuição por gênero</h3>
 		<p class="lead">
 			Distribuição dos recursos executados e dos agentes contemplados por sexo e faixa etária.
 		</p>
@@ -65,7 +67,7 @@
 
 	<div class="grid">
 		<div class="chart-card">
-			<h3 class="chart-title">Contemplados por sexo</h3>
+			<h4 class="chart-title">Contemplados por sexo</h4>
 			<DonutChartWithLegend
 				data={donutData}
 				colors={donutColors}
@@ -74,10 +76,15 @@
 				format={fmt}
 				height={360}
 			/>
+			<ChartDataTable
+				caption={`Contemplados por sexo — ${metricLabel}`}
+				columns={['Sexo', metricLabel]}
+				rows={donutData.map((d) => [d.label, fmt(d.value)])}
+			/>
 		</div>
 
 		<div class="chart-card">
-			<h3 class="chart-title">Pirâmide etária por sexo</h3>
+			<h4 class="chart-title">Pirâmide etária por sexo</h4>
 			<PyramidChartCustom
 				data={pyData}
 				leftLabel="Masculino"
@@ -86,6 +93,11 @@
 				format={fmt}
 				height={400}
 				centerGap={96}
+			/>
+			<ChartDataTable
+				caption={`Pirâmide etária por sexo — ${metricLabel}`}
+				columns={['Faixa etária', `Masculino (${isValor ? 'R$' : 'nº'})`, `Feminino (${isValor ? 'R$' : 'nº'})`]}
+				rows={pyData.map((d) => [d.label, fmt(d.left), fmt(d.right)])}
 			/>
 		</div>
 	</div>
@@ -106,7 +118,7 @@
 		margin-bottom: 1.5rem;
 	}
 
-	.sec-header h2 {
+	.sec-header h3 {
 		font-size: 1.6rem;
 		font-weight: 800;
 		color: #1B1B1B;
@@ -198,7 +210,7 @@
 		.grid {
 			grid-template-columns: 1fr;
 		}
-		.sec-header h2 {
+		.sec-header h3 {
 			font-size: 1.4rem;
 		}
 		/* Evita estouro horizontal: barra de filtro quebra e os botões dividem a largura. */

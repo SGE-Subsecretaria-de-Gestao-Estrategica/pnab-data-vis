@@ -2,8 +2,9 @@
 	import HorizontalStackedBarChartCustom from '$lib/components/HorizontalStackedBarChartCustom.svelte';
 	import DashboardFilterBar from '$lib/components/DashboardFilterBar.svelte';
 	import { createDashboardFilters, VISAO_LABELS } from '$lib/stores/dashboardFilters.svelte';
+	import ChartDataTable from '$lib/components/ChartDataTable.svelte';
 	import { colorScales } from 'sniic-design-system';
-	import { rowsByVisao, regionAgg, REGIOES } from '$lib/data/dashboard';
+	import { rowsByVisao, regionAgg, REGIOES, siglaToName } from '$lib/data/dashboard';
 
 	const filters = createDashboardFilters();
 
@@ -54,7 +55,7 @@
 
 <section class="section">
 	<header class="sec-header">
-		<h2>Território urbano × rural por estado</h2>
+		<h3>Território urbano × rural por estado</h3>
 		<p class="lead">
 			Participação das zonas urbana e rural no valor executado, por ente federativo,
 			com o Brasil como referência. Use o filtro para alternar a visão.
@@ -77,6 +78,11 @@
 			axisColor="#000000"
 			gridColor="#000000"
 		/>
+		<ChartDataTable
+			caption={`Participação das zonas urbana e rural no valor executado — ${scopeLabel}`}
+			columns={['Ente', 'Urbano', 'Rural']}
+			rows={data.map((d) => [siglaToName[d.label] ?? d.label, fmtPct(d.urbano), fmtPct(d.rural)])}
+		/>
 	</div>
 </section>
 
@@ -91,7 +97,7 @@
 		margin-bottom: 1.5rem;
 	}
 
-	.sec-header h2 {
+	.sec-header h3 {
 		font-size: 1.6rem;
 		font-weight: 800;
 		color: #1B1B1B;

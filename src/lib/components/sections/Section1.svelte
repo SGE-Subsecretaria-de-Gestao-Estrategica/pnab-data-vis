@@ -2,6 +2,7 @@
 	import BrazilChoropleth from '$lib/components/BrazilChoropleth.svelte';
 	import DashboardFilterBar from '$lib/components/DashboardFilterBar.svelte';
 	import BigNumberStat from '$lib/components/BigNumberStat.svelte';
+	import ChartDataTable from '$lib/components/ChartDataTable.svelte';
 	import { createDashboardFilters, VISAO_LABELS } from '$lib/stores/dashboardFilters.svelte';
 	import {
 		siglaToName,
@@ -103,10 +104,18 @@
 		if (filters.regiao !== 'Todas') return `Região ${filters.regiao}`;
 		return 'Brasil';
 	});
+
+	// Equivalente textual do mapa: uma linha por UF em escopo, ordenada por valor.
+	const mapTableRows = $derived(
+		Object.entries(mapValues)
+			.filter(([sigla]) => !inScope || inScope.has(sigla))
+			.sort((a, b) => b[1] - a[1])
+			.map(([sigla, v]) => [siglaToName[sigla] ?? sigla, fmtBRLfull(v)])
+	);
 </script>
 
 <section class="hero-band">
-	<h1>COMO OS RECURSOS DA ALDIR BLANC FORAM DISTRIBUÍDOS NOS TERRITÓRIOS?</h1>
+	<h2>COMO OS RECURSOS DA ALDIR BLANC FORAM DISTRIBUÍDOS NOS TERRITÓRIOS?</h2>
 </section>
 
 <section class="dashboard-band">
@@ -120,7 +129,7 @@
 		</p>
 	</header>
 
-	<h2>Valores gerais da pesquisa</h2>
+	<h3>Valores gerais da pesquisa</h3>
 
 	<!-- ── Filter bar ───────────────────────────────────────────────────────── -->
 	<DashboardFilterBar {filters} />
@@ -207,6 +216,12 @@
 			<p class="map-caption">Cor proporcional ao valor executado. Clique para detalhar.</p>
 		</div>
 	</div>
+
+	<ChartDataTable
+		caption={`Valor executado por unidade da federação — ${scopeLabel} · ${VISAO_LABELS[filters.visao]}`}
+		columns={['Unidade da federação', 'Valor executado (R$)']}
+		rows={mapTableRows}
+	/>
 	</div>
 </section>
 
@@ -222,7 +237,7 @@
 		background: #1351B4;
 	}
 
-	.hero-band h1 {
+	.hero-band h2 {
 		width: 100%;
 		max-width: 1200px;
 		margin: 0 auto;
@@ -255,6 +270,14 @@
 
 	.dash-header {
 		margin-bottom: 2rem;
+	}
+
+	/* "Valores gerais da pesquisa" — mantém o tamanho anterior após virar h3. */
+	.dashboard h3 {
+		font-size: 1.5rem;
+		font-weight: 700;
+		line-height: 1.2;
+		color: #1B1B1B;
 	}
 
 	.lead {
@@ -375,7 +398,7 @@
 		.dashboard {
 			padding: 2rem 1rem 3rem;
 		}
-		.hero-band h1 {
+		.hero-band h2 {
 			padding: 0 1rem;
 		}
 	}

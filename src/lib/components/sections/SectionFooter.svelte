@@ -9,6 +9,7 @@
 			Pesquisa realizada no <strong>SNIIC — Sistema Nacional de Informações e Indicadores
 			Culturais</strong>.
 		</p>
+		<p class="credit">Extração de dados realizada em julho de 2026.</p>
 		<p class="open-data">
 			Para acessar os dados desta pesquisa na íntegra, visite o
 			<a
